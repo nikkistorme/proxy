@@ -2,9 +2,25 @@
 
 ## Current state
 
-Phase 1: 1a, 1b and 1c are merged. PR preview deploys (CI/CD step 3) are in review on branch `ci-pr-previews`, ahead of 1d, the first UI issue.
+Phase 1: 1a, 1b, 1c and PR previews are merged. 1d (card art and import results UI) is in review on branch `phase-1d-import-ui` and waiting for the owner to test its preview. Phase 1 is complete once 1d merges.
 
 ## Done
+
+### Phase 1d: Card art and import results UI (2026-10-25)
+
+- `src/main.tsx` imports `design/tokens.css` directly, so a fresh design export updates the app. `src/index.css` holds the base styles, the design's double focus ring, and button styles.
+- `src/components/CardArt.tsx` (CD-6) renders `<img alt={name}>` filling its frame.
+  - With no image, or once the image fails to load, it shows a placeholder: the `--mat-edge` colour, an icon and the card name, labelled with the name.
+  - A new URL gets a fresh try.
+- `src/components/ImportResults.tsx` (CD-4 UI) is a native `<dialog>` following the MoveDialog board.
+  - It shows the file name, a summary (imported, new, updated, missing), the cards no longer in the CSV, and a problems table (Row, Column, Problem).
+  - Close it with Done, the × button or Esc.
+- Interim import panel in `App.tsx`: "Choose CSV file" runs `importCards` and `mergeImport`, shows the results, then shows the deck as a card grid. Importing again re-imports into the same deck. **Temporary:** replace it with the Start and setup screen.
+- Tests:
+  - Component tests: `CD-6 card art placeholder`, `CD-4 import results`, and the interim panel, which also covers CD-5 and focus return.
+  - E2E (`e2e/import.spec.ts`): import by mouse and by keyboard only, the problems table, Esc, focus return, axe with the dialog open and with the card grid, and the placeholder filling a 126 × 176 frame. The fixtures' `example.test` art requests are aborted in the test.
+- jsdom has no `<dialog>` methods. `src/test-setup.ts` adds a small stand-in, and real dialog behaviour is covered by E2E.
+- Checked by hand in the dev server: the dialog at desktop width and at 320px, Esc returning focus, and the placeholders in the grid.
 
 ### PR preview deploys (2026-10-25)
 
@@ -75,12 +91,14 @@ Phase 1: 1a, 1b and 1c are merged. PR preview deploys (CI/CD step 3) are in revi
 
 ## Next
 
-Phase 1 issues, one PR each:
-
-- **1d. UI (CD-6, CD-4 UI).** `CardArt` with a name placeholder, and the import-problems list. Follow `design/` (Import results isn't designed yet, so build it from the tokens and the `MoveDialog` pattern).
+- Owner tests the 1d preview, then merges. That completes Phase 1.
+- **Fonts (do before the Phase 2/3 table work):** the design uses Atkinson Hyperlegible Next for the UI and Atkinson Hyperlegible Mono for changing numbers, loaded from Google Fonts. AR-5 doesn't allow that network call, so self-host them, either with `@fontsource` packages (a new dependency, so ask first) or with the font files in `public/`. Until then the app uses the system fallbacks from `tokens.css`, and the mono font only shows on row numbers.
+- Phase 2 (piles), once the owner gives the go-ahead.
 
 ## Open problems
 
+- Dark theme isn't wired up. `tokens.css` has `[data-theme="dark"]` values, but nothing sets `data-theme` yet. Decide how the theme is chosen (follow the system setting, a toggle, or both) when the table is built.
+- PR preview clean-up leaves an empty `pr-preview/pr-N/.nojekyll` on `gh-pages`. It's harmless (the URL returns 404), but it could be tidied later.
 - For Phase 2 and 3: a changed `qty` only updates the definition. Piles still need a rule for adding or removing copies when `qty` changes on re-import.
 - For Phase 3: a table card showing its back face whose definition loses its back on re-import should fall back to the front.
 - For Phase 3: decide how cards on the table whose definition is `missing` should look. The import results in 1d can list them.
@@ -104,3 +122,7 @@ Phase 1 issues, one PR each:
 | 2026-10-25 | PR previews on GitHub Pages (gh-pages branch, `pr-preview/pr-N/`) | Netlify deploy previews; local testing only | Stays on GitHub with no new accounts or secrets. Production moved to the gh-pages branch so both can share it. |
 | 2026-10-25 | UI PRs wait for the owner to test the preview before merging | Merging on green CI | Lets the owner check every UI change in a real build before production |
 | 2026-10-25 | Saved data is keyed by the app's base path (applies from Phase 6) | Shared keys | Previews share the live site's web address, and so its storage |
+| 2026-10-25 | Import `design/tokens.css` directly instead of copying it into `src/` | Keeps one source of truth, so a fresh design export updates the app |
+| 2026-10-25 | Missing-art placeholder: solid `--mat-edge` fill, icon and name, no dashed border | `CardStates` uses a dashed outline for empty piles and drop targets, so a dashed placeholder would read as an empty slot |
+| 2026-10-25 | Interim import panel on the app shell until the Start and setup screen exists | Gives every UI PR something to test in the preview |
+| 2026-10-25 | Fonts deferred to their own issue before the table work | Self-hosting is needed under AR-5 and may add a dependency, so it needs its own decision |
