@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Proxy — Design system</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@500;700&amp;family=Atkinson+Hyperlegible+Next:wght@400;600;700&amp;family=Bitter:wght@500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1520px; height: 1560px; box-sizing: border-box; padding: 44px 48px; background: #F6F5F1; color: #1C1E1B; font-family: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif; display: flex; flex-direction: column; gap: 32px">
+
+<div style="display: flex; align-items: center; gap: 16px">
+<svg width="52" height="52" viewBox="0 0 26 26" aria-hidden="true"><rect x="3" y="5.5" width="13" height="18" rx="2.5" fill="none" stroke="#1C1E1B" stroke-width="1.4" stroke-dasharray="3 2.2"></rect><rect x="9.5" y="2" width="13" height="18" rx="2.5" fill="#1D5C86"></rect><path d="M13.3 7.5h5.4M13.3 11h5.4M13.3 14.5h3.4" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"></path></svg>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<h1 style="margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -0.01em">Proxy design system</h1>
+<span style="font-size: 15px; color: #575B54">Game-night table, quiet chrome. The mark: a finished card in front of its dashed stand-in.</span>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; align-items: start">
+
+<div style="display: flex; flex-direction: column; gap: 32px">
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 700">Colour tokens</h2>
+<table style="border-collapse: collapse; width: 100%; font-size: 13px; background: #FFFFFF; border-radius: 10px; overflow: hidden">
+<thead><tr style="text-align: left; color: #575B54; font-size: 12px">
+<th scope="col" style="padding: 10px 12px; font-weight: 600">Token</th>
+<th scope="col" style="padding: 10px 12px; font-weight: 600">Light</th>
+<th scope="col" style="padding: 10px 12px; font-weight: 600">Dark</th>
+<th scope="col" style="padding: 10px 12px; font-weight: 600">vs chrome bg</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{tokens}}" as="k" hint-placeholder-count="11">
+<tr style="border-top: 1px solid #DDDCD4">
+<td style="padding: 8px 12px"><span style="display: block; font-weight: 700; font-family: 'Atkinson Hyperlegible Mono', ui-monospace, monospace; font-size: 12px">{{k.name}}</span><span style="color: #575B54">{{k.role}}</span></td>
+<td style="padding: 8px 12px"><span style="display: inline-flex; align-items: center; gap: 8px"><span style="width: 28px; height: 28px; border-radius: 6px; background: {{k.light}}; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18)"></span><span style="font-family: 'Atkinson Hyperlegible Mono', ui-monospace, monospace; font-size: 12px">{{k.light}}</span></span></td>
+<td style="padding: 8px 12px"><span style="display: inline-flex; align-items: center; gap: 8px"><span style="width: 28px; height: 28px; border-radius: 6px; background: {{k.dark}}; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.18), 0 0 0 1px rgba(0,0,0,0.2)"></span><span style="font-family: 'Atkinson Hyperlegible Mono', ui-monospace, monospace; font-size: 12px">{{k.dark}}</span></span></td>
+<td style="padding: 8px 12px; font-family: 'Atkinson Hyperlegible Mono', ui-monospace, monospace; font-size: 12px">{{k.ratio}}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+<span style="font-size: 12px; color: #575B54">Text needs 4.5:1, controls and focus 3:1 (WCAG 2.2 AA). Seat colours on the table mat run 4.2:1 light and 6.8:1 dark, so they mark shapes there, never small text.</span>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 700">Seat identity</h2>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px">
+<sc-for list="{{seats}}" as="s" hint-placeholder-count="3">
+<div style="display: flex; gap: 12px; padding: 14px; border-radius: 10px; background: #FFFFFF">
+<div aria-hidden="true" style="position: relative; flex: none; width: 64px; height: 90px; border-radius: 5px; background: {{s.backBg}}">
+<span style="position: absolute; left: 4px; top: 4px; right: 4px; bottom: 4px; border: 1px solid rgba(255,255,255,0.35); border-radius: 3px"></span>
+<span style="position: absolute; left: 18px; top: 31px; width: 28px; height: 28px; border-radius: 14px; background: rgba(255,255,255,0.92); display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 16 16"><path d="{{s.shape}}" fill="{{s.back}}"></path></svg></span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<span style="display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 700"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="{{s.shape}}" fill="{{s.light}}"></path></svg>{{s.name}}</span>
+<span style="font-size: 12px; color: #575B54">{{s.cue}}</span>
+<span style="display: flex; gap: 4px"><span style="width: 22px; height: 22px; border-radius: 4px; background: {{s.light}}"></span><span style="width: 22px; height: 22px; border-radius: 4px; background: {{s.dark}}"></span><span style="width: 22px; height: 22px; border-radius: 4px; background: {{s.back}}"></span></span>
+</div>
+</div>
+</sc-for>
+</div>
+<span style="font-size: 12px; color: #575B54">Swatches: light theme, dark theme, card back. Every seat use pairs colour with its shape and name.</span>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 700">Motion, and what it becomes with reduced motion</h2>
+<table style="border-collapse: collapse; width: 100%; font-size: 13px; background: #FFFFFF; border-radius: 10px; overflow: hidden">
+<thead><tr style="text-align: left; color: #575B54; font-size: 12px">
+<th scope="col" style="padding: 10px 12px; font-weight: 600">Moment</th>
+<th scope="col" style="padding: 10px 12px; font-weight: 600">Default</th>
+<th scope="col" style="padding: 10px 12px; font-weight: 600">Reduced motion</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{motion}}" as="m" hint-placeholder-count="6">
+<tr style="border-top: 1px solid #DDDCD4">
+<td style="padding: 8px 12px; font-weight: 700">{{m.what}}</td>
+<td style="padding: 8px 12px">{{m.normal}}</td>
+<td style="padding: 8px 12px">{{m.reduced}}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</section>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 32px">
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 700">Type</h2>
+<div style="display: flex; flex-direction: column; padding: 6px 18px; border-radius: 10px; background: #FFFFFF">
+<sc-for list="{{type}}" as="y" hint-placeholder-count="9">
+<div style="display: flex; align-items: baseline; gap: 16px; padding: 8px 0; border-bottom: 1px solid #DDDCD4">
+<span style="width: 120px; flex: none; font-family: 'Atkinson Hyperlegible Mono', ui-monospace, monospace; font-size: 12px; color: #575B54">{{y.spec}}</span>
+<span style="font-family: {{y.family}}; font-size: {{y.size}}px; font-weight: {{y.weight}}; line-height: 1.2; font-variant-numeric: tabular-nums">{{y.sample}}</span>
+</div>
+</sc-for>
+</div>
+<span style="font-size: 12px; color: #575B54">Atkinson Hyperlegible Next for UI, its Mono sibling for every number that changes (counters, dice, counts) so digits never shift. Bitter appears only inside sample cards; real faces use the designer’s own layout fonts.</span>
+</section>
+
+<section style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 700">Spacing</h2>
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-radius: 10px; background: #FFFFFF">
+<sc-for list="{{space}}" as="p" hint-placeholder-count="6">
+<div style="display: flex; align-items: center; gap: 12px"><span style="width: 28px; font-family: 'Atkinson Hyperlegible Mono', ui-monospace, monospace; font-size: 12px">{{p.v}}</span><span style="height: 12px; width: {{p.v}}px; border-radius: 2px; background: #1D5C86"></span></div>
+</sc-for>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 700">Radius and elevation</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 16px; border-radius: 10px; background: #D9DBD0">
+<sc-for list="{{elev}}" as="e" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start">
+<div style="width: 64px; height: 44px; background: #FFFFFF; border-radius: {{e.r}}px; box-shadow: {{e.shadow}}"></div>
+<span style="font-size: 12px; font-weight: 700">{{e.name}}</span>
+<span style="font-size: 11px; color: #3F433D">{{e.spec}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 700">Focus and selection</h2>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px">
+<sc-for list="{{rings}}" as="r" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="height: 110px; border-radius: 10px; background: {{r.bg}}; display: flex; align-items: center; justify-content: center">
+<div style="position: relative; width: 56px; height: 78px; border-radius: 5px; background: {{r.card}}">
+<sc-if value="{{r.sel}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: -6px; top: -6px; right: -6px; bottom: -6px; border: 3px solid {{r.accent}}; border-radius: 9px"></div></sc-if>
+<sc-if value="{{r.focus}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: -3px; top: -3px; right: -3px; bottom: -3px; border-radius: 7px; box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 5px #111111"></div></sc-if>
+</div>
+</div>
+<span style="font-size: 12px; line-height: 1.35"><span style="font-weight: 700">{{r.name}}</span> {{r.note}}</span>
+</div>
+</sc-for>
+</div>
+<span style="font-size: 12px; color: #575B54">Focus ring: white 2px against the card, black 3px outside. One of the two always clears 3:1 on any art or mat. Controls in chrome use a 2px accent outline offset 2px.</span>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 700">Icons</h2>
+<div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; padding: 14px; border-radius: 10px; background: #FFFFFF">
+<sc-for list="{{icons}}" as="i" hint-placeholder-count="18">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 4px">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1C1E1B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{i.d}}"></path></svg>
+<span style="font-size: 11px; color: #3F433D; text-align: center">{{i.n}}</span>
+</div>
+</sc-for>
+</div>
+<span style="font-size: 12px; color: #575B54">24px grid, 1.8px stroke, round caps. Every icon-only button carries a label and its shortcut in the tooltip.</span>
+</section>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1520,"height":1560}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const tk = (name, role, light, dark, ratio) => ({ name, role, light, dark, ratio });
+    const SH = { tri: 'M8 2l6.5 11.5h-13z', circle: 'M8 2a6 6 0 1 0 .01 0z', square: 'M2.5 2.5h11v11h-11z' };
+    const MONO = "'Atkinson Hyperlegible Mono', ui-monospace, monospace";
+    const UI = "'Atkinson Hyperlegible Next', system-ui, sans-serif";
+    return {
+      tokens: [
+        tk('bg', 'Chrome: bars, tray, log', '#F6F5F1', '#141715', '—'),
+        tk('panel', 'Menus, dialogs, inputs', '#FFFFFF', '#1C201D', '—'),
+        tk('table', 'The playmat', '#D9DBD0', '#272C28', '—'),
+        tk('ink', 'Primary text', '#1C1E1B', '#ECEEE8', '15.4 / 15.4'),
+        tk('muted', 'Secondary text', '#575B54', '#A9B0A6', '6.4 / 8.1'),
+        tk('accent', 'Selection, primary action', '#1D5C86', '#86BDE6', '6.6 / 9.0'),
+        tk('control', 'Input and button borders', '#7E8279', '#6A7168', '3.6 / 3.6'),
+        tk('divider', 'Decorative rules only', '#DDDCD4', '#2C322D', 'decorative'),
+        tk('seat.ash', 'Seat A', '#A8461A', '#F2A06B', '5.4 / 8.6'),
+        tk('seat.briar', 'Seat B', '#1F5FA3', '#8AB8EE', '6.0 / 8.7'),
+        tk('seat.env', 'Environment seat', '#6B4C8A', '#C6A6E3', '6.4 / 8.6')
+      ],
+      seats: [
+        { name: 'Ash', cue: 'Triangle · diagonal stripes', shape: SH.tri, light: '#A8461A', dark: '#F2A06B', back: '#7A3412', backBg: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.10) 0 4px, transparent 4px 9px), #7A3412' },
+        { name: 'Briar', cue: 'Circle · dot grid', shape: SH.circle, light: '#1F5FA3', dark: '#8AB8EE', back: '#1D4475', backBg: 'radial-gradient(rgba(255,255,255,0.16) 1.3px, transparent 1.6px) 0 0 / 8px 8px, #1D4475' },
+        { name: 'Environment', cue: 'Square · fine rules', shape: SH.square, light: '#6B4C8A', dark: '#C6A6E3', back: '#4A3463', backBg: 'repeating-linear-gradient(0deg, rgba(255,255,255,0.10) 0 2px, transparent 2px 7px), #4A3463' }
+      ],
+      motion: [
+        { what: 'Drag lift', normal: 'Scale 1.06, −3° tilt, shadow grows, 120ms', reduced: 'Shadow only, no scale or tilt' },
+        { what: 'Drop', normal: 'Settles with 160ms ease-out', reduced: 'Instant' },
+        { what: 'Shuffle', normal: 'Pile riffles for 400ms', reduced: 'Count chip flashes; log entry' },
+        { what: 'Dice roll', normal: 'Faces tumble 500ms, result scales in', reduced: 'Result fades in, 120ms' },
+        { what: 'Counter changed', normal: 'Number pulses, tint fades over 1.2s', reduced: 'Tint holds 1.2s, no pulse' },
+        { what: 'Enlarge', normal: 'Fades and grows from the card, 140ms', reduced: 'Fade only' }
+      ],
+      type: [
+        { spec: 'UI 30 / 700', family: UI, size: 30, weight: 700, sample: 'Board titles' },
+        { spec: 'UI 20 / 700', family: UI, size: 20, weight: 700, sample: 'Dialog and sheet titles' },
+        { spec: 'UI 15 / 400', family: UI, size: 15, weight: 400, sample: 'Inputs and list rows' },
+        { spec: 'UI 14 / 600', family: UI, size: 14, weight: 600, sample: 'Buttons, menu items, log' },
+        { spec: 'UI 12 / 400', family: UI, size: 12, weight: 400, sample: 'Meta, timestamps, hints' },
+        { spec: 'UI 11 / 700 caps', family: UI, size: 11, weight: 700, sample: 'GROUP LABELS · ACTIVE' },
+        { spec: 'Mono 40 / 700', family: MONO, size: 40, weight: 700, sample: '14 · 07 · 20' },
+        { spec: 'Mono 17 / 700', family: MONO, size: 17, weight: 700, sample: 'Life 18  Energy 3' },
+        { spec: 'Mono 13 / 500', family: MONO, size: 13, weight: 500, sample: 'Ctrl+Z  M  Space  100%' }
+      ],
+      space: [{ v: 4 }, { v: 8 }, { v: 12 }, { v: 16 }, { v: 24 }, { v: 32 }],
+      elev: [
+        { name: 'Control 6', r: 6, spec: 'flat, 1px control border', shadow: 'inset 0 0 0 1px #7E8279' },
+        { name: 'Card 7', r: 7, spec: 'at rest on the mat', shadow: '0 1px 2px rgba(0,0,0,0.20), 0 3px 8px rgba(0,0,0,0.10)' },
+        { name: 'Menu 10', r: 10, spec: 'opened from the table', shadow: '0 10px 28px rgba(0,0,0,0.22)' },
+        { name: 'Dialog 14', r: 14, spec: 'modal over a scrim', shadow: '0 20px 48px rgba(0,0,0,0.30)' }
+      ],
+      rings: [
+        { name: 'Focus, light mat.', note: 'Black outer ring carries it.', bg: '#D9DBD0', card: '#D98A55', focus: true, sel: false, accent: '#1D5C86' },
+        { name: 'Focus, dark mat.', note: 'White inner ring carries it.', bg: '#272C28', card: '#1D4475', focus: true, sel: false, accent: '#86BDE6' },
+        { name: 'Selected, light.', note: 'Accent ring with a gap, plus check.', bg: '#D9DBD0', card: '#86AE7D', focus: false, sel: true, accent: '#1D5C86' },
+        { name: 'Selected + focus, dark.', note: 'Both stack cleanly.', bg: '#272C28', card: '#8E9DB6', focus: true, sel: true, accent: '#86BDE6' }
+      ],
+      icons: [
+        { n: 'Undo', d: 'M9 14L4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11' },
+        { n: 'Redo', d: 'M15 14l5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H13' },
+        { n: 'Zoom in', d: 'M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-4-4M8 11h6M11 8v6' },
+        { n: 'Fit all', d: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5' },
+        { n: 'Grid snap', d: 'M4 4h16v16H4zM9.3 4v16M14.7 4v16M4 9.3h16M4 14.7h16' },
+        { n: 'Save', d: 'M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6' },
+        { n: 'Layouts', d: 'M6 3h12v18H6zM9 6h6v5H9zM9 14h6M9 17h4' },
+        { n: 'Settings', d: 'M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1M15 5v4M9 10v4M17 15v4' },
+        { n: 'Shortcuts', d: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM9.5 9.5a2.5 2.5 0 0 1 4.9.7c0 1.7-2.4 2.3-2.4 3.8M12 17h.01' },
+        { n: 'Rotate', d: 'M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5' },
+        { n: 'Flip', d: 'M12 3v18M8 7l-4 5 4 5M16 7l4 5-4 5' },
+        { n: 'Counter', d: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM12 8v8M8 12h8' },
+        { n: 'Move to', d: 'M5 12h14M13 6l6 6-6 6' },
+        { n: 'Enlarge', d: 'M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7' },
+        { n: 'Duplicate', d: 'M8 8h12v12H8zM4 16V4h12' },
+        { n: 'Delete', d: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3' },
+        { n: 'Shuffle', d: 'M4 7h3l10 10h3M4 17h3l3-3M14 10l3-3h3M18 4l2 3-2 3M18 14l2 3-2 3' },
+        { n: 'Reveal', d: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6z' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

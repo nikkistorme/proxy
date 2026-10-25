@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sample card layout</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@500;700&amp;family=Atkinson+Hyperlegible+Next:wght@400;600;700&amp;family=Bitter:wght@500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div role="img" aria-label="{{label}}" style="width: {{w}}px; height: {{h}}px; overflow: hidden; border-radius: {{radius}}px; font-family: 'Bitter', Georgia, serif; color: #1E1C1A; position: relative">
+<div style="width: {{bw}}px; height: {{bh}}px; transform: scale({{s}}); transform-origin: 0 0; box-sizing: border-box; padding: 9px; display: flex; flex-direction: column; gap: 6px; background: {{pal.frame}}; border-radius: 13px">
+<div style="height: 30px; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 0 5px 0 10px; background: {{pal.bar}}; border-radius: 6px">
+<span style="font-size: 18px; font-weight: 700; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{card.name}}</span>
+<span style="flex: none; width: 23px; height: 23px; border-radius: 12px; background: {{pal.frame}}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Atkinson Hyperlegible Mono', ui-monospace, monospace; font-size: 14px; font-weight: 700">{{card.cost}}</span>
+</div>
+<div style="height: {{artH}}px; flex: none; border-radius: 4px; overflow: hidden; background: {{pal.art}}">
+<svg width="100%" height="100%" viewBox="0 0 240 140" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+<rect x="0" y="108" width="240" height="32" fill="{{pal.ground}}"></rect>
+<path d="{{artD}}" fill="{{pal.motif}}" fill-rule="evenodd"></path>
+</svg>
+</div>
+<div style="height: 22px; flex: none; display: flex; align-items: center; padding: 0 10px; background: {{pal.bar}}; border-radius: 4px; font-size: 13px; font-weight: 600; font-style: italic">{{card.type}}</div>
+<div style="flex: 1; min-height: 0; position: relative; padding: 7px 10px; background: #FBF8F2; border-radius: 4px; font-size: 14.5px; font-weight: 500; line-height: 1.28">
+<span>{{card.text}}</span>
+<sc-if value="{{hasStats}}" hint-placeholder-val="{{ true }}">
+<span style="position: absolute; right: 6px; bottom: 6px; padding: 2px 8px; border-radius: 6px; background: {{pal.frame}}; color: #FFFFFF; font-family: 'Atkinson Hyperlegible Mono', ui-monospace, monospace; font-size: 15px; font-weight: 700">{{card.stats}}</span>
+</sc-if>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"card":{"editor":null},"size":{"editor":"int","default":240,"min":40,"max":480},"$preview":{"width":240,"height":336}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const card = this.props.card || {
+      name: 'Ember Scout', cost: 2, type: 'Unit — Scout', faction: 'ember', art: 'flame',
+      text: 'When Ember Scout enters, look at the top card of any pile.', stats: '2 / 2'
+    };
+    const PAL = {
+      ember: { frame: '#3A2820', bar: '#F4E7D9', art: '#D98A55', ground: '#B9693A', motif: '#7A3416' },
+      briar: { frame: '#22342A', bar: '#E5EFDF', art: '#86AE7D', ground: '#668F5E', motif: '#2F5530' },
+      env:   { frame: '#29303B', bar: '#E3E7EE', art: '#8E9DB6', ground: '#6F7F99', motif: '#36435A' }
+    };
+    const ART = {
+      flame: 'M120 18c28 36 44 58 31 90a32 32 0 0 1-62 0c-8-20 9-31 11-50c9 9 14 18 19 21c6-19 1-42 1-61z',
+      sun: 'M120 30a30 30 0 1 0 0.1 0z',
+      peak: 'M0 140L68 48l40 44 36-58 96 106z',
+      wave: 'M0 98q30-22 60 0t60 0t60 0t60 0V140H0z',
+      leaf: 'M120 16c42 30 42 82 0 112c-42-30-42-82 0-112z',
+      tower: 'M102 34h36v106h-36zM94 26h52v14H94z',
+      eye: 'M28 70q92-64 184 0q-92 64-184 0zM120 52a18 18 0 1 0 .1 0z',
+      hound: 'M40 112c10-34 40-52 76-50l18-22l8 24c24 8 40 26 46 48z',
+      bridge: 'M0 96h240v10H0zM24 106v34h12v-34zM204 106v34h12v-34zM24 96q96-60 192 0'
+    };
+    const landscape = !!card.landscape;
+    const bw = landscape ? 336 : 240;
+    const bh = landscape ? 240 : 336;
+    const w = this.props.size ?? 240;
+    const s = w / bw;
+    return {
+      card,
+      pal: PAL[card.faction] || PAL.ember,
+      artD: ART[card.art] || ART.sun,
+      artH: landscape ? 96 : 140,
+      hasStats: !!card.stats,
+      bw, bh, s,
+      w, h: Math.round(bh * s),
+      radius: Math.max(3, Math.round(13 * s)),
+      label: card.name + '. ' + card.type + '. ' + card.text + (card.stats ? ' ' + card.stats : '')
+    };
+  }
+}
+</script>
+</body>
+</html>

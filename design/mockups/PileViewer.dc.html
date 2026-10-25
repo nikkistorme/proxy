@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Proxy — Pile viewer</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@500;700&amp;family=Atkinson+Hyperlegible+Next:wght@400;600;700&amp;family=Bitter:wght@500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 100%; height: 900px; position: relative; overflow: hidden; background: #F6F5F1; color: #1C1E1B; font-family: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif">
+<dc-import name="Main" theme="light" hint-size="100%,900px"></dc-import>
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 40; background: rgba(20,22,20,0.38)"></div>
+
+<div role="dialog" aria-modal="true" aria-labelledby="pv-title" style="position: absolute; top: 0; right: 0; bottom: 0; z-index: 50; width: 100%; max-width: 720px; box-sizing: border-box; display: flex; flex-direction: column; background: #FFFFFF; border-left: 1px solid #7E8279; border-top: 4px solid #A8461A; box-shadow: -12px 0 32px rgba(0,0,0,0.18)">
+
+<div style="display: flex; align-items: center; gap: 10px; padding: 16px 16px 12px 24px">
+<svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2l6.5 11.5h-13z" fill="#A8461A"></path></svg>
+<h2 id="pv-title" style="margin: 0; font-size: 20px; font-weight: 700">Ash deck</h2>
+<span style="font-size: 14px; color: #575B54">24 cards · shown face up to you only</span>
+<button aria-label="Close pile viewer (Esc)" style="margin-left: auto; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: #1C1E1B; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+</div>
+
+<div style="padding: 0 24px 12px; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px">
+<div style="flex: 1 1 220px; display: flex; flex-direction: column; gap: 5px">
+<label for="pv-search" style="font-size: 13px; font-weight: 600">Search name or text</label>
+<div style="position: relative">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#575B54" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 11px; top: 10px"><path d="M10.5 4a6.5 6.5 0 1 0 0 13a6.5 6.5 0 1 0 0-13zM20 20l-4.8-4.8"></path></svg>
+<input id="pv-search" type="search" value="ember" style="width: 100%; box-sizing: border-box; height: 38px; padding: 0 40px 0 38px; border: 2px solid #1D5C86; border-radius: 8px; background: #FFFFFF; color: #1C1E1B; font: inherit; font-size: 15px; outline: none">
+<button aria-label="Clear search" style="position: absolute; right: 5px; top: 5px; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: #575B54; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+</div>
+</div>
+<sc-for list="{{filters}}" as="f" hint-placeholder-count="3">
+<div style="display: flex; flex-direction: column; gap: 5px">
+<span style="font-size: 13px; font-weight: 600">{{f.label}}</span>
+<button aria-haspopup="listbox" style="height: 38px; min-width: 104px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 10px 0 12px; border: {{f.border}}; border-radius: 8px; background: {{f.bg}}; color: #1C1E1B; font: inherit; font-size: 14px; font-weight: {{f.weight}}; cursor: pointer">{{f.value}}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+</div>
+</sc-for>
+</div>
+
+<div role="status" style="display: flex; align-items: center; gap: 12px; padding: 8px 24px; background: #F6F5F1; border-top: 1px solid #DDDCD4; border-bottom: 1px solid #DDDCD4; font-size: 14px">
+<span><span style="font-weight: 700">4 of 24</span> match “ember” · Faction: Ember</span>
+<button style="margin-left: auto; height: 28px; padding: 0 8px; border: 0; border-radius: 6px; background: transparent; color: #1D5C86; font: inherit; font-size: 14px; font-weight: 600; text-decoration: underline; cursor: pointer">Clear all</button>
+<span style="font-size: 13px; color: #575B54">Sort: deck order</span>
+</div>
+
+<div style="flex: 1; min-height: 0; overflow: auto; padding: 20px 24px">
+<ul aria-label="Matching cards" style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px 16px">
+<sc-for list="{{results}}" as="r" hint-placeholder-count="4">
+<li style="display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<div style="position: relative; width: 150px; height: 210px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.22)">
+<dc-import name="Card" card="{{r.card}}" size="{{ 150 }}" hint-size="150px,210px"></dc-import>
+<sc-if value="{{r.focused}}" hint-placeholder-val="{{ false }}"><div aria-hidden="true" style="position: absolute; left: -3px; top: -3px; right: -3px; bottom: -3px; border-radius: 10px; box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 5px #111111"></div></sc-if>
+</div>
+<span style="font-size: 13px; color: #575B54"><span style="font-family: 'Atkinson Hyperlegible Mono', ui-monospace, monospace; font-weight: 700; color: #1C1E1B">#{{r.pos}}</span> from top</span>
+<sc-if value="{{r.focused}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<button style="height: 30px; padding: 0 10px; border: 0; border-radius: 6px; background: #1D5C86; color: #FFFFFF; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer">To hand</button>
+<button style="height: 30px; padding: 0 10px; border: 1px solid #7E8279; border-radius: 6px; background: #FFFFFF; color: #1C1E1B; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">To table</button>
+<button style="height: 30px; padding: 0 10px; border: 1px solid #7E8279; border-radius: 6px; background: #FFFFFF; color: #1C1E1B; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Move to…</button>
+</div>
+</sc-if>
+</li>
+</sc-for>
+</ul>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 24px 16px; border-top: 1px solid #DDDCD4">
+<sc-for list="{{footer}}" as="b" hint-placeholder-count="3">
+<button style="height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid #7E8279; border-radius: 8px; background: #FFFFFF; color: #1C1E1B; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{b.d}}"></path></svg>{{b.label}}</button>
+</sc-for>
+<span style="margin-left: auto; font-size: 12px; color: #575B54">Arrows browse · Enter to hand · M move · Esc close</span>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const f = (label, value, active) => ({
+      label, value,
+      border: active ? '2px solid #1D5C86' : '1px solid #7E8279',
+      bg: active ? '#E4EEF5' : '#FFFFFF',
+      weight: active ? 700 : 500
+    });
+    const r = (pos, card, focused) => ({ pos, card, focused: !!focused });
+    return {
+      filters: [f('Type', 'Any'), f('Cost', 'Any'), f('Faction', 'Ember', true)],
+      results: [
+        r(3, { name: 'Ember Scout', cost: 2, type: 'Unit — Scout', faction: 'ember', art: 'flame', text: 'When Ember Scout enters, look at the top card of any pile.', stats: '2 / 2' }, true),
+        r(7, { name: 'Emberline Courier', cost: 1, type: 'Unit — Courier', faction: 'ember', art: 'bridge', text: 'When played, draw a card if a Location is in play.', stats: '1 / 1' }),
+        r(12, { name: 'Ember Cache', cost: 1, type: 'Relic', faction: 'ember', art: 'sun', text: 'Store up to 3 Energy here. Spend it at any time.' }),
+        r(19, { name: 'Banked Ember', cost: 0, type: 'Tactic', faction: 'ember', art: 'flame', text: 'Gain 2 Energy at the start of next round.' })
+      ],
+      footer: [
+        { label: 'Shuffle', d: 'M4 7h3l10 10h3M4 17h3l3-3M14 10l3-3h3M18 4l2 3-2 3M18 14l2 3-2 3' },
+        { label: 'Draw top card', d: 'M12 4v12M7 11l5 5 5-5M5 20h14' },
+        { label: 'Reveal top card', d: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6z' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

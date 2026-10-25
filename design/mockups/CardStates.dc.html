@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Proxy — Card states</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@500;700&amp;family=Atkinson+Hyperlegible+Next:wght@400;600;700&amp;family=Bitter:wght@500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1520px; height: 2300px; box-sizing: border-box; padding: 44px 48px; background: #F6F5F1; color: #1C1E1B; font-family: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; align-items: baseline; gap: 16px">
+<h1 style="margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -0.01em">Card states</h1>
+<span style="font-size: 15px; color: #575B54">The app owns only the edge, shadow and overlays. Every overlay sits on a dark pill or a ring, so it reads on any user art.</span>
+</div>
+
+<sc-for list="{{sections}}" as="sec" hint-placeholder-count="4">
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 700">{{sec.title}}</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 18px; padding: 20px 24px; border-radius: 14px; background: #E8E9E1">
+<sc-for list="{{sec.tiles}}" as="x" hint-placeholder-count="6">
+<div style="width: 176px; display: flex; flex-direction: column; gap: 6px">
+<div style="position: relative; width: 176px; height: 210px; border-radius: 10px; background: {{x.stageBg}}">
+
+<sc-if value="{{x.ghost}}" hint-placeholder-val="{{ false }}"><div aria-hidden="true" style="position: absolute; left: 25px; top: 17px; width: 126px; height: 176px; box-sizing: border-box; border: 2px dashed #575B54; border-radius: 7px"></div></sc-if>
+<sc-if value="{{x.layers}}" hint-placeholder-val="{{ false }}">
+<div aria-hidden="true" style="position: absolute; left: 31px; top: 23px; width: 126px; height: 176px; border-radius: 7px; background: {{x.layerColor}}; box-shadow: 0 1px 2px rgba(0,0,0,0.2)"></div>
+<div aria-hidden="true" style="position: absolute; left: 28px; top: 20px; width: 126px; height: 176px; border-radius: 7px; background: {{x.layerColor}}; box-shadow: 0 0 0 1px rgba(255,255,255,0.2) inset"></div>
+</sc-if>
+<sc-if value="{{x.under}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 19px; top: 9px; width: 126px; height: 176px; border-radius: 7px; box-shadow: 0 1px 2px rgba(0,0,0,0.2), 0 3px 8px rgba(0,0,0,0.1)"><dc-import name="Card" card="{{x.underCard}}" size="{{ 126 }}" hint-size="126px,176px"></dc-import></div></sc-if>
+
+<div style="position: absolute; left: {{x.left}}px; top: {{x.top}}px; width: 126px; height: 176px; border-radius: 7px; transform: {{x.transform}}; box-shadow: {{x.shadow}}">
+<sc-if value="{{x.faceUp}}" hint-placeholder-val="{{ true }}"><dc-import name="Card" card="{{x.card}}" size="{{ 126 }}" hint-size="126px,176px"></dc-import></sc-if>
+<sc-if value="{{x.faceDown}}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; left: 0; top: 0; width: 126px; height: 176px; border-radius: 7px; background: {{x.backBg}}">
+<span aria-hidden="true" style="position: absolute; left: 6px; top: 6px; right: 6px; bottom: 6px; border: 1.5px solid rgba(255,255,255,0.35); border-radius: 4px"></span>
+<span aria-hidden="true" style="position: absolute; left: 41px; top: {{x.markTop}}px; width: 44px; height: 44px; border-radius: 22px; background: rgba(255,255,255,0.92); display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 16 16"><path d="{{x.backShape}}" fill="{{x.layerColor}}"></path></svg></span>
+<sc-if value="{{x.plate}}" hint-placeholder-val="{{ false }}"><span style="position: absolute; left: 10px; right: 10px; bottom: 10px; padding: 5px 7px; border-radius: 4px; background: rgba(255,255,255,0.95); color: #1A1A1A; display: flex; align-items: baseline; justify-content: space-between"><span style="font-size: 12px; font-weight: 700">{{x.plateName}}</span><span style="font-family: 'Atkinson Hyperlegible Mono', ui-monospace, monospace; font-size: 13px; font-weight: 700">{{x.plateCount}}</span></span></sc-if>
+</div>
+</sc-if>
+<sc-if value="{{x.empty}}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; left: 0; top: 0; width: 126px; height: 176px; box-sizing: border-box; border: 2px dashed #575B54; border-radius: 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; color: #1C1E1B">
+<svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2l6.5 11.5h-13z" fill="none" stroke="#A8461A" stroke-width="1.5"></path></svg>
+<span style="font-size: 13px; font-weight: 700">Ash deck</span>
+<span style="font-size: 12px; color: #575B54">Empty · 0</span>
+</div>
+</sc-if>
+<sc-if value="{{x.hoverBtn}}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position: absolute; right: -10px; top: -10px; width: 26px; height: 26px; border-radius: 13px; border: 1px solid #7E8279; background: #FFFFFF; color: #1C1E1B; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.25)"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5.5" cy="12" r="1.9"></circle><circle cx="12" cy="12" r="1.9"></circle><circle cx="18.5" cy="12" r="1.9"></circle></svg></span></sc-if>
+<sc-if value="{{x.selected}}" hint-placeholder-val="{{ false }}">
+<div aria-hidden="true" style="position: absolute; left: -7px; top: -7px; right: -7px; bottom: -7px; border: 3px solid {{x.accent}}; border-radius: 12px"></div>
+<div aria-hidden="true" style="position: absolute; right: -15px; top: -15px; width: 24px; height: 24px; border-radius: 12px; background: {{x.accent}}; box-shadow: 0 0 0 2px {{x.stageBg}}; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{x.accentInk}}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"></path></svg></div>
+</sc-if>
+<sc-if value="{{x.focused}}" hint-placeholder-val="{{ false }}"><div aria-hidden="true" style="position: absolute; left: -3px; top: -3px; right: -3px; bottom: -3px; border-radius: 9px; box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 5px #111111"></div></sc-if>
+<sc-if value="{{x.drop}}" hint-placeholder-val="{{ false }}">
+<div aria-hidden="true" style="position: absolute; left: -8px; top: -8px; right: -8px; bottom: -8px; border: 3px dashed #1D5C86; border-radius: 13px; background: rgba(29,92,134,0.10)"></div>
+<span style="position: absolute; left: 50%; top: -20px; transform: translateX(-50%); height: 24px; padding: 0 9px; border-radius: 12px; background: #1D5C86; color: #FFFFFF; display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; white-space: nowrap"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v14M6 12l6 6 6-6"></path></svg>Drop: top</span>
+</sc-if>
+<sc-if value="{{x.dfc}}" hint-placeholder-val="{{ false }}"><span style="position: absolute; left: 6px; top: 34px; height: 22px; padding: 0 6px 0 4px; border-radius: 11px; background: rgba(18,18,18,0.9); box-shadow: 0 0 0 1px rgba(255,255,255,0.75); color: #FFFFFF; display: flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 700"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3M20 4v4h-4M20 12a8 8 0 0 1-14 5.3M4 20v-4h4"></path></svg>2</span></sc-if>
+<sc-if value="{{x.chip}}" hint-placeholder-val="{{ false }}"><span style="position: absolute; left: 6px; top: 34px; height: 22px; padding: 0 7px 0 5px; border-radius: 11px; background: rgba(18,18,18,0.9); box-shadow: 0 0 0 1px rgba(255,255,255,0.75); color: #FFFFFF; display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="{{x.chipIcon}}"></path></svg>{{x.chip}}</span></sc-if>
+<sc-if value="{{x.hasCounters}}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; left: 0; right: 0; bottom: 34px; display: flex; flex-direction: column; align-items: center; gap: 4px">
+<sc-for list="{{x.counters}}" as="k" hint-placeholder-count="1">
+<span style="height: 24px; padding: 0 9px; border-radius: 12px; background: rgba(18,18,18,0.92); box-shadow: 0 0 0 1.5px rgba(255,255,255,0.8); color: #FFFFFF; display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; white-space: nowrap">{{k.label}}<span style="font-family: 'Atkinson Hyperlegible Mono', ui-monospace, monospace; font-size: 13px">{{k.value}}</span></span>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</div>
+<span style="font-size: 14px; font-weight: 700">{{x.label}}</span>
+<span style="font-size: 12px; line-height: 1.35; color: #575B54">{{x.note}}</span>
+</div>
+</sc-for>
+
+<sc-if value="{{sec.editor}}" hint-placeholder-val="{{ false }}">
+<div style="width: 400px; display: flex; flex-direction: column; gap: 6px">
+<div style="position: relative; width: 400px; height: 210px; border-radius: 10px; background: #D9DBD0">
+<div style="position: absolute; left: 25px; top: 17px; width: 126px; height: 176px; border-radius: 7px; box-shadow: 0 1px 2px rgba(0,0,0,0.2), 0 3px 8px rgba(0,0,0,0.1)">
+<dc-import name="Card" card="{{houndCard}}" size="{{ 126 }}" hint-size="126px,176px"></dc-import>
+<span style="position: absolute; left: 50%; bottom: 34px; transform: translateX(-50%); height: 24px; padding: 0 9px; border-radius: 12px; background: rgba(18,18,18,0.92); box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #111111; color: #FFFFFF; display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; white-space: nowrap">Damage<span style="font-family: 'Atkinson Hyperlegible Mono', ui-monospace, monospace; font-size: 13px">3</span></span>
+</div>
+<div role="dialog" aria-label="Edit counter" style="position: absolute; left: 168px; top: 30px; width: 210px; box-sizing: border-box; padding: 12px; border-radius: 10px; background: #FFFFFF; border: 1px solid #7E8279; box-shadow: 0 8px 22px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 10px">
+<label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600">Counter name<input value="Damage" style="height: 32px; padding: 0 8px; border: 1px solid #7E8279; border-radius: 6px; font: inherit; font-size: 14px; font-weight: 400; color: #1C1E1B"></label>
+<div role="group" aria-label="Damage value" style="display: flex; align-items: center; justify-content: space-between">
+<button aria-label="Decrease" style="width: 32px; height: 32px; border: 1px solid #7E8279; border-radius: 6px; background: #FFFFFF; color: #1C1E1B; font: inherit; font-size: 18px; cursor: pointer">−</button>
+<span style="font-family: 'Atkinson Hyperlegible Mono', ui-monospace, monospace; font-size: 24px; font-weight: 700">3</span>
+<button aria-label="Increase" style="width: 32px; height: 32px; border: 1px solid #7E8279; border-radius: 6px; background: #FFFFFF; color: #1C1E1B; font: inherit; font-size: 18px; cursor: pointer">+</button>
+</div>
+<button style="height: 28px; border: 0; background: transparent; color: #9B2C1F; font: inherit; font-size: 13px; font-weight: 600; text-decoration: underline; cursor: pointer; text-align: left; padding: 0">Remove counter</button>
+</div>
+</div>
+<span style="font-size: 14px; font-weight: 700">Editing</span>
+<span style="font-size: 12px; line-height: 1.35; color: #575B54">Click a badge or press C on a focused card. +/− keys step; Esc closes and keeps the value.</span>
+</div>
+</sc-if>
+</div>
+</section>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1520,"height":2300}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const SH = { tri: 'M8 2l6.5 11.5h-13z', circle: 'M8 2a6 6 0 1 0 .01 0z', square: 'M2.5 2.5h11v11h-11z' };
+    const BACK = {
+      ash:   { color: '#7A3412', bg: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.10) 0 5px, transparent 5px 11px), #7A3412', shape: SH.tri },
+      briar: { color: '#1D4475', bg: 'radial-gradient(rgba(255,255,255,0.16) 1.6px, transparent 1.9px) 0 0 / 10px 10px, #1D4475', shape: SH.circle },
+      env:   { color: '#4A3463', bg: 'repeating-linear-gradient(0deg, rgba(255,255,255,0.10) 0 2px, transparent 2px 8px), #4A3463', shape: SH.square }
+    };
+    const scout = { name: 'Ember Scout', cost: 2, type: 'Unit — Scout', faction: 'ember', art: 'flame', text: 'When Ember Scout enters, look at the top card of any pile.', stats: '2 / 2' };
+    const runner = { name: 'Ash Runner', cost: 2, type: 'Unit — Runner', faction: 'ember', art: 'peak', text: 'Exhaust: move a unit to an adjacent location.', stats: '1 / 3' };
+    const mender = { name: 'Moss Mender', cost: 2, type: 'Unit — Healer', faction: 'briar', art: 'leaf', text: 'Day: heal 2 Life. Night: flip to Rot Mender.', stats: '1 / 3' };
+    const golem = { name: 'Coal Golem', cost: 4, type: 'Unit — Construct', faction: 'ember', art: 'peak', text: 'Can’t move. Takes damage for units beside it.', stats: '1 / 6' };
+    const pup = { name: 'Cinder Pup', cost: 1, type: 'Unit — Beast', faction: 'ember', art: 'flame', text: '+1 attack while stacked on a Construct.', stats: '2 / 1' };
+    const hound = { name: 'Rust Hound', cost: 4, type: 'Threat — Beast', faction: 'env', art: 'hound', text: 'Hunts the seat with the lowest Life.', stats: '4 / 5' };
+    const wraith = { name: 'Fog Wraith', cost: 3, type: 'Threat — Spirit', faction: 'env', art: 'eye', text: 'Hides at the nearest location. Can’t be attacked while hidden.', stats: '3 / 2' };
+    const SHADOW = '0 1px 2px rgba(0,0,0,0.20), 0 3px 8px rgba(0,0,0,0.10)';
+    const T = (label, note, extra) => Object.assign({
+      label, note, card: scout, stageBg: '#D9DBD0', left: 25, top: 17, transform: 'none', shadow: SHADOW,
+      faceUp: true, faceDown: false, empty: false, ghost: false, layers: false, under: false, underCard: null,
+      hoverBtn: false, selected: false, focused: false, drop: false, dfc: false, chip: '', chipIcon: '',
+      hasCounters: false, counters: [], plate: false, plateName: '', plateCount: '', markTop: 66,
+      accent: '#1D5C86', accentInk: '#FFFFFF', backBg: '', backShape: '', layerColor: ''
+    }, extra || {});
+    const back = (key) => ({ faceUp: false, faceDown: true, backBg: BACK[key].bg, backShape: BACK[key].shape, layerColor: BACK[key].color });
+    const STACK = 'M8 3h12v14H8zM4 7v14h12';
+    const EYE = 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6z';
+
+    const tableTiles = [
+      T('Default', 'Edge radius and shadow only; the face is the user’s layout.'),
+      T('Hover', 'Lifts 3px, deeper shadow, actions button appears. Enlarge after 400ms.', { transform: 'translateY(-3px)', shadow: '0 2px 4px rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.16)', hoverBtn: true }),
+      T('Focused', 'Double ring: 2px white inside 3px black. Brought to front.', { focused: true }),
+      T('Selected', '3px accent ring with a gap, plus check badge (shape, not just colour).', { selected: true }),
+      T('Selected + focused', 'Both treatments stack without merging.', { selected: true, focused: true }),
+      T('Dragging', 'Scale 1.06, −3° tilt, deep shadow; origin shown dashed. Reduced motion: no tilt or scale.', { ghost: true, transform: 'translate(10px, -8px) rotate(-3deg) scale(1.06)', shadow: '0 18px 30px rgba(0,0,0,0.30), 0 4px 10px rgba(0,0,0,0.18)' }),
+      T('Rotated 90°', 'Turns around its centre. R rotates clockwise, Shift+R back.', { card: runner, transform: 'rotate(90deg)' }),
+      T('Rotated 180°', 'Same card, two steps.', { card: runner, transform: 'rotate(180deg)' }),
+      T('Rotated 270°', 'Three steps.', { card: runner, transform: 'rotate(270deg)' }),
+      T('Face-down', 'Owner’s seat back. Log says “a face-down card”.', back('ash')),
+      T('Double-faced', 'Badge marks two faces. F flips, enlarge shows both.', { card: mender, dfc: true }),
+      T('With counters', 'Dark pill with a white edge reads on any art.', { card: hound, hasCounters: true, counters: [{ label: 'Damage', value: 3 }] }),
+      T('In a stack', 'Offset 6/8px so the lower card’s name stays visible; count chip on top.', { card: pup, under: true, underCard: golem, left: 31, top: 25, chip: 'Stack 2', chipIcon: STACK })
+    ];
+    const backTiles = [
+      T('Ash back', 'Diagonal stripes, triangle.', back('ash')),
+      T('Briar back', 'Dot grid, circle.', back('briar')),
+      T('Environment back', 'Fine rules, square.', back('env')),
+      T('Back, focused', 'Same double ring as faces.', Object.assign(back('ash'), { focused: true }))
+    ];
+    const counterTiles = [
+      T('One counter', 'Centred above the text box, never over the name.', { card: hound, hasCounters: true, counters: [{ label: 'Damage', value: 3 }] }),
+      T('Several', 'Stack upward; four or more collapse to “+2 more”.', { card: wraith, hasCounters: true, counters: [{ label: '+1/+1 ×', value: 2 }, { label: 'Shield', value: 1 }, { label: 'Poison', value: 2 }] })
+    ];
+    const pileBase = (extra) => Object.assign(back('ash'), { layers: true, plate: true, plateName: 'Ash deck', plateCount: '24', markTop: 42 }, extra || {});
+    const pileTiles = [
+      T('Default', 'Two edge layers suggest depth; plate shows name and count.', pileBase()),
+      T('Hover', 'Lifts; Enter or click opens the pile viewer.', pileBase({ transform: 'translateY(-3px)', shadow: '0 2px 4px rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.16)' })),
+      T('Focused', 'Double ring, same as cards.', pileBase({ focused: true })),
+      T('Drop target', 'Dashed accent ring, tint and a label saying where it lands.', pileBase({ drop: true })),
+      T('Empty', 'Dashed outline keeps the spot; still a drop target.', { faceUp: false, empty: true, shadow: 'none' }),
+      T('Top revealed', 'Top card face-up on the stack, eye chip.', { layers: true, layerColor: '#7A3412', chip: 'Top', chipIcon: EYE })
+    ];
+    const themeTiles = [
+      T('Light table', 'Selected and focused on the light mat.', { selected: true, focused: true }),
+      T('Dark table', 'Same rings; accent lightens to #86BDE6.', { stageBg: '#272C28', selected: true, focused: true, accent: '#86BDE6', accentInk: '#0F1B24' }),
+      T('Light art', 'White inner ring still separates from pale art.', { card: mender, focused: true }),
+      T('Dark back, dark table', 'Black outer ring vanishes; white inner ring carries it.', Object.assign(back('briar'), { stageBg: '#272C28', focused: true }))
+    ];
+    return {
+      houndCard: hound,
+      sections: [
+        { title: 'Card on table', tiles: tableTiles, editor: false },
+        { title: 'Card backs', tiles: backTiles, editor: false },
+        { title: 'Counter badges', tiles: counterTiles, editor: true },
+        { title: 'Piles', tiles: pileTiles, editor: false },
+        { title: 'Overlays on both themes and any art', tiles: themeTiles, editor: false }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

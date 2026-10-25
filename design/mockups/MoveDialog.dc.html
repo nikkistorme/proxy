@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Proxy — Move to dialog</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@500;700&amp;family=Atkinson+Hyperlegible+Next:wght@400;600;700&amp;family=Bitter:wght@500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 100%; height: 900px; position: relative; overflow: hidden; background: #F6F5F1; color: #1C1E1B; font-family: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif">
+<dc-import name="Main" theme="light" hint-size="100%,900px"></dc-import>
+<div style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 50; background: rgba(20,22,20,0.45); display: flex; align-items: center; justify-content: center; padding: 16px">
+<div role="dialog" aria-modal="true" aria-labelledby="mv-title" style="width: 100%; max-width: 520px; border-radius: 14px; background: #FFFFFF; border: 1px solid #7E8279; box-shadow: 0 20px 48px rgba(0,0,0,0.3); display: flex; flex-direction: column">
+
+<div style="display: flex; align-items: center; gap: 14px; padding: 18px 16px 14px 20px">
+<div style="flex: none; width: 56px; height: 78px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25)"><dc-import name="Card" card="{{card}}" size="{{ 56 }}" hint-size="56px,78px"></dc-import></div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 13px; color: #575B54">Move card · from table</span>
+<h2 id="mv-title" style="margin: 0; font-size: 20px; font-weight: 700">Kindle Ward</h2>
+</div>
+<button aria-label="Close (Esc)" style="width: 32px; height: 32px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: #1C1E1B; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+</div>
+
+<div style="padding: 0 20px 10px; display: flex; flex-direction: column; gap: 6px">
+<label for="mv-search" style="font-size: 13px; font-weight: 600">Find a destination</label>
+<div style="position: relative">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#575B54" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 12px; top: 11px"><path d="M10.5 4a6.5 6.5 0 1 0 0 13a6.5 6.5 0 1 0 0-13zM20 20l-4.8-4.8"></path></svg>
+<input id="mv-search" type="search" role="combobox" aria-expanded="true" aria-controls="mv-list" aria-activedescendant="mv-briar-hand" value="bri" style="width: 100%; box-sizing: border-box; height: 40px; padding: 0 12px 0 40px; border: 2px solid #1D5C86; border-radius: 8px; background: #FFFFFF; color: #1C1E1B; font: inherit; font-size: 15px; outline: none">
+</div>
+<span style="font-size: 12px; color: #575B54">3 of 9 destinations match</span>
+</div>
+
+<div id="mv-list" role="listbox" aria-label="Destinations" style="padding: 0 12px 8px; display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
+<div role="presentation" style="padding: 8px 8px 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #575B54">{{g.group}}</div>
+<sc-for list="{{g.items}}" as="i" hint-placeholder-count="2">
+<div id="{{i.id}}" role="option" aria-selected="{{i.sel}}" style="height: 44px; display: flex; align-items: center; gap: 12px; padding: 0 12px; border-radius: 8px; background: {{i.bg}}; box-shadow: {{i.ring}}; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="{{i.shape}}" fill="{{i.color}}"></path></svg>
+<span style="flex: 1; font-size: 15px; font-weight: {{i.weight}}"><span>{{i.pre}}</span><mark style="background: #FBE3A6; color: #1C1E1B; border-radius: 2px; padding: 0 1px">{{i.hit}}</mark><span>{{i.post}}</span></span>
+<span style="font-size: 13px; color: #575B54">{{i.meta}}</span>
+<sc-if value="{{i.isSel}}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1D5C86" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"></path></svg></sc-if>
+</div>
+</sc-for>
+</sc-for>
+</div>
+
+<div style="padding: 4px 20px 12px">
+<label style="display: inline-flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer"><input type="checkbox" style="width: 18px; height: 18px; margin: 0; accent-color: #1D5C86">Keep it face up (piles only)</label>
+</div>
+
+<div style="display: flex; align-items: center; gap: 10px; padding: 12px 16px 14px 20px; border-top: 1px solid #DDDCD4; flex-wrap: wrap">
+<span style="flex: 1; min-width: 180px; font-size: 12px; color: #575B54">↑↓ choose · Enter move · Esc cancel</span>
+<button style="height: 36px; padding: 0 14px; border: 1px solid #7E8279; border-radius: 8px; background: #FFFFFF; color: #1C1E1B; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer">Cancel</button>
+<button style="height: 36px; padding: 0 16px; border: 0; border-radius: 8px; background: #1D5C86; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer">Move to Briar’s hand</button>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const SH = { circle: 'M8 2a6 6 0 1 0 .01 0z' };
+    const o = (id, pre, hit, post, meta, sel) => ({
+      id, pre, hit, post, meta, shape: SH.circle, color: '#1F5FA3',
+      sel: sel ? 'true' : 'false', isSel: !!sel,
+      bg: sel ? '#E4EEF5' : 'transparent',
+      ring: sel ? 'inset 0 0 0 2px #1D5C86' : 'none',
+      weight: sel ? 700 : 500
+    });
+    return {
+      card: { name: 'Kindle Ward', cost: 1, type: 'Ward', faction: 'ember', art: 'sun', text: 'Prevent the first 2 damage dealt to a unit each round.' },
+      groups: [
+        { group: 'Hands', items: [o('mv-briar-hand', '', 'Bri', 'ar’s hand', '4 cards', true)] },
+        { group: 'Piles', items: [
+          o('mv-briar-top', '', 'Bri', 'ar deck — top', '26 cards'),
+          o('mv-briar-bottom', '', 'Bri', 'ar deck — bottom', '26 cards')
+        ] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

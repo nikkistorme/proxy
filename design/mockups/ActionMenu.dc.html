@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Proxy — Card action menu</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@500;700&amp;family=Atkinson+Hyperlegible+Next:wght@400;600;700&amp;family=Bitter:wght@500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 100%; height: 900px; position: relative; overflow: hidden; background: #F6F5F1; color: #1C1E1B; font-family: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif">
+<dc-import name="Main" theme="light" hint-size="100%,900px"></dc-import>
+
+<div role="menu" aria-label="Actions for Kindle Ward" style="position: absolute; left: 468px; top: 300px; z-index: 50; width: 248px; padding: 6px; box-sizing: border-box; border-radius: 10px; background: #FFFFFF; border: 1px solid #7E8279; box-shadow: 0 10px 28px rgba(0,0,0,0.22); display: flex; flex-direction: column; gap: 1px">
+<div style="padding: 6px 10px 8px; font-size: 12px; color: #575B54; border-bottom: 1px solid #DDDCD4; margin-bottom: 4px">Kindle Ward · Ash · on table</div>
+<sc-for list="{{menu}}" as="m" hint-placeholder-count="8">
+<sc-if value="{{m.sep}}" hint-placeholder-val="{{ false }}"><div role="separator" style="height: 1px; margin: 4px 6px; background: #DDDCD4"></div></sc-if>
+<sc-if value="{{m.item}}" hint-placeholder-val="{{ true }}">
+<button role="menuitem" aria-haspopup="{{m.popup}}" aria-expanded="{{m.expanded}}" style="height: 36px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 6px; background: {{m.bg}}; color: #1C1E1B; font: inherit; font-size: 14px; font-weight: {{m.weight}}; text-align: left; cursor: pointer">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{m.d}}"></path></svg>
+<span style="flex: 1">{{m.label}}</span>
+<kbd style="font-family: 'Atkinson Hyperlegible Mono', ui-monospace, monospace; font-size: 12px; color: #575B54">{{m.key}}</kbd>
+<sc-if value="{{m.popup}}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></sc-if>
+</button>
+</sc-if>
+</sc-for>
+<div style="margin-top: 4px; padding: 8px 10px 4px; border-top: 1px solid #DDDCD4; font-size: 12px; color: #575B54">↑↓ choose · → open · Esc close</div>
+</div>
+
+<div role="menu" aria-label="Move Kindle Ward to" style="position: absolute; left: 720px; top: 446px; z-index: 51; width: 260px; padding: 6px; box-sizing: border-box; border-radius: 10px; background: #FFFFFF; border: 1px solid #7E8279; box-shadow: 0 10px 28px rgba(0,0,0,0.22); display: flex; flex-direction: column; gap: 1px">
+<sc-for list="{{dest}}" as="g" hint-placeholder-count="2">
+<div style="padding: 8px 10px 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #575B54">{{g.group}}</div>
+<sc-for list="{{g.items}}" as="i" hint-placeholder-count="3">
+<button role="menuitem" style="height: 36px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 6px; background: {{i.bg}}; box-shadow: {{i.ring}}; color: #1C1E1B; font: inherit; font-size: 14px; font-weight: {{i.weight}}; text-align: left; cursor: pointer">
+<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="{{i.shape}}" fill="{{i.color}}"></path></svg>
+<span style="flex: 1">{{i.label}}</span>
+<span style="font-size: 12px; color: #575B54">{{i.meta}}</span>
+</button>
+</sc-for>
+</sc-for>
+<div style="height: 1px; margin: 4px 6px; background: #DDDCD4"></div>
+<button role="menuitem" style="height: 36px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: #1D5C86; font: inherit; font-size: 14px; font-weight: 600; text-align: left; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 1 0 0 13a6.5 6.5 0 1 0 0-13zM20 20l-4.8-4.8"></path></svg>
+<span style="flex: 1">All destinations…</span>
+<kbd style="font-family: 'Atkinson Hyperlegible Mono', ui-monospace, monospace; font-size: 12px; color: #575B54">M</kbd>
+</button>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const it = (label, key, d, extra) => Object.assign({ item: true, label, key, d, bg: 'transparent', weight: 500, popup: undefined, expanded: undefined }, extra || {});
+    const menu = [
+      it('Rotate 90°', 'R', 'M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5'),
+      it('Flip face down', 'F', 'M12 3v18M8 7l-4 5 4 5M16 7l4 5-4 5'),
+      it('Add counter', 'C', 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM12 8v8M8 12h8'),
+      it('Move to', 'M', 'M5 12h14M13 6l6 6-6 6', { bg: '#E4EEF5', weight: 700, popup: 'menu', expanded: 'true' }),
+      it('Enlarge', 'Space', 'M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7'),
+      it('Duplicate', 'Ctrl+D', 'M8 8h12v12H8zM4 16V4h12'),
+      { sep: true },
+      it('Delete', 'Del', 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3')
+    ];
+    const SH = { tri: 'M8 2l6.5 11.5h-13z', circle: 'M8 2a6 6 0 1 0 .01 0z', square: 'M2.5 2.5h11v11h-11z' };
+    const d = (label, shape, color, meta, focus) => ({
+      label, shape, color, meta,
+      bg: focus ? '#E4EEF5' : 'transparent',
+      ring: focus ? 'inset 0 0 0 2px #1D5C86' : 'none',
+      weight: focus ? 700 : 500
+    });
+    const dest = [
+      { group: 'Hands', items: [
+        d('Ash’s hand', SH.tri, '#A8461A', '6 cards'),
+        d('Briar’s hand', SH.circle, '#1F5FA3', '4 cards', true)
+      ] },
+      { group: 'Piles', items: [
+        d('Ash deck — top', SH.tri, '#A8461A', '24'),
+        d('Ash deck — bottom', SH.tri, '#A8461A', '24'),
+        d('Briar deck — top', SH.circle, '#1F5FA3', '26'),
+        d('Environment — top', SH.square, '#6B4C8A', '18')
+      ] }
+    ];
+    return { menu, dest };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+/* Proxy design tokens — from the Design System board.
+   Contrast ratios are measured against --bg (chrome). */
+
+:root {
+  /* Surfaces */
+  --bg: #F6F5F1;          /* chrome: bars, hand tray, log */
+  --panel: #FFFFFF;       /* menus, dialogs, inputs */
+  --table: #D9DBD0;       /* the playmat */
+  --mat-edge: #C5C8BB;    /* faint inset line on the mat */
+  --divider: #DDDCD4;     /* decorative rules only */
+  --control: #7E8279;     /* input/button borders, 3.6:1 */
+
+  /* Text */
+  --ink: #1C1E1B;         /* 15.4:1 */
+  --muted: #575B54;       /* 6.4:1 */
+  --disabled: #9A9D95;
+
+  /* Accent: selection, primary actions */
+  --accent: #1D5C86;      /* 6.6:1 */
+  --accent-ink: #FFFFFF;
+  --accent-soft: #E4EEF5; /* highlighted menu row */
+
+  /* Seats: always paired with shape + name */
+  --seat-a: #A8461A;      /* Ash, triangle, 5.4:1 */
+  --seat-b: #1F5FA3;      /* Briar, circle, 6.0:1 */
+  --seat-env: #6B4C8A;    /* Environment, square, 6.4:1 */
+  --on-seat: #FFFFFF;
+
+  /* Card backs (same in both themes) */
+  --back-a: #7A3412;      /* diagonal stripes */
+  --back-b: #1D4475;      /* dot grid */
+  --back-env: #4A3463;    /* fine horizontal rules */
+
+  /* Focus: works on any art and both mats */
+  --focus-inner: #FFFFFF; /* 2px */
+  --focus-outer: #111111; /* 3px */
+
+  /* Type */
+  --font-ui: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif;
+  --font-num: 'Atkinson Hyperlegible Mono', ui-monospace, monospace; /* counters, dice, counts, kbd */
+
+  /* Spacing */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 32px;
+
+  /* Radius */
+  --radius-control: 6px; --radius-card: 7px; --radius-menu: 10px; --radius-dialog: 14px;
+
+  /* Elevation */
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.20), 0 3px 8px rgba(0,0,0,0.10);
+  --shadow-card-hover: 0 2px 4px rgba(0,0,0,0.20), 0 8px 16px rgba(0,0,0,0.16);
+  --shadow-card-drag: 0 18px 30px rgba(0,0,0,0.30), 0 4px 10px rgba(0,0,0,0.18);
+  --shadow-menu: 0 10px 28px rgba(0,0,0,0.22);
+  --shadow-dialog: 0 20px 48px rgba(0,0,0,0.30);
+  --scrim: rgba(20,22,20,0.45);
+
+  /* Card geometry: 63 × 88 mm, ratio 0.716; 126 × 176 px at 100% zoom */
+  --card-w: 126px;
+  --card-h: 176px;
+}
+
+[data-theme="dark"] {
+  --bg: #141715;
+  --panel: #1C201D;
+  --table: #272C28;
+  --mat-edge: #343A35;
+  --divider: #2C322D;
+  --control: #6A7168;     /* 3.6:1 */
+  --ink: #ECEEE8;         /* 15.4:1 */
+  --muted: #A9B0A6;       /* 8.1:1 */
+  --disabled: #5D635B;
+  --accent: #86BDE6;      /* 9.0:1 */
+  --accent-ink: #0F1B24;
+  --accent-soft: #1E2C36;
+  --seat-a: #F2A06B;      /* 8.6:1 */
+  --seat-b: #8AB8EE;      /* 8.7:1 */
+  --seat-env: #C6A6E3;    /* 8.6:1 */
+  --on-seat: #141715;
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.55), 0 4px 10px rgba(0,0,0,0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion-scale: 1; --motion-tilt: 0deg; }
+}
