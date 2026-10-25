@@ -2,9 +2,17 @@
 
 ## Current state
 
-Phase 1 (card data) is split into four issues. 1a and 1b are merged. 1c (re-import merge) is in review on branch `phase-1c-reimport-merge`.
+Phase 1: 1a, 1b and 1c are merged. PR preview deploys (CI/CD step 3) are in review on branch `ci-pr-previews`, ahead of 1d, the first UI issue.
 
 ## Done
+
+### PR preview deploys (2026-10-25)
+
+- `.github/workflows/preview.yml` (CI/CD step 3) builds each PR with `VITE_BASE=/proxy/pr-preview/pr-N/` and publishes it with `rossjrw/pr-preview-action` to `gh-pages/pr-preview/pr-N/`. It comments the link on the PR and removes the preview when the PR closes.
+- `.github/workflows/deploy.yml` now pushes `dist` to the root of the `gh-pages` branch with `JamesIves/github-pages-deploy-action`, leaving `pr-preview/` alone.
+- Pages serves from the `gh-pages` branch, root folder.
+- `vite.config.ts` reads the base path from `VITE_BASE`, defaulting to `/proxy/`. `public/.nojekyll` turns off Jekyll.
+- CLAUDE.md's Pull requests section now has the preview link, the How to test section, the rule to wait for the owner's check before merging, and the storage rule for previews.
 
 ### Phase 1c: Re-import merge (2026-10-25)
 
@@ -93,3 +101,6 @@ Phase 1 issues, one PR each:
 | 2026-10-25 | A row with a quote error is dropped and reported, not imported | An unclosed quote swallows the rest of the file, so the row's data can't be trusted |
 | 2026-10-25 | Cards removed from the CSV keep their definition, flagged `missing` | Copies already in play keep rendering, and import results can list them. Deleting would leave table cards pointing at nothing. |
 | 2026-10-25 | Name matching on re-import also applies when only one side has a CSV id | Adding ids to an existing sheet shouldn't break the cards already in play. Two different ids never match. |
+| 2026-10-25 | PR previews on GitHub Pages (gh-pages branch, `pr-preview/pr-N/`) | Netlify deploy previews; local testing only | Stays on GitHub with no new accounts or secrets. Production moved to the gh-pages branch so both can share it. |
+| 2026-10-25 | UI PRs wait for the owner to test the preview before merging | Merging on green CI | Lets the owner check every UI change in a real build before production |
+| 2026-10-25 | Saved data is keyed by the app's base path (applies from Phase 6) | Shared keys | Previews share the live site's web address, and so its storage |
