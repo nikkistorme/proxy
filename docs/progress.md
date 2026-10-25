@@ -2,9 +2,19 @@
 
 ## Current state
 
-Phase 1: 1a, 1b, 1c and PR previews are merged. 1d (card art and import results UI) is in review on branch `phase-1d-import-ui` and waiting for the owner to test its preview. Phase 1 is complete once 1d merges.
+Phase 1 (card data) is complete. Self-hosted fonts are in review on branch `fonts-self-hosted`, waiting for the owner to test the preview. Phase 2 (piles) is next, after the owner's go-ahead.
 
 ## Done
+
+### Self-hosted fonts (2026-10-25)
+
+- `@fontsource/atkinson-hyperlegible-next` and `@fontsource/atkinson-hyperlegible-mono` (5.3.0, OFL-1.1) are approved dependencies.
+- `src/fonts.ts` loads only the design's weights: Next 400, 600 and 700, and Mono 500 and 700. It's imported in `src/main.tsx` after the tokens.
+- Vite bundles the fonts, about 94 kB of woff2 in total, and browsers fetch only the weights and character ranges a page uses.
+- The font names match `design/tokens.css`, so the design file is unchanged.
+- New E2E checks in `e2e/smoke.spec.ts`:
+  - **AR-5:** the page requests nothing outside its own origin.
+  - **Fonts:** all five weights load. I confirmed this test fails without the fonts import.
 
 ### Phase 1d: Card art and import results UI (2026-10-25)
 
@@ -91,9 +101,8 @@ Phase 1: 1a, 1b, 1c and PR previews are merged. 1d (card art and import results 
 
 ## Next
 
-- Owner tests the 1d preview, then merges. That completes Phase 1.
-- **Fonts (do before the Phase 2/3 table work):** the design uses Atkinson Hyperlegible Next for the UI and Atkinson Hyperlegible Mono for changing numbers, loaded from Google Fonts. AR-5 doesn't allow that network call, so self-host them, either with `@fontsource` packages (a new dependency, so ask first) or with the font files in `public/`. Until then the app uses the system fallbacks from `tokens.css`, and the mono font only shows on row numbers.
-- Phase 2 (piles), once the owner gives the go-ahead.
+- Owner tests the fonts preview, then merges.
+- Phase 2 (piles), once the owner gives the go-ahead. Read SP-1 to SP-9 in the requirements, and `PileViewer`, `CardStates` and `Main` in `design/mockups/`.
 
 ## Open problems
 
@@ -127,3 +136,4 @@ Phase 1: 1a, 1b, 1c and PR previews are merged. 1d (card art and import results 
 |  2026-10-25 | Interim import panel on the app shell until the Start and setup screen exists | — | Gives every UI PR something to test in the preview  |
 |  2026-10-25 | Fonts deferred to their own issue before the table work | — | Self-hosting is needed under AR-5 and may add a dependency, so it needs its own decision  |
 | 2026-10-25 | Focus returned after a dialog closes uses standard `:focus-visible`: the ring shows after keyboard use, not after a mouse click | Forcing the ring after every close | Matches browser and platform conventions. Keyboard users always see it (WCAG 2.4.7), and E2E checks focus returns either way. Applies to all dialogs. |
+| 2026-10-25 | Self-host fonts with static `@fontsource` packages, five weights only | Font files copied into `public/`; `@fontsource-variable` packages; Google Fonts | Keeps AR-5. Static packages use the same font names as `tokens.css`, so the design file needs no edits. Updates come through npm. |
