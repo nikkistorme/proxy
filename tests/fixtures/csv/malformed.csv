@@ -1,0 +1,5 @@
+name,qty,Name,type
+Goblin,2,Ignored,Creature
+
+Troll,1,Ignored,Creature,extra
+Imp

@@ -1,5 +1,5 @@
 import { defineConfig, mergeConfig } from 'vitest/config';
-import viteConfig from './vite.config';
+import viteConfig from './vite.config.ts';
 
 export default mergeConfig(
   viteConfig,
@@ -13,6 +13,12 @@ export default mergeConfig(
         include: ['src/**/*.{ts,tsx}'],
         exclude: ['src/**/*.test.{ts,tsx}', 'src/test-setup.ts', 'src/main.tsx'],
         reporter: ['text', 'html', 'lcov'],
+        // QA-2: logic folders must stay at 85% lines and branches.
+        thresholds: {
+          'src/model/**': { lines: 85, branches: 85 },
+          'src/actions/**': { lines: 85, branches: 85 },
+          'src/csv/**': { lines: 85, branches: 85 },
+        },
       },
     },
   }),
