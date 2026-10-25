@@ -126,3 +126,4 @@ Phase 1: 1a, 1b, 1c and PR previews are merged. 1d (card art and import results 
 | 2026-10-25 | Missing-art placeholder: solid `--mat-edge` fill, icon and name, no dashed border | `CardStates` uses a dashed outline for empty piles and drop targets, so a dashed placeholder would read as an empty slot |
 | 2026-10-25 | Interim import panel on the app shell until the Start and setup screen exists | Gives every UI PR something to test in the preview |
 | 2026-10-25 | Fonts deferred to their own issue before the table work | Self-hosting is needed under AR-5 and may add a dependency, so it needs its own decision |
+| 2026-10-25 | Focus returned after a dialog closes uses standard `:focus-visible`: the ring shows after keyboard use, not after a mouse click | Forcing the ring after every close | Matches browser and platform conventions. Keyboard users always see it (WCAG 2.4.7), and E2E checks focus returns either way. Applies to all dialogs. |
