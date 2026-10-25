@@ -39,6 +39,12 @@ jobs:
     name: E2E + axe (${{ matrix.browser }})
     needs: check
     runs-on: ubuntu-latest
+    # The official image ships the browsers and their system deps, which
+    # saves ~12 minutes of apt installs for WebKit. Keep the tag in step
+    # with the exact @playwright/test version in package.json.
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --user 1001
     strategy:
       fail-fast: false
       matrix:
@@ -50,7 +56,6 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps ${{ matrix.browser }}
       - run: npm run test:e2e -- --project=${{ matrix.browser }}
       # QA-6: traces and screenshots from failed tests.
       - name: Upload Playwright report
