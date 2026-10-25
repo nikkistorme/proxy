@@ -107,23 +107,23 @@ Phase 1: 1a, 1b, 1c and PR previews are merged. 1d (card art and import results 
 
 ## Decisions
 
-| Date | Decision | Why |
-| --- | --- | --- |
-| 2026-10-25 | Phase 0 covers QA-6 and CI/CD steps 1, 2 and 5, not the "QA-2, CI/CD 1–4" in the requirements phase table | Coverage thresholds wait until Phase 1, when there's code to measure. Lighthouse CI is in Phase 7. PR previews (step 3) are still undecided. Branch protection (step 4) is an owner step. |
-| 2026-10-25 | ESLint 9 and TypeScript 6 rather than the latest majors | `eslint-plugin-jsx-a11y` and `typescript-eslint` don't support ESLint 10 or TypeScript 7 yet. Revisit when they do. |
-| 2026-10-25 | E2E runs against the production build (`vite preview`) | Matches the CI/CD requirement that E2E runs against the built app |
-| 2026-10-25 | One CI job per browser for E2E | Runs in parallel and keeps each check under the 10-minute budget. Each browser shows as its own required check. |
-| 2026-10-25 | E2E jobs run in the `mcr.microsoft.com/playwright` container, and `@playwright/test` is pinned to an exact version | `playwright install --with-deps webkit` took 12 minutes on a plain runner. The image tag must match the pinned version, so bump both together. |
-| 2026-10-25 | Phase 1 split into 1a parsing, 1b model and validation, 1c re-import merge, 1d UI | Each piece fits one session and one small PR (BP-2) |
-| 2026-10-25 | Papa Parse runs without header mode; the header is mapped in our own code | Keeps row numbers equal to spreadsheet rows when quoted cells span lines (CD-4 needs accurate rows) |
-| 2026-10-25 | A row with a quote error is dropped and reported, not imported | An unclosed quote swallows the rest of the file, so the row's data can't be trusted |
-| 2026-10-25 | Cards removed from the CSV keep their definition, flagged `missing` | Copies already in play keep rendering, and import results can list them. Deleting would leave table cards pointing at nothing. |
-| 2026-10-25 | Name matching on re-import also applies when only one side has a CSV id | Adding ids to an existing sheet shouldn't break the cards already in play. Two different ids never match. |
+| Date | Decision | Rejected | Why |
+| --- | --- | --- | --- |
+|  2026-10-25 | Phase 0 covers QA-6 and CI/CD steps 1, 2 and 5, not the "QA-2, CI/CD 1–4" in the requirements phase table | — | Coverage thresholds wait until Phase 1, when there's code to measure. Lighthouse CI is in Phase 7. PR previews (step 3) are still undecided. Branch protection (step 4) is an owner step.  |
+|  2026-10-25 | ESLint 9 and TypeScript 6 rather than the latest majors | — | `eslint-plugin-jsx-a11y` and `typescript-eslint` don't support ESLint 10 or TypeScript 7 yet. Revisit when they do.  |
+|  2026-10-25 | E2E runs against the production build (`vite preview`) | — | Matches the CI/CD requirement that E2E runs against the built app  |
+|  2026-10-25 | One CI job per browser for E2E | — | Runs in parallel and keeps each check under the 10-minute budget. Each browser shows as its own required check.  |
+|  2026-10-25 | E2E jobs run in the `mcr.microsoft.com/playwright` container, and `@playwright/test` is pinned to an exact version | — | `playwright install --with-deps webkit` took 12 minutes on a plain runner. The image tag must match the pinned version, so bump both together.  |
+|  2026-10-25 | Phase 1 split into 1a parsing, 1b model and validation, 1c re-import merge, 1d UI | — | Each piece fits one session and one small PR (BP-2)  |
+|  2026-10-25 | Papa Parse runs without header mode; the header is mapped in our own code | — | Keeps row numbers equal to spreadsheet rows when quoted cells span lines (CD-4 needs accurate rows)  |
+|  2026-10-25 | A row with a quote error is dropped and reported, not imported | — | An unclosed quote swallows the rest of the file, so the row's data can't be trusted  |
+|  2026-10-25 | Cards removed from the CSV keep their definition, flagged `missing` | — | Copies already in play keep rendering, and import results can list them. Deleting would leave table cards pointing at nothing.  |
+|  2026-10-25 | Name matching on re-import also applies when only one side has a CSV id | — | Adding ids to an existing sheet shouldn't break the cards already in play. Two different ids never match.  |
 | 2026-10-25 | PR previews on GitHub Pages (gh-pages branch, `pr-preview/pr-N/`) | Netlify deploy previews; local testing only | Stays on GitHub with no new accounts or secrets. Production moved to the gh-pages branch so both can share it. |
 | 2026-10-25 | UI PRs wait for the owner to test the preview before merging | Merging on green CI | Lets the owner check every UI change in a real build before production |
 | 2026-10-25 | Saved data is keyed by the app's base path (applies from Phase 6) | Shared keys | Previews share the live site's web address, and so its storage |
-| 2026-10-25 | Import `design/tokens.css` directly instead of copying it into `src/` | Keeps one source of truth, so a fresh design export updates the app |
-| 2026-10-25 | Missing-art placeholder: solid `--mat-edge` fill, icon and name, no dashed border | `CardStates` uses a dashed outline for empty piles and drop targets, so a dashed placeholder would read as an empty slot |
-| 2026-10-25 | Interim import panel on the app shell until the Start and setup screen exists | Gives every UI PR something to test in the preview |
-| 2026-10-25 | Fonts deferred to their own issue before the table work | Self-hosting is needed under AR-5 and may add a dependency, so it needs its own decision |
+|  2026-10-25 | Import `design/tokens.css` directly instead of copying it into `src/` | — | Keeps one source of truth, so a fresh design export updates the app  |
+|  2026-10-25 | Missing-art placeholder: solid `--mat-edge` fill, icon and name, no dashed border | — | `CardStates` uses a dashed outline for empty piles and drop targets, so a dashed placeholder would read as an empty slot  |
+|  2026-10-25 | Interim import panel on the app shell until the Start and setup screen exists | — | Gives every UI PR something to test in the preview  |
+|  2026-10-25 | Fonts deferred to their own issue before the table work | — | Self-hosting is needed under AR-5 and may add a dependency, so it needs its own decision  |
 | 2026-10-25 | Focus returned after a dialog closes uses standard `:focus-visible`: the ring shows after keyboard use, not after a mouse click | Forcing the ring after every close | Matches browser and platform conventions. Keyboard users always see it (WCAG 2.4.7), and E2E checks focus returns either way. Applies to all dialogs. |
