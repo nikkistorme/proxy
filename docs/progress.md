@@ -2,9 +2,27 @@
 
 ## Current state
 
-Phase 0 is complete. Phase 1 (card data) is split into four issues, 1a to 1d. 1a (CSV parsing) is in review on branch `phase-1a-csv-parsing`.
+Phase 1 (card data) is split into four issues. 1a is merged. 1b (card model and validation) is in review on branch `phase-1b-card-model`.
 
 ## Done
+
+### Phase 1b: Card model and validation (2026-10-25)
+
+- `src/model/card.ts` has two types:
+  - `CardFace`: `name`, `image?`, `layout?`, `type?`, and `fields` for every other column.
+  - `ImportedCard`: `row`, `sourceId?` (the CSV `id`), `qty`, `front`, `back?`.
+  - Imported cards have no app id yet. 1c assigns ids when an import is merged into a pile.
+- `src/csv/importCards.ts`: `importCards(text)` returns `{ cards, problems }` (CD-3, CD-4).
+  - Fronts are read first and backs attached after, so a back row can come before its front.
+  - Problems from parsing and from validation are merged into one list, sorted by row.
+  - The named columns are trimmed; every other column keeps its exact text.
+- Validation rules, as the owner confirmed:
+  - A missing name skips the row.
+  - A bad `qty` imports as 1 and is reported. `qty` 0 is allowed.
+  - A duplicate `id` is reported, and the later row imports without it.
+  - A shared name is reported when either card lacks an `id`, and both import.
+  - These back faces are dropped and reported: one pointing at an unknown id, one pointing at another back face, and a second back for the same front.
+- Fixtures: `double-faced.csv`, `import-errors.csv` (one row per problem) and `sixty-rows-two-dfc.csv`. The acceptance test confirms 60 rows give 58 cards, two of them with a back face.
 
 ### Phase 1a: CSV parsing (2026-10-25)
 
@@ -40,11 +58,6 @@ Phase 0 is complete. Phase 1 (card data) is split into four issues, 1a to 1d. 1a
 
 Phase 1 issues, one PR each:
 
-- **1b. Card model and validation (CD-3, CD-4).** Card definitions, double-faced pairing, validation problems, and the acceptance test where a 60-row CSV with two double-faced pairs gives 58 cards. Defaults proposed to the owner, not yet confirmed:
-  - an unreadable `qty` imports with qty 1 and is reported
-  - `qty` of 0 is allowed
-  - a duplicate `name` without an `id` is reported and both rows import
-  - these are reported as problems: a front with two backs, a back pointing at another back, and a duplicate `id`
 - **1c. Re-import merge (CD-5, model level).** Match by `id`, else `name`, and keep definition ids stable. The on-table part is tested in Phase 3.
 - **1d. UI (CD-6, CD-4 UI).** `CardArt` with a name placeholder, and the import-problems list. Follow `design/` (Import results isn't designed yet, so build it from the tokens and the `MoveDialog` pattern).
 

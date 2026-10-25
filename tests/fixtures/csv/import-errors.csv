@@ -1,0 +1,11 @@
+name,id,back_of,qty,rules
+,,,1,Row 2: missing name
+Goblin,gob,,two,Row 3: bad qty
+Hobgoblin,gob,,1,Row 4: duplicate id
+Ghost Side,,nobody,,Row 5: back_of unknown id
+Troll,troll,,0,Row 6: qty 0 is fine
+Troll Back,trollback,troll,,Row 7: valid back
+Troll Second Back,,troll,,Row 8: second back
+Back Of Back,,trollback,,Row 9: back_of a back face
+goblin ,,,1,Row 10: duplicate name without id
+,,troll,,Row 11: back with missing name

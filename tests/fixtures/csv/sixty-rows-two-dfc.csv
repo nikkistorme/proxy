@@ -1,0 +1,63 @@
+name,id,back_of,qty,type,image,rules
+Card 01,,,1,Spell,https://example.test/art/01.png,Rules text for card 1.
+Card 02,,,1,Location,https://example.test/art/02.png,Rules text for card 2.
+Card 03,,,1,Relic,https://example.test/art/03.png,Rules text for card 3.
+Card 04,,,1,Creature,https://example.test/art/04.png,Rules text for card 4.
+Card 05,,,1,Spell,,Rules text for card 5.
+Card 06,,,1,Location,https://example.test/art/06.png,Rules text for card 6.
+Card 07,,,1,Relic,https://example.test/art/07.png,Rules text for card 7.
+Card 08,,,1,Creature,https://example.test/art/08.png,Rules text for card 8.
+Card 09,,,1,Spell,https://example.test/art/09.png,Rules text for card 9.
+Card 10,,,1,Location,,Rules text for card 10.
+Nightfall Wolf,,daywolf,,Creature,,Transformed side.
+Daybreak Wolf,daywolf,,1,Creature,,Front side.
+Card 11,,,1,Relic,https://example.test/art/11.png,Rules text for card 11.
+Card 12,,,1,Creature,https://example.test/art/12.png,Rules text for card 12.
+Card 13,,,1,Spell,https://example.test/art/13.png,Rules text for card 13.
+Card 14,,,1,Location,https://example.test/art/14.png,Rules text for card 14.
+Card 15,,,1,Relic,,Rules text for card 15.
+Card 16,,,1,Creature,https://example.test/art/16.png,Rules text for card 16.
+Card 17,,,1,Spell,https://example.test/art/17.png,Rules text for card 17.
+Card 18,,,1,Location,https://example.test/art/18.png,Rules text for card 18.
+Card 19,,,1,Relic,https://example.test/art/19.png,Rules text for card 19.
+Card 20,,,1,Creature,,Rules text for card 20.
+Card 21,,,1,Spell,https://example.test/art/21.png,Rules text for card 21.
+Card 22,,,1,Location,https://example.test/art/22.png,Rules text for card 22.
+Card 23,,,1,Relic,https://example.test/art/23.png,Rules text for card 23.
+Card 24,,,1,Creature,https://example.test/art/24.png,Rules text for card 24.
+Card 25,,,1,Spell,,Rules text for card 25.
+Card 26,,,1,Location,https://example.test/art/26.png,Rules text for card 26.
+Card 27,,,1,Relic,https://example.test/art/27.png,Rules text for card 27.
+Card 28,,,1,Creature,https://example.test/art/28.png,Rules text for card 28.
+Sealed Gate,gate,,1,Location,,"Closed.
+Nothing passes."
+Open Gate,,gate,,Location,,"Open.
+Anything passes."
+Card 29,,,1,Spell,https://example.test/art/29.png,Rules text for card 29.
+Card 30,,,1,Location,,Rules text for card 30.
+Card 31,,,1,Relic,https://example.test/art/31.png,Rules text for card 31.
+Card 32,,,1,Creature,https://example.test/art/32.png,Rules text for card 32.
+Card 33,,,1,Spell,https://example.test/art/33.png,Rules text for card 33.
+Card 34,,,1,Location,https://example.test/art/34.png,Rules text for card 34.
+Card 35,,,1,Relic,,Rules text for card 35.
+Card 36,,,1,Creature,https://example.test/art/36.png,Rules text for card 36.
+Card 37,,,1,Spell,https://example.test/art/37.png,Rules text for card 37.
+Card 38,,,1,Location,https://example.test/art/38.png,Rules text for card 38.
+Card 39,,,1,Relic,https://example.test/art/39.png,Rules text for card 39.
+Card 40,,,1,Creature,,Rules text for card 40.
+Card 41,,,1,Spell,https://example.test/art/41.png,Rules text for card 41.
+Card 42,,,1,Location,https://example.test/art/42.png,Rules text for card 42.
+Card 43,,,1,Relic,https://example.test/art/43.png,Rules text for card 43.
+Card 44,,,1,Creature,https://example.test/art/44.png,Rules text for card 44.
+Card 45,,,1,Spell,,Rules text for card 45.
+Card 46,,,1,Location,https://example.test/art/46.png,Rules text for card 46.
+Card 47,,,1,Relic,https://example.test/art/47.png,Rules text for card 47.
+Card 48,,,1,Creature,https://example.test/art/48.png,Rules text for card 48.
+Card 49,,,1,Spell,https://example.test/art/49.png,Rules text for card 49.
+Card 50,,,1,Location,,Rules text for card 50.
+Card 51,,,1,Relic,https://example.test/art/51.png,Rules text for card 51.
+Card 52,,,1,Creature,https://example.test/art/52.png,Rules text for card 52.
+Card 53,,,1,Spell,https://example.test/art/53.png,Rules text for card 53.
+Card 54,,,1,Location,https://example.test/art/54.png,Rules text for card 54.
+Card 55,,,1,Relic,,Rules text for card 55.
+Card 56,,,1,Creature,https://example.test/art/56.png,Rules text for card 56.
