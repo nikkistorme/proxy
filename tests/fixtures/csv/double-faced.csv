@@ -1,0 +1,6 @@
+name,id,back_of,qty,type,rules
+Moonrise Hunter,,hunter,,Creature,Night side.
+Daylight Hunter,hunter,,2,Creature,Day side.
+Ember Shard,,,1,Relic,No back.
+Locked Vault,vault,,1,Location,Locked.
+Open Vault,,vault,,Location,Open.
