@@ -27,3 +27,16 @@ export interface ImportedCard {
   /** Second face of a double-faced card (CD-3). */
   back?: CardFace;
 }
+
+/** A card in a pile's deck. Table cards reference it by `id` (AR-4). */
+export interface CardDefinition extends ImportedCard {
+  /** App id, kept stable across re-imports (CD-5). */
+  id: string;
+  /** Set when the card is no longer in the pile's CSV. Copies in play still render. */
+  missing?: true;
+}
+
+/** Cards with the same name key are treated as the same card when there's no id. */
+export function cardNameKey(name: string): string {
+  return name.trim().toLowerCase();
+}

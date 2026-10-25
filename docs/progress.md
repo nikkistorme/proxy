@@ -2,9 +2,20 @@
 
 ## Current state
 
-Phase 1 (card data) is split into four issues. 1a is merged. 1b (card model and validation) is in review on branch `phase-1b-card-model`.
+Phase 1 (card data) is split into four issues. 1a and 1b are merged. 1c (re-import merge) is in review on branch `phase-1c-reimport-merge`.
 
 ## Done
+
+### Phase 1c: Re-import merge (2026-10-25)
+
+- `CardDefinition` (`src/model/card.ts`) is an `ImportedCard` plus an app `id` that stays stable across re-imports, and an optional `missing: true`.
+- `cardNameKey` (trim and lower-case) lives in `src/model/card.ts`. 1b's duplicate-name warning and 1c's matching both use it.
+- `mergeImport(existing, imported, newId)` in `src/model/mergeImport.ts` returns `{ definitions, added, updated, missing }` (CD-5):
+  - Matching by CSV id comes first. Then name matching, in file order, unless the two cards have different CSV ids.
+  - Matched definitions keep their id and take the new data. Unmatched cards get `newId()`.
+  - Definitions no longer in the CSV are kept, flagged `missing`, and placed after the imported cards. The flag clears if the card comes back.
+  - `newId` is passed in so tests can use predictable ids. The app should pass `crypto.randomUUID`.
+- The model-level acceptance test checks that changed rules text updates the definition, and that a table card referring to it keeps its position, rotation, counters and face.
 
 ### Phase 1b: Card model and validation (2026-10-25)
 
@@ -58,11 +69,13 @@ Phase 1 (card data) is split into four issues. 1a is merged. 1b (card model and 
 
 Phase 1 issues, one PR each:
 
-- **1c. Re-import merge (CD-5, model level).** Match by `id`, else `name`, and keep definition ids stable. The on-table part is tested in Phase 3.
 - **1d. UI (CD-6, CD-4 UI).** `CardArt` with a name placeholder, and the import-problems list. Follow `design/` (Import results isn't designed yet, so build it from the tokens and the `MoveDialog` pattern).
 
 ## Open problems
 
+- For Phase 2 and 3: a changed `qty` only updates the definition. Piles still need a rule for adding or removing copies when `qty` changes on re-import.
+- For Phase 3: a table card showing its back face whose definition loses its back on re-import should fall back to the front.
+- For Phase 3: decide how cards on the table whose definition is `missing` should look. The import results in 1d can list them.
 - The app's PR monitor still shows an error cached from the old npm `gh`. CI was checked with the real `gh` instead.
 - Local Node is 22.12.0. Some ESLint deps want ≥ 22.13 (this is an engine warning only). CI uses the latest Node 22.
 
@@ -78,3 +91,5 @@ Phase 1 issues, one PR each:
 | 2026-10-25 | Phase 1 split into 1a parsing, 1b model and validation, 1c re-import merge, 1d UI | Each piece fits one session and one small PR (BP-2) |
 | 2026-10-25 | Papa Parse runs without header mode; the header is mapped in our own code | Keeps row numbers equal to spreadsheet rows when quoted cells span lines (CD-4 needs accurate rows) |
 | 2026-10-25 | A row with a quote error is dropped and reported, not imported | An unclosed quote swallows the rest of the file, so the row's data can't be trusted |
+| 2026-10-25 | Cards removed from the CSV keep their definition, flagged `missing` | Copies already in play keep rendering, and import results can list them. Deleting would leave table cards pointing at nothing. |
+| 2026-10-25 | Name matching on re-import also applies when only one side has a CSV id | Adding ids to an existing sheet shouldn't break the cards already in play. Two different ids never match. |

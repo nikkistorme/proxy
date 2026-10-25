@@ -1,4 +1,4 @@
-import type { CardFace, ImportedCard } from '../model/card';
+import { cardNameKey, type CardFace, type ImportedCard } from '../model/card';
 import { parseCsv } from './parseCsv';
 import type { ImportProblem, RawRow } from './types';
 
@@ -16,10 +16,6 @@ function known(row: RawRow, column: string): string {
 
 function optional(value: string): string | undefined {
   return value === '' ? undefined : value;
-}
-
-function nameKey(name: string): string {
-  return name.trim().toLowerCase();
 }
 
 function toFace(row: RawRow, name: string): CardFace {
@@ -93,9 +89,9 @@ export function importCards(text: string): ImportResult {
       cardById.set(id, card);
     }
 
-    const first = firstRowByName.get(nameKey(name));
+    const first = firstRowByName.get(cardNameKey(name));
     if (first === undefined) {
-      firstRowByName.set(nameKey(name), card);
+      firstRowByName.set(cardNameKey(name), card);
     } else if (first.sourceId === undefined || card.sourceId === undefined) {
       problems.push({
         row: row.row,
