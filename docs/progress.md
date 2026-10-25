@@ -2,7 +2,7 @@
 
 ## Current state
 
-Phase 0 (scaffold and CI) is in review on branch `phase-0-scaffold`. No app features yet.
+Phase 0 (scaffold and CI) is complete and merged (PR #1). No app features yet. Phase 1 has not started.
 
 ## Done
 
@@ -18,16 +18,12 @@ Phase 0 (scaffold and CI) is in review on branch `phase-0-scaffold`. No app feat
 - `.github/workflows/deploy.yml`: on push to `main`, builds and deploys `dist` to GitHub Pages.
 - Node version is pinned in `.nvmrc` (22).
 - CI verified on PR #1. All checks were green; the whole pipeline takes about 70 seconds. A deliberately broken E2E assertion turned all three browser checks red and uploaded `trace.zip` and `test-failed-1.png` for each. The break was then reverted.
+- After the merge, the site deployed and loads at https://nikkistorme.github.io/proxy/. The `main` heading renders and there are no console errors.
+- Owner steps done: Pages source is GitHub Actions. A ruleset on `main` requires a PR, the four CI checks and an up-to-date branch, and blocks deletion and force pushes.
 
 ## Next
 
-- Merge the Phase 0 PR. Then the owner sets Settings → Pages → Source to **GitHub Actions** and adds branch protection on `main` requiring the CI checks:
-  - `Typecheck, lint, unit tests, build`
-  - `E2E + axe (chromium)`
-  - `E2E + axe (firefox)`
-  - `E2E + axe (webkit)`
-- Confirm the site loads at https://nikkistorme.github.io/proxy/.
-- Phase 1 (card data) once the owner gives the go-ahead. Add the QA-2 coverage thresholds then.
+- Phase 1 (card data), once the owner gives the go-ahead. Add the QA-2 coverage thresholds then.
 
 ## Open problems
 
