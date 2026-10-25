@@ -40,6 +40,17 @@ This project runs on the owner's personal Claude usage. Be economical.
 - Use semantic elements and accessible names; manage focus after moves and in dialogs; visible focus that is never hidden behind cards.
 - Respect `prefers-reduced-motion`. Targets at least 24 × 24 CSS px.
 
+## Design
+
+UI follows the Claude Design export in `design/`. Before building or changing any UI, read `design/HANDOFF.md`, then only the parts the issue needs:
+
+- `design/tokens.css` for every colour, type, spacing, radius and shadow value. Don't hard-code values the tokens cover.
+- `design/brief.md` for screen scope and interaction rules.
+- `design/mockups/*.dc.html` for exact sizes, copy and structure. The HANDOFF table says which board covers what. These are reference designs, so don't copy their templating.
+- Screens not designed yet (import results, setup, layout editor and others) are built from the same tokens and patterns: dialogs follow `MoveDialog`, side sheets follow `PileViewer`, and menus follow `ActionMenu`.
+
+Non-UI issues (parsing, model, actions) don't need the design files.
+
 ## Testing
 
 - Name tests after the requirement they cover: `describe('SP-6 shuffle', …)`.

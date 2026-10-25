@@ -2,9 +2,24 @@
 
 ## Current state
 
-Phase 0 (scaffold and CI) is complete and merged (PR #1). No app features yet. Phase 1 has not started.
+Phase 0 is complete. Phase 1 (card data) is split into four issues, 1a to 1d. 1a (CSV parsing) is in review on branch `phase-1a-csv-parsing`.
 
 ## Done
+
+### Phase 1a: CSV parsing (2026-10-25)
+
+- `src/csv/parseCsv.ts`: `parseCsv(text)` returns `{ columns, rows, problems }` (CD-1, CD-2). Built on Papa Parse 5.
+  - Row numbers match the spreadsheet: the header is row 1, and multi-line quoted cells don't shift later rows.
+  - Column names are trimmed and lower-cased. Blank header cells are ignored. A repeated column is reported, and the first one is kept.
+  - It strips a byte-order mark and skips blank lines.
+  - Missing trailing values become `''`. Extra values are reported and dropped.
+  - A row with a quote error (for example, an unclosed quote) is reported and dropped.
+  - An empty file, or one with no header, is reported.
+  - Cell values aren't trimmed here; 1b decides per column.
+- `ImportProblem` is `{ row, column?, message }` (`src/csv/types.ts`). 1b adds the validation problems to this list.
+- Fixtures are in `tests/fixtures/csv/`. Tests import them with Vite's `?raw`, so `src/` needs no Node types.
+- QA-2 thresholds (85% lines and branches) for `src/model/**`, `src/actions/**` and `src/csv/**` are in `vitest.config.ts`. I confirmed they fail the run when not met.
+- CLAUDE.md now has a Design section that points UI work at `design/`.
 
 ### Phase 0: Project scaffold and CI pipeline (2026-10-25)
 
@@ -23,7 +38,15 @@ Phase 0 (scaffold and CI) is complete and merged (PR #1). No app features yet. P
 
 ## Next
 
-- Phase 1 (card data), once the owner gives the go-ahead. Add the QA-2 coverage thresholds then.
+Phase 1 issues, one PR each:
+
+- **1b. Card model and validation (CD-3, CD-4).** Card definitions, double-faced pairing, validation problems, and the acceptance test where a 60-row CSV with two double-faced pairs gives 58 cards. Defaults proposed to the owner, not yet confirmed:
+  - an unreadable `qty` imports with qty 1 and is reported
+  - `qty` of 0 is allowed
+  - a duplicate `name` without an `id` is reported and both rows import
+  - these are reported as problems: a front with two backs, a back pointing at another back, and a duplicate `id`
+- **1c. Re-import merge (CD-5, model level).** Match by `id`, else `name`, and keep definition ids stable. The on-table part is tested in Phase 3.
+- **1d. UI (CD-6, CD-4 UI).** `CardArt` with a name placeholder, and the import-problems list. Follow `design/` (Import results isn't designed yet, so build it from the tokens and the `MoveDialog` pattern).
 
 ## Open problems
 
@@ -39,3 +62,6 @@ Phase 0 (scaffold and CI) is complete and merged (PR #1). No app features yet. P
 | 2026-10-25 | E2E runs against the production build (`vite preview`) | Matches the CI/CD requirement that E2E runs against the built app |
 | 2026-10-25 | One CI job per browser for E2E | Runs in parallel and keeps each check under the 10-minute budget. Each browser shows as its own required check. |
 | 2026-10-25 | E2E jobs run in the `mcr.microsoft.com/playwright` container, and `@playwright/test` is pinned to an exact version | `playwright install --with-deps webkit` took 12 minutes on a plain runner. The image tag must match the pinned version, so bump both together. |
+| 2026-10-25 | Phase 1 split into 1a parsing, 1b model and validation, 1c re-import merge, 1d UI | Each piece fits one session and one small PR (BP-2) |
+| 2026-10-25 | Papa Parse runs without header mode; the header is mapped in our own code | Keeps row numbers equal to spreadsheet rows when quoted cells span lines (CD-4 needs accurate rows) |
+| 2026-10-25 | A row with a quote error is dropped and reported, not imported | An unclosed quote swallows the rest of the file, so the row's data can't be trusted |
