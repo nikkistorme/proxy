@@ -1,0 +1,31 @@
+/* Icon buttons from the Main board's toolbar. */
+.table-tools {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.table-tools__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.table-tools__button:hover {
+  background: var(--accent-soft);
+}
+
+.table-tools__button[aria-disabled='true'] {
+  background: transparent;
+  color: var(--disabled);
+  cursor: default;
+}

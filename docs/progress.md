@@ -2,9 +2,24 @@
 
 ## Current state
 
-Phase 2 (piles) is complete: 2a to 2h are merged. Next is Phase 3 (Table: TT-1 to TT-15, A11Y-1 to A11Y-6), which starts with a plan and a split once the owner gives the go-ahead.
+Phase 3 (Table) is under way. It's split into 3a to 3l, issues #23 to #34 under #20. 3a (undo and redo) is merged, and 3b (placed table cards and table focus, #24) is next.
 
 ## Done
+
+### Phase 3a: Undo and redo (2026-10-26)
+
+- Phase 3 is split into 12 issues, #23 to #34 (3a to 3l), linked as sub-issues of #20.
+- **History in the store** (TT-15): `dispatch` saves the game from before each action, with that action's announcement, in `past`. Undo moves it to `future`, and any new action clears `future`.
+  - Actions never change a game in place, so the saved games share every part that didn't change. Undo after a shuffle restores the exact order, and undoing a load also restores definitions.
+  - An action that returns the same state, like drawing from an empty pile, adds no step and keeps redo.
+  - History is capped at `HISTORY_LIMIT` (200 steps). The oldest step is dropped past that.
+  - Undo and redo announce "Undone: <the action's announcement>" and "Redone: …", or "Nothing to undo." and "Nothing to redo." (A11Y-5).
+- **`TableTools`** is the header's `<nav aria-label="Table tools">` from the Main board, with only Undo and Redo so far. They're 32px icon buttons labelled "Undo (Ctrl+Z)" and "Redo (Ctrl+Shift+Z)", with ", nothing to undo" or ", nothing to redo" added when there isn't one.
+  - They use `aria-disabled`, not `disabled`, so focus stays put after the last undo and a press says why.
+- **Keys:** Ctrl/⌘+Z undoes. Ctrl/⌘+Shift+Z and Ctrl+Y redo. They're ignored in fields, which keep their own undo, and while a dialog or menu is open, whose contents would go stale.
+- The toolbar adds two Tab stops before the piles, so the Tab counts in `e2e/import.spec.ts` and `e2e/manage-piles.spec.ts` went up by two.
+- Tests: 235 unit (`TT-15 undo and redo` in the store and `TT-15 undo and redo controls`) and 30 E2E, including `e2e/undo.spec.ts` (mouse with axe, keyboard only, and phone size at 375 × 667 and 320 wide).
+- Checked by hand from screenshots at 1280 and 320 wide.
 
 ### Issue templates (2026-10-26)
 
@@ -290,15 +305,16 @@ Phase 2 (piles) is complete: 2a to 2h are merged. Next is Phase 3 (Table: TT-1 t
 
 ## Next
 
-- **Phase 3 (Table)**, after the owner's go-ahead. Start by proposing a split into one-session issues. Open problems already noted for Phase 3:
-  - the face state needs three values (front, back, face down)
-  - cards whose definition is `missing`
-  - choosing the dark theme
-  - a back face lost on re-import
-- From Phase 3 on, the table's card menu can reuse `MoveDialog`.
+- **3b: Placed table cards and table focus (#24)**, after the owner's go-ahead. Then 3c to 3l in order, #25 to #34. Open problems that belong to later issues:
+  - 3b: the face state needs three values (front, back, face down), and cards whose definition is `missing`
+  - 3c: choosing the dark theme
+  - 3d: a back face lost on re-import, and whether to drop the delete-pile confirmation in favour of an Undo toast
+- From 3d on, the table's card menu can reuse `MoveDialog`.
 
 ## Open problems
 
+- **Saving undo history (PS-2, Phase 6):** each step is a whole game, so plain JSON would repeat the card definitions in every step. Phase 6 needs a compact form, such as saving definitions once or saving the differences between steps.
+- E2E: under the full suite's load, `e2e/move-dialog.spec.ts` (keyboard only) and `e2e/manage-piles.spec.ts` (keyboard only) each failed once in 3a and passed on rerun and alone. Watch for flakiness.
 - The search-match highlight uses the board's `#FBE3A6` with ink text, which isn't a token. Add a highlight token if the design gets one.
 - axe's label-in-name check joins text from separate blocks with no spaces, so a button containing a whole card face fails it. The viewer avoids that with the overlay pattern. Keep it in mind for table cards in Phase 3.
 - In this cloud environment the pinned `@playwright/test` wants a newer Chromium than the one installed. Local E2E ran with a scratch config pointing `launchOptions.executablePath` at `/opt/pw-browsers/chromium`. That config isn't committed, and CI is unaffected.
@@ -368,3 +384,9 @@ Phase 2 (piles) is complete: 2a to 2h are merged. Next is Phase 3 (Table: TT-1 t
 | 2026-10-26 | Peek reorders inside the dialog and puts the cards back with one `reorderTop` when it closes | One reorder action for every Up or Down | One action and one announcement for the whole rearrangement. Moves still apply at once. |
 | 2026-10-26 | Peek's Move to… leaves out the peeked pile's top | Offering every destination | It duplicates reordering, and would put the card back among the cards being reordered |
 | 2026-10-26 | Menus fit the viewport: below, else above, else capped to the roomier side and scrolling with inner shadows | Always opening below | The owner's MacBook showed the pile menu running past the bottom of the screen. The owner asked for scrolling with an inner shadow when a menu can't fit. |
+| 2026-10-26 | Phase 3 split into 3a to 3l (#23 to #34), with undo first | One Phase 3 issue | Each fits one session and one PR (BP-2). Undo first means every later action gets it for free. |
+| 2026-10-26 | Undo history saves the whole game before each action | Saving how to reverse each action | Actions are already pure, so nothing changes in them, and undo after a shuffle is exact by construction |
+| 2026-10-26 | Actions that change nothing add no undo step | A step for every dispatch | Undo should always change something you can see |
+| 2026-10-26 | Undo and Redo stay focusable with `aria-disabled` and announce why when there's nothing to do | `disabled` buttons, as on the board | Focus doesn't drop after the last undo. Matches "Draw stays enabled and announces why". |
+| 2026-10-26 | Undo shortcuts do nothing in fields or while a dialog or menu is open | Undoing anywhere | Fields keep their own undo, and open dialogs hold card lists an undo would make stale |
+| 2026-10-26 | Keep the delete-pile confirmation for now | Dropping it now that undo exists | The owner chose to revisit it with Undo toasts in 3d |

@@ -46,7 +46,8 @@ test.describe('SP-1 and CD-4 load a deck into a pile', () => {
   });
 
   test('keyboard only: open the pile menu, load, and close with Escape', async ({ page }) => {
-    await page.keyboard.press('Tab');
+    // Undo and Redo, then the first pile.
+    for (let i = 0; i < 3; i++) await page.keyboard.press('Tab');
     await expect(mainPile(page)).toBeFocused();
     await page.keyboard.press('Enter');
 
