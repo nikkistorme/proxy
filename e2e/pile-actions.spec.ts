@@ -97,8 +97,9 @@ test.describe('SP-6 pile actions', () => {
     await expect(mainPile(page)).toBeFocused();
 
     await page.keyboard.press('Enter');
-    // End reaches Delete…; up past Rename… to Mill cards….
+    // End reaches Delete…; up past Rename… and View cards… to Mill cards….
     await page.keyboard.press('End');
+    await page.keyboard.press('ArrowUp');
     await page.keyboard.press('ArrowUp');
     await page.keyboard.press('ArrowUp');
     await expect(page.getByRole('menuitem', { name: 'Mill cards…' })).toBeFocused();

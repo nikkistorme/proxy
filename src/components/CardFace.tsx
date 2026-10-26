@@ -20,6 +20,12 @@ function cardText(face: CardFaceData): string | undefined {
   return undefined;
 }
 
+/** What the card says, in the order it shows it: name, cost, type, text and stats. */
+export function cardFaceLabel(face: CardFaceData): string {
+  const cost = face.fields.cost?.trim();
+  return [face.name, cost && `Cost ${cost}`, face.type, cardText(face), face.fields.stats?.trim()].filter(Boolean).join('. ');
+}
+
 /**
  * The default card rendering, laid out like the design's sample card
  * (`Card.dc.html`) at its 240 × 336 base size and scaled to `width`.
@@ -28,11 +34,10 @@ export function CardFace({ face, width = 126 }: CardFaceProps) {
   const cost = face.fields.cost?.trim();
   const stats = face.fields.stats?.trim();
   const text = cardText(face);
-  const label = [face.name, face.type, text, stats].filter(Boolean).join('. ');
   const style = { '--card-scale': width / 240, width, height: Math.round((width * 336) / 240) } as CSSProperties;
 
   return (
-    <div className="card-face" role="img" aria-label={label} style={style}>
+    <div className="card-face" role="img" aria-label={cardFaceLabel(face)} style={style}>
       <div className="card-face__base">
         <div className="card-face__bar">
           <span className="card-face__name">{face.name}</span>

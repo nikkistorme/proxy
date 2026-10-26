@@ -9,7 +9,7 @@ describe('Default card face', () => {
         face={{ name: 'Ember Scout', type: 'Unit — Scout', fields: { cost: '2', text: 'Look at the top card.', stats: '2 / 2' } }}
       />,
     );
-    const card = screen.getByRole('img', { name: 'Ember Scout. Unit — Scout. Look at the top card.. 2 / 2' });
+    const card = screen.getByRole('img', { name: 'Ember Scout. Cost 2. Unit — Scout. Look at the top card.. 2 / 2' });
     expect(card).toHaveTextContent('Ember Scout');
     expect(card).toHaveTextContent('2');
     expect(card).toHaveTextContent('Unit — Scout');

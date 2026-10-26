@@ -15,6 +15,7 @@ import { PileCountDialog, type CountRequest } from './PileCountDialog';
 import { PileMenu } from './PileMenu';
 import { PileNameDialog, type PileNameRequest } from './PileNameDialog';
 import { PileTile } from './PileTile';
+import { PileViewer } from './PileViewer';
 import { seatIdentity } from './seatIdentity';
 
 function faceOf(game: GameState, cardId: string) {
@@ -41,6 +42,7 @@ export function GameScreen() {
   const [countRequest, setCountRequest] = useState<CountRequest>();
   const [nameRequest, setNameRequest] = useState<PileNameRequest>();
   const [deleteRequest, setDeleteRequest] = useState<DeletePileRequest>();
+  const [viewerPileId, setViewerPileId] = useState<string>();
   /** A pile id, or ADD_PILE, to focus once it has rendered (after adding or deleting a pile). */
   const pendingFocusRef = useRef<string>(undefined);
   const addPileRef = useRef<HTMLButtonElement>(null);
@@ -83,14 +85,23 @@ export function GameScreen() {
     };
   }, []);
 
-  // D draws, unless something else has the keyboard (a field, a menu or a dialog).
+  // D draws, and V on a focused pile opens its viewer, unless something else has
+  // the keyboard (a field, a menu or a dialog).
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() !== 'd' || event.ctrlKey || event.metaKey || event.altKey) return;
+      const key = event.key.toLowerCase();
+      if ((key !== 'd' && key !== 'v') || event.ctrlKey || event.metaKey || event.altKey) return;
       const target = event.target as HTMLElement;
       if (target.closest('input, textarea, select, [contenteditable]')) return;
       // Read what's open from the page, not React state, which can lag a dialog closing.
       if (document.querySelector('dialog[open], [role="menu"]')) return;
+      if (key === 'v') {
+        const pileId = Object.keys(tileRefs.current).find((id) => tileRefs.current[id] === target);
+        if (!pileId) return;
+        event.preventDefault();
+        setViewerPileId(pileId);
+        return;
+      }
       event.preventDefault();
       drawOne();
     };
@@ -243,6 +254,11 @@ export function GameScreen() {
     if (pileId && game.piles.some((p) => p.id === pileId)) returnFocusToPile(pileId);
   }
 
+  function closeViewer() {
+    setViewerPileId(undefined);
+    returnFocusToPile(viewerPileId);
+  }
+
   function returnFocusToAddPile() {
     const active = document.activeElement;
     if (!active || active === document.body || active.closest('dialog')) addPileRef.current?.focus();
@@ -343,6 +359,7 @@ export function GameScreen() {
                         pile={pile}
                         ownerName={seatName(pile.ownerSeatId)}
                         keepOrder={keepOrder[pile.id] ?? false}
+                        onView={setViewerPileId}
                         onLoad={chooseFile}
                         onToggleKeepOrder={toggleKeepOrder}
                         onDraw={drawFrom}
@@ -415,6 +432,7 @@ export function GameScreen() {
         onConfirm={confirmCount}
         onClose={closeCount}
       />
+      <PileViewer key={viewerPileId ?? 'closed'} pileId={viewerPileId} onClose={closeViewer} />
       <LiveRegion />
     </div>
   );
