@@ -2,9 +2,32 @@
 
 ## Current state
 
-Phase 1 (card data) is complete. Self-hosted fonts are in review on branch `fonts-self-hosted`, waiting for the owner to test the preview. Phase 2 (piles) is next, after the owner's go-ahead.
+Phase 1 and self-hosted fonts are merged. Phase 2 (piles) is split into 2a to 2e. 2a (game state and pile actions) is in review on branch `phase-2a-pile-actions`.
 
 ## Done
+
+### Phase 2a: Game state and pile actions (2026-10-25)
+
+- `src/model/random.ts` (AR-3):
+  - `cryptoRandomInt` uses `crypto.getRandomValues` and rejects values from the uneven tail of the range, so every result is equally likely.
+  - `seededRandomInt` (mulberry32) gives repeatable results for tests only.
+- `src/model/shuffle.ts`: Fisher–Yates `shuffled(items, randomInt)`.
+- `src/model/game.ts` defines the state: `seats`, `activeSeatId`, `definitions`, `cards` (one per physical copy), `piles` (card ids top first, `sourceName`, the pile's `definitionIds`), `hands` per player seat, and `table` (a list until Phase 3).
+  - `ActionContext` holds `{ randomInt, newId }`. Every action returns `{ state, announcement }` (AR-1, AR-2).
+  - `createSoloGame()` fixes the Solo PvE preset in code until Phase 5: Player 1 and Environment, with P1 main deck, Environment deck and Board cards.
+- `src/actions/loadPile.ts` (SP-3 and CD-5 in play):
+  - It loads one copy per `qty` and shuffles unless `keepOrder` is set.
+  - Reloading follows the agreed rule: copies outside the pile are never touched, and the pile adds or removes its own copies so the game total matches the new `qty`. New copies are shuffled in, or go to the bottom with `keepOrder`. Existing order is kept, and extra copies are removed from the bottom.
+  - Copies it couldn't remove come back as `shortfalls` for the import results.
+- `src/actions/pileActions.ts` (SP-6):
+  - `shuffle` turns every card face down.
+  - `draw(n)` moves cards to the active seat's hand and names them in the announcement.
+  - `revealTop`
+  - `mill(n)` deals cards one at a time onto another pile.
+  - Empty piles produce an announcement, not an error.
+- Tests:
+  - Grouped as `AR-3 random source`, `SP-6 shuffle (Fisher–Yates)` (including the uniformity acceptance test: 60,000 shuffles, chi-square < 35), `SP-3 load a pile`, `CD-5 reload into a pile in play`, `SP-6 draw/reveal/mill` and `AR-1 actions are pure`.
+  - `src/actions/testing.ts` provides the seeded context.
 
 ### Self-hosted fonts (2026-10-25)
 
@@ -101,14 +124,21 @@ Phase 1 (card data) is complete. Self-hosted fonts are in review on branch `font
 
 ## Next
 
-- Owner tests the fonts preview, then merges.
-- Phase 2 (piles), once the owner gives the go-ahead. Read SP-1 to SP-9 in the requirements, and `PileViewer`, `CardStates` and `Main` in `design/mockups/`.
+Phase 2 issues, one PR each:
+
+- **2b. Moves and pile management (SP-4, SP-8, SP-9 logic).** Move a card between the table, hands and pile top or bottom, setting face state for where it lands. Peek at and reorder the top N cards. Add, rename and delete piles; decide what happens to a deleted pile's cards.
+- **2c. Piles on screen (SP-1, SP-2, SP-5, SP-6 UI).**
+  - Zustand store and live region.
+  - Pile tiles: name, count and a face-down top card, following `CardStates`.
+  - Pile actions; load and reload per pile, replacing the temporary panel; and the import results with shortfalls.
+  - A default card face based on `Card.dc.html`, and a simple hand list.
+- **2d. Pile viewer (SP-7, SP-8 UI)** following `PileViewer`, including the acceptance test: find a card and put it on the table in three actions or fewer.
+- **2e. Peek UI (SP-9).**
 
 ## Open problems
 
 - Dark theme isn't wired up. `tokens.css` has `[data-theme="dark"]` values, but nothing sets `data-theme` yet. Decide how the theme is chosen (follow the system setting, a toggle, or both) when the table is built.
 - PR preview clean-up leaves an empty `pr-preview/pr-N/.nojekyll` on `gh-pages`. It's harmless (the URL returns 404), but it could be tidied later.
-- For Phase 2 and 3: a changed `qty` only updates the definition. Piles still need a rule for adding or removing copies when `qty` changes on re-import.
 - For Phase 3: a table card showing its back face whose definition loses its back on re-import should fall back to the front.
 - For Phase 3: decide how cards on the table whose definition is `missing` should look. The import results in 1d can list them.
 - The app's PR monitor still shows an error cached from the old npm `gh`. CI was checked with the real `gh` instead.
@@ -137,3 +167,6 @@ Phase 1 (card data) is complete. Self-hosted fonts are in review on branch `font
 |  2026-10-25 | Fonts deferred to their own issue before the table work | — | Self-hosting is needed under AR-5 and may add a dependency, so it needs its own decision  |
 | 2026-10-25 | Focus returned after a dialog closes uses standard `:focus-visible`: the ring shows after keyboard use, not after a mouse click | Forcing the ring after every close | Matches browser and platform conventions. Keyboard users always see it (WCAG 2.4.7), and E2E checks focus returns either way. Applies to all dialogs. |
 | 2026-10-25 | Self-host fonts with static `@fontsource` packages, five weights only | Font files copied into `public/`; `@fontsource-variable` packages; Google Fonts | Keeps AR-5. Static packages use the same font names as `tokens.css`, so the design file needs no edits. Updates come through npm. |
+| 2026-10-25 | Solo PvE seats and piles fixed in code until Phase 5 | A single seat and pile | Gives draw a real active seat and hand, and Phase 5 adds the format picker on top |
+| 2026-10-25 | Reloading a pile in play: only that pile's copies change, to match the new `qty`. Existing order is kept, new copies are shuffled in (or go to the bottom with keep-order), and extras are removed from the bottom. | Rebuilding the pile from scratch | Never disturbs cards in play or the pile's order. Copies that can't be removed are reported. |
+| 2026-10-25 | Draw and mill announce the card names | Counts only | The person drawing sees the cards, so screen-reader users should hear them too |
