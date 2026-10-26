@@ -9,6 +9,8 @@ export type MenuEntry =
       /** 24 × 24 SVG path for the leading icon. */
       icon?: string;
       shortcut?: string;
+      /** Shown and focusable, but does nothing (ARIA menu convention). */
+      disabled?: boolean;
       onSelect: () => void;
     }
   | { kind: 'checkbox'; id: string; label: string; checked: boolean; onToggle: () => void }
@@ -105,7 +107,9 @@ export function Menu({ label, header, entries, onClose }: MenuProps) {
             tabIndex={-1}
             className="menu__item"
             aria-keyshortcuts={entry.shortcut}
+            aria-disabled={entry.disabled || undefined}
             onClick={() => {
+              if (entry.disabled) return;
               entry.onSelect();
               onClose();
             }}

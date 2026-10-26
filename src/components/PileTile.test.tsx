@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { createEvent, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { Pile } from '../model/game';
@@ -16,8 +16,20 @@ const pile = (count: number, extra: Partial<Pile> = {}): Pile => ({
 function renderTile(p: Pile, props: Partial<Parameters<typeof PileTile>[0]> = {}) {
   const onOpenMenu = vi.fn();
   const registerTile = vi.fn();
-  render(<PileTile pile={p} ownerName="Player 1" revealedTop={undefined} menuOpen={false} onOpenMenu={onOpenMenu} registerTile={registerTile} {...props} />);
-  return { onOpenMenu, registerTile };
+  const onDropFile = vi.fn();
+  const { container } = render(
+    <PileTile
+      pile={p}
+      ownerName="Player 1"
+      revealedTop={undefined}
+      menuOpen={false}
+      onOpenMenu={onOpenMenu}
+      registerTile={registerTile}
+      onDropFile={onDropFile}
+      {...props}
+    />,
+  );
+  return { onOpenMenu, registerTile, onDropFile, tile: container.querySelector('.pile-tile') as HTMLElement };
 }
 
 describe('SP-5 pile tile', () => {
@@ -54,5 +66,52 @@ describe('SP-5 pile tile', () => {
     await userEvent.click(button);
     expect(onOpenMenu).toHaveBeenCalledTimes(1);
     expect(registerTile).toHaveBeenCalledWith('pile-1', button);
+  });
+});
+
+describe('SP-1 drop a CSV on a pile', () => {
+  const fileDrag = (files: File[] = []) => ({ dataTransfer: { types: ['Files'], files, dropEffect: 'none' } });
+
+  it('highlights while a file is over it and loads the dropped file', () => {
+    const { tile, onDropFile } = renderTile(pile(3));
+    const file = new File(['name\nImp\n'], 'deck.csv', { type: 'text/csv' });
+
+    const enter = createEvent.dragEnter(tile, fileDrag());
+    fireEvent(tile, enter);
+    expect(enter.defaultPrevented).toBe(true);
+    expect(tile).toHaveClass('pile-tile--drop-target');
+    expect(tile).toHaveTextContent('Drop to load');
+
+    // Moving over a child fires another enter and a leave; the highlight stays.
+    fireEvent.dragEnter(tile, fileDrag());
+    fireEvent.dragLeave(tile);
+    expect(tile).toHaveClass('pile-tile--drop-target');
+
+    const over = createEvent.dragOver(tile, fileDrag());
+    fireEvent(tile, over);
+    expect(over.defaultPrevented).toBe(true);
+
+    fireEvent.drop(tile, fileDrag([file]));
+    expect(onDropFile).toHaveBeenCalledWith('pile-1', file);
+    expect(tile).not.toHaveClass('pile-tile--drop-target');
+  });
+
+  it('clears the highlight when the drag leaves', () => {
+    const { tile } = renderTile(pile(3));
+    fireEvent.dragEnter(tile, fileDrag());
+    fireEvent.dragLeave(tile);
+    expect(tile).not.toHaveClass('pile-tile--drop-target');
+  });
+
+  it('ignores drags that carry no files', () => {
+    const { tile, onDropFile } = renderTile(pile(3));
+    const textDrag = { dataTransfer: { types: ['text/plain'], files: [] } };
+    fireEvent.dragEnter(tile, textDrag);
+    const over = createEvent.dragOver(tile, textDrag);
+    fireEvent(tile, over);
+    fireEvent.drop(tile, textDrag);
+    expect(over.defaultPrevented).toBe(false);
+    expect(tile).not.toHaveClass('pile-tile--drop-target');
+    expect(onDropFile).not.toHaveBeenCalled();
   });
 });

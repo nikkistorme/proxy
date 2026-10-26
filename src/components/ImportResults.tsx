@@ -1,5 +1,6 @@
-import { useEffect, useId, useRef } from 'react';
+import { useId } from 'react';
 import type { ImportProblem } from '../csv/types';
+import { Dialog } from './Dialog';
 import './ImportResults.css';
 
 export interface ImportSummary {
@@ -28,16 +29,7 @@ function plural(count: number, one: string, many: string): string {
 
 /** Import results dialog (CD-4): what imported, and every problem by row and column. */
 export function ImportResults({ summary, onClose }: ImportResultsProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const titleId = useId();
   const problemsId = useId();
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    if (summary && !dialog.open) dialog.showModal();
-    if (!summary && dialog.open) dialog.close();
-  }, [summary]);
 
   const parts = summary
     ? [plural(summary.cardCount, 'card', 'cards') + ' imported', `${summary.added} new`, `${summary.updated} updated`]
@@ -45,76 +37,57 @@ export function ImportResults({ summary, onClose }: ImportResultsProps) {
   if (summary?.missingNames.length) parts.push(`${summary.missingNames.length} missing`);
 
   return (
-    // Esc fires the dialog's close event, which reports back through onClose.
-    <dialog ref={dialogRef} className="import-results" aria-labelledby={titleId} onClose={onClose}>
+    <Dialog
+      open={summary !== undefined}
+      title="Import results"
+      eyebrow={summary && (summary.pileName ? `${summary.fileName} into ${summary.pileName}` : summary.fileName)}
+      hint="Esc close"
+      onClose={onClose}
+      primaryLabel="Done"
+    >
       {summary && (
         <>
-          <div className="import-results__header">
-            <div className="import-results__titles">
-              <span className="import-results__eyebrow">
-                {summary.pileName ? `${summary.fileName} into ${summary.pileName}` : summary.fileName}
-              </span>
-              <h2 id={titleId} className="import-results__title">
-                Import results
-              </h2>
-            </div>
-            <button type="button" className="icon-button" aria-label="Close" onClick={() => dialogRef.current?.close()}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                <path d="M6 6l12 12M18 6L6 18" />
-              </svg>
-            </button>
-          </div>
+          <p className="import-results__summary">{parts.join(' · ')}</p>
+          {summary.missingNames.length > 0 && (
+            <p className="import-results__missing">
+              No longer in the CSV, kept in the deck: {summary.missingNames.join(', ')}
+            </p>
+          )}
 
-          <div className="import-results__body">
-            <p className="import-results__summary">{parts.join(' · ')}</p>
-            {summary.missingNames.length > 0 && (
-              <p className="import-results__missing">
-                No longer in the CSV, kept in the deck: {summary.missingNames.join(', ')}
-              </p>
-            )}
+          {summary.shortfalls && summary.shortfalls.length > 0 && (
+            <p className="import-results__missing">
+              More copies in play than the new qty, so these stay:{' '}
+              {summary.shortfalls.map((s) => `${s.name} (${plural(s.extra, 'extra copy', 'extra copies')})`).join(', ')}
+            </p>
+          )}
 
-            {summary.shortfalls && summary.shortfalls.length > 0 && (
-              <p className="import-results__missing">
-                More copies in play than the new qty, so these stay:{' '}
-                {summary.shortfalls.map((s) => `${s.name} (${plural(s.extra, 'extra copy', 'extra copies')})`).join(', ')}
-              </p>
-            )}
-
-            <h3 id={problemsId} className="import-results__subtitle">
-              {summary.problems.length === 0 ? 'No problems found' : plural(summary.problems.length, 'problem', 'problems')}
-            </h3>
-            {summary.problems.length > 0 && (
-              <div className="import-results__table-wrap">
-                <table className="import-results__table" aria-labelledby={problemsId}>
-                  <thead>
-                    <tr>
-                      <th scope="col">Row</th>
-                      <th scope="col">Column</th>
-                      <th scope="col">Problem</th>
+          <h3 id={problemsId} className="import-results__subtitle">
+            {summary.problems.length === 0 ? 'No problems found' : plural(summary.problems.length, 'problem', 'problems')}
+          </h3>
+          {summary.problems.length > 0 && (
+            <div className="import-results__table-wrap">
+              <table className="import-results__table" aria-labelledby={problemsId}>
+                <thead>
+                  <tr>
+                    <th scope="col">Row</th>
+                    <th scope="col">Column</th>
+                    <th scope="col">Problem</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summary.problems.map((problem, index) => (
+                    <tr key={index}>
+                      <td className="import-results__num">{problem.row}</td>
+                      <td>{problem.column ?? '—'}</td>
+                      <td>{problem.message}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {summary.problems.map((problem, index) => (
-                      <tr key={index}>
-                        <td className="import-results__num">{problem.row}</td>
-                        <td>{problem.column ?? '—'}</td>
-                        <td>{problem.message}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          <div className="import-results__footer">
-            <span className="import-results__hint">Esc close</span>
-            <button type="button" className="button button--primary" onClick={() => dialogRef.current?.close()}>
-              Done
-            </button>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </>
       )}
-    </dialog>
+    </Dialog>
   );
 }

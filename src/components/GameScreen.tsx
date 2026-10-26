@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { loadPile } from '../actions/loadPile';
-import { draw } from '../actions/pileActions';
+import { draw, mill, revealTop, shuffle } from '../actions/pileActions';
 import { importCards } from '../csv/importCards';
 import type { GameState, Pile } from '../model/game';
 import { useGameStore } from '../store/gameStore';
@@ -9,6 +9,7 @@ import './GameScreen.css';
 import { HandTray } from './HandTray';
 import { ImportResults, type ImportSummary } from './ImportResults';
 import { LiveRegion } from './LiveRegion';
+import { PileCountDialog, type CountRequest } from './PileCountDialog';
 import { PileMenu } from './PileMenu';
 import { PileTile } from './PileTile';
 import { seatIdentity } from './seatIdentity';
@@ -31,6 +32,7 @@ export function GameScreen() {
   const [menuPileId, setMenuPileId] = useState<string>();
   const [keepOrder, setKeepOrder] = useState<Record<string, boolean>>({});
   const [summary, setSummary] = useState<ImportSummary>();
+  const [countRequest, setCountRequest] = useState<CountRequest>();
   const loadTargetRef = useRef<string>(undefined);
   const returnFocusRef = useRef<string>(undefined);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -47,6 +49,19 @@ export function GameScreen() {
   const drawOne = useCallback(() => {
     if (drawPile) dispatch((g) => draw(g, { pileId: drawPile.id }));
   }, [dispatch, drawPile]);
+
+  // A file dropped anywhere but a pile must not make the browser open it instead.
+  useEffect(() => {
+    const block = (event: DragEvent) => {
+      if (event.dataTransfer?.types.includes('Files')) event.preventDefault();
+    };
+    window.addEventListener('dragover', block);
+    window.addEventListener('drop', block);
+    return () => {
+      window.removeEventListener('dragover', block);
+      window.removeEventListener('drop', block);
+    };
+  }, []);
 
   // D draws, unless something else has the keyboard (a field, a menu or a dialog).
   useEffect(() => {
@@ -79,13 +94,24 @@ export function GameScreen() {
     // Clear the input so choosing the same file again still loads it.
     input.value = '';
     const pileId = loadTargetRef.current;
-    if (!file || !pileId) return;
+    if (file && pileId) await loadFile(pileId, file);
+  }
+
+  /** SP-1: load a CSV into a pile, from the file picker or a drop. */
+  async function loadFile(pileId: string, file: File) {
+    returnFocusRef.current = pileId;
+    const pileName = game.piles.find((p) => p.id === pileId)?.name ?? '';
+    const looksLikeCsv = file.name.toLowerCase().endsWith('.csv') || file.type === 'text/csv';
+    if (!looksLikeCsv) {
+      const problem = { row: 1, message: `${file.name} isn't a CSV file. Nothing was loaded.` };
+      setSummary({ fileName: file.name, pileName, cardCount: 0, added: 0, updated: 0, missingNames: [], problems: [problem] });
+      return;
+    }
 
     const { cards, problems } = importCards(await file.text());
     const result = dispatch((g, context) =>
       loadPile(g, { pileId, sourceName: file.name, cards, keepOrder: keepOrder[pileId] ?? false }, context),
     );
-    returnFocusRef.current = pileId;
     setSummary({
       fileName: file.name,
       pileName: result.state.piles.find((p) => p.id === pileId)?.name ?? '',
@@ -98,10 +124,64 @@ export function GameScreen() {
     });
   }
 
+  /**
+   * Gives focus back to a pile after its dialog closes. The dialog's close event
+   * can arrive a moment late, so only do it if focus was lost with the dialog,
+   * never by taking it from wherever the player has already moved on to.
+   */
+  function returnFocusToPile(pileId: string | undefined) {
+    const active = document.activeElement;
+    const focusWasLost = !active || active === document.body || active.closest('dialog') !== null;
+    if (pileId && focusWasLost) tileRefs.current[pileId]?.focus();
+  }
+
   function closeResults() {
     setSummary(undefined);
-    if (returnFocusRef.current) tileRefs.current[returnFocusRef.current]?.focus();
+    returnFocusToPile(returnFocusRef.current);
   }
+
+  const openDrawMany = useCallback(
+    (pileId: string) => {
+      const pile = game.piles.find((p) => p.id === pileId);
+      const seat = game.seats.find((s) => s.id === game.activeSeatId);
+      if (pile && seat) setCountRequest({ mode: 'draw', pile, handName: seat.name });
+    },
+    [game],
+  );
+
+  const openMill = useCallback(
+    (pileId: string) => {
+      const pile = game.piles.find((p) => p.id === pileId);
+      if (pile) setCountRequest({ mode: 'mill', pile, targets: game.piles.filter((p) => p.id !== pileId) });
+    },
+    [game],
+  );
+
+  function confirmCount(count: number, toPileId?: string) {
+    if (!countRequest) return;
+    const pileId = countRequest.pile.id;
+    if (countRequest.mode === 'draw') dispatch((g) => draw(g, { pileId, count }));
+    else if (toPileId) dispatch((g) => mill(g, { pileId, count, toPileId }));
+  }
+
+  function closeCount() {
+    setCountRequest(undefined);
+    returnFocusToPile(countRequest?.pile.id);
+  }
+
+  const shuffleFrom = useCallback(
+    (pileId: string) => {
+      dispatch((g, context) => shuffle(g, { pileId }, context));
+    },
+    [dispatch],
+  );
+
+  const revealFrom = useCallback(
+    (pileId: string) => {
+      dispatch((g) => revealTop(g, { pileId }));
+    },
+    [dispatch],
+  );
 
   const toggleKeepOrder = useCallback((pileId: string) => {
     setKeepOrder((k) => ({ ...k, [pileId]: !(k[pileId] ?? false) }));
@@ -171,6 +251,7 @@ export function GameScreen() {
                 <li key={pile.id} className="pile-row__slot">
                   <PileTile
                     registerTile={registerTile}
+                    onDropFile={(id, file) => void loadFile(id, file)}
                     pile={pile}
                     ownerName={seatName(pile.ownerSeatId)}
                     revealedTop={revealedTop}
@@ -185,6 +266,11 @@ export function GameScreen() {
                       onLoad={chooseFile}
                       onToggleKeepOrder={toggleKeepOrder}
                       onDraw={drawFrom}
+                      onDrawMany={openDrawMany}
+                      onShuffle={shuffleFrom}
+                      onReveal={revealFrom}
+                      onMill={openMill}
+                      canMill={game.piles.length > 1}
                       onClose={closeMenu}
                     />
                   )}
@@ -214,6 +300,12 @@ export function GameScreen() {
 
       <input ref={fileRef} type="file" accept=".csv,text/csv" hidden data-testid="csv-file" onChange={(e) => void handleFile(e)} />
       <ImportResults summary={summary} onClose={closeResults} />
+      <PileCountDialog
+        key={countRequest ? `${countRequest.mode}-${countRequest.pile.id}` : 'closed'}
+        request={countRequest}
+        onConfirm={confirmCount}
+        onClose={closeCount}
+      />
       <LiveRegion />
     </div>
   );

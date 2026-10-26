@@ -89,7 +89,8 @@ test.describe('SP-5 and SP-6 piles and drawing', () => {
 
     await mainPile(page).focus();
     await page.keyboard.press('Enter');
-    await page.keyboard.press('End');
+    // Load CSV…, Reload double-faced.csv…, Keep CSV order, then Draw 1.
+    for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowDown');
     await expect(page.getByRole('menuitem', { name: 'Draw 1' })).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(page.getByRole('list', { name: "Player 1's hand, 2 cards" })).toBeVisible();
@@ -122,7 +123,7 @@ test.describe('CD-4 import results on a phone', () => {
   test('the results fill most of the screen and the problem list scrolls', async ({ page }) => {
     await loadMain(page, 'import-errors.csv');
     const dialog = page.getByRole('dialog', { name: 'Import results' });
-    const body = dialog.locator('.import-results__body');
+    const body = dialog.locator('.dialog__body');
     const dialogBox = await dialog.boundingBox();
     const bodyBox = await body.boundingBox();
     // Regression: the dialog collapsed to its header and footer on a phone.
