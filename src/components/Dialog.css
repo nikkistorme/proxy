@@ -16,6 +16,10 @@
   max-width: 440px;
 }
 
+.dialog--medium {
+  max-width: 520px;
+}
+
 .dialog--wide {
   max-width: 640px;
 }
@@ -36,6 +40,12 @@
   align-items: center;
   gap: 14px;
   padding: 18px var(--space-4) 14px 20px;
+}
+
+.dialog__media {
+  flex: none;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 
 .dialog__titles {

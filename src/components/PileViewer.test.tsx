@@ -140,6 +140,43 @@ describe('SP-8 move a card from the pile viewer', () => {
   });
 });
 
+describe('SP-8 Move to… from the pile viewer', () => {
+  it('moves the current card to the bottom of another pile, then focuses the next match', async () => {
+    const { user, state, pileNames } = renderViewer();
+    await user.click(screen.getByRole('button', { name: card('Tide Caller', 2) }));
+    await user.click(screen.getByRole('button', { name: 'Move to…: Tide Caller' }));
+    const move = screen.getByRole('dialog', { name: 'Tide Caller' });
+    expect(move).toHaveTextContent('Move card · from P1 main deck');
+    await user.type(within(move).getByRole('combobox'), 'board{ArrowDown}{Enter}');
+
+    expect(namesOf(state(), state().piles.find((p) => p.id === 'pile-board')?.cardIds)).toEqual(['Tide Caller']);
+    expect(pileNames()).toEqual(['Ember Scout', 'Emberline Courier', 'Kindle Ward']);
+    expect(screen.queryByRole('dialog', { name: 'Tide Caller' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: card('Emberline Courier', 2) })).toHaveFocus();
+  });
+
+  it('M opens it, and cancelling leaves the card, focus and the viewer where they were', async () => {
+    const { user, pileNames, onClose } = renderViewer();
+    await user.type(screen.getByRole('textbox', { name: 'Search name or text' }), 'kindle');
+    await user.keyboard('{ArrowDown}m');
+    expect(screen.getByRole('dialog', { name: 'Kindle Ward' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(pileNames()).toHaveLength(4);
+    expect(screen.getByRole('button', { name: card('Kindle Ward', 4) })).toHaveFocus();
+    // Regression: closing the Move dialog also closed the viewer.
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('can move a card to the top of its own pile', async () => {
+    const { user, pileNames } = renderViewer();
+    await user.click(screen.getByRole('button', { name: card('Kindle Ward', 4) }));
+    await user.keyboard('m');
+    await user.keyboard('main deck — top{Enter}');
+    expect(pileNames()).toEqual(['Kindle Ward', 'Ember Scout', 'Tide Caller', 'Emberline Courier']);
+  });
+});
+
 describe('SP-6 pile viewer footer', () => {
   it('reveals and draws the top card', async () => {
     const { user, state, shown } = renderViewer();

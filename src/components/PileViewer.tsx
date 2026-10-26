@@ -4,6 +4,8 @@ import { draw, revealTop, shuffle } from '../actions/pileActions';
 import { useGameStore } from '../store/gameStore';
 import { CardFace, cardFaceLabel } from './CardFace';
 import { LiveRegion } from './LiveRegion';
+import { MoveDialog, type MoveRequest } from './MoveDialog';
+import { moveDestinations } from './moveDestinations';
 import { filterColumns, filterEntries, pileEntries, type PileEntry } from './pileFilter';
 import './Form.css';
 import './PileViewer.css';
@@ -57,6 +59,7 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [currentId, setCurrentId] = useState<string>();
+  const [moveRequest, setMoveRequest] = useState<MoveRequest>();
 
   const pile = game.piles.find((p) => p.id === pileId);
   const open = pile !== undefined;
@@ -76,10 +79,11 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
     if (!open && dialog.open) dialog.close();
   }, [open]);
 
-  // Focus the next card (or the search) once a move has re-rendered the list.
+  // Focus the next card (or the search) once a move has re-rendered the list,
+  // and the Move dialog, if it was open, has closed.
   useEffect(() => {
     const pending = pendingFocusRef.current;
-    if (!pending) return;
+    if (!pending || moveRequest) return;
     pendingFocusRef.current = undefined;
     if (pending === 'search') searchRef.current?.focus();
     else listRef.current?.querySelector<HTMLElement>(`[data-card-id="${pending}"]`)?.focus();
@@ -114,6 +118,19 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
     move(entry, { zone: 'table' });
   }
 
+  /** SP-8: choose any destination in the Move to… dialog. */
+  function openMove(entry: PileEntry) {
+    if (!pile) return;
+    // Cancelling comes back to this card; a move replaces it with the next match.
+    pendingFocusRef.current = entry.cardId;
+    setMoveRequest({ cardId: entry.cardId, face: entry.face, fromName: pile.name, options: moveDestinations(game, entry.cardId) });
+  }
+
+  function confirmMove(to: Destination) {
+    const entry = matches.find((m) => m.cardId === moveRequest?.cardId);
+    if (entry) move(entry, to);
+  }
+
   function onCardKeyDown(event: KeyboardEvent<HTMLButtonElement>, entry: PileEntry) {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     const index = matches.indexOf(entry);
@@ -144,6 +161,10 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
       case 't':
       case 'T':
         toTable(entry);
+        break;
+      case 'm':
+      case 'M':
+        openMove(entry);
         break;
       default:
         return;
@@ -187,7 +208,8 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
       className="pile-viewer"
       aria-labelledby={titleId}
       style={{ borderTopColor: identity.color }}
-      onClose={onClose}
+      // React passes the Move dialog's close event up to this dialog too; only this one's own closes it.
+      onClose={(event) => event.target === event.currentTarget && onClose()}
     >
       {pile && (
         <>
@@ -290,7 +312,7 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
                           data-card-id={entry.cardId}
                           tabIndex={isCurrent ? 0 : -1}
                           aria-label={cardLabel(entry)}
-                          aria-keyshortcuts="Enter T"
+                          aria-keyshortcuts="Enter T M"
                           onClick={() => setCurrentId(entry.cardId)}
                           onFocus={() => setCurrentId(entry.cardId)}
                           onKeyDown={(e) => onCardKeyDown(e, entry)}
@@ -316,6 +338,14 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
                             onClick={() => toTable(entry)}
                           >
                             To table
+                          </button>
+                          <button
+                            type="button"
+                            className="pile-viewer__action"
+                            aria-label={`Move to…: ${entry.face.name}`}
+                            onClick={() => openMove(entry)}
+                          >
+                            Move to…
                           </button>
                         </div>
                       )}
@@ -365,9 +395,15 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
               Reveal top card
             </button>
             <span className="pile-viewer__hint" aria-hidden="true">
-              Arrows browse · Enter to hand · T to table · Esc close
+              Arrows browse · Enter to hand · T table · M move · Esc close
             </span>
           </div>
+          <MoveDialog
+            key={moveRequest?.cardId ?? 'closed'}
+            request={moveRequest}
+            onConfirm={confirmMove}
+            onClose={() => setMoveRequest(undefined)}
+          />
           {/* The page's live region is outside this modal, where screen readers may not hear it. */}
           <LiveRegion />
         </>
