@@ -34,6 +34,17 @@
   box-shadow: var(--shadow-card-hover);
 }
 
+/*
+ * The focused card is the current card that keys and the card menu act on, so its
+ * ring shows after a click too, not only after keyboard use as elsewhere.
+ */
+.table-card__button:focus {
+  outline: 2px solid transparent;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+
 .table-card__frame {
   position: absolute;
   inset: 6px;

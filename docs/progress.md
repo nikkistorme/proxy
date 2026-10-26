@@ -24,6 +24,7 @@ Phase 3 (Table) is under way. It's split into 3a to 3m: issues #23 to #34, plus 
 - **Focus (A11Y-3).** The table is a group with one Tab stop, which is the last card focused, or the first in reading order once that card has gone.
   - Arrow keys go to the nearest card in that direction (`nearestInDirection` in `src/model/tableNavigation.ts`), where sideways distance counts double. At the edge, focus stays put.
   - A focused card is drawn above every other card (A11Y-7), visually only, so it isn't an action.
+  - **Owner review: clicking a card did nothing visible.** The ring only showed after keyboard use (`:focus-visible`), and Safari doesn't focus a button on click. Table cards now focus themselves on click and show the ring on any focus, because the focused card is the current card that keys and the card menu act on. The E2E mouse test checks the ring and stacking after a click, and fails without the fix in Chromium and WebKit.
 - **Names (A11Y-6), from `tableCardView`:**
   - the name, plus ", front face" or ", back face" for double-faced cards, then ", rotated 90°", then ", not in the CSV any more"
   - face-down cards: "Face-down card, Player 1" (or "shared")
@@ -431,3 +432,4 @@ Phase 3 (Table) is under way. It's split into 3a to 3m: issues #23 to #34, plus 
 | 2026-10-26 | Table card names are short: name, face and rotation | The full card text the viewer reads | Arrowing across the table would read whole rules boxes. The details command (3d) reads every column. The owner confirmed it. |
 | 2026-10-26 | Piles stay in their row in 3b, and moving piles onto the table is its own issue (#37) | Doing it in 3b | It needs positions, drag and keyboard moves for piles, so it builds on 3c, 3e and 3f. The owner asked for it not to be lost. |
 | 2026-10-26 | Bringing a focused card to the front is visual only (CSS) | A bring-to-front action | Focus shouldn't create undo steps or change the game |
+| 2026-10-26 | Table cards show the focus ring after a click as well as keyboard use, and focus themselves on click | Only `:focus-visible`, as for other controls | The focused card is the current card that keys and the card menu act on, so it must be visible. Safari doesn't focus buttons on click. The owner's review found clicking showed nothing. |

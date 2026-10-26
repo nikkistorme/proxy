@@ -58,6 +58,8 @@ export function TableCard({ view, layer, tabbable, register, onFocus, onKeyDown 
         className="table-card__button"
         aria-label={label}
         tabIndex={tabbable ? 0 : -1}
+        // Safari doesn't focus a button on click, and a clicked card must become the current one.
+        onClick={(event) => event.currentTarget.focus()}
         onFocus={() => onFocus(entry.cardId)}
         onKeyDown={(event) => onKeyDown(entry.cardId, event)}
       />

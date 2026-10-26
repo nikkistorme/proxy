@@ -43,8 +43,12 @@ test.describe('A11Y-3 and A11Y-6 cards on the table', () => {
     expect(second && first && second.x - first.x).toBe(142);
     expect(second?.y).toBe(first?.y);
 
+    // A click makes the card current: focused, ringed and drawn above the others.
     await tableCard(page, 'Card 03').click();
     await expect(tableCard(page, 'Card 03')).toBeFocused();
+    await expect(tableCard(page, 'Card 03')).toHaveCSS('box-shadow', /rgb\(17, 17, 17\) 0px 0px 0px 5px/);
+    const zIndex = await tableCard(page, 'Card 03').evaluate((b) => getComputedStyle(b.parentElement as HTMLElement).zIndex);
+    expect(Number(zIndex)).toBeGreaterThan(4);
     const results = await new AxeBuilder({ page }).withTags(axeTags).analyze();
     expect(results.violations).toEqual([]);
   });
