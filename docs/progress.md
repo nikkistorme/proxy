@@ -2,9 +2,27 @@
 
 ## Current state
 
-Phase 1 and self-hosted fonts are merged. Phase 2 (piles) is split into 2a to 2e. 2a (game state and pile actions) is in review on branch `phase-2a-pile-actions`.
+Phase 2 (piles): 2a is merged. 2b (moves and pile management) is in review on branch `phase-2b-moves-piles`.
 
 ## Done
+
+### Phase 2b: Moves and pile management (2026-10-25)
+
+- `src/actions/moveCard.ts` (SP-8):
+  - `moveCard` moves a card to the table, a seat's hand, or the top or bottom of a pile. Cards left behind keep their order.
+  - A card lands face up on the table and face down on a pile, unless `faceUp` is set. In a hand its face doesn't change.
+  - A move to where the card already is (table to table, or the same hand) changes nothing and says so.
+  - `locateCard` finds which zone a card is in.
+- `src/actions/peek.ts` (SP-9):
+  - `peekTop` is a read, not an action: it returns the top N cards and an announcement.
+  - `reorderTop` puts the top N back in a new order, and must be given exactly those cards.
+  - Moving a peeked card uses `moveCard`.
+- `src/actions/piles.ts` (SP-4):
+  - `addPile` adds a pile owned by a seat or shared, and returns its `pileId`. `renamePile` renames one.
+  - Names must be unique, ignoring case and surrounding spaces.
+  - `deletePile` needs a target pile if the pile still has cards. They go to the target's bottom, in order. Cards elsewhere stay in play.
+- `src/actions/testing.ts` now has `gameWithDeck` and `namesOf`.
+- 24 new tests (116 in total), grouped as `SP-8 move a card`, `SP-9 peek` and `reorder`, and `SP-4 add`, `rename` and `delete a pile`.
 
 ### Phase 2a: Game state and pile actions (2026-10-25)
 
@@ -126,7 +144,6 @@ Phase 1 and self-hosted fonts are merged. Phase 2 (piles) is split into 2a to 2e
 
 Phase 2 issues, one PR each:
 
-- **2b. Moves and pile management (SP-4, SP-8, SP-9 logic).** Move a card between the table, hands and pile top or bottom, setting face state for where it lands. Peek at and reorder the top N cards. Add, rename and delete piles; decide what happens to a deleted pile's cards.
 - **2c. Piles on screen (SP-1, SP-2, SP-5, SP-6 UI).**
   - Zustand store and live region.
   - Pile tiles: name, count and a face-down top card, following `CardStates`.
@@ -137,6 +154,7 @@ Phase 2 issues, one PR each:
 
 ## Open problems
 
+- For Phase 3 (TT-6): face state is a boolean `faceUp`. Flipping a double-faced card to show its back needs a three-way state (front, back, face down), which Phase 3 should introduce.
 - Dark theme isn't wired up. `tokens.css` has `[data-theme="dark"]` values, but nothing sets `data-theme` yet. Decide how the theme is chosen (follow the system setting, a toggle, or both) when the table is built.
 - PR preview clean-up leaves an empty `pr-preview/pr-N/.nojekyll` on `gh-pages`. It's harmless (the URL returns 404), but it could be tidied later.
 - For Phase 3: a table card showing its back face whose definition loses its back on re-import should fall back to the front.
@@ -170,3 +188,6 @@ Phase 2 issues, one PR each:
 | 2026-10-25 | Solo PvE seats and piles fixed in code until Phase 5 | A single seat and pile | Gives draw a real active seat and hand, and Phase 5 adds the format picker on top |
 | 2026-10-25 | Reloading a pile in play: only that pile's copies change, to match the new `qty`. Existing order is kept, new copies are shuffled in (or go to the bottom with keep-order), and extras are removed from the bottom. | Rebuilding the pile from scratch | Never disturbs cards in play or the pile's order. Copies that can't be removed are reported. |
 | 2026-10-25 | Draw and mill announce the card names | Counts only | The person drawing sees the cards, so screen-reader users should hear them too |
+| 2026-10-25 | Deleting a pile that still has cards moves them to the bottom of a chosen pile | Removing the cards from the game | No card silently leaves play |
+| 2026-10-25 | Cards land face up on the table and face down on a pile (unless kept face up); a hand doesn't change their face | Keeping the card's previous face | Matches the MoveDialog's "Keep it face up (piles only)" option |
+| 2026-10-25 | Pile names are unique, ignoring case and surrounding spaces | Allowing duplicate names | Destination lists such as Move to… must not show two piles with the same name |
