@@ -19,7 +19,11 @@ Phase 2 (piles) is complete: 2a to 2h are merged. Next is Phase 3 (Table: TT-1 t
 - `moveDestinations` takes `{ exceptTopOf }`.
 - **`Dialog` acts only on its own `close` event.** React passes a nested dialog's close event up to its parents, which 2g fixed for the viewer only. A regression test covers it; I confirmed it fails without the fix.
 - `GameScreen` only counts focus as lost when it's on the page body or inside a dialog that has closed. Before, focus inside the newly opened Peek dialog counted as lost, and the count dialog's late close event could pull focus back to the pile.
-- Tests: 220 unit (`SP-9 peek`, `SP-9 peek N`, and the Dialog regression), and 26 E2E including `e2e/peek.spec.ts` (mouse with axe, keyboard only with Move to… "— bottom" and Esc, and phone size at 375 × 667).
+- **Owner review: the pile menu ran past the bottom of the screen** on a 14-inch MacBook Pro.
+  - `Menu` now fits itself to the viewport when it opens, and on resize and scroll. It opens below its opener if it fits, else above if that fits (`data-placement="above"`, placed by the container's CSS), else on the roomier side, capped to that space.
+  - It scrolls inside, and an inner shadow shows on any edge with more options out of view (`data-more-above` and `data-more-below`).
+  - The E2E regression test at 1280 × 560 fails without the fix (the menu's bottom was at 872px).
+- Tests: 223 unit (`SP-9 peek`, `SP-9 peek N`, the Dialog regression, and `Action menu stays inside the viewport`), and 27 E2E including `e2e/peek.spec.ts` (mouse with axe, keyboard only with Move to… "— bottom" and Esc, and phone size at 375 × 667) and the short-screen menu test.
 - Checked by hand from screenshots at 1280 × 800 and 320 × 640.
 
 ### Workflow rules (2026-10-26)
@@ -354,3 +358,4 @@ Phase 2 (piles) is complete: 2a to 2h are merged. Next is Phase 3 (Table: TT-1 t
 | 2026-10-26 | Peek: Done, Esc and × all keep the order shown. The count starts at 3. | Esc cancelling the reorder; starting at 1 | What you see is what's in the pile. 3 matches the sample card. The owner confirmed both. |
 | 2026-10-26 | Peek reorders inside the dialog and puts the cards back with one `reorderTop` when it closes | One reorder action for every Up or Down | One action and one announcement for the whole rearrangement. Moves still apply at once. |
 | 2026-10-26 | Peek's Move to… leaves out the peeked pile's top | Offering every destination | It duplicates reordering, and would put the card back among the cards being reordered |
+| 2026-10-26 | Menus fit the viewport: below, else above, else capped to the roomier side and scrolling with inner shadows | Always opening below | The owner's MacBook showed the pile menu running past the bottom of the screen. The owner asked for scrolling with an inner shadow when a menu can't fit. |

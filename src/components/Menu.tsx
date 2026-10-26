@@ -1,4 +1,4 @@
-import { useEffect, useRef, type KeyboardEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, type KeyboardEvent } from 'react';
 import './Menu.css';
 
 export type MenuEntry =
@@ -25,6 +25,39 @@ interface MenuProps {
   onClose: () => void;
 }
 
+/** Space kept between the menu and the edge of the viewport. */
+const VIEWPORT_MARGIN = 8;
+
+/**
+ * Keeps the menu inside the viewport. It opens below its opener when it fits,
+ * else above when that fits, else on the roomier side, capped to that space
+ * and scrolling inside. The container's CSS places `data-placement="above"`.
+ */
+function fitToViewport(menu: HTMLElement) {
+  menu.style.maxHeight = '';
+  delete menu.dataset.placement;
+  const opener = (menu.parentElement ?? menu).getBoundingClientRect();
+  const rect = menu.getBoundingClientRect();
+  const gap = rect.top - opener.bottom;
+  const below = window.innerHeight - rect.top - VIEWPORT_MARGIN;
+  const above = opener.top - gap - VIEWPORT_MARGIN;
+  if (rect.height <= below) return;
+  if (rect.height <= above || above > below) {
+    menu.dataset.placement = 'above';
+    if (rect.height > above) menu.style.maxHeight = `${Math.floor(above)}px`;
+  } else {
+    menu.style.maxHeight = `${Math.floor(below)}px`;
+  }
+}
+
+/** Marks which edges have more options scrolled out of view, for the inner shadows. */
+function markOverflow(menu: HTMLElement) {
+  const moreAbove = menu.scrollTop > 0;
+  const moreBelow = menu.scrollTop + menu.clientHeight < menu.scrollHeight - 1;
+  menu.toggleAttribute('data-more-above', moreAbove);
+  menu.toggleAttribute('data-more-below', moreBelow);
+}
+
 /**
  * An action menu following the ActionMenu board. Arrow keys, Home and End
  * move between items; Enter or Space selects; Escape or Tab closes.
@@ -33,6 +66,23 @@ export function Menu({ label, header, entries, onClose }: MenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
   const items = () => [...(menuRef.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]') ?? [])];
+
+  // Fit before the first paint, and again whenever the viewport changes.
+  useLayoutEffect(() => {
+    const menu = menuRef.current;
+    if (!menu) return;
+    const fit = () => {
+      fitToViewport(menu);
+      markOverflow(menu);
+    };
+    fit();
+    window.addEventListener('resize', fit);
+    window.addEventListener('scroll', fit, { passive: true });
+    return () => {
+      window.removeEventListener('resize', fit);
+      window.removeEventListener('scroll', fit);
+    };
+  }, []);
 
   useEffect(() => {
     items()[0]?.focus();
@@ -74,7 +124,15 @@ export function Menu({ label, header, entries, onClose }: MenuProps) {
   }
 
   return (
-    <div ref={menuRef} role="menu" aria-label={label} tabIndex={-1} className="menu" onKeyDown={onKeyDown}>
+    <div
+      ref={menuRef}
+      role="menu"
+      aria-label={label}
+      tabIndex={-1}
+      className="menu"
+      onKeyDown={onKeyDown}
+      onScroll={(event) => markOverflow(event.currentTarget)}
+    >
       <div className="menu__header" aria-hidden="true">
         {header}
       </div>

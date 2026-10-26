@@ -128,6 +128,12 @@
   left: 0;
 }
 
+/* Menu.tsx opens the menu upward when it only fits above the pile. */
+.pile-row__slot > .menu[data-placement='above'] {
+  top: auto;
+  bottom: calc(100% + var(--space-3));
+}
+
 .table-area__heading {
   margin: var(--space-6) 0 var(--space-3);
   color: var(--muted);
