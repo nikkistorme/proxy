@@ -19,6 +19,7 @@ import { PileNameDialog, type PileNameRequest } from './PileNameDialog';
 import { PileTile } from './PileTile';
 import { PileViewer } from './PileViewer';
 import { seatIdentity } from './seatIdentity';
+import { TableTools } from './TableTools';
 
 function faceOf(game: GameState, cardId: string) {
   const card = game.cards[cardId];
@@ -331,6 +332,7 @@ export function GameScreen() {
         </svg>
         <h1 className="game__title">Proxy</h1>
         <span className="game__format">Solo PvE</span>
+        <TableTools />
       </header>
 
       <section className="seat-bar" aria-label="Seats">

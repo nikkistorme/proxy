@@ -60,8 +60,8 @@ test.describe('SP-4 manage piles', () => {
   });
 
   test('keyboard only: add a shared pile, then delete it', async ({ page }) => {
-    // Three piles, then Add pile.
-    for (let i = 0; i < 4; i++) await page.keyboard.press('Tab');
+    // Undo, Redo, three piles, then Add pile.
+    for (let i = 0; i < 6; i++) await page.keyboard.press('Tab');
     await expect(page.getByRole('button', { name: 'Add pile' })).toBeFocused();
     await page.keyboard.press('Enter');
 

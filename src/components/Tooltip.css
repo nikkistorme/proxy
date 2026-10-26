@@ -1,0 +1,34 @@
+.tooltip {
+  position: relative;
+  display: inline-flex;
+}
+
+/* The popup's top padding bridges the gap, so the pointer can move onto the text without it closing. */
+.tooltip__popup {
+  position: absolute;
+  top: 100%;
+  z-index: 20;
+  padding-top: 6px;
+}
+
+.tooltip__popup--center {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.tooltip__popup--end {
+  right: 0;
+}
+
+.tooltip__text {
+  display: block;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-control);
+  background: var(--ink);
+  box-shadow: var(--shadow-menu);
+  color: var(--panel);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
