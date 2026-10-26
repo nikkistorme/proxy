@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createSoloGame } from '../model/game';
 import { draw } from './pileActions';
-import { addPile, deletePile, renamePile } from './piles';
+import { addPile, deletePile, renamePile, validatePileName } from './piles';
 import { gameWithDeck, namesOf, testContext } from './testing';
 
 const MAIN = 'pile-p1-main';
@@ -78,5 +78,15 @@ describe('SP-4 delete a pile', () => {
     expect(() => deletePile(game, { pileId: MAIN })).toThrow('P1 main deck still has cards; choose a pile to move them to');
     expect(() => deletePile(game, { pileId: MAIN, moveCardsToPileId: MAIN })).toThrow("Cannot move a pile's cards into itself");
     expect(() => deletePile(game, { pileId: MAIN, moveCardsToPileId: 'nope' })).toThrow('Unknown pile: nope');
+  });
+});
+
+describe('SP-4 pile names', () => {
+  it('explains why a name cannot be used, and accepts a good one', () => {
+    const game = createSoloGame();
+    expect(validatePileName(game, '  ')).toBe('A pile needs a name');
+    expect(validatePileName(game, 'board cards')).toBe('There is already a pile called Board cards');
+    expect(validatePileName(game, 'Discard')).toBeUndefined();
+    expect(validatePileName(game, 'BOARD CARDS', BOARD)).toBeUndefined();
   });
 });

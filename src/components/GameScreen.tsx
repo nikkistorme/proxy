@@ -1,16 +1,19 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { loadPile } from '../actions/loadPile';
 import { draw, mill, revealTop, shuffle } from '../actions/pileActions';
+import { addPile, deletePile, renamePile, validatePileName } from '../actions/piles';
 import { importCards } from '../csv/importCards';
 import type { GameState, Pile } from '../model/game';
 import { useGameStore } from '../store/gameStore';
 import { CardFace } from './CardFace';
+import { DeletePileDialog, type DeletePileRequest } from './DeletePileDialog';
 import './GameScreen.css';
 import { HandTray } from './HandTray';
 import { ImportResults, type ImportSummary } from './ImportResults';
 import { LiveRegion } from './LiveRegion';
 import { PileCountDialog, type CountRequest } from './PileCountDialog';
 import { PileMenu } from './PileMenu';
+import { PileNameDialog, type PileNameRequest } from './PileNameDialog';
 import { PileTile } from './PileTile';
 import { seatIdentity } from './seatIdentity';
 
@@ -18,6 +21,8 @@ function faceOf(game: GameState, cardId: string) {
   const card = game.cards[cardId];
   return card && game.definitions[card.definitionId]?.front;
 }
+
+const ADD_PILE = 'add-pile';
 
 /** The pile the active seat draws from: its first owned pile (its main deck). */
 function drawPileFor(game: GameState): Pile | undefined {
@@ -28,11 +33,17 @@ function drawPileFor(game: GameState): Pile | undefined {
 export function GameScreen() {
   const game = useGameStore((s) => s.game);
   const dispatch = useGameStore((s) => s.dispatch);
+  const announce = useGameStore((s) => s.announce);
 
   const [menuPileId, setMenuPileId] = useState<string>();
   const [keepOrder, setKeepOrder] = useState<Record<string, boolean>>({});
   const [summary, setSummary] = useState<ImportSummary>();
   const [countRequest, setCountRequest] = useState<CountRequest>();
+  const [nameRequest, setNameRequest] = useState<PileNameRequest>();
+  const [deleteRequest, setDeleteRequest] = useState<DeletePileRequest>();
+  /** A pile id, or ADD_PILE, to focus once it has rendered (after adding or deleting a pile). */
+  const pendingFocusRef = useRef<string>(undefined);
+  const addPileRef = useRef<HTMLButtonElement>(null);
   const loadTargetRef = useRef<string>(undefined);
   const returnFocusRef = useRef<string>(undefined);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -48,7 +59,16 @@ export function GameScreen() {
 
   const drawOne = useCallback(() => {
     if (drawPile) dispatch((g) => draw(g, { pileId: drawPile.id }));
-  }, [dispatch, drawPile]);
+    else if (activeSeat) announce(`${activeSeat.name} has no pile to draw from.`);
+  }, [dispatch, announce, drawPile, activeSeat]);
+
+  // Focus a pile (or Add pile) once it exists in the page. Runs after every render.
+  useEffect(() => {
+    const pending = pendingFocusRef.current;
+    if (!pending) return;
+    pendingFocusRef.current = undefined;
+    (pending === ADD_PILE ? addPileRef.current : tileRefs.current[pending])?.focus();
+  });
 
   // A file dropped anywhere but a pile must not make the browser open it instead.
   useEffect(() => {
@@ -169,6 +189,65 @@ export function GameScreen() {
     returnFocusToPile(countRequest?.pile.id);
   }
 
+  const openRename = useCallback(
+    (pileId: string) => {
+      const pile = game.piles.find((p) => p.id === pileId);
+      if (pile) setNameRequest({ mode: 'rename', pile });
+    },
+    [game],
+  );
+
+  const openDelete = useCallback(
+    (pileId: string) => {
+      const pile = game.piles.find((p) => p.id === pileId);
+      if (pile) setDeleteRequest({ pile, targets: game.piles.filter((p) => p.id !== pileId) });
+    },
+    [game],
+  );
+
+  const validateName = useCallback((name: string, exceptPileId?: string) => validatePileName(game, name, exceptPileId), [game]);
+
+  function confirmName(name: string, ownerSeatId: string | undefined) {
+    if (nameRequest?.mode === 'rename') {
+      const pileId = nameRequest.pile.id;
+      dispatch((g) => renamePile(g, { pileId, name }));
+      return;
+    }
+    const result = dispatch((g, context) =>
+      addPile(g, ownerSeatId === undefined ? { name } : { name, ownerSeatId }, context),
+    );
+    pendingFocusRef.current = result.pileId;
+  }
+
+  function closeName() {
+    const pileId = nameRequest?.mode === 'rename' ? nameRequest.pile.id : undefined;
+    setNameRequest(undefined);
+    if (pileId) returnFocusToPile(pileId);
+    else returnFocusToAddPile();
+  }
+
+  function confirmDelete(moveCardsToPileId: string | undefined) {
+    if (!deleteRequest) return;
+    const pileId = deleteRequest.pile.id;
+    // Focus moves to the pile that takes this one's place, or Add pile if it was the last.
+    const index = game.piles.findIndex((p) => p.id === pileId);
+    const next = game.piles[index + 1] ?? game.piles[index - 1];
+    dispatch((g) => deletePile(g, moveCardsToPileId === undefined ? { pileId } : { pileId, moveCardsToPileId }));
+    pendingFocusRef.current = next?.id ?? ADD_PILE;
+  }
+
+  function closeDelete() {
+    const pileId = deleteRequest?.pile.id;
+    setDeleteRequest(undefined);
+    // If the pile still exists, the delete was cancelled.
+    if (pileId && game.piles.some((p) => p.id === pileId)) returnFocusToPile(pileId);
+  }
+
+  function returnFocusToAddPile() {
+    const active = document.activeElement;
+    if (!active || active === document.body || active.closest('dialog')) addPileRef.current?.focus();
+  }
+
   const shuffleFrom = useCallback(
     (pileId: string) => {
       dispatch((g, context) => shuffle(g, { pileId }, context));
@@ -243,41 +322,57 @@ export function GameScreen() {
           <h2 id="table-heading" className="visually-hidden">
             Table
           </h2>
-          <ul className="pile-row" aria-label="Piles">
-            {game.piles.map((pile) => {
-              const topId = pile.cardIds[0];
-              const revealedTop = topId && game.cards[topId]?.faceUp ? faceOf(game, topId) : undefined;
-              return (
-                <li key={pile.id} className="pile-row__slot">
-                  <PileTile
-                    registerTile={registerTile}
-                    onDropFile={(id, file) => void loadFile(id, file)}
-                    pile={pile}
-                    ownerName={seatName(pile.ownerSeatId)}
-                    revealedTop={revealedTop}
-                    menuOpen={menuPileId === pile.id}
-                    onOpenMenu={() => setMenuPileId((open) => (open === pile.id ? undefined : pile.id))}
-                  />
-                  {menuPileId === pile.id && (
-                    <PileMenu
+          <div className="pile-area">
+            <ul className="pile-row" aria-label="Piles">
+              {game.piles.map((pile) => {
+                const topId = pile.cardIds[0];
+                const revealedTop = topId && game.cards[topId]?.faceUp ? faceOf(game, topId) : undefined;
+                return (
+                  <li key={pile.id} className="pile-row__slot">
+                    <PileTile
+                      registerTile={registerTile}
+                      onDropFile={(id, file) => void loadFile(id, file)}
                       pile={pile}
                       ownerName={seatName(pile.ownerSeatId)}
-                      keepOrder={keepOrder[pile.id] ?? false}
-                      onLoad={chooseFile}
-                      onToggleKeepOrder={toggleKeepOrder}
-                      onDraw={drawFrom}
-                      onDrawMany={openDrawMany}
-                      onShuffle={shuffleFrom}
-                      onReveal={revealFrom}
-                      onMill={openMill}
-                      canMill={game.piles.length > 1}
-                      onClose={closeMenu}
+                      revealedTop={revealedTop}
+                      menuOpen={menuPileId === pile.id}
+                      onOpenMenu={() => setMenuPileId((open) => (open === pile.id ? undefined : pile.id))}
                     />
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+                    {menuPileId === pile.id && (
+                      <PileMenu
+                        pile={pile}
+                        ownerName={seatName(pile.ownerSeatId)}
+                        keepOrder={keepOrder[pile.id] ?? false}
+                        onLoad={chooseFile}
+                        onToggleKeepOrder={toggleKeepOrder}
+                        onDraw={drawFrom}
+                        onDrawMany={openDrawMany}
+                        onShuffle={shuffleFrom}
+                        onReveal={revealFrom}
+                        onMill={openMill}
+                        canMill={game.piles.length > 1}
+                        onRename={openRename}
+                        onDelete={openDelete}
+                        canDelete={pile.cardIds.length === 0 || game.piles.length > 1}
+                        onClose={closeMenu}
+                      />
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            <button
+              ref={addPileRef}
+              type="button"
+              className="add-pile"
+              onClick={() => setNameRequest({ mode: 'add', defaultOwnerId: game.activeSeatId })}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              Add pile
+            </button>
+          </div>
 
           <h3 className="table-area__heading">On the table</h3>
           {tableCards.length === 0 ? (
@@ -300,6 +395,20 @@ export function GameScreen() {
 
       <input ref={fileRef} type="file" accept=".csv,text/csv" hidden data-testid="csv-file" onChange={(e) => void handleFile(e)} />
       <ImportResults summary={summary} onClose={closeResults} />
+      <PileNameDialog
+        key={nameRequest ? (nameRequest.mode === 'rename' ? `rename-${nameRequest.pile.id}` : 'add') : 'closed'}
+        request={nameRequest}
+        seats={game.seats}
+        validateName={validateName}
+        onConfirm={confirmName}
+        onClose={closeName}
+      />
+      <DeletePileDialog
+        key={deleteRequest ? `delete-${deleteRequest.pile.id}` : 'closed'}
+        request={deleteRequest}
+        onConfirm={confirmDelete}
+        onClose={closeDelete}
+      />
       <PileCountDialog
         key={countRequest ? `${countRequest.mode}-${countRequest.pile.id}` : 'closed'}
         request={countRequest}

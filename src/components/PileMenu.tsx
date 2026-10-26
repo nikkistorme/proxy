@@ -9,6 +9,8 @@ const ICONS = {
   shuffle: 'M4 7h3l10 10h3M4 17h3l3-3M14 10l3-3h3M18 4l2 3-2 3M18 14l2 3-2 3',
   reveal: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6z',
   mill: 'M4 12h12M12 7l5 5-5 5M20 5v14',
+  rename: 'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4',
+  delete: 'M5 7h14M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
 };
 
 interface PileMenuProps {
@@ -24,12 +26,17 @@ interface PileMenuProps {
   onMill: (pileId: string) => void;
   /** False when there is no other pile to mill onto. */
   canMill: boolean;
+  onRename: (pileId: string) => void;
+  onDelete: (pileId: string) => void;
+  /** False when the pile has cards and there is no other pile to take them. */
+  canDelete: boolean;
   onClose: () => void;
 }
 
-/** Actions for one pile (SP-1, SP-2, SP-3, SP-6). */
+/** Actions for one pile (SP-1, SP-2, SP-3, SP-4, SP-6). */
 export function PileMenu(props: PileMenuProps) {
-  const { pile, ownerName, keepOrder, onLoad, onToggleKeepOrder, onDraw, onDrawMany, onShuffle, onReveal, onMill, canMill, onClose } = props;
+  const { pile, ownerName, keepOrder, onLoad, onToggleKeepOrder, onDraw, onDrawMany, onShuffle, onReveal, onMill, canMill } = props;
+  const { onRename, onDelete, canDelete, onClose } = props;
   const empty = pile.cardIds.length === 0;
   const entries: MenuEntry[] = [{ kind: 'item', id: 'load', label: 'Load CSV…', icon: ICONS.load, onSelect: () => onLoad(pile.id) }];
   if (pile.sourceName) {
@@ -43,6 +50,9 @@ export function PileMenu(props: PileMenuProps) {
     { kind: 'item', id: 'shuffle', label: 'Shuffle', icon: ICONS.shuffle, disabled: pile.cardIds.length < 2, onSelect: () => onShuffle(pile.id) },
     { kind: 'item', id: 'reveal', label: 'Reveal top card', icon: ICONS.reveal, disabled: empty, onSelect: () => onReveal(pile.id) },
     { kind: 'item', id: 'mill', label: 'Mill cards…', icon: ICONS.mill, disabled: empty || !canMill, onSelect: () => onMill(pile.id) },
+    { kind: 'separator', id: 'sep-2' },
+    { kind: 'item', id: 'rename', label: 'Rename…', icon: ICONS.rename, onSelect: () => onRename(pile.id) },
+    { kind: 'item', id: 'delete', label: 'Delete…', icon: ICONS.delete, disabled: !canDelete, onSelect: () => onDelete(pile.id) },
   );
 
   const count = `${pile.cardIds.length} ${pile.cardIds.length === 1 ? 'card' : 'cards'}`;

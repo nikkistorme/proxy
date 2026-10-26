@@ -18,6 +18,8 @@ export interface GameStore {
    * announces it (AR-2). Returns the full result, for actions with extra output.
    */
   dispatch: <R extends ActionResult>(action: (game: GameState, context: ActionContext) => R) => R;
+  /** Announces something that isn't a game change, like why nothing happened. */
+  announce: (text: string) => void;
 }
 
 export const liveContext: ActionContext = { randomInt: cryptoRandomInt, newId: () => crypto.randomUUID() };
@@ -31,6 +33,7 @@ export function createGameStore(game: GameState = createSoloGame(), context: Act
       set({ game: result.state, announcement: { text: result.announcement, id: get().announcement.id + 1 } });
       return result;
     },
+    announce: (text) => set({ announcement: { text, id: get().announcement.id + 1 } }),
   }));
 }
 

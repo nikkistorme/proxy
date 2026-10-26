@@ -1,7 +1,7 @@
 import { useId, useState } from 'react';
 import type { Pile } from '../model/game';
 import { Dialog } from './Dialog';
-import './PileCountDialog.css';
+import './Form.css';
 
 export type CountRequest = { mode: 'draw'; pile: Pile; handName: string } | { mode: 'mill'; pile: Pile; targets: Pile[] };
 
@@ -53,8 +53,8 @@ export function PileCountDialog({ request, onConfirm, onClose }: PileCountDialog
     >
       {request && (
         <>
-          <div className="count-form__field">
-            <label htmlFor={countId} className="count-form__label">
+          <div className="form-field">
+            <label htmlFor={countId} className="form-label">
               {request.mode === 'draw' ? `Cards to draw into ${request.handName}'s hand` : 'Cards to move'}
             </label>
             <input
@@ -67,27 +67,27 @@ export function PileCountDialog({ request, onConfirm, onClose }: PileCountDialog
               value={value}
               aria-invalid={showError && !valid}
               aria-describedby={showError && error ? errorId : undefined}
-              className="count-form__input"
+              className="form-input form-input--number"
               data-autofocus
               onFocus={(event) => event.currentTarget.select()}
               onChange={(event) => setValue(event.currentTarget.value)}
               onBlur={() => setShowError(true)}
             />
             {showError && error && (
-              <p id={errorId} className="count-form__error">
+              <p id={errorId} className="form-error">
                 {error}
               </p>
             )}
           </div>
 
           {request.mode === 'mill' && (
-            <fieldset className="count-form__targets">
-              <legend className="count-form__label">Move them to the top of</legend>
+            <fieldset className="form-choices">
+              <legend className="form-label">Move them to the top of</legend>
               {request.targets.map((pile) => (
-                <label key={pile.id} className="count-form__target">
+                <label key={pile.id} className="form-choice">
                   <input type="radio" name="target" value={pile.id} checked={target === pile.id} onChange={() => setTarget(pile.id)} />
-                  <span className="count-form__target-name">{pile.name}</span>{' '}
-                  <span className="count-form__target-meta">{cardsWord(pile.cardIds.length)}</span>
+                  <span className="form-choice__name">{pile.name}</span>{' '}
+                  <span className="form-choice__meta">{cardsWord(pile.cardIds.length)}</span>
                 </label>
               ))}
             </fieldset>

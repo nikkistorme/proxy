@@ -34,6 +34,14 @@ describe('AR-2 store and live region', () => {
     expect(status.firstElementChild).not.toBe(first);
   });
 
+  it('announces text that is not a game change', () => {
+    const store = createGameStore(gameWithDeck(), testContext());
+    const before = store.getState().game;
+    store.getState().announce('Player 1 has no pile to draw from.');
+    expect(store.getState().announcement).toEqual({ text: 'Player 1 has no pile to draw from.', id: 1 });
+    expect(store.getState().game).toBe(before);
+  });
+
   it('needs a provider', () => {
     function Reader() {
       useGameStore((s) => s.game);

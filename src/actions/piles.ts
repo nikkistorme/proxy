@@ -6,12 +6,22 @@ function pileNameKey(name: string): string {
   return name.trim().toLowerCase();
 }
 
-function checkName(state: GameState, name: string, exceptPileId?: string): string {
+/**
+ * Why a pile name can't be used, or undefined if it can. Dialogs show this
+ * message, and the actions enforce the same rule.
+ */
+export function validatePileName(state: GameState, name: string, exceptPileId?: string): string | undefined {
   const trimmed = name.trim();
-  if (trimmed === '') throw new Error('A pile needs a name');
+  if (trimmed === '') return 'A pile needs a name';
   const clash = state.piles.find((p) => p.id !== exceptPileId && pileNameKey(p.name) === pileNameKey(trimmed));
-  if (clash) throw new Error(`There is already a pile called ${clash.name}`);
-  return trimmed;
+  if (clash) return `There is already a pile called ${clash.name}`;
+  return undefined;
+}
+
+function checkName(state: GameState, name: string, exceptPileId?: string): string {
+  const problem = validatePileName(state, name, exceptPileId);
+  if (problem) throw new Error(problem);
+  return name.trim();
 }
 
 function ownerLabel(state: GameState, pile: Pile): string {

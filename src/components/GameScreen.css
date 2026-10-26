@@ -86,6 +86,30 @@
   background: var(--table);
 }
 
+.pile-area {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-6);
+}
+
+/* A plain button, not a dashed outline: dashed means an empty pile. */
+.add-pile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--control);
+  border-radius: var(--radius-control);
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .pile-row {
   display: flex;
   flex-wrap: wrap;
