@@ -1,0 +1,63 @@
+name: Bug
+description: Something that doesn't work as the requirements say.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      placeholder: "Undo after a shuffle leaves the deck in the shuffled order."
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should happen
+      description: Cite the requirement ID if there is one.
+      placeholder: "TT-15 / acceptance: undo after a shuffle restores the previous order exactly."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: input
+    attributes:
+      label: Input method
+      multiple: true
+      options:
+        - Mouse
+        - Keyboard only
+        - Screen reader
+        - Touch
+
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and assistive tech
+      placeholder: "Firefox 131 + NVDA 2026.2, macOS Safari 19 + VoiceOver"
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshots, console output or saved game
+      description: Attach an exported JSON bundle if the bug depends on game state.
+
+  - type: checkboxes
+    id: regression
+    attributes:
+      label: Fix requirements
+      options:
+        - label: The fix PR includes a regression test (QA-7)
+          required: false
