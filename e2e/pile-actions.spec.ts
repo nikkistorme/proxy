@@ -153,6 +153,14 @@ test.describe('Pile menu on a short screen', () => {
     expect(box?.y).toBeGreaterThanOrEqual(0);
     await expect(menu).toHaveAttribute('data-more-below', '');
     await expect(menu).not.toHaveAttribute('data-more-above');
+    // The shadows are overlay layers above the items, so a hovered item can't cover them.
+    const shadow = (edge: '::before' | '::after') =>
+      menu.evaluate((m, pseudo) => {
+        const style = getComputedStyle(m, pseudo);
+        return { position: style.position, zIndex: style.zIndex, opacity: style.opacity };
+      }, edge);
+    expect(await shadow('::after')).toEqual({ position: 'sticky', zIndex: '1', opacity: '1' });
+    expect((await shadow('::before')).opacity).toBe('0');
 
     await page.keyboard.press('End');
     const last = menu.getByRole('menuitem', { name: 'Delete…' });
@@ -160,6 +168,8 @@ test.describe('Pile menu on a short screen', () => {
     await expect(last).toBeInViewport();
     await expect(menu).toHaveAttribute('data-more-above', '');
     await expect(menu).not.toHaveAttribute('data-more-below');
+    expect((await shadow('::before')).opacity).toBe('1');
+    expect((await shadow('::after')).opacity).toBe('0');
     const results = await new AxeBuilder({ page }).withTags(axeTags).analyze();
     expect(results.violations).toEqual([]);
   });

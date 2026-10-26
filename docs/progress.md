@@ -22,6 +22,7 @@ Phase 2 (piles) is complete: 2a to 2h are merged. Next is Phase 3 (Table: TT-1 t
 - **Owner review: the pile menu ran past the bottom of the screen** on a 14-inch MacBook Pro.
   - `Menu` now fits itself to the viewport when it opens, and on resize and scroll. It opens below its opener if it fits, else above if that fits (`data-placement="above"`, placed by the container's CSS), else on the roomier side, capped to that space.
   - It scrolls inside, and an inner shadow shows on any edge with more options out of view (`data-more-above` and `data-more-below`).
+  - The shadows are sticky `::before` and `::after` overlay layers, at 60% black. After the owner's second review, they replaced an inset `box-shadow` on the menu, which was too faint and painted underneath the items, so a hovered item covered it.
   - The E2E regression test at 1280 × 560 fails without the fix (the menu's bottom was at 872px).
 - Tests: 223 unit (`SP-9 peek`, `SP-9 peek N`, the Dialog regression, and `Action menu stays inside the viewport`), and 27 E2E including `e2e/peek.spec.ts` (mouse with axe, keyboard only with Move to… "— bottom" and Esc, and phone size at 375 × 667) and the short-screen menu test.
 - Checked by hand from screenshots at 1280 × 800 and 320 × 640.
