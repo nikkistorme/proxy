@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { gameWithDeck, namesOf, testContext } from '../actions/testing';
+import { gameWithDeck, namesOf, tableIds, testContext } from '../actions/testing';
 import { createGameStore, GameStoreProvider } from '../store/gameStore';
 import { PeekDialog } from './PeekDialog';
 
@@ -83,7 +83,7 @@ describe('SP-9 peek', () => {
     await user.click(within(move).getByRole('option', { name: /^Table/ }));
     await user.click(within(move).getByRole('button', { name: 'Move to Table' }));
 
-    expect(namesOf(state(), state().table)).toEqual(['Ogre']);
+    expect(namesOf(state(), tableIds(state()))).toEqual(['Ogre']);
     expect(shown()).toEqual(['Imp', 'Troll']);
     // Regression: closing the Move dialog must not close the Peek dialog.
     expect(dialog).toBeInTheDocument();

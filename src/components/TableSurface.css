@@ -1,0 +1,33 @@
+/* The playmat from the Main board. It scrolls inside its own area, never the page (A11Y-11). */
+.table-surface__scroll {
+  overflow: auto;
+  margin-top: var(--space-5);
+}
+
+.table-surface {
+  position: relative;
+  min-width: 100%;
+  border-radius: 16px;
+}
+
+/* The mat's faint inset edge. */
+.table-surface::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid var(--mat-edge);
+  border-radius: 16px;
+  pointer-events: none;
+}
+
+.table-surface--empty {
+  margin-top: var(--space-5);
+  padding: var(--space-5);
+}
+
+.table-surface__empty {
+  position: relative;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}

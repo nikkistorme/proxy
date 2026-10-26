@@ -8,7 +8,7 @@ export function shuffle(state: GameState, args: { pileId: string }, context: Act
   const cards = { ...state.cards };
   for (const id of pile.cardIds) {
     const card = cards[id];
-    if (card?.faceUp) cards[id] = { ...card, faceUp: false };
+    if (card && card.side !== 'down') cards[id] = { ...card, side: 'down' };
   }
   const next = withPile({ ...state, cards }, { ...pile, cardIds: shuffled(pile.cardIds, context.randomInt) });
   return { state: next, announcement: `Shuffled ${pile.name}. ${plural(pile.cardIds.length, 'card')}.` };
@@ -45,7 +45,7 @@ export function revealTop(state: GameState, args: { pileId: string }): ActionRes
   const top = topId === undefined ? undefined : state.cards[topId];
   if (!topId || !top) return { state, announcement: `${pile.name} is empty. Nothing to reveal.` };
 
-  const next = top.faceUp ? state : { ...state, cards: { ...state.cards, [topId]: { ...top, faceUp: true } } };
+  const next = top.side === 'front' ? state : { ...state, cards: { ...state.cards, [topId]: { ...top, side: 'front' as const } } };
   return { state: next, announcement: `Top of ${pile.name}: ${cardName(state, topId)}.` };
 }
 

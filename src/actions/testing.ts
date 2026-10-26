@@ -19,6 +19,11 @@ export function namesOf(state: GameState, ids: readonly string[] | undefined): s
   return (ids ?? []).map((id) => state.definitions[state.cards[id]?.definitionId ?? '']?.front.name ?? '?');
 }
 
+/** Card ids on the table, bottom of the stacking order first. */
+export function tableIds(state: GameState): string[] {
+  return state.table.map((entry) => entry.cardId);
+}
+
 /** A Solo game with the given cards in P1 main deck, top to bottom in CSV order. */
 export function gameWithDeck(csv = 'name\nImp\nOgre\nTroll\n'): GameState {
   return loadPile(createSoloGame(), { pileId: 'pile-p1-main', sourceName: 'deck.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;

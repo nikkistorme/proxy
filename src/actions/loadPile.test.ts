@@ -22,10 +22,17 @@ function load(state: GameState, csv: string, options: { keepOrder?: boolean; con
 }
 
 describe('SP-3 load a pile', () => {
+  it("gives each copy its pile's seat as owner, for its card back", () => {
+    const owned = loadPile(createSoloGame(), { pileId: 'pile-p1-main', sourceName: 'a.csv', cards: cardsFrom('name\nImp\n'), keepOrder: true }, testContext()).state;
+    expect(Object.values(owned.cards).map((c) => c.ownerSeatId)).toEqual(['seat-p1']);
+    const shared = loadPile(createSoloGame(), { pileId: 'pile-board', sourceName: 'a.csv', cards: cardsFrom('name\nImp\n'), keepOrder: true }, testContext()).state;
+    expect(Object.values(shared.cards)[0]).not.toHaveProperty('ownerSeatId');
+  });
+
   it('makes one copy per qty, in CSV order when asked', () => {
     const { state, announcement } = load(createSoloGame(), 'name,qty\nImp,2\nOgre,1\nWisp,0\n', { keepOrder: true });
     expect(pileNames(state)).toEqual(['Imp', 'Imp', 'Ogre']);
-    expect(Object.values(state.cards).every((card) => !card.faceUp)).toBe(true);
+    expect(Object.values(state.cards).every((card) => card.side === 'down')).toBe(true);
     expect(announcement).toBe('Loaded deck.csv into P1 main deck: 3 cards, in CSV order.');
   });
 

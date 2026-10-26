@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { gameWithDeck, namesOf, testContext } from '../actions/testing';
+import { gameWithDeck, namesOf, tableIds, testContext } from '../actions/testing';
 import type { GameState } from '../model/game';
 import { createGameStore, GameStoreProvider } from '../store/gameStore';
 import { PileViewer } from './PileViewer';
@@ -88,8 +88,8 @@ describe('SP-8 move a card from the pile viewer', () => {
     await user.click(screen.getByRole('button', { name: card('Tide Caller', 2) }));
     await user.click(screen.getByRole('button', { name: 'To table: Tide Caller' }));
 
-    expect(namesOf(state(), state().table)).toEqual(['Tide Caller']);
-    expect(state().cards[state().table[0] ?? '']?.faceUp).toBe(true);
+    expect(namesOf(state(), tableIds(state()))).toEqual(['Tide Caller']);
+    expect(state().cards[tableIds(state())[0] ?? '']?.side).toBe('front');
     expect(pileNames()).toEqual(['Ember Scout', 'Emberline Courier', 'Kindle Ward']);
     expect(screen.getByRole('button', { name: card('Emberline Courier', 2) })).toHaveFocus();
     expect(within(dialog).getByText('Moved Tide Caller from P1 main deck to the table.')).toBeInTheDocument();
@@ -113,7 +113,7 @@ describe('SP-8 move a card from the pile viewer', () => {
     await user.keyboard('t');
     expect(screen.getByRole('button', { name: card('Ember Scout', 1) })).toHaveFocus();
     await user.keyboard('t');
-    expect(namesOf(state(), state().table)).toEqual(['Emberline Courier', 'Ember Scout']);
+    expect(namesOf(state(), tableIds(state()))).toEqual(['Emberline Courier', 'Ember Scout']);
     expect(pileNames()).toEqual(['Tide Caller']);
     expect(screen.getByRole('textbox', { name: 'Search name or text' })).toHaveFocus();
   });
@@ -181,7 +181,7 @@ describe('SP-6 pile viewer footer', () => {
   it('reveals and draws the top card', async () => {
     const { user, state, shown } = renderViewer();
     await user.click(screen.getByRole('button', { name: 'Reveal top card' }));
-    expect(state().cards[state().piles[0]?.cardIds[0] ?? '']?.faceUp).toBe(true);
+    expect(state().cards[state().piles[0]?.cardIds[0] ?? '']?.side).toBe('front');
     await user.click(screen.getByRole('button', { name: 'Draw top card' }));
     expect(namesOf(state(), state().hands['seat-p1'])).toEqual(['Ember Scout']);
     expect(shown()).toHaveLength(3);

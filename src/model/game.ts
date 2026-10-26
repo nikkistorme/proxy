@@ -8,12 +8,30 @@ export interface Seat {
   hasHand: boolean;
 }
 
+/**
+ * Which way up a card is (TT-6): its front, its back (double-faced cards only),
+ * or face down, showing its owner's card back.
+ */
+export type CardSide = 'front' | 'back' | 'down';
+
 /** One physical copy of a card. Its look comes from its definition (AR-4). */
 export interface CardInstance {
   id: string;
   definitionId: string;
-  /** Face up on the table or on top of a pile. */
-  faceUp: boolean;
+  side: CardSide;
+  /** Seat of the pile it was loaded into, for its card back. Undefined for a shared pile. */
+  ownerSeatId?: string;
+}
+
+/** Card rotation on the table, in 90° steps clockwise (TT-5). */
+export type Rotation = 0 | 90 | 180 | 270;
+
+/** A card on the table. Its top-left corner is at x, y in table px at 100% zoom. */
+export interface TableEntry {
+  cardId: string;
+  x: number;
+  y: number;
+  rotation: Rotation;
 }
 
 export interface Pile {
@@ -37,8 +55,8 @@ export interface GameState {
   piles: Pile[];
   /** Card instance ids in each player seat's hand, keyed by seat id. */
   hands: Record<string, string[]>;
-  /** Card instance ids on the table. Positions arrive in Phase 3. */
-  table: string[];
+  /** Cards on the table, bottom of the stacking order first (TT-10). */
+  table: TableEntry[];
 }
 
 /** Everything an action needs from outside the state, injectable for tests (AR-3). */

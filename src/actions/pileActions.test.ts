@@ -26,7 +26,7 @@ describe('SP-6 shuffle', () => {
     const { state, announcement } = shuffle(revealed, { pileId: MAIN }, testContext());
     expect(pileOf(state, MAIN)).not.toEqual(pileOf(revealed, MAIN));
     expect([...pileOf(state, MAIN)].sort()).toEqual([...pileOf(revealed, MAIN)].sort());
-    expect(Object.values(state.cards).some((card) => card.faceUp)).toBe(false);
+    expect(Object.values(state.cards).some((card) => card.side !== 'down')).toBe(false);
     expect(announcement).toBe('Shuffled P1 main deck. 10 cards.');
   });
 });
@@ -70,7 +70,7 @@ describe('SP-6 reveal top card', () => {
   it('turns the top card face up and names it', () => {
     const { state, announcement } = revealTop(game(), { pileId: MAIN });
     const topId = state.piles.find((p) => p.id === MAIN)?.cardIds[0] ?? '';
-    expect(state.cards[topId]?.faceUp).toBe(true);
+    expect(state.cards[topId]?.side).toBe('front');
     expect(announcement).toBe('Top of P1 main deck: Imp.');
   });
 

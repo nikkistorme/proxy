@@ -6,7 +6,6 @@ import { addPile, deletePile, renamePile, validatePileName } from '../actions/pi
 import { importCards } from '../csv/importCards';
 import type { GameState, Pile } from '../model/game';
 import { useGameStore } from '../store/gameStore';
-import { CardFace } from './CardFace';
 import { DeletePileDialog, type DeletePileRequest } from './DeletePileDialog';
 import './GameScreen.css';
 import { HandTray } from './HandTray';
@@ -19,6 +18,7 @@ import { PileNameDialog, type PileNameRequest } from './PileNameDialog';
 import { PileTile } from './PileTile';
 import { PileViewer } from './PileViewer';
 import { seatIdentity } from './seatIdentity';
+import { TableSurface } from './TableSurface';
 import { TableTools } from './TableTools';
 
 function faceOf(game: GameState, cardId: string) {
@@ -313,10 +313,6 @@ export function GameScreen() {
   );
 
   const seatName = (seatId: string | undefined) => game.seats.find((s) => s.id === seatId)?.name;
-  const tableCards = game.table.flatMap((id) => {
-    const face = faceOf(game, id);
-    return face ? [{ id, face }] : [];
-  });
   const handCards = (game.hands[game.activeSeatId] ?? []).flatMap((id) => {
     const face = faceOf(game, id);
     return face ? [{ id, face }] : [];
@@ -366,7 +362,7 @@ export function GameScreen() {
             <ul className="pile-row" aria-label="Piles">
               {game.piles.map((pile) => {
                 const topId = pile.cardIds[0];
-                const revealedTop = topId && game.cards[topId]?.faceUp ? faceOf(game, topId) : undefined;
+                const revealedTop = topId && game.cards[topId]?.side === 'front' ? faceOf(game, topId) : undefined;
                 return (
                   <li key={pile.id} className="pile-row__slot">
                     <PileTile
@@ -416,18 +412,7 @@ export function GameScreen() {
             </button>
           </div>
 
-          <h3 className="table-area__heading">On the table</h3>
-          {tableCards.length === 0 ? (
-            <p className="table-area__empty">No cards on the table yet.</p>
-          ) : (
-            <ul className="table-area__cards" aria-label={`Cards on the table, ${tableCards.length}`}>
-              {tableCards.map((card) => (
-                <li key={card.id}>
-                  <CardFace face={card.face} />
-                </li>
-              ))}
-            </ul>
-          )}
+          <TableSurface />
         </section>
 
         {activeSeat?.hasHand && (

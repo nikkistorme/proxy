@@ -1,4 +1,5 @@
-import type { ActionResult, GameState } from '../model/game';
+import type { ActionResult, CardSide, GameState } from '../model/game';
+import { freeSpot } from '../model/tablePlacement';
 import { cardName, getPile, withPile } from './helpers';
 
 /** Where a card is now. */
@@ -6,7 +7,11 @@ export type CardLocation = { zone: 'table' } | { zone: 'hand'; seatId: string } 
 
 /** Where a card can be moved to (SP-8). */
 export type Destination =
-  | { zone: 'table' }
+  | {
+      zone: 'table';
+      /** Top-left corner in table px. The first free spot when left out. */
+      position?: { x: number; y: number };
+    }
   | { zone: 'hand'; seatId: string }
   | {
       zone: 'pile';
@@ -17,7 +22,7 @@ export type Destination =
     };
 
 export function locateCard(state: GameState, cardId: string): CardLocation {
-  if (state.table.includes(cardId)) return { zone: 'table' };
+  if (state.table.some((entry) => entry.cardId === cardId)) return { zone: 'table' };
   for (const [seatId, hand] of Object.entries(state.hands)) {
     if (hand.includes(cardId)) return { zone: 'hand', seatId };
   }
@@ -49,8 +54,9 @@ function without(ids: readonly string[], cardId: string): string[] {
 
 /**
  * SP-8: move one card to the table, a hand, or the top or bottom of a pile.
- * Cards left behind keep their order. A card lands face up on the table and
- * face down on a pile unless `faceUp` is set; in a hand its face is unchanged.
+ * Cards left behind keep their order. A card lands front up on the table, at
+ * `position` or the first free spot, and face down on a pile unless `faceUp`
+ * is set; in a hand its side is unchanged.
  */
 export function moveCard(state: GameState, args: { cardId: string; to: Destination }): ActionResult {
   const { cardId, to } = args;
@@ -73,7 +79,7 @@ export function moveCard(state: GameState, args: { cardId: string; to: Destinati
 
   // Take the card out of where it is.
   let next: GameState = state;
-  if (from.zone === 'table') next = { ...next, table: without(next.table, cardId) };
+  if (from.zone === 'table') next = { ...next, table: next.table.filter((entry) => entry.cardId !== cardId) };
   if (from.zone === 'hand') next = { ...next, hands: { ...next.hands, [from.seatId]: without(next.hands[from.seatId] ?? [], cardId) } };
   if (from.zone === 'pile') {
     const pile = getPile(next, from.pileId);
@@ -83,19 +89,20 @@ export function moveCard(state: GameState, args: { cardId: string; to: Destinati
   // Put it where it's going, face up or down as it lands.
   const card = state.cards[cardId];
   if (!card) throw new Error(`Unknown card: ${cardId}`);
-  let faceUp = card.faceUp;
+  let side: CardSide = card.side;
   if (to.zone === 'table') {
-    faceUp = true;
-    next = { ...next, table: [...next.table, cardId] };
+    side = 'front';
+    const { x, y } = to.position ?? freeSpot(next.table);
+    next = { ...next, table: [...next.table, { cardId, x, y, rotation: 0 }] };
   }
   if (to.zone === 'hand') next = { ...next, hands: { ...next.hands, [to.seatId]: [...(next.hands[to.seatId] ?? []), cardId] } };
   if (to.zone === 'pile') {
-    faceUp = to.faceUp ?? false;
+    side = to.faceUp ? 'front' : 'down';
     const pile = getPile(next, to.pileId);
     const cardIds = to.position === 'top' ? [cardId, ...pile.cardIds] : [...pile.cardIds, cardId];
     next = withPile(next, { ...pile, cardIds });
   }
-  if (faceUp !== card.faceUp) next = { ...next, cards: { ...next.cards, [cardId]: { ...card, faceUp } } };
+  if (side !== card.side) next = { ...next, cards: { ...next.cards, [cardId]: { ...card, side } } };
 
   return {
     state: next,
