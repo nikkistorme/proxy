@@ -29,6 +29,13 @@ async function loadSixty(page: Page) {
 test.describe('TT-15 undo and redo', () => {
   test('mouse: undo a shuffle back to the revealed top card, then redo it', async ({ page }) => {
     await expect(undoButton(page)).toHaveAccessibleName('Undo (Ctrl+Z), nothing to undo');
+    // The tooltip shows the same label on hover, and goes when the pointer leaves.
+    const tooltip = page.locator('.tooltip__text', { hasText: 'Undo (Ctrl+Z), nothing to undo' });
+    await undoButton(page).hover();
+    await expect(tooltip).toBeVisible();
+    await expect(tooltip).toBeInViewport({ ratio: 1 });
+    await page.mouse.move(400, 400);
+    await expect(tooltip).toBeHidden();
     await loadSixty(page);
     await mainPile(page).click();
     await page.getByRole('menuitem', { name: 'Reveal top card' }).click();
@@ -70,6 +77,7 @@ test.describe('TT-15 undo and redo', () => {
     await page.keyboard.press('Shift+Tab');
     await expect(redoButton(page)).toBeFocused();
     await page.keyboard.press('Shift+Tab');
+    await expect(page.locator('.tooltip__text', { hasText: /^Undo \(Ctrl\+Z\)$/ })).toBeVisible();
     await expect(undoButton(page)).toBeFocused();
     await page.keyboard.press('Enter');
     await page.keyboard.press('Enter');

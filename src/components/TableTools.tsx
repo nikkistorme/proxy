@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import './TableTools.css';
+import { Tooltip } from './Tooltip';
 
 const ICONS = {
   undo: 'M9 14L4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11',
@@ -44,16 +45,20 @@ export function TableTools() {
   return (
     <nav className="table-tools" aria-label="Table tools">
       {/* aria-disabled, not disabled, so focus stays put after the last undo and a press says why. */}
-      <button type="button" className="table-tools__button" aria-label={undoLabel} title={undoLabel} aria-disabled={!canUndo || undefined} onClick={undo}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d={ICONS.undo} />
-        </svg>
-      </button>
-      <button type="button" className="table-tools__button" aria-label={redoLabel} title={redoLabel} aria-disabled={!canRedo || undefined} onClick={redo}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d={ICONS.redo} />
-        </svg>
-      </button>
+      <Tooltip label={undoLabel} align="end">
+        <button type="button" className="table-tools__button" aria-label={undoLabel} aria-disabled={!canUndo || undefined} onClick={undo}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d={ICONS.undo} />
+          </svg>
+        </button>
+      </Tooltip>
+      <Tooltip label={redoLabel} align="end">
+        <button type="button" className="table-tools__button" aria-label={redoLabel} aria-disabled={!canRedo || undefined} onClick={redo}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d={ICONS.redo} />
+          </svg>
+        </button>
+      </Tooltip>
     </nav>
   );
 }

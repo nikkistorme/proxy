@@ -16,10 +16,14 @@ Phase 3 (Table) is under way. It's split into 3a to 3l, issues #23 to #34 under 
   - Undo and redo announce "Undone: <the action's announcement>" and "Redone: …", or "Nothing to undo." and "Nothing to redo." (A11Y-5).
 - **`TableTools`** is the header's `<nav aria-label="Table tools">` from the Main board, with only Undo and Redo so far. They're 32px icon buttons labelled "Undo (Ctrl+Z)" and "Redo (Ctrl+Shift+Z)", with ", nothing to undo" or ", nothing to redo" added when there isn't one.
   - They use `aria-disabled`, not `disabled`, so focus stays put after the last undo and a press says why.
+- **`Tooltip`** (`src/components/Tooltip.tsx`) gives icon-only buttons a visible label with their shortcut, as the Design System asks. It replaced `title`, after the owner's review found that hovering showed nothing.
+  - It shows on mouse hover after `TOOLTIP_DELAY_MS` (300ms), and at once on keyboard focus. Esc hides it, and it stays while the pointer is over it (WCAG 1.4.13). Touch doesn't show it.
+  - The control keeps its own accessible name, and the tooltip is `aria-hidden`, so the label isn't read twice.
+  - `align="end"` lines it up with the button's right edge, for the toolbar at the right of the screen.
 - **Keys:** Ctrl/⌘+Z undoes. Ctrl/⌘+Shift+Z and Ctrl+Y redo. They're ignored in fields, which keep their own undo, and while a dialog or menu is open, whose contents would go stale.
 - The toolbar adds two Tab stops before the piles, so the Tab counts in `e2e/import.spec.ts` and `e2e/manage-piles.spec.ts` went up by two.
-- Tests: 235 unit (`TT-15 undo and redo` in the store and `TT-15 undo and redo controls`) and 30 E2E, including `e2e/undo.spec.ts` (mouse with axe, keyboard only, and phone size at 375 × 667 and 320 wide).
-- Checked by hand from screenshots at 1280 and 320 wide.
+- Tests: 239 unit (`TT-15 undo and redo` in the store, `TT-15 undo and redo controls` and `Icon button tooltips`) and 30 E2E, including `e2e/undo.spec.ts` (mouse with axe and the tooltip on hover, keyboard only with the tooltip on focus, and phone size at 375 × 667 and 320 wide).
+- Checked by hand from screenshots at 1280 and 320 wide, with the tooltip open.
 
 ### Issue templates (2026-10-26)
 
@@ -390,3 +394,4 @@ Phase 3 (Table) is under way. It's split into 3a to 3l, issues #23 to #34 under 
 | 2026-10-26 | Undo and Redo stay focusable with `aria-disabled` and announce why when there's nothing to do | `disabled` buttons, as on the board | Focus doesn't drop after the last undo. Matches "Draw stays enabled and announces why". |
 | 2026-10-26 | Undo shortcuts do nothing in fields or while a dialog or menu is open | Undoing anywhere | Fields keep their own undo, and open dialogs hold card lists an undo would make stale |
 | 2026-10-26 | Keep the delete-pile confirmation for now | Dropping it now that undo exists | The owner chose to revisit it with Undo toasts in 3d |
+| 2026-10-26 | Icon buttons get our own `Tooltip`, shown on hover and on keyboard focus | The browser's `title` tooltip | `title` is slow, differs between browsers and never shows on focus or touch. The owner's review found it showed nothing. |
