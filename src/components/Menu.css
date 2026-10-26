@@ -71,3 +71,8 @@
   color: var(--muted);
   font-size: 12px;
 }
+
+.menu__item[aria-disabled='true'] {
+  color: var(--disabled);
+  cursor: default;
+}

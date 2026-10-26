@@ -127,3 +127,28 @@
 .pile-tile__empty-zero::before {
   content: '· ';
 }
+
+/* A CSV file is being dragged over the pile (SP-1). Shape and text, not colour alone. */
+.pile-tile--drop-target::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border: 3px solid var(--accent);
+  border-radius: calc(var(--radius-card) + 4px);
+  pointer-events: none;
+}
+
+.pile-tile__drop-label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-control);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}

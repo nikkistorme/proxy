@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { testContext } from './actions/testing';
@@ -123,6 +123,18 @@ describe('SP-6 draw', () => {
 });
 
 describe('Pile menu focus', () => {
+  it('does not take focus back when a dialog close event arrives after focus has moved on', async () => {
+    const user = renderGame();
+    await loadIntoMain(user, 'name\nImp\n');
+    const dialog = screen.getByRole('dialog', { name: 'Import results' }) as HTMLDialogElement;
+    // The player has already moved on before the (late) close event fires.
+    const draw = screen.getByRole('button', { name: 'Draw' });
+    draw.focus();
+    dialog.open = false;
+    fireEvent(dialog, new Event('close'));
+    expect(draw).toHaveFocus();
+  });
+
   it('returns focus to the pile when the menu closes with Escape', async () => {
     const user = renderGame();
     await user.click(mainTile());
@@ -138,5 +150,97 @@ describe('Pile menu focus', () => {
     await user.click(mainTile());
     await user.click(mainTile());
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+});
+
+describe('SP-6 pile menu actions', () => {
+  async function loaded(csv = 'name\nImp\nOgre\nTroll\nWisp\n') {
+    const user = renderGame();
+    await loadIntoMain(user, csv, { keepOrder: true });
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    return user;
+  }
+
+  async function choose(user: ReturnType<typeof userEvent.setup>, item: string) {
+    await user.click(mainTile());
+    await user.click(screen.getByRole('menuitem', { name: item }));
+  }
+
+  it('shuffles the pile', async () => {
+    const user = await loaded();
+    await choose(user, 'Shuffle');
+    expect(screen.getByRole('status')).toHaveTextContent('Shuffled P1 main deck. 4 cards.');
+  });
+
+  it('reveals the top card on the pile', async () => {
+    const user = await loaded();
+    await choose(user, 'Reveal top card');
+    expect(mainTile()).toHaveAccessibleName('P1 main deck, 4 cards, Player 1, top card face up: Imp');
+    expect(screen.getByRole('status')).toHaveTextContent('Top of P1 main deck: Imp.');
+  });
+
+  it('draws N into the hand, then returns focus to the pile', async () => {
+    const user = await loaded();
+    await choose(user, 'Draw cards…');
+    const field = screen.getByRole('spinbutton', { name: "Cards to draw into Player 1's hand" });
+    await user.clear(field);
+    await user.type(field, '3{Enter}');
+    expect(screen.getByRole('list', { name: "Player 1's hand, 3 cards" })).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Player 1 drew Imp, Ogre and Troll from P1 main deck. 1 card left.');
+    expect(mainTile()).toHaveFocus();
+  });
+
+  it('mills N onto another pile', async () => {
+    const user = await loaded();
+    await choose(user, 'Mill cards…');
+    const field = screen.getByRole('spinbutton', { name: 'Cards to move' });
+    await user.clear(field);
+    await user.type(field, '2');
+    await user.click(screen.getByRole('radio', { name: /^Environment deck/ }));
+    await user.click(screen.getByRole('button', { name: 'Move' }));
+    expect(screen.getByRole('button', { name: /^Environment deck,/ })).toHaveAccessibleName('Environment deck, 2 cards, Environment');
+    expect(screen.getByRole('status')).toHaveTextContent('Moved Imp and Ogre from P1 main deck to Environment deck.');
+  });
+
+  it('leaves Draw, Shuffle, Reveal and Mill unavailable on an empty pile', async () => {
+    const user = renderGame();
+    await user.click(mainTile());
+    for (const name of ['Draw 1', 'Draw cards…', 'Shuffle', 'Reveal top card', 'Mill cards…']) {
+      expect(screen.getByRole('menuitem', { name })).toHaveAttribute('aria-disabled', 'true');
+    }
+    await user.click(screen.getByRole('menuitem', { name: 'Draw cards…' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('menu')).toBeInTheDocument();
+  });
+});
+
+describe('SP-1 drop a file on a pile', () => {
+  const drop = (target: Element, file: File) => {
+    const dataTransfer = { types: ['Files'], files: [file] };
+    fireEvent.dragEnter(target, { dataTransfer });
+    fireEvent.drop(target, { dataTransfer });
+  };
+
+  it('loads a dropped CSV into that pile', async () => {
+    renderGame();
+    drop(screen.getByRole('button', { name: /^Board cards,/ }), csvFile('name\nToken\nToken 2\n', 'tokens.csv'));
+    expect(await screen.findByRole('dialog', { name: 'Import results' })).toHaveTextContent('tokens.csv into Board cards');
+    expect(screen.getByRole('button', { name: /^Board cards,/ })).toHaveAccessibleName('Board cards, 2 cards, shared');
+  });
+
+  it('refuses a file that is not a CSV, and loads nothing', async () => {
+    renderGame();
+    drop(mainTile(), new File(['not a deck'], 'art.png', { type: 'image/png' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Import results' });
+    expect(dialog).toHaveTextContent("art.png isn't a CSV file. Nothing was loaded.");
+    expect(mainTile()).toHaveAccessibleName('P1 main deck, empty, 0 cards, Player 1');
+  });
+
+  it('stops the browser opening a file dropped anywhere else', () => {
+    renderGame();
+    const event = new Event('dragover', { cancelable: true });
+    Object.defineProperty(event, 'dataTransfer', { value: { types: ['Files'] } });
+    window.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
   });
 });

@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef, useState, type DragEvent } from 'react';
 import type { CardFace as CardFaceData } from '../model/card';
 import type { Pile } from '../model/game';
 import { CardFace } from './CardFace';
@@ -16,6 +16,8 @@ interface PileTileProps {
   onOpenMenu: () => void;
   /** Gives the parent this tile's button, for returning focus to it. */
   registerTile: (pileId: string, element: HTMLButtonElement | null) => void;
+  /** SP-1: a file dropped on the pile. Load CSV… in the menu is the non-drag way. */
+  onDropFile: (pileId: string, file: File) => void;
 }
 
 /**
@@ -25,8 +27,38 @@ interface PileTileProps {
  * the button holds only the plate text. Its label then always starts with the
  * text you can see (WCAG 2.5.3), whatever the top card says.
  */
-export function PileTile({ pile, ownerName, revealedTop, menuOpen, onOpenMenu, registerTile }: PileTileProps) {
+export function PileTile({ pile, ownerName, revealedTop, menuOpen, onOpenMenu, registerTile, onDropFile }: PileTileProps) {
   const ref = useCallback((element: HTMLButtonElement | null) => registerTile(pile.id, element), [registerTile, pile.id]);
+  const [dropTarget, setDropTarget] = useState(false);
+  // dragenter and dragleave fire for every child, so count them to know when the drag really leaves.
+  const dragDepth = useRef(0);
+
+  const isFileDrag = (event: DragEvent) => event.dataTransfer.types.includes('Files');
+  const dragHandlers = {
+    onDragEnter: (event: DragEvent) => {
+      if (!isFileDrag(event)) return;
+      event.preventDefault();
+      dragDepth.current += 1;
+      setDropTarget(true);
+    },
+    onDragOver: (event: DragEvent) => {
+      if (!isFileDrag(event)) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'copy';
+    },
+    onDragLeave: () => {
+      dragDepth.current = Math.max(0, dragDepth.current - 1);
+      if (dragDepth.current === 0) setDropTarget(false);
+    },
+    onDrop: (event: DragEvent) => {
+      if (!isFileDrag(event)) return;
+      event.preventDefault();
+      dragDepth.current = 0;
+      setDropTarget(false);
+      const file = event.dataTransfer.files[0];
+      if (file) onDropFile(pile.id, file);
+    },
+  };
   const identity = seatIdentity(pile.ownerSeatId);
   const count = pile.cardIds.length;
   const label = [
@@ -40,7 +72,7 @@ export function PileTile({ pile, ownerName, revealedTop, menuOpen, onOpenMenu, r
     .join(', ');
 
   return (
-    <div className="pile-tile">
+    <div className={dropTarget ? 'pile-tile pile-tile--drop-target' : 'pile-tile'} {...dragHandlers}>
       {count > 2 && <div className={`pile-tile__layer pile-tile__layer--2 ${identity.backClass}`} aria-hidden="true" />}
       {count > 1 && <div className={`pile-tile__layer pile-tile__layer--1 ${identity.backClass}`} aria-hidden="true" />}
       {count > 0 && (
@@ -87,6 +119,11 @@ export function PileTile({ pile, ownerName, revealedTop, menuOpen, onOpenMenu, r
           </span>
         )}
       </button>
+      {dropTarget && (
+        <span className="pile-tile__drop-label" aria-hidden="true">
+          Drop to load
+        </span>
+      )}
     </div>
   );
 }

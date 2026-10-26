@@ -2,9 +2,32 @@
 
 ## Current state
 
-Phase 2 (piles): 2a and 2b are merged. 2c (game screen and pile loading) is in review on branch `phase-2c-game-screen`, waiting for the owner to test the preview.
+Phase 2 (piles): 2a, 2b and 2c are merged. 2d (pile actions) is in review on branch `phase-2d-pile-actions`, waiting for the owner to test the preview.
 
 ## Done
+
+### Phase 2d: Pile actions (2026-10-26)
+
+- `Dialog` (`src/components/Dialog.tsx`) is a shared native modal following `MoveDialog`. It has:
+  - an eyebrow and title, a close button, and a footer with a hint, an optional Cancel, and a main button
+  - `onSubmit` to turn it into a form, where Enter submits
+  - `data-autofocus` to choose which element gets focus first
+  - the phone-size fix from PR #11 built in
+  - `ImportResults` now uses it, and `ImportResults.css` keeps only the results styles.
+- `PileCountDialog` handles **Draw cards…** and **Mill cards…** (SP-6).
+  - It has a number field from 1 to the pile size, with an inline error.
+  - Mill also has a radio list of the other piles.
+  - The game screen gives each request its own `key`, so every opening starts fresh.
+- The pile menu adds **Draw cards…**, **Shuffle**, **Reveal top card** and **Mill cards…**.
+  - Items that can't run are `aria-disabled`: on an empty pile, Shuffle with fewer than two cards, and Mill with no other pile.
+- **Drop a CSV on a pile (SP-1):**
+  - The pile gets a 3px accent ring and a "Drop to load" label, and the file loads with that pile's Keep CSV order setting.
+  - A file that isn't a CSV is reported instead of loaded.
+  - A file dropped elsewhere on the page doesn't make the browser navigate away to open it.
+- **Bug fixed during the build:** a dialog's `close` event can arrive a moment after Done. When it did, `closeResults` pulled focus back to the pile even if you had already opened a menu, which closed the menu.
+  - Focus now returns to the pile only if it was lost (on the page body or inside the closed dialog).
+  - A regression test covers it; I confirmed it fails without the fix.
+- Tests: 163 unit, and 14 E2E including `e2e/pile-actions.spec.ts`. They cover mouse and keyboard paths, axe with the count dialogs open, and dropping a file.
 
 ### Phase 2c: Game screen and pile loading (2026-10-25)
 
@@ -172,13 +195,14 @@ Phase 2 (piles): 2a and 2b are merged. 2c (game screen and pile loading) is in r
 
 ## Next
 
-- Owner tests the 2c preview, then merges.
-- **2d. Pile menu actions (SP-4, SP-6, SP-1 drop):** shuffle, Draw N, Reveal top, Mill N, add, rename and delete pile, and dropping a CSV on a pile.
-- **2e. Pile viewer (SP-7, SP-8 UI)** following `PileViewer`, including the acceptance test: find a card and put it on the table in three actions or fewer.
-- **2f. Peek UI (SP-9).**
+- Owner tests the 2d preview, then merges.
+- **2e. Pile management (SP-4):** add, rename and delete piles, using `Dialog`. The rules are already in `src/actions/piles.ts`.
+- **2f. Pile viewer (SP-7, SP-8)** following `PileViewer`, including the acceptance test: find a card and put it on the table in three actions or fewer.
+- **2g. Peek (SP-9).**
 
 ## Open problems
 
+- The form error colour uses `--seat-a` (5.4:1 on the panel), because the tokens have no error colour. Add an error token if the design gets one.
 - **Reload is two clicks, not one:** "Reload <file>…" reopens the file picker, because browsers can't re-read a chosen file. A true one-click reload needs the File System Access API, which works in Chromium only and falls back to the picker elsewhere. That fits with Phase 6, where the file handle can be saved with the game.
 - The default card face uses the UI font, not the sample card's Bitter, which would be another font dependency. Phase 4 layouts will set card fonts.
 - The shared-pile back colour `#3F433D` isn't a design token. The design has no shared seat, so add a token if the design gets one.
@@ -224,3 +248,7 @@ Phase 2 (piles): 2a and 2b are merged. 2c (game screen and pile loading) is in r
 | 2026-10-25 | Seat identities: Player 1 gets the first design seat, Environment the environment one, and shared piles a neutral back | Using the design's seat names | Keeps the design's shape, colour and pattern system with our seat names |
 | 2026-10-25 | Pile tiles: a fixed `aria-label` on a button that holds only the plate text, with the card art as a layer underneath | A name computed from visible text | Computed names differ between browsers and jsdom. This way the label always contains the visible text (WCAG 2.5.3). |
 | 2026-10-25 | The D shortcut checks the page for an open dialog or menu, not React state | Gating on component state | State can lag the native dialog's close event, which drops a D pressed straight after Esc |
+| 2026-10-26 | Pile management split into its own issue (2e); viewer and peek become 2f and 2g | One large 2d | Keeps each PR reviewable |
+| 2026-10-26 | One shared `Dialog`, with `ImportResults` moved onto it | A separate dialog for each use | Every dialog gets the same focus, Escape and phone-size behaviour |
+| 2026-10-26 | Draw N and Mill N use a dialog with a number field | A submenu of preset numbers | Allows any number, and is easier by keyboard and screen reader |
+| 2026-10-26 | After a dialog closes, focus goes back to the pile only if it was lost | Always moving focus to the pile | The close event can arrive late, after the player has already moved on |

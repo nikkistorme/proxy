@@ -5,6 +5,10 @@ const ICONS = {
   load: 'M12 16V4M7 9l5-5 5 5M5 20h14',
   reload: 'M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5',
   draw: 'M12 4v12M7 11l5 5 5-5M5 20h14',
+  drawMany: 'M8 4v10M4 10l4 4 4-4M16 4v10M12 10l4 4 4-4M4 20h16',
+  shuffle: 'M4 7h3l10 10h3M4 17h3l3-3M14 10l3-3h3M18 4l2 3-2 3M18 14l2 3-2 3',
+  reveal: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6z',
+  mill: 'M4 12h12M12 7l5 5-5 5M20 5v14',
 };
 
 interface PileMenuProps {
@@ -14,11 +18,19 @@ interface PileMenuProps {
   onLoad: (pileId: string) => void;
   onToggleKeepOrder: (pileId: string) => void;
   onDraw: (pileId: string) => void;
+  onDrawMany: (pileId: string) => void;
+  onShuffle: (pileId: string) => void;
+  onReveal: (pileId: string) => void;
+  onMill: (pileId: string) => void;
+  /** False when there is no other pile to mill onto. */
+  canMill: boolean;
   onClose: () => void;
 }
 
-/** Actions for one pile (SP-1, SP-2, SP-3, SP-6). 2d adds the rest. */
-export function PileMenu({ pile, ownerName, keepOrder, onLoad, onToggleKeepOrder, onDraw, onClose }: PileMenuProps) {
+/** Actions for one pile (SP-1, SP-2, SP-3, SP-6). */
+export function PileMenu(props: PileMenuProps) {
+  const { pile, ownerName, keepOrder, onLoad, onToggleKeepOrder, onDraw, onDrawMany, onShuffle, onReveal, onMill, canMill, onClose } = props;
+  const empty = pile.cardIds.length === 0;
   const entries: MenuEntry[] = [{ kind: 'item', id: 'load', label: 'Load CSV…', icon: ICONS.load, onSelect: () => onLoad(pile.id) }];
   if (pile.sourceName) {
     entries.push({ kind: 'item', id: 'reload', label: `Reload ${pile.sourceName}…`, icon: ICONS.reload, onSelect: () => onLoad(pile.id) });
@@ -26,7 +38,11 @@ export function PileMenu({ pile, ownerName, keepOrder, onLoad, onToggleKeepOrder
   entries.push(
     { kind: 'checkbox', id: 'keep-order', label: 'Keep CSV order', checked: keepOrder, onToggle: () => onToggleKeepOrder(pile.id) },
     { kind: 'separator', id: 'sep-1' },
-    { kind: 'item', id: 'draw', label: 'Draw 1', icon: ICONS.draw, onSelect: () => onDraw(pile.id) },
+    { kind: 'item', id: 'draw', label: 'Draw 1', icon: ICONS.draw, disabled: empty, onSelect: () => onDraw(pile.id) },
+    { kind: 'item', id: 'draw-many', label: 'Draw cards…', icon: ICONS.drawMany, disabled: empty, onSelect: () => onDrawMany(pile.id) },
+    { kind: 'item', id: 'shuffle', label: 'Shuffle', icon: ICONS.shuffle, disabled: pile.cardIds.length < 2, onSelect: () => onShuffle(pile.id) },
+    { kind: 'item', id: 'reveal', label: 'Reveal top card', icon: ICONS.reveal, disabled: empty, onSelect: () => onReveal(pile.id) },
+    { kind: 'item', id: 'mill', label: 'Mill cards…', icon: ICONS.mill, disabled: empty || !canMill, onSelect: () => onMill(pile.id) },
   );
 
   const count = `${pile.cardIds.length} ${pile.cardIds.length === 1 ? 'card' : 'cards'}`;
