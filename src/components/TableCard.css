@@ -1,0 +1,84 @@
+/* Card on the table, from the Main and CardStates boards. */
+.table-card {
+  position: absolute;
+  width: var(--card-w);
+  height: var(--card-h);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+/* A focused card comes to the front, so its focus ring is never hidden (A11Y-7). */
+.table-card:focus-within {
+  z-index: 10000 !important;
+}
+
+.table-card__face,
+.table-card__button {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-card);
+}
+
+.table-card__face {
+  overflow: hidden;
+}
+
+.table-card__button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.table-card__button:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+/*
+ * The focused card is the current card that keys and the card menu act on, so its
+ * ring shows after a click too, not only after keyboard use as elsewhere.
+ */
+.table-card__button:focus {
+  outline: 2px solid transparent;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+
+.table-card__frame {
+  position: absolute;
+  inset: 6px;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+}
+
+.table-card__mark {
+  position: absolute;
+  left: 41px;
+  top: 66px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+/* Card overlays are dark pills with a white edge, so they read on any art (HANDOFF decision 8). */
+.table-card__badge {
+  position: absolute;
+  left: 6px;
+  top: 34px;
+  display: flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 11px;
+  background: rgba(18, 18, 18, 0.9);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.75);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  pointer-events: none;
+}

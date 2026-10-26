@@ -60,7 +60,7 @@ export function loadPile(state: GameState, args: LoadPileArgs, context: ActionCo
 
     for (let i = have; i < wanted; i++) {
       const id = context.newId();
-      newCards[id] = { id, definitionId: definition.id, faceUp: false };
+      newCards[id] = { id, definitionId: definition.id, side: 'down', ...(pile.ownerSeatId && { ownerSeatId: pile.ownerSeatId }) };
       added.push(id);
     }
 

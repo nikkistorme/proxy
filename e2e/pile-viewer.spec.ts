@@ -14,7 +14,7 @@ const mainPile = (page: Page) => page.getByRole('button', { name: /^P1 main deck
 const viewer = (page: Page) => page.getByRole('dialog', { name: 'P1 main deck' });
 /** A viewer card button by its name and position ("Card 01. Spell. … #1 from top"). */
 const card = (name: string, position: number | string = '\\d+') => new RegExp(`^${name}\\. .* #${position} from top$`);
-const tableCards = (page: Page) => page.getByRole('list', { name: /^Cards on the table/ });
+const tableCards = (page: Page) => page.getByRole('group', { name: /^Table, / });
 
 /** Loads the 60-row deck (58 cards) into P1 main deck in CSV order: Card 01 is on top. */
 async function loadSixty(page: Page) {
@@ -47,7 +47,7 @@ test.describe('SP-7, SP-8 pile viewer', () => {
     await expect(sheet).toBeHidden();
     await expect(mainPile(page)).toBeFocused();
     await expect(mainPile(page)).toHaveAccessibleName('P1 main deck, 57 cards, Player 1');
-    await expect(tableCards(page).getByRole('img')).toHaveAccessibleName(/^Card 37\./);
+    await expect(tableCards(page).getByRole('button')).toHaveAccessibleName('Card 37');
   });
 
   test('keyboard only: V opens the viewer, arrows browse, T and Enter move, Esc closes', async ({ page }) => {
@@ -76,7 +76,7 @@ test.describe('SP-7, SP-8 pile viewer', () => {
     await expect(sheet).toBeHidden();
     await expect(mainPile(page)).toBeFocused();
     await expect(page.getByRole('list', { name: "Player 1's hand, 1 card" })).toBeVisible();
-    await expect(tableCards(page).getByRole('img')).toHaveAccessibleName(/^Card 37\./);
+    await expect(tableCards(page).getByRole('button')).toHaveAccessibleName('Card 37');
   });
 
   test('filters by column, and has no axe violations while filtered', async ({ page }) => {

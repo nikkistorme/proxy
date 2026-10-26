@@ -2,9 +2,38 @@
 
 ## Current state
 
-Phase 3 (Table) is under way. It's split into 3a to 3l, issues #23 to #34 under #20. 3a (undo and redo) is merged, and 3b (placed table cards and table focus, #24) is next.
+Phase 3 (Table) is under way. It's split into 3a to 3m: issues #23 to #34, plus #37, all under #20. 3a (undo and redo) and 3b (placed table cards and table focus) are merged. 3c (pan, zoom, fit all and grid snap, #25) is next.
 
 ## Done
+
+### Phase 3b: Placed table cards and table focus (2026-10-26)
+
+- **Card sides (TT-6).** `CardInstance.faceUp` is now `side: 'front' | 'back' | 'down'` (`CardSide`).
+  - A card moved to the table shows its front. One moved to a pile is face down unless kept face up. Shuffle turns every card face down, and Reveal turns the top card's front up.
+  - Nothing sets `back` yet: flipping comes in 3d.
+- **Card owners.** Each copy records `ownerSeatId`, the seat of the pile it was loaded into (none for a shared pile), so a face-down card shows its owner's back.
+- **Table entries.** `table` is a list of `TableEntry` objects (`{ cardId, x, y, rotation }`), bottom of the stacking order first.
+  - `Rotation` is 0, 90, 180 or 270.
+  - `moveCard` to the table takes an optional `position`. Without one, `freeSpot` (`src/model/tablePlacement.ts`) picks the first grid cell no card covers, six cards to a row. A quarter-turned card counts by its turned size.
+- **`TableSurface` and `TableCard`** replace the "On the table" list.
+  - Cards sit at their positions on the mat, with the Main board's size, shadow and inset mat edge. The mat grows to fit its cards and scrolls inside its own area, so the page never scrolls sideways.
+  - **Face down:** the owner's card back, with its frame and seat mark.
+  - **Missing definition:** a "Not in CSV" dark pill.
+  - **Back face:** a card showing its back whose definition lost its back falls back to its front.
+  - Rotation is drawn around the card's centre.
+- **Focus (A11Y-3).** The table is a group with one Tab stop, which is the last card focused, or the first in reading order once that card has gone.
+  - Arrow keys go to the nearest card in that direction (`nearestInDirection` in `src/model/tableNavigation.ts`), where sideways distance counts double. At the edge, focus stays put.
+  - A focused card is drawn above every other card (A11Y-7), visually only, so it isn't an action.
+  - **Owner review: clicking a card did nothing visible.** The ring only showed after keyboard use (`:focus-visible`), and Safari doesn't focus a button on click. Table cards now focus themselves on click and show the ring on any focus, because the focused card is the current card that keys and the card menu act on. The E2E mouse test checks the ring and stacking after a click, and fails without the fix in Chromium and WebKit.
+- **Names (A11Y-6), from `tableCardView`:**
+  - the name, plus ", front face" or ", back face" for double-faced cards, then ", rotated 90°", then ", not in the CSV any more"
+  - face-down cards: "Face-down card, Player 1" (or "shared")
+  - Each card is a transparent button over a decorative face, the same pattern as the viewer.
+- **New issues from planning:**
+  - **#37 (3m):** movable piles on the table, at the owner's request.
+  - **#26 (3d)** now also covers a hand card menu with Play to table and Move to….
+- Tests: 261 unit (`TT-4 placing a card on the table`, `TT-4 cards on the table`, `TT-6 card sides`, `A11Y-3 table navigation`, `A11Y-3 table focus` and `A11Y-6 table card names`) and 33 E2E, including `e2e/table.spec.ts` (mouse with axe, keyboard only, and phone size at 375 × 667).
+- Checked by hand from screenshots at 1280 and 320 wide.
 
 ### Phase 3a: Undo and redo (2026-10-26)
 
@@ -313,11 +342,10 @@ Phase 3 (Table) is under way. It's split into 3a to 3l, issues #23 to #34 under 
 
 ## Next
 
-- **3b: Placed table cards and table focus (#24)**, after the owner's go-ahead. Then 3c to 3l in order, #25 to #34. Open problems that belong to later issues:
-  - 3b: the face state needs three values (front, back, face down), and cards whose definition is `missing`
+- **3c: Pan, zoom, fit all and grid snap (#25)**, after the owner's go-ahead. Then 3d to 3l (#26 to #34), and 3m (#37, movable piles) after 3c, 3e and 3f. Open problems that belong to later issues:
   - 3c: choosing the dark theme
-  - 3d: a back face lost on re-import, and whether to drop the delete-pile confirmation in favour of an Undo toast
-- From 3d on, the table's card menu can reuse `MoveDialog`.
+  - 3d: whether to drop the delete-pile confirmation in favour of an Undo toast, and a double-faced badge on table cards (from CardStates)
+- 3d's card menu can reuse `MoveDialog`, and covers hand cards too.
 
 ## Open problems
 
@@ -325,17 +353,14 @@ Phase 3 (Table) is under way. It's split into 3a to 3l, issues #23 to #34 under 
 - Local WebKit on macOS skips buttons when tabbing, unlike CI's Linux WebKit, so the keyboard-only E2E tests that press Tab fail locally in WebKit only. Use Chromium locally, as BP-4 says, and trust CI for WebKit.
 - E2E: under the full suite's load, `e2e/move-dialog.spec.ts` (keyboard only) and `e2e/manage-piles.spec.ts` (keyboard only) each failed once in 3a and passed on rerun and alone. Watch for flakiness.
 - The search-match highlight uses the board's `#FBE3A6` with ink text, which isn't a token. Add a highlight token if the design gets one.
-- axe's label-in-name check joins text from separate blocks with no spaces, so a button containing a whole card face fails it. The viewer avoids that with the overlay pattern. Keep it in mind for table cards in Phase 3.
+- axe's label-in-name check joins text from separate blocks with no spaces, so a button containing a whole card face fails it. The viewer and table cards avoid that with the overlay pattern.
 - In this cloud environment the pinned `@playwright/test` wants a newer Chromium than the one installed. Local E2E ran with a scratch config pointing `launchOptions.executablePath` at `/opt/pw-browsers/chromium`. That config isn't committed, and CI is unaffected.
 - The form error colour uses `--seat-a` (5.4:1 on the panel), because the tokens have no error colour. Add an error token if the design gets one.
 - **Reload is two clicks, not one:** "Reload <file>…" reopens the file picker, because browsers can't re-read a chosen file. A true one-click reload needs the File System Access API, which works in Chromium only and falls back to the picker elsewhere. That fits with Phase 6, where the file handle can be saved with the game.
 - The default card face uses the UI font, not the sample card's Bitter, which would be another font dependency. Phase 4 layouts will set card fonts.
 - The shared-pile back colour `#3F433D` isn't a design token. The design has no shared seat, so add a token if the design gets one.
-- For Phase 3 (TT-6): face state is a boolean `faceUp`. Flipping a double-faced card to show its back needs a three-way state (front, back, face down), which Phase 3 should introduce.
 - Dark theme isn't wired up. `tokens.css` has `[data-theme="dark"]` values, but nothing sets `data-theme` yet. Decide how the theme is chosen (follow the system setting, a toggle, or both) when the table is built.
 - PR preview clean-up leaves an empty `pr-preview/pr-N/.nojekyll` on `gh-pages`. It's harmless (the URL returns 404), but it could be tidied later.
-- For Phase 3: a table card showing its back face whose definition loses its back on re-import should fall back to the front.
-- For Phase 3: decide how cards on the table whose definition is `missing` should look. The import results in 1d can list them.
 - The app's PR monitor still shows an error cached from the old npm `gh`. CI was checked with the real `gh` instead.
 - Local Node is 22.12.0. Some ESLint deps want ≥ 22.13 (this is an engine warning only). CI uses the latest Node 22.
 
@@ -400,3 +425,11 @@ Phase 3 (Table) is under way. It's split into 3a to 3l, issues #23 to #34 under 
 | 2026-10-26 | Undo shortcuts do nothing in fields or while a dialog or menu is open | Undoing anywhere | Fields keep their own undo, and open dialogs hold card lists an undo would make stale |
 | 2026-10-26 | Keep the delete-pile confirmation for now | Dropping it now that undo exists | The owner chose to revisit it with Undo toasts in 3d |
 | 2026-10-26 | Icon buttons get our own `Tooltip`, shown on hover and on keyboard focus | The browser's `title` tooltip | `title` is slow, differs between browsers and never shows on focus or touch. The owner's review found it showed nothing. |
+| 2026-10-26 | Card face state is `side: 'front' \| 'back' \| 'down'` | A `faceUp` flag plus a back flag | One value can't contradict itself, and flipping (3d) just changes it |
+| 2026-10-26 | Table order is the stacking order, with no z numbers | A z-index on each card | Bring to front and send to back are list moves, and z values can never clash |
+| 2026-10-26 | A card put on the table without a position goes in the first free grid cell | Stacking every card at one spot | New cards never land on top of others |
+| 2026-10-26 | Face-down names include the owner: "Face-down card, Player 1" | Only "face-down card", as A11Y-6 says | The card back already shows whose it is, so it's the same information sighted players have. The owner confirmed it. |
+| 2026-10-26 | Table card names are short: name, face and rotation | The full card text the viewer reads | Arrowing across the table would read whole rules boxes. The details command (3d) reads every column. The owner confirmed it. |
+| 2026-10-26 | Piles stay in their row in 3b, and moving piles onto the table is its own issue (#37) | Doing it in 3b | It needs positions, drag and keyboard moves for piles, so it builds on 3c, 3e and 3f. The owner asked for it not to be lost. |
+| 2026-10-26 | Bringing a focused card to the front is visual only (CSS) | A bring-to-front action | Focus shouldn't create undo steps or change the game |
+| 2026-10-26 | Table cards show the focus ring after a click as well as keyboard use, and focus themselves on click | Only `:focus-visible`, as for other controls | The focused card is the current card that keys and the card menu act on, so it must be visible. Safari doesn't focus buttons on click. The owner's review found clicking showed nothing. |
