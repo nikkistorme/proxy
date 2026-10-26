@@ -2,9 +2,15 @@
 
 ## Current state
 
-Phase 2 (piles): 2a to 2f are merged. 2g (Move to… dialog) is in review on branch `claude/pile-viewer-planning-s81smu`, waiting for the owner to test the preview.
+Phase 2 (piles): 2a to 2g are merged. Next is 2h (Peek, SP-9), the last Phase 2 issue.
 
 ## Done
+
+### Workflow rules (2026-10-26)
+
+- PR #16: after opening a PR, the session subscribes to its activity, so CI results and review comments reach it.
+- This PR: every PR, docs-only ones included, updates this file. It's written as it will read after the merge, so `main` is never out of date.
+- Also fixed lines that had gone stale: 2g was still "in review" and #16 still "waiting".
 
 ### Phase 2g: Move to… dialog (2026-10-26)
 
@@ -255,8 +261,12 @@ Phase 2 (piles): 2a to 2f are merged. 2g (Move to… dialog) is in review on bra
 
 ## Next
 
-- Owner tests the 2g preview, then merges. PR #16 (CLAUDE.md, watching PRs) also waits for the owner.
-- **2h. Peek (SP-9).** It can reuse `MoveDialog` for moving peeked cards.
+- **2h. Peek (SP-9).** The plan is agreed:
+  - **Peek at top cards…** in the pile menu opens `PileCountDialog` in a `peek` mode, starting at 3.
+  - A Peek dialog shows the cards top first. Each one has Up, Down and Move to… (Move to… leaves out "<this pile> — top").
+  - Done, Esc and × all put the cards back in the order shown, with one `reorderTop`.
+  - `Dialog` acts only on its own `close` event.
+- Then Phase 3, after the owner's go-ahead.
 
 ## Open problems
 
@@ -325,3 +335,5 @@ Phase 2 (piles): 2a to 2f are merged. 2g (Move to… dialog) is in review on bra
 | 2026-10-26 | Move to… lists the Table as its own group, above Hands and Piles | Hands and Piles only, as on the board | Phase 3 reuses the dialog for cards in hands, where the table matters. The owner confirmed it. |
 | 2026-10-26 | A click on a Move to… row chooses it, and the main button (or Enter) moves | Moving on a single click | Matches the board's footer button that names the choice, and leaves time to tick "Keep it face up" |
 | 2026-10-26 | The rule to watch PRs went in its own PR | Bundling it into 2g | The owner asked for a separate PR |
+| 2026-10-26 | Every PR updates progress.md, written as it will read after the merge | Updating only at the end of a session; writing "in review" | `main` stays correct the moment a PR merges. The owner asked for it, and it's recorded in CLAUDE.md. |
+| 2026-10-26 | Peek: Done, Esc and × all keep the order shown. The count starts at 3. | Esc cancelling the reorder; starting at 1 | What you see is what's in the pile. 3 matches the sample card. The owner confirmed both. |

@@ -19,6 +19,7 @@ This project runs on the owner's personal Claude usage. Be economical.
 - If a fix fails twice, stop and report the problem instead of trying more variations.
 - Never start the next issue or phase without the owner's go-ahead.
 - **End every session by updating `docs/progress.md`**: done, next, open problems, decisions made.
+- **Every PR updates `docs/progress.md`**, docs-only PRs included. Write it as it will read after the merge: Current state and Next must still be true once the owner merges, so never write "in review".
 
 ## Stack
 
