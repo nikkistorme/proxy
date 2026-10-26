@@ -115,3 +115,19 @@ test.describe('CD-6 card art placeholder', () => {
     expect(box && [Math.round(box.width), Math.round(box.height)]).toEqual([104, 146]);
   });
 });
+
+test.describe('CD-4 import results on a phone', () => {
+  test.use({ viewport: { width: 375, height: 667 } });
+
+  test('the results fill most of the screen and the problem list scrolls', async ({ page }) => {
+    await loadMain(page, 'import-errors.csv');
+    const dialog = page.getByRole('dialog', { name: 'Import results' });
+    const body = dialog.locator('.import-results__body');
+    const dialogBox = await dialog.boundingBox();
+    const bodyBox = await body.boundingBox();
+    // Regression: the dialog collapsed to its header and footer on a phone.
+    expect(dialogBox?.height).toBeGreaterThan(667 * 0.75);
+    expect(bodyBox?.height).toBeGreaterThan(667 * 0.5);
+    await expect(dialog.getByRole('button', { name: 'Done' })).toBeInViewport();
+  });
+});

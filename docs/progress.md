@@ -32,6 +32,9 @@ Phase 2 (piles): 2a and 2b are merged. 2c (game screen and pile loading) is in r
   - 142 unit tests (component tests for CardFace, PileTile, Menu, HandTray, the store and the game screen).
   - 8 E2E tests, including load, draw and the menu by mouse and by keyboard only, with axe on the screen, with the menu open and with the dialog open.
 - Checked by hand: the empty state, a loaded deck with drawn cards, the menu, and 320px wide (no sideways scrolling).
+- Owner review: the import results dialog was too short to read on the owner's phone. I couldn't reproduce it in emulated iPhone sizes (WebKit and Chromium).
+  - Made the CSS robust anyway: the scrolling body uses `flex: 1 1 auto` instead of a 0% basis, which some mobile Safari versions collapse, and the dialog's height limit uses `100dvh`.
+  - Added a phone-size E2E regression test.
 
 ### Phase 2b: Moves and pile management (2026-10-25)
 
