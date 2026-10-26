@@ -11,6 +11,7 @@ Phase 2 (piles) is complete: 2a to 2h are merged. Next is Phase 3 (Table: TT-1 t
 - Issue 21: `.github/ISSUE_TEMPLATE/` has a **Bug** form and a **Feature or task** form, and blank issues are turned off.
   - Bug asks for what happened, what should happen (with the requirement ID), steps, input method, browser and assistive tech, and evidence, and reminds the fix PR to add a regression test (QA-7).
   - Feature or task asks for the phase, requirement IDs, goal, in and out of scope, acceptance criteria, the agreed plan and notes.
+- They apply the `bug` and `feature` labels. The `feature` label was created for this.
 - The templates don't add issues to a project board. Add a `projects:` line to each template if you want that later.
 
 ### Phase 2h: Peek (2026-10-26)
@@ -311,7 +312,6 @@ Phase 2 (piles) is complete: 2a to 2h are merged. Next is Phase 3 (Table: TT-1 t
 - For Phase 3: a table card showing its back face whose definition loses its back on re-import should fall back to the front.
 - For Phase 3: decide how cards on the table whose definition is `missing` should look. The import results in 1d can list them.
 - The app's PR monitor still shows an error cached from the old npm `gh`. CI was checked with the real `gh` instead.
-- The Feature or task template applies a `feature` label, which the repo doesn't have yet. GitHub skips a missing label, so new issues get no label until it's created.
 - Local Node is 22.12.0. Some ESLint deps want ≥ 22.13 (this is an engine warning only). CI uses the latest Node 22.
 
 ## Decisions
