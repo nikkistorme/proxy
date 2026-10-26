@@ -2,9 +2,39 @@
 
 ## Current state
 
-Phase 2 (piles): 2a is merged. 2b (moves and pile management) is in review on branch `phase-2b-moves-piles`.
+Phase 2 (piles): 2a and 2b are merged. 2c (game screen and pile loading) is in review on branch `phase-2c-game-screen`, waiting for the owner to test the preview.
 
 ## Done
+
+### Phase 2c: Game screen and pile loading (2026-10-25)
+
+- **Zustand 5.0.16** (in the approved stack). `src/store/gameStore.ts`:
+  - `createGameStore(game, context)` holds `{ game, announcement, dispatch }`.
+  - `dispatch(action)` runs any 2a or 2b action, stores the result and returns it.
+  - `GameStoreProvider` and `useGameStore` connect it to React; tests inject a store with the seeded context.
+- `LiveRegion`: a polite `role="status"` region. It's keyed by announcement id, so the same text twice is read twice (AR-2).
+- `GameScreen` replaces the temporary import panel. It follows `Main`, simplified until Phase 3:
+  - a header and a seat bar showing which seat is active
+  - a table area with piles in a row and an "On the table" grid
+  - the active seat's hand tray
+- `PileTile` (SP-5) has two edge layers and a seat-patterned back with a name and count plate. An empty pile shows a dashed outline. A revealed top card shows its face.
+  - The card back or face is a decorative layer under the button, and the button holds only the plate text. Its `aria-label` always starts with the visible text, as WCAG 2.5.3 (label in name) requires.
+- `Menu` is a reusable ARIA menu following `ActionMenu`: arrow keys, Home and End, Enter, Escape or Tab to close, and checkbox items.
+  - It ignores presses inside its own container, so clicking the opener toggles it closed.
+  - Shortcut keys use `aria-keyshortcuts`, and the visible key label is hidden from screen readers.
+- `PileMenu` (SP-1, SP-2, SP-3, SP-6) has Load CSV…, Reload <file>…, Keep CSV order and Draw 1. 2d adds the rest.
+- `CardFace` is the default face, at `Card.dc.html`'s 240 × 336 base size scaled to width, in the sample card's neutral palette.
+  - It shows name and `cost`, the art (`CardArt` with a new `decorative` option), `type`, text from `text`, `rules` or `rules text`, and `stats`.
+- `HandTray` (FS-3, SP-6) has a seat-coloured top edge and the hand's cards. Draw and the D key draw from the active seat's first pile. D is ignored in fields, in menus, in open dialogs and with modifier keys.
+- `seatIdentity` (`src/components/seatIdentity.ts`) gives Player 1 the design's first seat (triangle, stripes) and Environment its own (square, fine rules). Player 2 gets the circle and dots. Shared piles get a neutral diamond with a hatched back.
+- `ImportResults` now shows the target pile and any shortfalls.
+- Tests:
+  - 142 unit tests (component tests for CardFace, PileTile, Menu, HandTray, the store and the game screen).
+  - 8 E2E tests, including load, draw and the menu by mouse and by keyboard only, with axe on the screen, with the menu open and with the dialog open.
+- Checked by hand: the empty state, a loaded deck with drawn cards, the menu, and 320px wide (no sideways scrolling).
+- Owner review: the import results dialog was too short to read on the owner's phone. I couldn't reproduce it in emulated iPhone sizes (WebKit and Chromium).
+  - Made the CSS robust anyway: the scrolling body uses `flex: 1 1 auto` instead of a 0% basis, which some mobile Safari versions collapse, and the dialog's height limit uses `100dvh`.
+  - Added a phone-size E2E regression test.
 
 ### Phase 2b: Moves and pile management (2026-10-25)
 
@@ -142,18 +172,16 @@ Phase 2 (piles): 2a is merged. 2b (moves and pile management) is in review on br
 
 ## Next
 
-Phase 2 issues, one PR each:
-
-- **2c. Piles on screen (SP-1, SP-2, SP-5, SP-6 UI).**
-  - Zustand store and live region.
-  - Pile tiles: name, count and a face-down top card, following `CardStates`.
-  - Pile actions; load and reload per pile, replacing the temporary panel; and the import results with shortfalls.
-  - A default card face based on `Card.dc.html`, and a simple hand list.
-- **2d. Pile viewer (SP-7, SP-8 UI)** following `PileViewer`, including the acceptance test: find a card and put it on the table in three actions or fewer.
-- **2e. Peek UI (SP-9).**
+- Owner tests the 2c preview, then merges.
+- **2d. Pile menu actions (SP-4, SP-6, SP-1 drop):** shuffle, Draw N, Reveal top, Mill N, add, rename and delete pile, and dropping a CSV on a pile.
+- **2e. Pile viewer (SP-7, SP-8 UI)** following `PileViewer`, including the acceptance test: find a card and put it on the table in three actions or fewer.
+- **2f. Peek UI (SP-9).**
 
 ## Open problems
 
+- **Reload is two clicks, not one:** "Reload <file>…" reopens the file picker, because browsers can't re-read a chosen file. A true one-click reload needs the File System Access API, which works in Chromium only and falls back to the picker elsewhere. That fits with Phase 6, where the file handle can be saved with the game.
+- The default card face uses the UI font, not the sample card's Bitter, which would be another font dependency. Phase 4 layouts will set card fonts.
+- The shared-pile back colour `#3F433D` isn't a design token. The design has no shared seat, so add a token if the design gets one.
 - For Phase 3 (TT-6): face state is a boolean `faceUp`. Flipping a double-faced card to show its back needs a three-way state (front, back, face down), which Phase 3 should introduce.
 - Dark theme isn't wired up. `tokens.css` has `[data-theme="dark"]` values, but nothing sets `data-theme` yet. Decide how the theme is chosen (follow the system setting, a toggle, or both) when the table is built.
 - PR preview clean-up leaves an empty `pr-preview/pr-N/.nojekyll` on `gh-pages`. It's harmless (the URL returns 404), but it could be tidied later.
@@ -191,3 +219,8 @@ Phase 2 issues, one PR each:
 | 2026-10-25 | Deleting a pile that still has cards moves them to the bottom of a chosen pile | Removing the cards from the game | No card silently leaves play |
 | 2026-10-25 | Cards land face up on the table and face down on a pile (unless kept face up); a hand doesn't change their face | Keeping the card's previous face | Matches the MoveDialog's "Keep it face up (piles only)" option |
 | 2026-10-25 | Pile names are unique, ignoring case and surrounding spaces | Allowing duplicate names | Destination lists such as Move to… must not show two piles with the same name |
+| 2026-10-25 | Phase 2 re-split: 2c game screen and loading, 2d pile menu actions, 2e viewer, 2f peek | The original 2c covering every pile action | Keeps each PR reviewable |
+| 2026-10-25 | Default card face columns: `cost`, `type`, the first of `text`, `rules` or `rules text`, and `stats` | Showing every column | Matches the sample card until Phase 4 layouts |
+| 2026-10-25 | Seat identities: Player 1 gets the first design seat, Environment the environment one, and shared piles a neutral back | Using the design's seat names | Keeps the design's shape, colour and pattern system with our seat names |
+| 2026-10-25 | Pile tiles: a fixed `aria-label` on a button that holds only the plate text, with the card art as a layer underneath | A name computed from visible text | Computed names differ between browsers and jsdom. This way the label always contains the visible text (WCAG 2.5.3). |
+| 2026-10-25 | The D shortcut checks the page for an open dialog or menu, not React state | Gating on component state | State can lag the native dialog's close event, which drops a D pressed straight after Esc |

@@ -1,0 +1,16 @@
+/* Card backs from the design system. Back colours are the same in both themes. */
+.card-back--a {
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0 5px, transparent 5px 11px), var(--back-a);
+}
+
+.card-back--b {
+  background: radial-gradient(rgba(255, 255, 255, 0.16) 1.6px, transparent 1.9px) 0 0 / 10px 10px, var(--back-b);
+}
+
+.card-back--env {
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.1) 0 2px, transparent 2px 8px), var(--back-env);
+}
+
+.card-back--shared {
+  background: repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.1) 0 1px, transparent 1px 6px), #3F433D;
+}

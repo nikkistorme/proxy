@@ -1,0 +1,74 @@
+/* Hand tray from the Main board: seat-coloured top edge, header, row of cards. */
+.hand-tray {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  min-height: 196px;
+  border-top: 3px solid;
+  background: var(--bg);
+}
+
+.hand-tray__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-4);
+}
+
+.hand-tray__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.hand-tray__count {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.hand-tray__draw {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  margin-left: auto;
+  padding: 0 10px;
+  border: 1px solid var(--control);
+  border-radius: var(--radius-control);
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hand-tray__kbd {
+  color: var(--muted);
+  font-family: var(--font-num);
+  font-size: 11px;
+}
+
+.hand-tray__cards {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 2px var(--space-4) var(--space-3);
+  overflow-x: auto;
+  list-style: none;
+}
+
+.hand-tray__cards li {
+  flex: none;
+  border-radius: 6px;
+  box-shadow: var(--shadow-card);
+}
+
+.hand-tray__empty {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  color: var(--muted);
+  font-size: 14px;
+}

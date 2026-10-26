@@ -6,6 +6,8 @@ interface CardArtProps {
   name: string;
   /** URL of the card art. */
   image?: string | undefined;
+  /** Inside something that already names the card: no alt text, and an icon-only placeholder. */
+  decorative?: boolean;
 }
 
 /**
@@ -13,21 +15,24 @@ interface CardArtProps {
  * fails to load, it shows a placeholder with the card name instead. It never
  * changes the size of the frame it sits in.
  */
-export function CardArt({ name, image }: CardArtProps) {
+export function CardArt({ name, image, decorative = false }: CardArtProps) {
   // Remember which URL failed, so a new URL gets a fresh try.
   const [failedImage, setFailedImage] = useState<string>();
 
   if (image === undefined || image === failedImage) {
     return (
-      <div className="card-art card-art--placeholder" role="img" aria-label={name}>
+      <div
+        className="card-art card-art--placeholder"
+        {...(decorative ? { 'aria-hidden': true } : { role: 'img', 'aria-label': name })}
+      >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <rect x="3" y="4" width="18" height="16" rx="2" />
           <path d="M3 16l5-5 4 4 3-3 6 6M3 3l18 18" />
         </svg>
-        <span className="card-art__name">{name}</span>
+        {!decorative && <span className="card-art__name">{name}</span>}
       </div>
     );
   }
 
-  return <img className="card-art" src={image} alt={name} onError={() => setFailedImage(image)} />;
+  return <img className="card-art" src={image} alt={decorative ? '' : name} onError={() => setFailedImage(image)} />;
 }
