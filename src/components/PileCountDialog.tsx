@@ -3,7 +3,19 @@ import type { Pile } from '../model/game';
 import { Dialog } from './Dialog';
 import './Form.css';
 
-export type CountRequest = { mode: 'draw'; pile: Pile; handName: string } | { mode: 'mill'; pile: Pile; targets: Pile[] };
+export type CountRequest =
+  | { mode: 'draw'; pile: Pile; handName: string }
+  | { mode: 'mill'; pile: Pile; targets: Pile[] }
+  | { mode: 'peek'; pile: Pile };
+
+/** Peek starts at 3, like "Look at the top 3", or the whole pile if it's smaller. */
+const PEEK_START = 3;
+
+const TEXT = {
+  draw: { title: 'Draw from', hint: 'Enter draw · Esc cancel', primary: 'Draw' },
+  mill: { title: 'Mill from', hint: 'Enter move · Esc cancel', primary: 'Move' },
+  peek: { title: 'Peek at', hint: 'Enter peek · Esc cancel', primary: 'Peek' },
+};
 
 interface PileCountDialogProps {
   /** Give each request its own `key`, so every opening starts with fresh values. */
@@ -16,11 +28,13 @@ function cardsWord(count: number): string {
   return `${count} ${count === 1 ? 'card' : 'cards'}`;
 }
 
-/** SP-6: Draw N to the active hand, or Mill N onto another pile. */
+/** SP-6: Draw N to the active hand, or Mill N onto another pile. SP-9: Peek at the top N. */
 export function PileCountDialog({ request, onConfirm, onClose }: PileCountDialogProps) {
   const countId = useId();
   const errorId = useId();
-  const [value, setValue] = useState('1');
+  const [value, setValue] = useState(() =>
+    String(request?.mode === 'peek' ? Math.min(PEEK_START, request.pile.cardIds.length) : 1),
+  );
   const [target, setTarget] = useState(request?.mode === 'mill' ? request.targets[0]?.id : undefined);
   const [showError, setShowError] = useState(false);
 
@@ -28,7 +42,7 @@ export function PileCountDialog({ request, onConfirm, onClose }: PileCountDialog
   const count = Number(value);
   const valid = /^\d+$/.test(value.trim()) && count >= 1 && count <= max;
   const error = valid ? undefined : `Enter a whole number from 1 to ${max}.`;
-  const isDraw = request?.mode === 'draw';
+  const text = TEXT[request?.mode ?? 'draw'];
 
   function submit(): boolean {
     if (!valid || (request?.mode === 'mill' && !target)) {
@@ -42,10 +56,10 @@ export function PileCountDialog({ request, onConfirm, onClose }: PileCountDialog
   return (
     <Dialog
       open={request !== undefined}
-      title={request ? `${isDraw ? 'Draw from' : 'Mill from'} ${request.pile.name}` : ''}
+      title={request ? `${text.title} ${request.pile.name}` : ''}
       eyebrow={request && `${cardsWord(max)} in the pile`}
-      hint={isDraw ? 'Enter draw · Esc cancel' : 'Enter move · Esc cancel'}
-      primaryLabel={isDraw ? 'Draw' : 'Move'}
+      hint={text.hint}
+      primaryLabel={text.primary}
       cancelLabel="Cancel"
       width="narrow"
       onClose={onClose}
@@ -55,7 +69,11 @@ export function PileCountDialog({ request, onConfirm, onClose }: PileCountDialog
         <>
           <div className="form-field">
             <label htmlFor={countId} className="form-label">
-              {request.mode === 'draw' ? `Cards to draw into ${request.handName}'s hand` : 'Cards to move'}
+              {request.mode === 'draw'
+                ? `Cards to draw into ${request.handName}'s hand`
+                : request.mode === 'peek'
+                  ? 'Cards to look at'
+                  : 'Cards to move'}
             </label>
             <input
               id={countId}

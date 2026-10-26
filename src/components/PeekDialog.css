@@ -1,0 +1,67 @@
+/* Peek dialog (SP-9), built from the MoveDialog board's patterns: one row per card, top first. */
+.peek__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.peek__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--divider);
+}
+
+.peek__row:last-child {
+  border-bottom: 0;
+}
+
+.peek__position {
+  min-width: 52px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.peek__number {
+  color: var(--ink);
+  font-family: var(--font-num);
+  font-weight: 700;
+}
+
+.peek__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.peek__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--control);
+  border-radius: var(--radius-control);
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.peek__button[aria-disabled='true'] {
+  border-color: var(--disabled);
+  color: var(--disabled);
+  cursor: default;
+}
+
+.peek__empty {
+  margin: 0;
+  color: var(--muted);
+}

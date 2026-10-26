@@ -2,9 +2,25 @@
 
 ## Current state
 
-Phase 2 (piles): 2a to 2g are merged. Next is 2h (Peek, SP-9), the last Phase 2 issue.
+Phase 2 (piles) is complete: 2a to 2h are merged. Next is Phase 3 (Table: TT-1 to TT-15, A11Y-1 to A11Y-6), which starts with a plan and a split once the owner gives the go-ahead.
 
 ## Done
+
+### Phase 2h: Peek (2026-10-26)
+
+- **Peek at top cards…** (SP-9) sits in the pile menu after Reveal top card, and is disabled on an empty pile.
+  - It opens `PileCountDialog` in a new `peek` mode: "Peek at <pile>", "Cards to look at", starting at 3 or the pile size if that's smaller.
+  - `peekTop` is a read, so `GameScreen` announces its text ("Top 3 of P1 main deck, top first: …") instead of dispatching anything.
+- `PeekDialog` follows the MoveDialog patterns, on `Dialog`:
+  - **Layout:** "Top N of <pile>", with the eyebrow "Shown face up to you only", and a numbered list, top first. Each row has its position, the card face at 100px, and **Up**, **Down** and **Move to…**, named for the card ("Up: Card 01").
+  - **Up and Down** change only the dialog's order and announce each step ("Troll is now 1 of 3, the top."). Focus stays on the same button of the moved card. At the ends, Up and Down are `aria-disabled` and stay focusable.
+  - **Move to…** opens the 2g `MoveDialog` without "<this pile> — top", because reordering does that. A move applies at once with `moveCard`, and focus goes to the next row's Move to…, or to Done when none are left.
+  - **Closing:** Done, Esc and × all put the cards back in the order shown with one `reorderTop`, and only if the order changed. After moves this still works, because the cards left are exactly the pile's new top.
+- `moveDestinations` takes `{ exceptTopOf }`.
+- **`Dialog` acts only on its own `close` event.** React passes a nested dialog's close event up to its parents, which 2g fixed for the viewer only. A regression test covers it; I confirmed it fails without the fix.
+- `GameScreen` only counts focus as lost when it's on the page body or inside a dialog that has closed. Before, focus inside the newly opened Peek dialog counted as lost, and the count dialog's late close event could pull focus back to the pile.
+- Tests: 220 unit (`SP-9 peek`, `SP-9 peek N`, and the Dialog regression), and 26 E2E including `e2e/peek.spec.ts` (mouse with axe, keyboard only with Move to… "— bottom" and Esc, and phone size at 375 × 667).
+- Checked by hand from screenshots at 1280 × 800 and 320 × 640.
 
 ### Workflow rules (2026-10-26)
 
@@ -261,17 +277,16 @@ Phase 2 (piles): 2a to 2g are merged. Next is 2h (Peek, SP-9), the last Phase 2 
 
 ## Next
 
-- **2h. Peek (SP-9).** The plan is agreed:
-  - **Peek at top cards…** in the pile menu opens `PileCountDialog` in a `peek` mode, starting at 3.
-  - A Peek dialog shows the cards top first. Each one has Up, Down and Move to… (Move to… leaves out "<this pile> — top").
-  - Done, Esc and × all put the cards back in the order shown, with one `reorderTop`.
-  - `Dialog` acts only on its own `close` event.
-- Then Phase 3, after the owner's go-ahead.
+- **Phase 3 (Table)**, after the owner's go-ahead. Start by proposing a split into one-session issues. Open problems already noted for Phase 3:
+  - the face state needs three values (front, back, face down)
+  - cards whose definition is `missing`
+  - choosing the dark theme
+  - a back face lost on re-import
+- From Phase 3 on, the table's card menu can reuse `MoveDialog`.
 
 ## Open problems
 
 - The search-match highlight uses the board's `#FBE3A6` with ink text, which isn't a token. Add a highlight token if the design gets one.
-- Any other dialog that ever opens inside a dialog needs the same check as the viewer: act only on `close` events whose target is the dialog itself. `Dialog` doesn't check this yet, because nothing opens inside one.
 - axe's label-in-name check joins text from separate blocks with no spaces, so a button containing a whole card face fails it. The viewer avoids that with the overlay pattern. Keep it in mind for table cards in Phase 3.
 - In this cloud environment the pinned `@playwright/test` wants a newer Chromium than the one installed. Local E2E ran with a scratch config pointing `launchOptions.executablePath` at `/opt/pw-browsers/chromium`. That config isn't committed, and CI is unaffected.
 - The form error colour uses `--seat-a` (5.4:1 on the panel), because the tokens have no error colour. Add an error token if the design gets one.
@@ -337,3 +352,5 @@ Phase 2 (piles): 2a to 2g are merged. Next is 2h (Peek, SP-9), the last Phase 2 
 | 2026-10-26 | The rule to watch PRs went in its own PR | Bundling it into 2g | The owner asked for a separate PR |
 | 2026-10-26 | Every PR updates progress.md, written as it will read after the merge | Updating only at the end of a session; writing "in review" | `main` stays correct the moment a PR merges. The owner asked for it, and it's recorded in CLAUDE.md. |
 | 2026-10-26 | Peek: Done, Esc and × all keep the order shown. The count starts at 3. | Esc cancelling the reorder; starting at 1 | What you see is what's in the pile. 3 matches the sample card. The owner confirmed both. |
+| 2026-10-26 | Peek reorders inside the dialog and puts the cards back with one `reorderTop` when it closes | One reorder action for every Up or Down | One action and one announcement for the whole rearrangement. Moves still apply at once. |
+| 2026-10-26 | Peek's Move to… leaves out the peeked pile's top | Offering every destination | It duplicates reordering, and would put the card back among the cards being reordered |

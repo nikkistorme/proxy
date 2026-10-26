@@ -47,4 +47,11 @@ describe('SP-8 move destinations', () => {
     expect(matchDestinations(options, '')).toHaveLength(8);
     expect(matchDestinations(options, 'nowhere')).toEqual([]);
   });
+
+  it("can leave out one pile's top, for peeking", () => {
+    const options = labels(moveDestinations(game, topCard, { exceptTopOf: 'pile-p1-main' }));
+    expect(options).not.toContain('P1 main deck — top');
+    expect(options).toContain('P1 main deck — bottom');
+    expect(options).toContain('Board cards — top');
+  });
 });

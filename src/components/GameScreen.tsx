@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { loadPile } from '../actions/loadPile';
+import { peekTop } from '../actions/peek';
 import { draw, mill, revealTop, shuffle } from '../actions/pileActions';
 import { addPile, deletePile, renamePile, validatePileName } from '../actions/piles';
 import { importCards } from '../csv/importCards';
@@ -11,6 +12,7 @@ import './GameScreen.css';
 import { HandTray } from './HandTray';
 import { ImportResults, type ImportSummary } from './ImportResults';
 import { LiveRegion } from './LiveRegion';
+import { PeekDialog, type PeekRequest } from './PeekDialog';
 import { PileCountDialog, type CountRequest } from './PileCountDialog';
 import { PileMenu } from './PileMenu';
 import { PileNameDialog, type PileNameRequest } from './PileNameDialog';
@@ -43,6 +45,7 @@ export function GameScreen() {
   const [nameRequest, setNameRequest] = useState<PileNameRequest>();
   const [deleteRequest, setDeleteRequest] = useState<DeletePileRequest>();
   const [viewerPileId, setViewerPileId] = useState<string>();
+  const [peekRequest, setPeekRequest] = useState<PeekRequest>();
   /** A pile id, or ADD_PILE, to focus once it has rendered (after adding or deleting a pile). */
   const pendingFocusRef = useRef<string>(undefined);
   const addPileRef = useRef<HTMLButtonElement>(null);
@@ -162,7 +165,8 @@ export function GameScreen() {
    */
   function returnFocusToPile(pileId: string | undefined) {
     const active = document.activeElement;
-    const focusWasLost = !active || active === document.body || active.closest('dialog') !== null;
+    // Lost means on the page body or inside a dialog that has closed, not in one that has just opened.
+    const focusWasLost = !active || active === document.body || active.closest('dialog:not([open])') !== null;
     if (pileId && focusWasLost) tileRefs.current[pileId]?.focus();
   }
 
@@ -188,10 +192,23 @@ export function GameScreen() {
     [game],
   );
 
+  const openPeek = useCallback(
+    (pileId: string) => {
+      const pile = game.piles.find((p) => p.id === pileId);
+      if (pile) setCountRequest({ mode: 'peek', pile });
+    },
+    [game],
+  );
+
   function confirmCount(count: number, toPileId?: string) {
     if (!countRequest) return;
     const pileId = countRequest.pile.id;
-    if (countRequest.mode === 'draw') dispatch((g) => draw(g, { pileId, count }));
+    if (countRequest.mode === 'peek') {
+      // Looking changes nothing, so it's a read and an announcement, not an action (SP-9).
+      const peek = peekTop(game, { pileId, count });
+      announce(peek.announcement);
+      setPeekRequest({ pileId, cardIds: peek.cardIds });
+    } else if (countRequest.mode === 'draw') dispatch((g) => draw(g, { pileId, count }));
     else if (toPileId) dispatch((g) => mill(g, { pileId, count, toPileId }));
   }
 
@@ -252,6 +269,11 @@ export function GameScreen() {
     setDeleteRequest(undefined);
     // If the pile still exists, the delete was cancelled.
     if (pileId && game.piles.some((p) => p.id === pileId)) returnFocusToPile(pileId);
+  }
+
+  function closePeek() {
+    setPeekRequest(undefined);
+    returnFocusToPile(peekRequest?.pileId);
   }
 
   function closeViewer() {
@@ -366,6 +388,7 @@ export function GameScreen() {
                         onDrawMany={openDrawMany}
                         onShuffle={shuffleFrom}
                         onReveal={revealFrom}
+                        onPeek={openPeek}
                         onMill={openMill}
                         canMill={game.piles.length > 1}
                         onRename={openRename}
@@ -432,6 +455,7 @@ export function GameScreen() {
         onConfirm={confirmCount}
         onClose={closeCount}
       />
+      <PeekDialog key={peekRequest ? `peek-${peekRequest.pileId}` : 'closed'} request={peekRequest} onClose={closePeek} />
       <PileViewer key={viewerPileId ?? 'closed'} pileId={viewerPileId} onClose={closeViewer} />
       <LiveRegion />
     </div>

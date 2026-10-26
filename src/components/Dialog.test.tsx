@@ -63,4 +63,21 @@ describe('Dialog', () => {
     expect(onSubmit).toHaveBeenCalledTimes(2);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it('ignores the close event of a dialog opened inside it', async () => {
+    const user = userEvent.setup();
+    const onOuterClose = vi.fn();
+    const onInnerClose = vi.fn();
+    render(
+      <Dialog open title="Outer" primaryLabel="Done" onClose={onOuterClose}>
+        <Dialog open title="Inner" primaryLabel="Close inner" onClose={onInnerClose}>
+          Body
+        </Dialog>
+      </Dialog>,
+    );
+    await user.click(screen.getByRole('button', { name: 'Close inner' }));
+    expect(onInnerClose).toHaveBeenCalledTimes(1);
+    // Regression: React passed the inner close event up, which also closed the outer dialog.
+    expect(onOuterClose).not.toHaveBeenCalled();
+  });
 });
