@@ -2,9 +2,27 @@
 
 ## Current state
 
-Phase 2 (piles): 2a to 2e are merged. 2f (pile viewer) is in review on branch `claude/pile-viewer-planning-s81smu`, waiting for the owner to test the preview.
+Phase 2 (piles): 2a to 2f are merged. 2g (Move to… dialog) is in review on branch `claude/pile-viewer-planning-s81smu`, waiting for the owner to test the preview.
 
 ## Done
+
+### Phase 2g: Move to… dialog (2026-10-26)
+
+- `src/components/moveDestinations.ts` (SP-8):
+  - `moveDestinations(state, cardId)` lists where a card can go, grouped Table, Hands, then Piles. Piles offer "— top" and "— bottom", and each destination has an "N cards" note.
+  - It leaves out the table or hand the card is already in. The card's own pile stays in, because its top and bottom are real moves.
+  - `matchDestinations` filters by label, ignoring case, and returns where the match is for highlighting.
+- `MoveDialog`, following the MoveDialog board, built on `Dialog`:
+  - **Header:** a 56px card thumbnail (`Dialog` gains a `media` slot and a 520px `medium` width) and "Move card · from <pile>".
+  - **Search:** "Find a destination" is a combobox over a listbox with a named group for each heading. It uses `aria-activedescendant`, highlights the matched text with `<mark>`, and shows "N of M destinations match" as a status.
+  - **Choosing:** ↑↓ choose and Enter moves. A click chooses a row and keeps focus in the search, and the main button names the choice ("Move to Board cards — bottom"). "Keep it face up (piles only)" applies to piles only.
+  - **No match:** nothing moves.
+- **In the viewer:** a **Move to…** button next to To table, and the **M** key on a card. After a move, focus goes to the next match. Cancelling returns focus to the same card.
+- **Bug fixed during the build:** React passes a nested `<dialog>`'s `close` event up to its parents, so closing the Move dialog also closed the viewer. The viewer now only acts on its own `close`. A regression test covers it; I confirmed it fails without the fix.
+- **Option names** come from their content, with a real space between the label and the note. With an `aria-label`, axe's label-in-name check joined the flex items without a space and failed.
+- Tests: 209 unit (`SP-8 move destinations`, `SP-8 Move to… dialog`, `SP-8 Move to… from the pile viewer`), and 23 E2E including `e2e/move-dialog.spec.ts` (mouse, keyboard only, Esc closes only the Move dialog, axe with it open, and phone size at 375 × 667).
+- Checked by hand from screenshots at 1280 × 800 and 320 × 640.
+- CLAUDE.md's rule to watch each PR's activity went in its own PR (#16), as the owner asked.
 
 ### Phase 2f: Pile viewer (2026-10-26)
 
@@ -237,12 +255,13 @@ Phase 2 (piles): 2a to 2e are merged. 2f (pile viewer) is in review on branch `c
 
 ## Next
 
-- Owner tests the 2f preview, then merges.
-- **2g. Move to… dialog (rest of SP-8)** following `MoveDialog`: a destination search (combobox and grouped listbox), the top or bottom of any pile, any hand, and "Keep it face up (piles only)". Open it from the viewer with a Move to… button and the M key. Phase 3's card menu reuses it.
-- **2h. Peek (SP-9).**
+- Owner tests the 2g preview, then merges. PR #16 (CLAUDE.md, watching PRs) also waits for the owner.
+- **2h. Peek (SP-9).** It can reuse `MoveDialog` for moving peeked cards.
 
 ## Open problems
 
+- The search-match highlight uses the board's `#FBE3A6` with ink text, which isn't a token. Add a highlight token if the design gets one.
+- Any other dialog that ever opens inside a dialog needs the same check as the viewer: act only on `close` events whose target is the dialog itself. `Dialog` doesn't check this yet, because nothing opens inside one.
 - axe's label-in-name check joins text from separate blocks with no spaces, so a button containing a whole card face fails it. The viewer avoids that with the overlay pattern. Keep it in mind for table cards in Phase 3.
 - In this cloud environment the pinned `@playwright/test` wants a newer Chromium than the one installed. Local E2E ran with a scratch config pointing `launchOptions.executablePath` at `/opt/pw-browsers/chromium`. That config isn't committed, and CI is unaffected.
 - The form error colour uses `--seat-a` (5.4:1 on the panel), because the tokens have no error colour. Add an error token if the design gets one.
@@ -303,3 +322,6 @@ Phase 2 (piles): 2a to 2e are merged. 2f (pile viewer) is in review on branch `c
 | 2026-10-26 | Opening the viewer by mouse is the pile menu, then View cards…, and counts as one action | A one-click View button on the tile | The owner confirmed the two clicks are fine |
 | 2026-10-26 | View cards… sits after Mill cards…, not first in the menu | First item | On an empty pile, Load CSV… should get first focus, and the viewer has V for speed |
 | 2026-10-26 | Viewer cards are transparent buttons over a decorative face, named with the full card text and position | A button wrapping the face with a short label | Keeps visible text in the name (WCAG 2.5.3) and passes axe. Screen-reader users hear the card text. |
+| 2026-10-26 | Move to… lists the Table as its own group, above Hands and Piles | Hands and Piles only, as on the board | Phase 3 reuses the dialog for cards in hands, where the table matters. The owner confirmed it. |
+| 2026-10-26 | A click on a Move to… row chooses it, and the main button (or Enter) moves | Moving on a single click | Matches the board's footer button that names the choice, and leaves time to tick "Keep it face up" |
+| 2026-10-26 | The rule to watch PRs went in its own PR | Bundling it into 2g | The owner asked for a separate PR |

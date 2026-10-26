@@ -6,6 +6,8 @@ interface DialogProps {
   title: string;
   /** Small context line above the title, like the file or pile it is about. */
   eyebrow?: ReactNode;
+  /** Decorative picture before the title, like the card being moved. */
+  media?: ReactNode;
   /** Keyboard hint in the footer, like "Enter draw · Esc cancel". */
   hint?: string;
   /** Called once whenever the dialog closes: Esc, the close button, or an action. */
@@ -16,8 +18,8 @@ interface DialogProps {
   cancelLabel?: string;
   /** Makes the dialog a form: Enter or the main button submits. Return true to close. */
   onSubmit?: () => boolean;
-  /** `narrow` for short forms; `wide` for tables. */
-  width?: 'narrow' | 'wide';
+  /** `narrow` for short forms; `medium` for pickers; `wide` for tables. */
+  width?: 'narrow' | 'medium' | 'wide';
   children: ReactNode;
 }
 
@@ -30,6 +32,7 @@ export function Dialog({
   open,
   title,
   eyebrow,
+  media,
   hint,
   onClose,
   primaryLabel,
@@ -93,6 +96,11 @@ export function Dialog({
       {open && (
         <>
           <div className="dialog__header">
+            {media && (
+              <div className="dialog__media" aria-hidden="true">
+                {media}
+              </div>
+            )}
             <div className="dialog__titles">
               {eyebrow && <span className="dialog__eyebrow">{eyebrow}</span>}
               <h2 id={titleId} className="dialog__title">
