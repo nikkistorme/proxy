@@ -6,6 +6,14 @@ Phase 2 (piles) is complete: 2a to 2h are merged. Next is Phase 3 (Table: TT-1 t
 
 ## Done
 
+### Issue templates (2026-10-26)
+
+- Issue 21: `.github/ISSUE_TEMPLATE/` has a **Bug** form and a **Feature or task** form, and blank issues are turned off.
+  - Bug asks for what happened, what should happen (with the requirement ID), steps, input method, browser and assistive tech, and evidence, and reminds the fix PR to add a regression test (QA-7).
+  - Feature or task asks for the phase, requirement IDs, goal, in and out of scope, acceptance criteria, the agreed plan and notes.
+- They apply the `bug` and `feature` labels. The `feature` label was created for this.
+- The templates don't add issues to a project board. Add a `projects:` line to each template if you want that later.
+
 ### Phase 2h: Peek (2026-10-26)
 
 - **Peek at top cards…** (SP-9) sits in the pile menu after Reveal top card, and is disabled on an empty pile.

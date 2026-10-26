@@ -1,0 +1,92 @@
+name: Feature or task
+description: One small slice of a build phase, sized for one Claude Code session and one PR.
+title: "[Phase N] "
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Keep it small: if you can't write pass/fail acceptance criteria, the issue isn't ready.
+        Requirement IDs come from `docs/requirements.md`.
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Phase
+      options:
+        - "0. Scaffold"
+        - "1. Card data"
+        - "2. Piles"
+        - "3. Table"
+        - "4. Layouts"
+        - "5. Formats"
+        - "6. Persistence and Sheets"
+        - "7. Polish"
+    validations:
+      required: true
+
+  - type: input
+    id: requirements
+    attributes:
+      label: Requirement IDs
+      description: Every requirement this issue implements.
+      placeholder: "SP-6, SP-7, A11Y-1"
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: One or two sentences on what a user can do when this is done.
+      placeholder: "Open any pile in a viewer, search it by name, and move a card to the table."
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: In scope
+      description: What to build. Name files or areas if you know them.
+      placeholder: |
+        - Pile viewer dialog with search by name
+        - "Move to table" and "Move to hand" actions
+        - Unit tests for the filter logic; one E2E flow, mouse and keyboard
+    validations:
+      required: true
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: What not to touch, even if it looks related.
+      placeholder: |
+        - Column filters (separate issue)
+        - Any styling beyond the default card rendering
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Pass/fail checks, copied or adapted from the requirements doc.
+      value: |
+        - [ ]
+        - [ ] Works by keyboard alone
+        - [ ] axe scan passes with zero violations
+        - [ ] Tests name the requirement IDs they cover
+    validations:
+      required: true
+
+  - type: textarea
+    id: plan
+    attributes:
+      label: Agreed plan
+      description: Leave blank when filing. Paste Claude Code's approved plan here before it starts building.
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes and decisions
+      description: Links, open questions, or decisions made along the way (add a record in docs/decisions/ for significant ones).
