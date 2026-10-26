@@ -244,3 +244,91 @@ describe('SP-1 drop a file on a pile', () => {
     expect(event.defaultPrevented).toBe(true);
   });
 });
+
+describe('SP-4 manage piles', () => {
+  const pileNames = () =>
+    within(screen.getByRole('list', { name: 'Piles' }))
+      .getAllByRole('button')
+      .map((b) => b.getAttribute('aria-label'));
+
+  it('adds a pile and moves focus to it', async () => {
+    const user = renderGame();
+    await user.click(screen.getByRole('button', { name: 'Add pile' }));
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Discard{Enter}');
+    expect(pileNames()).toContain('Discard, empty, 0 cards, Player 1');
+    expect(screen.getByRole('button', { name: /^Discard,/ })).toHaveFocus();
+    expect(screen.getByRole('status')).toHaveTextContent('Added pile Discard (Player 1).');
+  });
+
+  it('returns focus to Add pile when adding is cancelled', async () => {
+    const user = renderGame();
+    await user.click(screen.getByRole('button', { name: 'Add pile' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('button', { name: 'Add pile' })).toHaveFocus();
+  });
+
+  it('renames a pile from its menu and keeps focus on it', async () => {
+    const user = renderGame();
+    await user.click(screen.getByRole('button', { name: /^Board cards,/ }));
+    await user.click(screen.getByRole('menuitem', { name: 'Rename…' }));
+    await user.keyboard('Tokens{Enter}');
+    expect(screen.getByRole('button', { name: /^Tokens,/ })).toHaveFocus();
+    expect(screen.getByRole('status')).toHaveTextContent('Renamed Board cards to Tokens.');
+  });
+
+  it('deletes an empty pile and moves focus to the next one', async () => {
+    const user = renderGame();
+    await user.click(screen.getByRole('button', { name: /^Environment deck,/ }));
+    await user.click(screen.getByRole('menuitem', { name: 'Delete…' }));
+    await user.click(screen.getByRole('button', { name: 'Delete pile' }));
+    expect(pileNames()).toEqual(['P1 main deck, empty, 0 cards, Player 1', 'Board cards, empty, 0 cards, shared']);
+    expect(screen.getByRole('button', { name: /^Board cards,/ })).toHaveFocus();
+  });
+
+  it('deletes a pile with cards, moving them to the chosen pile', async () => {
+    const user = renderGame();
+    await loadIntoMain(user, 'name\nImp\nOgre\n');
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    await user.click(mainTile());
+    await user.click(screen.getByRole('menuitem', { name: 'Delete…' }));
+    await user.click(screen.getByRole('radio', { name: /^Board cards/ }));
+    await user.click(screen.getByRole('button', { name: 'Delete pile' }));
+    expect(screen.getByRole('button', { name: /^Board cards,/ })).toHaveAccessibleName('Board cards, 2 cards, shared');
+    expect(screen.getByRole('status')).toHaveTextContent('Deleted P1 main deck. Moved 2 cards to the bottom of Board cards.');
+  });
+
+  it('keeps focus on the pile when a delete is cancelled', async () => {
+    const user = renderGame();
+    await user.click(mainTile());
+    await user.click(screen.getByRole('menuitem', { name: 'Delete…' }));
+    await user.keyboard('{Escape}');
+    expect(mainTile()).toHaveFocus();
+  });
+
+  it('moves focus to Add pile after deleting the last pile, and says when there is nothing to draw from', async () => {
+    const user = renderGame();
+    for (const name of [/^P1 main deck,/, /^Environment deck,/, /^Board cards,/]) {
+      await user.click(screen.getByRole('button', { name }));
+      await user.click(screen.getByRole('menuitem', { name: 'Delete…' }));
+      await user.click(screen.getByRole('button', { name: 'Delete pile' }));
+    }
+    expect(within(screen.getByRole('list', { name: 'Piles' })).queryAllByRole('button')).toEqual([]);
+    expect(screen.getByRole('button', { name: 'Add pile' })).toHaveFocus();
+
+    await user.click(screen.getByRole('button', { name: 'Draw' }));
+    expect(screen.getByRole('status')).toHaveTextContent('Player 1 has no pile to draw from.');
+  });
+
+  it('cannot delete the only pile while it holds cards', async () => {
+    const user = renderGame();
+    await loadIntoMain(user, 'name\nImp\n');
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    for (const name of [/^Environment deck,/, /^Board cards,/]) {
+      await user.click(screen.getByRole('button', { name }));
+      await user.click(screen.getByRole('menuitem', { name: 'Delete…' }));
+      await user.click(screen.getByRole('button', { name: 'Delete pile' }));
+    }
+    await user.click(mainTile());
+    expect(screen.getByRole('menuitem', { name: 'Delete…' })).toHaveAttribute('aria-disabled', 'true');
+  });
+});

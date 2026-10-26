@@ -2,9 +2,26 @@
 
 ## Current state
 
-Phase 2 (piles): 2a, 2b and 2c are merged. 2d (pile actions) is in review on branch `phase-2d-pile-actions`, waiting for the owner to test the preview.
+Phase 2 (piles): 2a to 2d are merged. 2e (pile management) is in review on branch `phase-2e-manage-piles`, waiting for the owner to test the preview.
 
 ## Done
+
+### Phase 2e: Pile management (2026-10-26)
+
+- `validatePileName(state, name, exceptPileId?)` in `src/actions/piles.ts` returns the reason a name can't be used. The dialogs show it, and the actions throw it, so they always agree.
+- The store gains `announce(text)`, for things that aren't game changes. Draw and D now announce "Player 1 has no pile to draw from." when the active seat owns no pile.
+- `Form.css` holds the shared dialog form styles (field, label, input, error, radio choices). `PileCountDialog` now uses it.
+- **Add pile:**
+  - A plain button sits after the pile row (`.pile-area` wraps the list and the button, so the list contains only piles).
+  - `PileNameDialog` asks for a name and an owner: any seat, including Environment, or Shared. It defaults to the active seat.
+  - Focus moves to the new pile.
+- **Rename…:** `PileNameDialog` opens with the name selected. A pile can change the case of its own name. Focus stays on the pile.
+- **Delete…:** `DeletePileDialog` always asks, because there's no undo yet.
+  - A pile with cards also asks where they go (radio list), and they go to the bottom of that pile.
+  - Delete… is disabled when the pile has cards and there's no other pile.
+  - Focus moves to the next pile, or to Add pile if none are left. Cancelling keeps focus on the pile.
+- Focus after adding or deleting uses a pending-focus ref that an effect applies after render, because the new or next tile only exists once the page has updated.
+- Tests: 182 unit, and 16 E2E including `e2e/manage-piles.spec.ts`. They cover mouse and keyboard paths, duplicate and blank names, focus after each action, and axe on every dialog.
 
 ### Phase 2d: Pile actions (2026-10-26)
 
@@ -195,9 +212,8 @@ Phase 2 (piles): 2a, 2b and 2c are merged. 2d (pile actions) is in review on bra
 
 ## Next
 
-- Owner tests the 2d preview, then merges.
-- **2e. Pile management (SP-4):** add, rename and delete piles, using `Dialog`. The rules are already in `src/actions/piles.ts`.
-- **2f. Pile viewer (SP-7, SP-8)** following `PileViewer`, including the acceptance test: find a card and put it on the table in three actions or fewer.
+- Owner tests the 2e preview, then merges.
+- **2f. Pile viewer (SP-7, SP-8)** following `PileViewer`: search, column filters, and To hand / To table / Move to…. It includes the acceptance test: find a card in a 60-card deck and put it on the table in three actions or fewer.
 - **2g. Peek (SP-9).**
 
 ## Open problems
@@ -252,3 +268,6 @@ Phase 2 (piles): 2a, 2b and 2c are merged. 2d (pile actions) is in review on bra
 | 2026-10-26 | One shared `Dialog`, with `ImportResults` moved onto it | A separate dialog for each use | Every dialog gets the same focus, Escape and phone-size behaviour |
 | 2026-10-26 | Draw N and Mill N use a dialog with a number field | A submenu of preset numbers | Allows any number, and is easier by keyboard and screen reader |
 | 2026-10-26 | After a dialog closes, focus goes back to the pile only if it was lost | Always moving focus to the pile | The close event can arrive late, after the player has already moved on |
+| 2026-10-26 | Draw with no pile to draw from stays enabled and announces why | Disabling Draw | Explains what's wrong instead of leaving a dead button |
+| 2026-10-26 | New piles can belong to any seat, including Environment, or be shared | Player seats only | Matches the Solo PvE preset, which already has an Environment deck |
+| 2026-10-26 | Deleting a pile always asks first | Deleting straight away | There's no undo until Phase 3 |
