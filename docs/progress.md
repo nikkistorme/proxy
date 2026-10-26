@@ -2,9 +2,34 @@
 
 ## Current state
 
-Phase 2 (piles): 2a to 2d are merged. 2e (pile management) is in review on branch `phase-2e-manage-piles`, waiting for the owner to test the preview.
+Phase 2 (piles): 2a to 2e are merged. 2f (pile viewer) is in review on branch `claude/pile-viewer-planning-s81smu`, waiting for the owner to test the preview.
 
 ## Done
+
+### Phase 2f: Pile viewer (2026-10-26)
+
+- `src/components/pileFilter.ts` (SP-7) has pure helpers:
+  - `pileEntries` lists a pile's cards top first, with their position.
+  - `filterColumns` offers a filter for `type` and for every other column with 2 to 12 different values. It never offers the free-text columns (`text`, `rules`, `rules text`), and sorts values naturally (2 before 10).
+  - `filterEntries` keeps deck order. Search matches the name and every column, ignoring case and surrounding spaces.
+- `PileViewer` (SP-7, SP-8) is a native modal sheet from the right, up to 720px wide, following the PileViewer board:
+  - **Header:** a top edge in the seat colour, the seat shape, the pile name, "N cards · shown face up to you only", and a close button.
+  - **Filters:** a search field with a Clear button, then one native `<select>` per filter column.
+  - **Status line:** "4 of 24 match "ember" · Faction: Ember", with Clear all.
+  - **Results:** a grid of 150px cards, each with "#N from top".
+  - **Footer:** Shuffle, Draw top card and Reveal top card.
+  - Each card is a transparent button over a decorative face, like the pile tiles. Its name is the full card text plus "#N from top".
+  - Only the current card is in the tab order (roving tabindex), and only it shows **To hand** and **To table**.
+  - **Keyboard:** arrows and Home/End browse, Enter sends the card to hand, T to the table. ↓ from the search goes to the results, and ↑ from the first row goes back to the search.
+  - **After a move:** focus goes to the next match, then the previous one, then the search.
+  - **No hand:** To hand and Draw top card say "<seat> has no hand." when the active seat has none.
+  - **Announcements:** the viewer has its own live region, because the page's region sits outside the modal.
+  - **Phones:** height uses `100dvh`, and the results scroll while the footer stays visible. At 320px wide the grid has one column; from about 340px it has two.
+- **Opening the viewer:** a new **View cards…** menu item (after Mill cards…, shortcut V), or V on a focused pile.
+- `cardFaceLabel` is exported from `CardFace`. Card labels now include the cost ("Cost 2"), in the order the card shows it.
+- **Acceptance** (SP section): in the 58-card deck, open the viewer, search "Card 37", then To table. That's three actions, by mouse and by keyboard (V, type, ↓, T).
+- Tests: 197 unit (`SP-7 pile viewer search and filters`, `SP-7 pile viewer`, `SP-8 move a card from the pile viewer`, `SP-6 pile viewer footer`), and 20 E2E including `e2e/pile-viewer.spec.ts` (mouse, keyboard only, axe while filtered, and phone size at 375 × 667).
+- Checked by hand from screenshots at 1280 × 800 and 320 × 640, with no sideways scrolling.
 
 ### Phase 2e: Pile management (2026-10-26)
 
@@ -212,12 +237,14 @@ Phase 2 (piles): 2a to 2d are merged. 2e (pile management) is in review on branc
 
 ## Next
 
-- Owner tests the 2e preview, then merges.
-- **2f. Pile viewer (SP-7, SP-8)** following `PileViewer`: search, column filters, and To hand / To table / Move to…. It includes the acceptance test: find a card in a 60-card deck and put it on the table in three actions or fewer.
-- **2g. Peek (SP-9).**
+- Owner tests the 2f preview, then merges.
+- **2g. Move to… dialog (rest of SP-8)** following `MoveDialog`: a destination search (combobox and grouped listbox), the top or bottom of any pile, any hand, and "Keep it face up (piles only)". Open it from the viewer with a Move to… button and the M key. Phase 3's card menu reuses it.
+- **2h. Peek (SP-9).**
 
 ## Open problems
 
+- axe's label-in-name check joins text from separate blocks with no spaces, so a button containing a whole card face fails it. The viewer avoids that with the overlay pattern. Keep it in mind for table cards in Phase 3.
+- In this cloud environment the pinned `@playwright/test` wants a newer Chromium than the one installed. Local E2E ran with a scratch config pointing `launchOptions.executablePath` at `/opt/pw-browsers/chromium`. That config isn't committed, and CI is unaffected.
 - The form error colour uses `--seat-a` (5.4:1 on the panel), because the tokens have no error colour. Add an error token if the design gets one.
 - **Reload is two clicks, not one:** "Reload <file>…" reopens the file picker, because browsers can't re-read a chosen file. A true one-click reload needs the File System Access API, which works in Chromium only and falls back to the picker elsewhere. That fits with Phase 6, where the file handle can be saved with the game.
 - The default card face uses the UI font, not the sample card's Bitter, which would be another font dependency. Phase 4 layouts will set card fonts.
@@ -271,3 +298,8 @@ Phase 2 (piles): 2a to 2d are merged. 2e (pile management) is in review on branc
 | 2026-10-26 | Draw with no pile to draw from stays enabled and announces why | Disabling Draw | Explains what's wrong instead of leaving a dead button |
 | 2026-10-26 | New piles can belong to any seat, including Environment, or be shared | Player seats only | Matches the Solo PvE preset, which already has an Environment deck |
 | 2026-10-26 | Deleting a pile always asks first | Deleting straight away | There's no undo until Phase 3 |
+| 2026-10-26 | Move to… split from the viewer into 2g; Peek becomes 2h | One 2f covering all of SP-8 | Move to… is its own dialog that Phase 3 reuses, and the viewer alone filled a session |
+| 2026-10-26 | Viewer filters are native `<select>`s, one per column with 2 to 12 values. Search covers every column. | Custom listbox dropdowns as on the board | Native selects work better on iOS and with screen readers. Search still covers long text columns, so any column can be filtered. |
+| 2026-10-26 | Opening the viewer by mouse is the pile menu, then View cards…, and counts as one action | A one-click View button on the tile | The owner confirmed the two clicks are fine |
+| 2026-10-26 | View cards… sits after Mill cards…, not first in the menu | First item | On an empty pile, Load CSV… should get first focus, and the viewer has V for speed |
+| 2026-10-26 | Viewer cards are transparent buttons over a decorative face, named with the full card text and position | A button wrapping the face with a short label | Keeps visible text in the name (WCAG 2.5.3) and passes axe. Screen-reader users hear the card text. |
