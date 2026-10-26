@@ -91,6 +91,8 @@ test.describe('SP-7, SP-8 pile viewer', () => {
     expect(names.length).toBeGreaterThan(0);
     expect(names.every((n) => n?.startsWith('Card 3') && n.includes('. Spell. '))).toBe(true);
 
+    // Let the sheet finish fading in, or axe reads half-faded text colours.
+    await sheet.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished)));
     const results = await new AxeBuilder({ page }).withTags(axeTags).analyze();
     expect(results.violations).toEqual([]);
   });

@@ -83,7 +83,11 @@ test.describe('SP-5 and SP-6 piles and drawing', () => {
 
   test('keyboard only: draw with D, and from the pile menu', async ({ page }) => {
     await loadMain(page, 'double-faced.csv', true);
+    // Reading the file is async: wait for the results before Esc, or Esc can land before they open.
+    const importResults = page.getByRole('dialog', { name: 'Import results' });
+    await expect(importResults).toBeVisible();
     await page.keyboard.press('Escape');
+    await expect(importResults).toBeHidden();
 
     await page.keyboard.press('d');
     await expect(page.getByRole('status')).toHaveText('Player 1 drew Daylight Hunter from P1 main deck. 3 cards left.');

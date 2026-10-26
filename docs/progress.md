@@ -21,6 +21,10 @@ Phase 3 (Table) is under way. It's split into 3a to 3l, issues #23 to #34 under 
   - The control keeps its own accessible name, and the tooltip is `aria-hidden`, so the label isn't read twice.
   - `align="end"` lines it up with the button's right edge, for the toolbar at the right of the screen.
 - **Keys:** Ctrl/⌘+Z undoes. Ctrl/⌘+Shift+Z and Ctrl+Y redo. They're ignored in fields, which keep their own undo, and while a dialog or menu is open, whose contents would go stale.
+- **Two WebKit E2E races fixed.** They failed in CI, and the D one already failed on `main`:
+  - `import.spec.ts` "draw with D" pressed Esc before the async Import results dialog had opened, so the dialog then blocked D. It now waits for the dialog to open and close.
+  - `pile-viewer.spec.ts` "filters by column" ran axe during the viewer's 200ms fade-in, so axe read half-faded colours. It now waits for the sheet's animations to finish.
+  - Each failed about 1 in 3 locally in WebKit, and passed 10 of 10 after the fix.
 - The toolbar adds two Tab stops before the piles, so the Tab counts in `e2e/import.spec.ts` and `e2e/manage-piles.spec.ts` went up by two.
 - Tests: 239 unit (`TT-15 undo and redo` in the store, `TT-15 undo and redo controls` and `Icon button tooltips`) and 30 E2E, including `e2e/undo.spec.ts` (mouse with axe and the tooltip on hover, keyboard only with the tooltip on focus, and phone size at 375 × 667 and 320 wide).
 - Checked by hand from screenshots at 1280 and 320 wide, with the tooltip open.
@@ -318,6 +322,7 @@ Phase 3 (Table) is under way. It's split into 3a to 3l, issues #23 to #34 under 
 ## Open problems
 
 - **Saving undo history (PS-2, Phase 6):** each step is a whole game, so plain JSON would repeat the card definitions in every step. Phase 6 needs a compact form, such as saving definitions once or saving the differences between steps.
+- Local WebKit on macOS skips buttons when tabbing, unlike CI's Linux WebKit, so the keyboard-only E2E tests that press Tab fail locally in WebKit only. Use Chromium locally, as BP-4 says, and trust CI for WebKit.
 - E2E: under the full suite's load, `e2e/move-dialog.spec.ts` (keyboard only) and `e2e/manage-piles.spec.ts` (keyboard only) each failed once in 3a and passed on rerun and alone. Watch for flakiness.
 - The search-match highlight uses the board's `#FBE3A6` with ink text, which isn't a token. Add a highlight token if the design gets one.
 - axe's label-in-name check joins text from separate blocks with no spaces, so a button containing a whole card face fails it. The viewer avoids that with the overlay pattern. Keep it in mind for table cards in Phase 3.
