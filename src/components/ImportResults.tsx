@@ -4,6 +4,8 @@ import './ImportResults.css';
 
 export interface ImportSummary {
   fileName: string;
+  /** Pile the deck was loaded into. */
+  pileName?: string;
   /** Cards in this import, not counting back faces. */
   cardCount: number;
   added: number;
@@ -11,6 +13,8 @@ export interface ImportSummary {
   /** Names of cards no longer in the CSV. They stay in the deck, flagged missing. */
   missingNames: string[];
   problems: ImportProblem[];
+  /** Cards with more copies in play than their new qty, because the extras aren't in the pile. */
+  shortfalls?: { name: string; extra: number }[];
 }
 
 interface ImportResultsProps {
@@ -47,7 +51,9 @@ export function ImportResults({ summary, onClose }: ImportResultsProps) {
         <>
           <div className="import-results__header">
             <div className="import-results__titles">
-              <span className="import-results__eyebrow">{summary.fileName}</span>
+              <span className="import-results__eyebrow">
+                {summary.pileName ? `${summary.fileName} into ${summary.pileName}` : summary.fileName}
+              </span>
               <h2 id={titleId} className="import-results__title">
                 Import results
               </h2>
@@ -64,6 +70,13 @@ export function ImportResults({ summary, onClose }: ImportResultsProps) {
             {summary.missingNames.length > 0 && (
               <p className="import-results__missing">
                 No longer in the CSV, kept in the deck: {summary.missingNames.join(', ')}
+              </p>
+            )}
+
+            {summary.shortfalls && summary.shortfalls.length > 0 && (
+              <p className="import-results__missing">
+                More copies in play than the new qty, so these stay:{' '}
+                {summary.shortfalls.map((s) => `${s.name} (${plural(s.extra, 'extra copy', 'extra copies')})`).join(', ')}
               </p>
             )}
 
