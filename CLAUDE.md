@@ -10,6 +10,8 @@ This project runs on the owner's personal Claude usage. Be economical.
 
 - Work on **one issue at a time**, in the current phase only (see "Build phases" in the requirements). One issue = one branch = one small PR.
 - **Start every session by reading `docs/progress.md`**, then only the requirement sections and files the current issue needs. Do not explore the whole repo or re-read the whole spec.
+- `docs/progress.md` holds the current state, what's next, **open problems** and the **decision log** from earlier sessions. Check them before re-deciding anything or reopening a settled question.
+- The PR workflow (preview links, How to test steps, waiting for the owner to test, and the storage rule for previews) is under **Pull requests** below.
 - **Propose a short plan before coding** (files to touch, tests to add). Wait for approval.
 - If the task looks bigger than one session, **stop and propose a split** before writing code.
 - Do not touch files outside the issue's scope. No drive-by refactors or reformatting.
@@ -40,6 +42,15 @@ This project runs on the owner's personal Claude usage. Be economical.
 - Use semantic elements and accessible names; manage focus after moves and in dialogs; visible focus that is never hidden behind cards.
 - Respect `prefers-reduced-motion`. Targets at least 24 × 24 CSS px.
 
+## Phones
+
+The owner tests UI previews on a phone, including iOS, so phone-size layout matters even though desktop is the main target.
+
+- Every screen works from 320 CSS px wide with no sideways page scrolling. Rows wrap; long rows scroll inside their own region.
+- Dialogs and sheets fit the phone screen: their content scrolls and the footer buttons stay visible. Use `100dvh` for height limits, and don't rely on a `flex: 1` (0%) basis inside auto-height containers, which some mobile Safari versions collapse.
+- New screens or dialogs get a phone-size E2E check (for example a 375 × 667 viewport), like the import results test in `e2e/import.spec.ts`.
+- For keyboard testing on iOS, the owner uses a hardware keyboard with Full Keyboard Access turned on.
+
 ## Design
 
 UI follows the Claude Design export in `design/`. Before building or changing any UI, read `design/HANDOFF.md`, then only the parts the issue needs:
@@ -62,7 +73,8 @@ Non-UI issues (parsing, model, actions) don't need the design files.
 ## Pull requests
 
 - Title cites the issue; description lists requirement IDs, what changed, how it was tested, and accessibility notes.
-- Keep PRs small. CI must pass before review.- Every PR gets a preview at `https://nikkistorme.github.io/proxy/pr-preview/pr-N/`. A bot comments the link on the PR, and the preview is removed when the PR closes.
+- Keep PRs small. CI must pass before review.
+- Every PR gets a preview at `https://nikkistorme.github.io/proxy/pr-preview/pr-N/`. A bot comments the link on the PR, and the preview is removed when the PR closes.
 - PRs that change anything visible or interactive include a **How to test** section: the preview link, then numbered steps saying what to click or press and what should happen. Cover the keyboard path too.
 - For those PRs, stop once CI is green and wait for the owner to test the preview. Only the owner merges, after their own check.
 - Previews share the live site's web address, so they share its browser storage. Anything saved (IndexedDB, localStorage) must be keyed by the app's base path, so a preview never reads or overwrites the live site's saves.
