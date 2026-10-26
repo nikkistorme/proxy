@@ -92,7 +92,13 @@ export function Dialog({
 
   return (
     // Esc fires the dialog's close event, which reports back through onClose.
-    <dialog ref={dialogRef} className={`dialog dialog--${width}`} aria-labelledby={titleId} onClose={onClose}>
+    <dialog
+      ref={dialogRef}
+      className={`dialog dialog--${width}`}
+      aria-labelledby={titleId}
+      // React passes a nested dialog's close event up to this one too; only act on our own.
+      onClose={(event) => event.target === event.currentTarget && onClose()}
+    >
       {open && (
         <>
           <div className="dialog__header">

@@ -31,8 +31,9 @@ function cardsWord(count: number): string {
  * SP-8: every place a card can move to, grouped Table, Hands, then Piles.
  * The card's current table or hand is left out, since moving there does
  * nothing. Its own pile stays in, since its top and bottom are real moves.
+ * `exceptTopOf` leaves out one pile's top, where reordering does the same job (SP-9).
  */
-export function moveDestinations(state: GameState, cardId: string): MoveOption[] {
+export function moveDestinations(state: GameState, cardId: string, { exceptTopOf }: { exceptTopOf?: string } = {}): MoveOption[] {
   const from = locateCard(state, cardId);
   const options: MoveOption[] = [];
 
@@ -52,6 +53,7 @@ export function moveDestinations(state: GameState, cardId: string): MoveOption[]
   }
   for (const pile of state.piles) {
     for (const position of ['top', 'bottom'] as const) {
+      if (position === 'top' && pile.id === exceptTopOf) continue;
       options.push({
         key: `pile-${pile.id}-${position}`,
         group: 'Piles',

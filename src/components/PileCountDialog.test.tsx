@@ -80,3 +80,19 @@ describe('SP-6 mill N', () => {
     expect(onConfirm).not.toHaveBeenCalled();
   });
 });
+
+describe('SP-9 peek N', () => {
+  it('asks how many to look at, starting at 3', async () => {
+    const { user, onConfirm } = renderDialog({ mode: 'peek', pile: main });
+    expect(screen.getByRole('dialog', { name: 'Peek at P1 main deck' })).toBeInTheDocument();
+    const field = screen.getByRole('spinbutton', { name: 'Cards to look at' });
+    expect(field).toHaveValue(3);
+    await user.click(screen.getByRole('button', { name: 'Peek' }));
+    expect(onConfirm).toHaveBeenCalledWith(3, undefined);
+  });
+
+  it('starts at the pile size when the pile has fewer than 3 cards', () => {
+    renderDialog({ mode: 'peek', pile: board });
+    expect(screen.getByRole('spinbutton', { name: 'Cards to look at' })).toHaveValue(2);
+  });
+});

@@ -139,3 +139,38 @@ test.describe('SP-1 drop a CSV on a pile', () => {
     await expect(page.getByRole('dialog', { name: 'Import results' })).toContainText("art.png isn't a CSV file. Nothing was loaded.");
   });
 });
+
+test.describe('Pile menu on a short screen', () => {
+  test.use({ viewport: { width: 1280, height: 560 } });
+
+  test('stays inside the viewport, scrolls, and shows an inner shadow while more options are hidden', async ({ page }) => {
+    await loadSixty(page);
+    await mainPile(page).click();
+    const menu = page.getByRole('menu', { name: 'Actions for P1 main deck' });
+    const box = await menu.boundingBox();
+    // Regression: the menu ran past the bottom of the viewport.
+    expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(560);
+    expect(box?.y).toBeGreaterThanOrEqual(0);
+    await expect(menu).toHaveAttribute('data-more-below', '');
+    await expect(menu).not.toHaveAttribute('data-more-above');
+    // The shadows are overlay layers above the items, so a hovered item can't cover them.
+    const shadow = (edge: '::before' | '::after') =>
+      menu.evaluate((m, pseudo) => {
+        const style = getComputedStyle(m, pseudo);
+        return { position: style.position, zIndex: style.zIndex, opacity: style.opacity };
+      }, edge);
+    expect(await shadow('::after')).toEqual({ position: 'sticky', zIndex: '1', opacity: '1' });
+    expect((await shadow('::before')).opacity).toBe('0');
+
+    await page.keyboard.press('End');
+    const last = menu.getByRole('menuitem', { name: 'Delete…' });
+    await expect(last).toBeFocused();
+    await expect(last).toBeInViewport();
+    await expect(menu).toHaveAttribute('data-more-above', '');
+    await expect(menu).not.toHaveAttribute('data-more-below');
+    expect((await shadow('::before')).opacity).toBe('1');
+    expect((await shadow('::after')).opacity).toBe('0');
+    const results = await new AxeBuilder({ page }).withTags(axeTags).analyze();
+    expect(results.violations).toEqual([]);
+  });
+});
