@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
+import { tabTo } from './keyboard';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../tests/fixtures/csv/${name}`, import.meta.url));
 const axeTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -46,9 +47,7 @@ test.describe('SP-1 and CD-4 load a deck into a pile', () => {
   });
 
   test('keyboard only: open the pile menu, load, and close with Escape', async ({ page }) => {
-    // Undo and Redo, then the first pile.
-    for (let i = 0; i < 3; i++) await page.keyboard.press('Tab');
-    await expect(mainPile(page)).toBeFocused();
+    await tabTo(page, mainPile(page));
     await page.keyboard.press('Enter');
 
     const menu = page.getByRole('menu', { name: 'Actions for P1 main deck' });

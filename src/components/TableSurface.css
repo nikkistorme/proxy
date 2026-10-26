@@ -1,13 +1,31 @@
-/* The playmat from the Main board. It scrolls inside its own area, never the page (A11Y-11). */
-.table-surface__scroll {
-  overflow: auto;
+/*
+ * The table viewport from the Main board. The mat pans and zooms inside it and
+ * never scrolls the page (A11Y-11). One-finger touch pans natively; pinches are ours.
+ */
+.table-viewport {
+  position: relative;
+  height: 60dvh;
   margin-top: var(--space-5);
+  overflow: auto;
+  border-radius: 16px;
+  touch-action: pan-x pan-y;
+}
+
+.table-viewport--panning,
+.table-viewport--panning .table-surface {
+  cursor: grabbing;
+}
+
+.table-viewport__sizer {
+  position: relative;
 }
 
 .table-surface {
-  position: relative;
-  min-width: 100%;
-  border-radius: 16px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  cursor: grab;
+  transform-origin: 0 0;
 }
 
 /* The mat's faint inset edge. */
@@ -20,14 +38,21 @@
   pointer-events: none;
 }
 
-.table-surface--empty {
-  margin-top: var(--space-5);
-  padding: var(--space-5);
+/* TT-2: a faint grid, shown only while snapping is on. One cell is half an auto-placement step. */
+.table-surface--grid {
+  background-image:
+    linear-gradient(to right, var(--mat-edge) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--mat-edge) 1px, transparent 1px);
+  background-position: 16px 16px;
+  background-size: 71px 96px;
 }
 
 .table-surface__empty {
-  position: relative;
+  position: absolute;
+  left: var(--space-5);
+  top: var(--space-5);
   margin: 0;
   color: var(--muted);
   font-size: 14px;
+  cursor: default;
 }

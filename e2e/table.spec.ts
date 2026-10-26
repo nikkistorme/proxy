@@ -34,7 +34,7 @@ test.describe('A11Y-3 and A11Y-6 cards on the table', () => {
   test('mouse: cards played from the viewer appear on the table, named, with no axe violations', async ({ page }) => {
     await expect(table(page)).toHaveAccessibleName('Table, 0 cards');
     await fourOnTable(page);
-    await expect(table(page)).toHaveAccessibleName('Table, 4 cards. Arrow keys move between cards.');
+    await expect(table(page)).toHaveAccessibleName('Table, 4 cards. Arrow keys move between cards. Shift and arrow keys pan.');
     for (const name of ['Card 01', 'Card 02', 'Card 03', 'Card 04']) await expect(tableCard(page, name)).toBeVisible();
 
     // Each card lands in the next free spot, left to right.
@@ -75,7 +75,7 @@ test.describe('A11Y-3 and A11Y-6 cards on the table', () => {
 
     // Undo takes the last card off the table again.
     await page.keyboard.press('ControlOrMeta+z');
-    await expect(table(page)).toHaveAccessibleName('Table, 3 cards. Arrow keys move between cards.');
+    await expect(table(page)).toHaveAccessibleName('Table, 3 cards. Arrow keys move between cards. Shift and arrow keys pan.');
   });
 });
 
@@ -86,7 +86,7 @@ test.describe('A11Y-3 table on a phone', () => {
     await fourOnTable(page);
     const sideways = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
     expect(sideways).toBe(false);
-    const scroller = page.locator('.table-surface__scroll');
+    const scroller = page.locator('.table-viewport');
     expect(await scroller.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
 
     // Arrowing to an off-screen card scrolls it into view.

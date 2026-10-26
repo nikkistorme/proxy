@@ -2,9 +2,34 @@
 
 ## Current state
 
-Phase 3 (Table) is under way. It's split into 3a to 3m: issues #23 to #34, plus #37, all under #20. 3a (undo and redo) and 3b (placed table cards and table focus) are merged. 3c (pan, zoom, fit all and grid snap, #25) is next.
+Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37 and #39, all under #20. 3a to 3c are merged: undo and redo; placed table cards and table focus; and pan, zoom, fit all and grid snap. 3d (card action menu, #26) is next.
 
 ## Done
+
+### Phase 3c: Pan, zoom, fit all and grid snap (2026-10-26)
+
+- **The dark theme moved to its own issue, #39 (3n),** by agreement, because it needs every screen checked in dark.
+- **View state** lives in the store as `view: { zoom, snap }`, apart from `game`, so it's never an undo step.
+  - The table registers a `tableViewport` (`stepZoom`, `resetZoom`, `fitAll`), which the toolbar and keys call.
+  - Changes are announced: "Zoom 110%.", "Showing all 9 cards at 62%.", "Snap to grid on.", and "No cards on the table to fit."
+- **Layout.** At 768 × 600 and up, the app fills the window (`100dvh`). The header, seats, piles and hand stay put, and the table viewport takes the rest. Smaller screens scroll the page, and the table viewport is `60dvh` tall.
+- **Zoom (`src/model/tableView.ts`):**
+  - steps of 25, 33, 50, 67, 75, 90, 100, 110, 125, 150, 175 and 200%
+  - `stepZoom`, from between steps after a pinch, goes to the nearest step that way
+  - `scrollAfterZoom` keeps the point under the pointer or the centre in place
+  - The mat is scaled with a CSS transform inside a sizer, so the scrollbars match.
+  - The mat always fills the view and reaches two cards past the rightmost card and one card below the lowest, so there's room to pan and drop.
+- **Input:**
+  - Ctrl/⌘+wheel (and a trackpad pinch) zooms around the pointer, and a plain wheel scrolls.
+  - A two-finger touch pinch zooms around the fingers. Touch events with `touch-action: pan-x pan-y` keep one-finger scrolling native, and Safari's `gesturestart` is stopped.
+  - Dragging empty table space with the mouse pans, and Shift+arrow keys pan by 64px.
+- **Fit all** frames every card and never zooms in past 100%.
+- **Grid snap** is off by default. When it's on, a faint grid shows on the mat in `--mat-edge`, every 71 × 96px from 16,16 (half an auto-placement cell). `snapToGrid` is ready for 3e and 3f, which place cards at arbitrary spots.
+- **Toolbar** (Main board): Zoom out (−), a "100%" zoom reset in the number font, Zoom in (+), Fit all cards (0), and Snap to grid (G) with `aria-pressed`, all with tooltips.
+  - The keys are + or =, −, 0 and G. They're ignored with Ctrl/⌘ (browser zoom), in fields, and while a dialog or menu is open.
+- **`e2e/keyboard.ts` `tabTo`** presses Tab until the target has focus. The keyboard tests that counted Tab presses use it now, so new toolbar buttons don't break them.
+- Tests: 278 unit (`TT-1 zoom steps`, `TT-1 fit all`, `TT-2 snap to grid`, `TT-1 and TT-2 zoom, fit and snap controls` and `TT-1 panning and zooming the table`) and 36 E2E, including `e2e/table-view.spec.ts` (mouse with axe, keyboard only, and phone size).
+- Checked by hand from screenshots at 1280 × 800 and 375 × 667.
 
 ### Phase 3b: Placed table cards and table focus (2026-10-26)
 
@@ -342,9 +367,10 @@ Phase 3 (Table) is under way. It's split into 3a to 3m: issues #23 to #34, plus 
 
 ## Next
 
-- **3c: Pan, zoom, fit all and grid snap (#25)**, after the owner's go-ahead. Then 3d to 3l (#26 to #34), and 3m (#37, movable piles) after 3c, 3e and 3f. Open problems that belong to later issues:
-  - 3c: choosing the dark theme
+- **3d: Card action menu (#26)**, after the owner's go-ahead. Then 3e to 3l (#27 to #34), 3m (#37, movable piles) after 3e and 3f, and 3n (#39, dark theme) at any point. Open problems that belong to later issues:
   - 3d: whether to drop the delete-pile confirmation in favour of an Undo toast, and a double-faced badge on table cards (from CardStates)
+  - 3e and 3f: use `snapToGrid` when snap is on
+  - 3n: choosing the dark theme
 - 3d's card menu can reuse `MoveDialog`, and covers hand cards too.
 
 ## Open problems
@@ -359,7 +385,7 @@ Phase 3 (Table) is under way. It's split into 3a to 3m: issues #23 to #34, plus 
 - **Reload is two clicks, not one:** "Reload <file>…" reopens the file picker, because browsers can't re-read a chosen file. A true one-click reload needs the File System Access API, which works in Chromium only and falls back to the picker elsewhere. That fits with Phase 6, where the file handle can be saved with the game.
 - The default card face uses the UI font, not the sample card's Bitter, which would be another font dependency. Phase 4 layouts will set card fonts.
 - The shared-pile back colour `#3F433D` isn't a design token. The design has no shared seat, so add a token if the design gets one.
-- Dark theme isn't wired up. `tokens.css` has `[data-theme="dark"]` values, but nothing sets `data-theme` yet. Decide how the theme is chosen (follow the system setting, a toggle, or both) when the table is built.
+- Dark theme isn't wired up. `tokens.css` has `[data-theme="dark"]` values, but nothing sets `data-theme` yet. #39 (3n) follows the system setting, with a toggle once Settings exists.
 - PR preview clean-up leaves an empty `pr-preview/pr-N/.nojekyll` on `gh-pages`. It's harmless (the URL returns 404), but it could be tidied later.
 - The app's PR monitor still shows an error cached from the old npm `gh`. CI was checked with the real `gh` instead.
 - Local Node is 22.12.0. Some ESLint deps want ≥ 22.13 (this is an engine warning only). CI uses the latest Node 22.
@@ -433,3 +459,11 @@ Phase 3 (Table) is under way. It's split into 3a to 3m: issues #23 to #34, plus 
 | 2026-10-26 | Piles stay in their row in 3b, and moving piles onto the table is its own issue (#37) | Doing it in 3b | It needs positions, drag and keyboard moves for piles, so it builds on 3c, 3e and 3f. The owner asked for it not to be lost. |
 | 2026-10-26 | Bringing a focused card to the front is visual only (CSS) | A bring-to-front action | Focus shouldn't create undo steps or change the game |
 | 2026-10-26 | Table cards show the focus ring after a click as well as keyboard use, and focus themselves on click | Only `:focus-visible`, as for other controls | The focused card is the current card that keys and the card menu act on, so it must be visible. Safari doesn't focus buttons on click. The owner's review found clicking showed nothing. |
+| 2026-10-26 | Dark theme split from 3c into #39 (3n) | Doing it in 3c | Checking every screen in dark is unrelated to pan and zoom. The owner agreed. |
+| 2026-10-26 | Zoom, scroll and snap are view state, outside the game and the undo history | Making them game actions | They change how you look at the table, not the game |
+| 2026-10-26 | Shift+arrow keys pan; plain arrows stay for moving between cards | Plain arrows pan when the empty table has focus | One key, one meaning, wherever focus is. 3e uses plain arrows to move a picked-up card. The owner agreed. |
+| 2026-10-26 | Ctrl/⌘+wheel and pinch zoom; a plain wheel scrolls | A plain wheel zooms | Trackpad two-finger scrolling sends wheel events, so a plain wheel zoom would stop trackpad panning. It matches Figma and Miro. The owner agreed. |
+| 2026-10-26 | Fit all never zooms in past 100% | Fitting a few cards at up to 200% | A couple of cards shouldn't blow up. The owner agreed. |
+| 2026-10-26 | The snap grid is half an auto-placement cell (71 × 96px) | A fine grid such as 16px | Snapped cards line up with auto-placed rows and columns, or sit halfway between them |
+| 2026-10-26 | The app fills the window at 768 × 600 and up; smaller screens scroll the page with a 60dvh table | Always filling the window | On phones, the wrapped piles and the hand would leave almost no table |
+| 2026-10-26 | Keyboard E2E tests reach controls with `tabTo`, not a fixed number of Tab presses | Counting Tab presses | Every new toolbar button broke the counts |

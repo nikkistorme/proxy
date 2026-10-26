@@ -16,6 +16,23 @@ export interface HistoryEntry {
   announcement: string;
 }
 
+/** How the table is shown. Not part of the game: changing it is never an undo step. */
+export interface TableView {
+  zoom: number;
+  /** TT-2: grid snapping, off by default. */
+  snap: boolean;
+}
+
+/**
+ * The table's viewport, registered by the table while it's on screen, so the
+ * toolbar and keys can zoom and fit (TT-1) around what's actually in view.
+ */
+export interface TableViewport {
+  stepZoom: (direction: 'in' | 'out') => void;
+  resetZoom: () => void;
+  fitAll: () => void;
+}
+
 /** TT-15 asks for at least 200 undo steps. */
 export const HISTORY_LIMIT = 200;
 
@@ -38,6 +55,10 @@ export interface GameStore {
   undo: () => void;
   /** TT-15: replays the last undone action, or announces that there is nothing to redo. */
   redo: () => void;
+  view: TableView;
+  setView: (view: Partial<TableView>) => void;
+  tableViewport: TableViewport | undefined;
+  setTableViewport: (viewport: TableViewport | undefined) => void;
 }
 
 export const liveContext: ActionContext = { randomInt: cryptoRandomInt, newId: () => crypto.randomUUID() };
@@ -50,6 +71,10 @@ export function createGameStore(game: GameState = createSoloGame(), context: Act
       announcement: { text: '', id: 0 },
       past: [],
       future: [],
+      view: { zoom: 1, snap: false },
+      setView: (view) => set({ view: { ...get().view, ...view } }),
+      tableViewport: undefined,
+      setTableViewport: (tableViewport) => set({ tableViewport }),
       dispatch: (action) => {
         const { game: before, past } = get();
         const result = action(before, context);
