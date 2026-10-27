@@ -75,7 +75,7 @@ test.describe('SP-7, SP-8 pile viewer', () => {
     await page.keyboard.press('Escape');
     await expect(sheet).toBeHidden();
     await expect(mainPile(page)).toBeFocused();
-    await expect(page.getByRole('list', { name: "Player 1's hand, 1 card" })).toBeVisible();
+    await expect(page.getByRole('list', { name: /^Player 1's hand, 1 card\./ })).toBeVisible();
     await expect(tableCards(page).getByRole('button')).toHaveAccessibleName('Card 37');
   });
 

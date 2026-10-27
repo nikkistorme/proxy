@@ -74,8 +74,8 @@ test.describe('SP-5 and SP-6 piles and drawing', () => {
     await expect(mainPile(page)).toHaveAccessibleName('P1 main deck, 4 cards, Player 1');
 
     await page.getByRole('button', { name: 'Draw' }).click();
-    const hand = page.getByRole('list', { name: "Player 1's hand, 1 card" });
-    await expect(hand.getByRole('img')).toHaveAccessibleName('Daylight Hunter. Creature. Day side.');
+    const hand = page.getByRole('list', { name: /^Player 1's hand, 1 card\./ });
+    await expect(hand.getByRole('button')).toHaveAccessibleName('Daylight Hunter, double-faced');
     await expect(mainPile(page)).toHaveAccessibleName('P1 main deck, 3 cards, Player 1');
     await expect(page.getByRole('status')).toHaveText('Player 1 drew Daylight Hunter from P1 main deck. 3 cards left.');
   });
@@ -97,7 +97,7 @@ test.describe('SP-5 and SP-6 piles and drawing', () => {
     for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowDown');
     await expect(page.getByRole('menuitem', { name: 'Draw 1' })).toBeFocused();
     await page.keyboard.press('Enter');
-    await expect(page.getByRole('list', { name: "Player 1's hand, 2 cards" })).toBeVisible();
+    await expect(page.getByRole('list', { name: /^Player 1's hand, 2 cards\./ })).toBeVisible();
     await expect(mainPile(page)).toBeFocused();
 
     const results = await new AxeBuilder({ page }).withTags(axeTags).analyze();
@@ -113,8 +113,8 @@ test.describe('CD-6 card art placeholder', () => {
     await page.keyboard.press('d');
 
     // Card 01's art URL is aborted, so its art box shows the placeholder.
-    const card = page.getByRole('list', { name: "Player 1's hand, 1 card" }).getByRole('img');
-    await expect(card).toHaveAccessibleName(/^Card 01\./);
+    await expect(page.getByRole('list', { name: /^Player 1's hand, 1 card\./ }).getByRole('button')).toHaveAccessibleName('Card 01');
+    const card = page.locator('.hand-tray__card').first();
     await expect(card.locator('.card-art--placeholder')).toBeVisible();
     const box = await card.boundingBox();
     expect(box && [Math.round(box.width), Math.round(box.height)]).toEqual([104, 146]);

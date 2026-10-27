@@ -32,10 +32,15 @@ const VIEWPORT_MARGIN = 8;
  * Keeps the menu inside the viewport. It opens below its opener when it fits,
  * else above when that fits, else on the roomier side, capped to that space
  * and scrolling inside. The container's CSS places `data-placement="above"`.
+ * A menu that would run off the right edge shifts left.
  */
 function fitToViewport(menu: HTMLElement) {
   menu.style.maxHeight = '';
+  menu.style.marginLeft = '';
   delete menu.dataset.placement;
+  const box = menu.getBoundingClientRect();
+  const overRight = box.right - (window.innerWidth - VIEWPORT_MARGIN);
+  if (overRight > 0) menu.style.marginLeft = `${-Math.min(overRight, Math.max(0, box.left - VIEWPORT_MARGIN))}px`;
   const opener = (menu.parentElement ?? menu).getBoundingClientRect();
   const rect = menu.getBoundingClientRect();
   const gap = rect.top - opener.bottom;
