@@ -119,6 +119,22 @@ test.describe('TT-8 card counters', () => {
 test.describe('TT-8 counters on a phone', () => {
   test.use({ viewport: { width: 375, height: 667 } });
 
+  test('a touch screen opens the dialog without focusing a text field', async ({ browser, browserName }) => {
+    test.skip(browserName === 'firefox', 'Firefox has no mobile emulation');
+    const context = await browser.newContext({ viewport: { width: 375, height: 667 }, hasTouch: true, isMobile: true });
+    const page = await context.newPage();
+    await page.route('https://example.test/**', (route) => route.abort());
+    await page.goto('./');
+    expect(await page.evaluate(() => matchMedia('(pointer: coarse)').matches)).toBe(true);
+    const card = await emberShardOnTable(page);
+    await card.focus();
+    await page.keyboard.press('c');
+    await expect(counters(page)).toBeVisible();
+    expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('INPUT');
+    expect(await counters(page).evaluate((el) => el.contains(document.activeElement))).toBe(true);
+    await context.close();
+  });
+
   test('the dialog fits the screen with Done in view', async ({ page }) => {
     const card = await emberShardOnTable(page);
     await card.focus();

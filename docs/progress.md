@@ -17,7 +17,8 @@ Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection
   - **Focus:** opens on the clicked pill's counter, else the first counter, else the new counter's name. After Add, the new counter's value; after Remove, the new counter's name. On close, back to the card.
   - **Keys:** + and − (and the arrow keys in the value field) step the value on the value controls. Typed names and values are kept on Enter, Escape or leaving the field. Escape closes and keeps everything.
   - **Announcements:** the dialog has its own live region, like the pile viewer, because the page's region sits outside the modal.
-- **Tests:** 380 unit tests, including `counters.test.ts` and `TableCounters.test.tsx`. The new `e2e/counters.spec.ts` covers keyboard only (add, step, rename, remove, undo), mouse with axe on the dialog and a pill click, and the dialog at 375 × 667.
+  - **Touch screens (owner rule):** focus never goes straight to a text field, because that slides the keyboard up. `touchScreen()` (`pointer: coarse`) picks a button instead: the counter's + on opening or after Add, **Add counter** after Remove, else the dialog's first button.
+- **Tests:** 382 unit tests, including `counters.test.ts` and `TableCounters.test.tsx`. The new `e2e/counters.spec.ts` covers keyboard only (add, step, rename, remove, undo), mouse with axe on the dialog and a pill click, the dialog at 375 × 667, and an emulated phone where no text field takes focus (Chromium and WebKit).
 
 ### Planning: post-V1 issues (2026-10-27)
 
@@ -529,6 +530,7 @@ Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection
 
 - **3i-2: enlarge and the double-faced badge (#31)**, after the owner's go-ahead. The owner's notes from planning: the preview shows one face at a time, with a button that flips a double-faced card (with a flip animation that respects reduced motion); hover opens it after 400ms; I opens it from the keyboard (Space already moves a card); and a touch hold on a table card that lets go without moving opens the card's menu, as on a pile, with enlarge in the menu. Until Phase 4 layouts, "landscape" means a card turned on the table, shown upright.
 - Then 3j (#32, hand reordering) and 3k (#33, seat counters, dice and roll log), 3n (#39, dark theme) at any point, and 3o (#61) last: the ? shortcut reference, a WCAG 2.1.4 fix for the page-wide D shortcut, the announcement audit, and the solo-turn E2E that closes Phase 3.
+- **#68: no text-field focus on touch screens in the other dialogs** (Move to…, pile viewer, Draw/Mill/Peek count, pile name). It isn't tied to a phase, and the owner chooses when.
 - **After V1, as feature issues:** selection and group actions (#29), stacks (#30), and control settings with shortcut remapping (#53).
 - **Multi-select in the pile viewer (#57)**, a feature issue outside the phases, when the owner chooses. Open problems that belong to later issues:
   - #29 (after V1): move the Actions button to the selected card
@@ -688,3 +690,4 @@ Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection
 | 2026-10-27 | One counters dialog lists all of a card's counters, opened by C, the menu or a pill | The board's small popover for one counter | The shared `Dialog` brings focus, Escape and phone-size behaviour, and one place handles adding, changing and removing. |
 | 2026-10-27 | Every counter change is its own undo step and applies straight away | Applying the changes on Done | The board says Escape keeps the value, and each step is announced. |
 | 2026-10-27 | 3i-2 enlarge opens with I, and a still touch hold on a table card opens its menu | Space (moves a card); a hold that enlarges | Owner decision |
+| 2026-10-27 | On touch screens, a dialog's focus goes to a button, never straight to a text field | Autofocusing the first field everywhere | Owner rule: the keyboard sliding up is jarring. Done in the counters dialog; the other dialogs follow in #68. |

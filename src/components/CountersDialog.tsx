@@ -7,6 +7,7 @@ import { Dialog } from './Dialog';
 import { LiveRegion } from './LiveRegion';
 import './CountersDialog.css';
 import './Form.css';
+import { touchScreen } from './touchScreen';
 
 export interface CountersRequest {
   cardId: string;
@@ -43,11 +44,15 @@ export function CountersDialog({ request, onClose }: CountersDialogProps) {
   const newNameRef = useRef<HTMLInputElement>(null);
   /** A counter whose value field should take focus once it has rendered. */
   const [focusCounter, setFocusCounter] = useState<string>();
+  /** On a touch screen, focus goes to buttons, never straight to a text field. */
+  const [touch] = useState(touchScreen);
+  const addRef = useRef<HTMLButtonElement>(null);
 
   const entry = request && game.table.find((e) => e.cardId === request.cardId);
   const counters = entry?.counters ?? [];
   const cardId = request?.cardId ?? '';
-  // The pill that was clicked, else the first counter, else the new counter's name.
+  // The pill that was clicked, else the first counter, else the new counter's name
+  // (or, on a touch screen, the dialog's first button).
   const startOn = request && (counters.find((c) => c.id === request.counterId) ?? counters[0])?.id;
 
   function add() {
@@ -65,7 +70,7 @@ export function CountersDialog({ request, onClose }: CountersDialogProps) {
 
   function remove(counterId: string) {
     dispatch((g) => removeCounter(g, { cardId, counterId }));
-    newNameRef.current?.focus();
+    (touch ? addRef : newNameRef).current?.focus();
   }
 
   const name = entry ? shownName(game, cardId) : '';
@@ -80,6 +85,7 @@ export function CountersDialog({ request, onClose }: CountersDialogProps) {
                   key={counter.id}
                   counter={counter}
                   startHere={counter.id === startOn}
+                  touch={touch}
                   focusNow={counter.id === focusCounter}
                   onFocused={() => setFocusCounter(undefined)}
                   onSet={(value) => dispatch((g) => setCounter(g, { cardId, counterId: counter.id, value }))}
@@ -111,7 +117,7 @@ export function CountersDialog({ request, onClose }: CountersDialogProps) {
                 placeholder="Damage, +1/+1…"
                 aria-invalid={error !== undefined}
                 aria-describedby={error ? errorId : undefined}
-                {...(startOn === undefined && { 'data-autofocus': true })}
+                {...(startOn === undefined && !touch && { 'data-autofocus': true })}
                 onChange={(event) => {
                   setNewName(event.currentTarget.value);
                   setError(undefined);
@@ -122,7 +128,7 @@ export function CountersDialog({ request, onClose }: CountersDialogProps) {
                   add();
                 }}
               />
-              <button type="button" className="button" onClick={add}>
+              <button ref={addRef} type="button" className="button" onClick={add}>
                 Add counter
               </button>
             </div>
@@ -143,6 +149,8 @@ interface CounterRowProps {
   counter: Counter;
   /** Takes focus when the dialog opens. */
   startHere: boolean;
+  /** Focus the + button rather than the value field, so no keyboard slides up. */
+  touch: boolean;
   /** Takes focus now, as a counter that was just added. */
   focusNow: boolean;
   onFocused: () => void;
@@ -153,7 +161,7 @@ interface CounterRowProps {
 }
 
 /** One counter: its name, − value +, and Remove. Typed text is kept on Enter, Escape or leaving the field. */
-function CounterRow({ counter, startHere, focusNow, onFocused, onSet, onRename, nameProblem, onRemove }: CounterRowProps) {
+function CounterRow({ counter, startHere, touch, focusNow, onFocused, onSet, onRename, nameProblem, onRemove }: CounterRowProps) {
   const nameId = useId();
   const valueId = useId();
   const errorId = useId();
@@ -164,12 +172,13 @@ function CounterRow({ counter, startHere, focusNow, onFocused, onSet, onRename, 
   const valueDraft = valueTyped ?? String(counter.value);
   const [nameError, setNameError] = useState<string>();
   const valueRef = useRef<HTMLInputElement>(null);
+  const increaseRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!focusNow) return;
-    valueRef.current?.focus();
+    (touch ? increaseRef : valueRef).current?.focus();
     onFocused();
-  }, [focusNow, onFocused]);
+  }, [focusNow, touch, onFocused]);
 
   function commitName() {
     if (nameDraft.trim() === counter.name) {
@@ -249,7 +258,7 @@ function CounterRow({ counter, startHere, focusNow, onFocused, onSet, onRename, 
             type="text"
             inputMode="numeric"
             value={valueDraft}
-            {...(startHere && { 'data-autofocus': true })}
+            {...(startHere && !touch && { 'data-autofocus': true })}
             onFocus={(event) => event.currentTarget.select()}
             onChange={(event) => setValueDraft(event.currentTarget.value)}
             onBlur={commitValue}
@@ -267,7 +276,15 @@ function CounterRow({ counter, startHere, focusNow, onFocused, onSet, onRename, 
               }
             }}
           />
-          <button type="button" className="button counters-row__step" aria-label={`Increase ${counter.name}`} onKeyDown={onStepKey} onClick={() => step(1)}>
+          <button
+            ref={increaseRef}
+            type="button"
+            className="button counters-row__step"
+            aria-label={`Increase ${counter.name}`}
+            {...(startHere && touch && { 'data-autofocus': true })}
+            onKeyDown={onStepKey}
+            onClick={() => step(1)}
+          >
             +
           </button>
         </div>

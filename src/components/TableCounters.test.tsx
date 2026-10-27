@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { addCounter } from '../actions/counters';
 import { moveCard } from '../actions/moveCard';
 import { gameWithDeck, pilesOutOfTheWay, testContext } from '../actions/testing';
@@ -108,5 +108,35 @@ describe('TT-8 card counters', () => {
     expect(counters(store)).toEqual(['Damage 1']);
     act(() => store.getState().undo());
     expect(counters(store)).toBeUndefined();
+  });
+});
+
+describe('TT-8 counters on a touch screen', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('never focuses a text field, so no keyboard slides up', async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === '(pointer: coarse)', media: query }));
+    const store = setup();
+    fireEvent.click(card('Imp'));
+    act(() => {
+      store.getState().dispatch((g, context) => addTo(g, 'Damage', context));
+    });
+    fireEvent.click(within(table()).getByRole('button', { name: 'Damage 1' }));
+    expect(within(dialog()).getByRole('button', { name: 'Increase Damage' })).toHaveFocus();
+    await userEvent.click(within(dialog()).getByRole('button', { name: 'Remove counter' }));
+    expect(within(dialog()).getByRole('button', { name: 'Add counter' })).toHaveFocus();
+    // Adding focuses the new counter's + button, not its value.
+    await userEvent.type(within(dialog()).getByRole('textbox', { name: 'New counter name' }), 'Shield');
+    await userEvent.click(within(dialog()).getByRole('button', { name: 'Add counter' }));
+    expect(within(dialog()).getByRole('button', { name: 'Increase Shield' })).toHaveFocus();
+  });
+
+  it('opens with no counters without focusing the name field', async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === '(pointer: coarse)', media: query }));
+    setup();
+    card('Imp').focus();
+    await userEvent.keyboard('c');
+    expect(within(dialog()).getByRole('textbox', { name: 'New counter name' })).not.toHaveFocus();
+    expect(document.activeElement?.tagName).not.toBe('INPUT');
   });
 });
