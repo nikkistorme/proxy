@@ -6,6 +6,12 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 
 ## Done
 
+### Workflow: requirements upkeep and phase-free issues (2026-10-27)
+
+- `CLAUDE.md`: every PR also updates `docs/requirements.md` when development changed something the spec covers, and lists the changed requirement IDs in the PR description.
+- The **Feature or task** issue form no longer asks for a phase or adds a "[Phase N]" title prefix, since work after V1 won't be organised in phases.
+- `CLAUDE.md` keeps the stay-in-the-current-phase rule only until V1 is finished. After that, work isn't restricted to phases.
+
 ### Phase 3m-1: Piles on the table (2026-10-27)
 
 - **One surface (owner decision):** the separate pile row is gone. Piles sit on the table with the cards, as on the Main board, card-sized and under the cards.
@@ -597,3 +603,4 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 | 2026-10-27 | Piles and cards share one table surface, with no separate pile row | Keeping the pile row above the table | Owner decision: pile dragging (3f-2, 3m-2) works on the same surface as cards |
 | 2026-10-27 | 3m is split: 3m-1 puts piles on the table, 3m-2 (#51) moves them; both come before 3f-2 | One PR | At the owner's go-ahead, to keep the PR small |
 | 2026-10-27 | Add pile lives in the table toolbar, with a visible label | A button on the table | The table is only for cards and piles, and the toolbar is always in view |
+| 2026-10-27 | Feature issues no longer name a phase; PRs keep `docs/requirements.md` in step with what was built | Keeping the phase dropdown after V1 | Work after V1 isn't organised in phases, and the spec should stay accurate as decisions change during development. |
