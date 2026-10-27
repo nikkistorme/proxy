@@ -72,3 +72,40 @@
   color: var(--muted);
   font-size: 14px;
 }
+
+/* Each card is a transparent button over its face, like the table's and the viewer's. */
+.hand-tray__card {
+  position: relative;
+}
+
+.hand-tray__card-button {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.hand-tray__card-button:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* Where a hand card's menu opens: over the card on screen. The tray is at the bottom, so Menu.tsx usually opens it above. */
+.hand-card-menu-anchor {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.hand-card-menu-anchor > .menu {
+  top: calc(100% + var(--space-2));
+  left: 0;
+  pointer-events: auto;
+}
+
+.hand-card-menu-anchor > .menu[data-placement='above'] {
+  top: auto;
+  bottom: calc(100% + var(--space-2));
+}

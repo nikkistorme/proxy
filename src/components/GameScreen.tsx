@@ -325,10 +325,6 @@ export function GameScreen() {
   );
 
   const seatName = (seatId: string | undefined) => game.seats.find((s) => s.id === seatId)?.name;
-  const handCards = (game.hands[game.activeSeatId] ?? []).flatMap((id) => {
-    const face = faceOf(game, id);
-    return face ? [{ id, face }] : [];
-  });
 
   return (
     <div className="game">
@@ -428,7 +424,7 @@ export function GameScreen() {
         </section>
 
         {activeSeat?.hasHand && (
-          <HandTray seatId={activeSeat.id} seatName={activeSeat.name} cards={handCards} onDraw={drawOne} />
+          <HandTray seatId={activeSeat.id} seatName={activeSeat.name} onDraw={drawOne} />
         )}
       </main>
 

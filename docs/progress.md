@@ -2,9 +2,26 @@
 
 ## Current state
 
-Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37, #39 and #41, all under #20. 3a to 3d are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; and the table card menu. 3d-2 (hand card menu, #41) is next.
+Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37, #39 and #41, all under #20. 3a to 3d-2 are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; and the hand card menu. 3e (keyboard and single-pointer placement, #27) is next.
 
 ## Done
+
+### Phase 3d-2: Hand card menu (2026-10-27)
+
+- **Hand cards are buttons.** Each is a transparent button over a decorative face, named for the card ("Imp", or "Daylight Hunter, double-faced").
+  - The hand is one Tab stop, with ←, →, Home and End between cards (A11Y-3). The list's name ends "Arrow keys move between cards."
+- **`HandTray`** now reads the hand from the store, so it no longer takes `cards`.
+- **`HandCardMenu`:** Play to table (P), Move to… (M) and Details….
+  - **Opening it:** a click or tap on the card, Enter, Shift+F10 or the Menu key, or a right-click.
+  - **Placement:** it opens in a fixed anchor outside the scrolling hand row, which would clip it.
+- **What each item does:**
+  - **Play to table** uses `moveCard` to put the card in the next free spot.
+  - **Move to…** reuses `MoveDialog`, "from Player 1's hand".
+  - **Details…** uses `CardDetailsDialog`'s new `faceUp` option, because drawn cards keep their face-down side in the hand.
+- **Focus after a card leaves:** the card now in its place, or the one before, or **Draw** when the hand is empty. Dialogs return focus to the card.
+- **`Menu` shifts left** when it would run off the right edge of the screen. The phone E2E caught a hand card menu half off-screen. This also fixes the table card menu near the right edge.
+- **Tests that read hand cards as images** now read them as buttons by name.
+- Tests: 304 unit (`FS-3 hand tray`, `A11Y-3 hand focus` and `TT-4 and SP-8 hand card menu`) and 43 E2E, including `e2e/hand.spec.ts` (mouse with axe, keyboard only, and phone size).
 
 ### Phase 3d: Card action menu (2026-10-27)
 
@@ -402,10 +419,11 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 
 ## Next
 
-- **3d-2: Hand card menu (#41)**, after the owner's go-ahead. Then 3e to 3l (#27 to #34), 3m (#37, movable piles) after 3e and 3f, and 3n (#39, dark theme) at any point. Open problems that belong to later issues:
+- **3e: Keyboard and single-pointer placement (#27)**, after the owner's go-ahead. Then 3f to 3l (#28 to #34), 3m (#37, movable piles) after 3e and 3f, and 3n (#39, dark theme) at any point. Open problems that belong to later issues:
   - 3e and 3f: use `snapToGrid` when snap is on
   - 3g: move the Actions button to the selected card
   - 3i: a double-faced badge on table cards (from CardStates)
+  - 3j: dragging to reorder the hand, where a click without a drag still opens the menu
 
 ## Open problems
 
@@ -512,3 +530,6 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 | 2026-10-27 | Empty piles delete without asking, with an Undo toast | Always asking first | Undo exists now, and the brief asks for a toast instead of confirmations. A pile with cards still asks where they go. The owner agreed. |
 | 2026-10-27 | Duplicates are flagged and skipped when a reload counts copies | Counting them | Otherwise duplicating a token would make a reload remove a real copy from the pile |
 | 2026-10-27 | The toast stays until the next action, with no timer | Disappearing after a few seconds | No time limit to read or reach Undo (WCAG 2.2.1), and Ctrl+Z works anyway |
+| 2026-10-27 | A click or tap on a hand card opens its menu | Only focusing it, as on the table | Hand cards have no other click action, and the issue asked for it. The owner agreed. |
+| 2026-10-27 | Hand card names are short: the name, plus ", double-faced" | The full card text | Full text is in Details…, as on the table. The owner agreed. |
+| 2026-10-27 | `Menu` shifts left to stay on screen | Fitting only vertically | Menus opened from cards near the right edge ran off a phone screen |

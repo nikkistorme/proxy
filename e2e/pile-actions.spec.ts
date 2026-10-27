@@ -56,10 +56,10 @@ test.describe('SP-6 pile actions', () => {
     const drawDialog = page.getByRole('dialog', { name: 'Draw from P1 main deck' });
     await drawDialog.getByRole('spinbutton').fill('3');
     await drawDialog.getByRole('button', { name: 'Draw' }).click();
-    const hand = page.getByRole('list', { name: "Player 1's hand, 3 cards" });
+    const hand = page.getByRole('list', { name: /^Player 1's hand, 3 cards\./ });
     await expect(hand).toBeVisible();
     // After a shuffle, the chance of drawing Card 01, 02, 03 in order is about 1 in 180,000.
-    const names = await hand.getByRole('img').evaluateAll((cards) => cards.map((c) => c.getAttribute('aria-label')?.split('.')[0]));
+    const names = await hand.getByRole('button').evaluateAll((cards) => cards.map((c) => c.getAttribute('aria-label')?.split('.')[0]));
     expect(names).not.toEqual(['Card 01', 'Card 02', 'Card 03']);
 
     await mainPile(page).click();
@@ -92,7 +92,7 @@ test.describe('SP-6 pile actions', () => {
     expect(results.violations).toEqual([]);
     await page.keyboard.type('2');
     await page.keyboard.press('Enter');
-    await expect(page.getByRole('list', { name: "Player 1's hand, 2 cards" })).toBeVisible();
+    await expect(page.getByRole('list', { name: /^Player 1's hand, 2 cards\./ })).toBeVisible();
     await expect(status(page)).toHaveText('Player 1 drew Card 01 and Card 02 from P1 main deck. 56 cards left.');
     await expect(mainPile(page)).toBeFocused();
 

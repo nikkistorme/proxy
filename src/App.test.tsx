@@ -99,8 +99,8 @@ describe('SP-6 draw', () => {
     await user.click(mainTile());
     await user.click(screen.getByRole('menuitem', { name: 'Draw 1' }));
 
-    const hand = screen.getByRole('list', { name: "Player 1's hand, 3 cards" });
-    expect(within(hand).getAllByRole('img').map((c) => c.getAttribute('aria-label'))).toEqual(['Imp', 'Ogre', 'Troll']);
+    const hand = screen.getByRole('list', { name: /^Player 1's hand, 3 cards\./ });
+    expect(within(hand).getAllByRole('button').map((c) => c.getAttribute('aria-label'))).toEqual(['Imp', 'Ogre', 'Troll']);
     expect(mainTile()).toHaveAccessibleName('P1 main deck, empty, 0 cards, Player 1');
     expect(screen.getByRole('status')).toHaveTextContent('Player 1 drew Troll from P1 main deck. 0 cards left.');
   });
@@ -185,7 +185,7 @@ describe('SP-6 pile menu actions', () => {
     const field = screen.getByRole('spinbutton', { name: "Cards to draw into Player 1's hand" });
     await user.clear(field);
     await user.type(field, '3{Enter}');
-    expect(screen.getByRole('list', { name: "Player 1's hand, 3 cards" })).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: /^Player 1's hand, 3 cards\./ })).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('Player 1 drew Imp, Ogre and Troll from P1 main deck. 1 card left.');
     expect(mainTile()).toHaveFocus();
   });
