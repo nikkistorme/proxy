@@ -2,9 +2,19 @@
 
 ## Current state
 
-Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37, #39, #41, #49, #51 and #56, all under #20. 3a to 3f-1, 3m-1 and 3m-2 are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; piles on the table; and moving piles, with a click on a pile drawing its top card. 3f-2 (dragging cards from the pile viewer, #49) and 3m-3 (merging piles, #56) are next.
+Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37, #39, #41, #49, #51 and #56, all under #20. 3a to 3f-2, 3m-1 and 3m-2 are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; and moving piles, with a click on a pile drawing its top card. 3m-3 (merging piles, #56) is next. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases.
 
 ## Done
+
+### Phase 3f-2: Dragging cards from the pile viewer (2026-10-27)
+
+- **Dragging (TT-4, SP-8):** a card in the pile viewer can be dragged by mouse or touch to a spot on the table, a hand, or the top of any pile. It uses the 3f-1 controller (5px mouse slop, 250ms touch hold, snap and edge clamping, Escape to cancel). Every drop goes through `moveCard`, so it's one undo step with the same announcement as Move to….
+- **The viewer steps aside:** a modal leaves the page inert, so the drop zones behind it can't be reached. Once a card lifts, the viewer closes (without counting as the viewer closing), and after the drop or cancel it opens again (owner decision).
+- **Focus:** after a drop, the next match, as after To hand or To table, or the search when none are left. After Escape or a drop on nothing, "Put Ogre back." and focus on the same card.
+- **Its own pile:** a card dropped on its own pile goes to the top. The top card is just put back (owner decision).
+- **Code:** `DragSource` gains `onLift`, and its `from` can be undefined for a card below a pile's top. The viewer ignores its own close events while a card is lifted.
+- **Tests:** 353 unit tests, including `PileViewerDrag.test.tsx`. The new `e2e/viewer-drag.spec.ts` covers a mouse drag to the table with axe mid-drag and after the viewer comes back, drags to the hand and another pile, Escape, and touch at 375 × 667 (Chromium only).
+- **New issue:** #57, selecting several cards in the pile viewer and acting on them together, including dragging. It's a feature issue, not tied to a phase.
 
 ### Phase 3m-2: Moving piles, and what pressing a pile does (2026-10-27)
 
@@ -486,10 +496,9 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 
 ## Next
 
-- **3f-2: Dragging cards from the pile viewer onto the table, a hand or a pile (#49)**, after the owner's go-ahead.
 - **3m-3: Merging piles by dropping one on another (#56)**, after the owner's go-ahead. Piles must never overlap. Dropping a pile on another asks which is deleted and where its cards go, perhaps reusing the Delete pile dialog.
-- Then 3g to 3l (#29 to #34), and 3n (#39, dark theme) at any point. Open problems that belong to later issues:
-  - 3f-2: the viewer is a modal dialog over the drop zones, so it has to get out of the way while a card is dragged
+- Then 3g to 3l (#29 to #34), and 3n (#39, dark theme) at any point.
+- **Multi-select in the pile viewer (#57)**, a feature issue outside the phases, when the owner chooses. Open problems that belong to later issues:
   - 3g: move the Actions button to the selected card
   - 3i: a double-faced badge on table cards (from CardStates)
   - 3j: dragging to reorder the hand, where a click without a drag still opens the menu
@@ -508,7 +517,9 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 - The hand's "Drop: Player 1's hand" label sits mid-tray, so the dragged card can cover it. The ring and tint still show.
 - The Actions button and card overlays scale with the table's zoom, so below 100% the button is smaller than 24 × 24px (A11Y-8 counts default zoom only). Enter and right-click always work. Revisit if it's a problem in play.
 - A card turned a quarter at the table's left or top edge reaches up to 25px past the mat edge, because it turns around its centre. Placing keeps cards inside the edge (`clampToTable`), but turning a card in place doesn't move it.
-- Pile viewer and peek cards can't choose a spot straight away, because those dialogs would have to close first. Send the card to the table, then press Space on it.
+- Pile viewer cards can be dragged to a spot on the table, but the keyboard can't choose a spot straight from the viewer or peek, because those dialogs would have to close first. Send the card to the table, then press Space on it.
+- A card dragged out of the pile viewer keeps the viewer's 150px size under the pointer, not the table card's size at the current zoom.
+- Dragging from the pile viewer by touch needs a check on an iPhone, like the other touch drags.
 - In jsdom, the search in a Move to… dialog opened from the hand card menu doesn't always get focus before typing, so unit tests type into it directly. Browsers focus it, and the E2E covers that.
 - `axe` scrolls the table while it checks contrast, so E2E tests that click cards after an axe check scroll the table back first.
 - **Saving undo history (PS-2, Phase 6):** each step is a whole game, so plain JSON would repeat the card definitions in every step. Phase 6 needs a compact form, such as saving definitions once or saving the differences between steps.
@@ -631,3 +642,6 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 | 2026-10-27 | Piles must never overlap; dropping one on another merges them after a confirmation, in its own issue (#56) | Letting piles stack like cards; doing it in 3m-2 | Owner decision on #54 |
 | 2026-10-27 | A drag swallows the next pointer click until the next press, or a second at most | Swallowing only clicks in the same task | A touch's click arrives after the finger lifts and got through. Keyboard clicks (detail 0) are never swallowed. |
 | 2026-10-27 | Feature issues no longer name a phase; PRs keep `docs/requirements.md` in step with what was built | Keeping the phase dropdown after V1 | Work after V1 isn't organised in phases, and the spec should stay accurate as decisions change during development. |
+| 2026-10-27 | The pile viewer closes while a card is dragged out of it, and opens again after the drop | Fading it but leaving it modal; closing it for good | A modal makes the page inert, so drop zones can't be hit. Coming back lets you drag several cards in a row, as To hand and To table allow. Owner decision. |
+| 2026-10-27 | A viewer card dropped on its own pile goes to the top; the top card is put back | Ignoring drops on its own pile | Matches Move to…'s "own pile — top". Owner decision. |
+| 2026-10-27 | Multi-select in the pile viewer is its own feature issue (#57), not tied to a phase | Adding it to 3f-2 | Owner request. Keeps 3f-2 small. |

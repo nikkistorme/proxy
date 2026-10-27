@@ -1,7 +1,8 @@
-import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { moveCard, type Destination } from '../actions/moveCard';
 import { draw, revealTop, shuffle } from '../actions/pileActions';
 import { useGameStore } from '../store/gameStore';
+import { useCardDrag } from './cardDrag';
 import { CardFace, cardFaceLabel } from './CardFace';
 import { LiveRegion } from './LiveRegion';
 import { MoveDialog, type MoveRequest } from './MoveDialog';
@@ -48,12 +49,15 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
   const game = useGameStore((s) => s.game);
   const dispatch = useGameStore((s) => s.dispatch);
   const announce = useGameStore((s) => s.announce);
+  const startDrag = useCardDrag();
 
   const dialogRef = useRef<HTMLDialogElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   /** A card id, or 'search', to focus once the page has updated after a move. */
   const pendingFocusRef = useRef<string>(undefined);
+  /** Set while a card is dragged out: the viewer steps aside, and its close isn't the viewer closing. */
+  const liftedRef = useRef(false);
   const titleId = useId();
   const searchId = useId();
   const [search, setSearch] = useState('');
@@ -90,6 +94,43 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
   });
 
   const close = () => dialogRef.current?.close();
+
+  /** Back after a drag, as it was. */
+  function reopen() {
+    const dialog = dialogRef.current;
+    liftedRef.current = false;
+    if (dialog && !dialog.open) dialog.showModal();
+  }
+
+  // TT-4: dragging a card out to the table, a hand or a pile, through the same move as To hand and Move to….
+  function onCardPointerDown(entry: PileEntry, event: PointerEvent<HTMLButtonElement>) {
+    const visual = event.currentTarget.previousElementSibling;
+    if (!(visual instanceof HTMLElement) || !pileId) return;
+    const name = entry.face.name;
+    startDrag(event, {
+      cardId: entry.cardId,
+      name,
+      visual,
+      scale: 1,
+      rotation: 0,
+      // Dropping the top card on its own pile puts it back; any other card goes to the top.
+      from: entry.position === 1 ? { zone: 'pile', pileId, position: 'top' } : undefined,
+      onLift: () => {
+        // A modal leaves the page inert, so the drop zones behind it can't be reached.
+        liftedRef.current = true;
+        dialogRef.current?.close();
+      },
+      drop: (to) => {
+        reopen();
+        move(entry, to);
+      },
+      cancel: () => {
+        reopen();
+        announce(`Put ${name} back.`);
+        focusCard(entry);
+      },
+    });
+  }
 
   function focusCard(entry: PileEntry | undefined) {
     if (!entry) return;
@@ -209,7 +250,8 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
       aria-labelledby={titleId}
       style={{ borderTopColor: identity.color }}
       // React passes the Move dialog's close event up to this dialog too; only this one's own closes it.
-      onClose={(event) => event.target === event.currentTarget && onClose()}
+      // A close while a card is dragged out, arriving late or not, isn't the viewer closing.
+      onClose={(event) => event.target === event.currentTarget && !liftedRef.current && !event.currentTarget.open && onClose()}
     >
       {pile && (
         <>
@@ -302,7 +344,7 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
                   return (
                     <li key={entry.cardId} className="pile-viewer__item">
                       {/* Like the pile tiles: the card is a decorative layer under a button that names it. */}
-                      <div className="pile-viewer__frame">
+                      <div className="pile-viewer__frame card-drag-source">
                         <div aria-hidden="true">
                           <CardFace face={entry.face} width={CARD_WIDTH} />
                         </div>
@@ -316,6 +358,7 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
                           onClick={() => setCurrentId(entry.cardId)}
                           onFocus={() => setCurrentId(entry.cardId)}
                           onKeyDown={(e) => onCardKeyDown(e, entry)}
+                          onPointerDown={(e) => onCardPointerDown(entry, e)}
                         />
                       </div>
                       <span className="pile-viewer__position" aria-hidden="true">

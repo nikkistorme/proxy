@@ -21,12 +21,14 @@ interface DragSourceBase {
   /** How much the visual is scaled on screen, like the table's zoom. */
   scale: number;
   rotation: Rotation;
-  /** Where the card is now. Dropping it here puts it back. */
-  from: Destination;
+  /** Where the card is now. Dropping it here puts it back. A card inside a pile, below its top, is nowhere a drop can name. */
+  from: Destination | undefined;
   /** Moves the card through the same action as a keyboard move. */
   drop: (to: Destination) => void;
   /** The drag ended without a move: the card stays where it was. */
   cancel: () => void;
+  /** The card has lifted, before any target is looked for. The pile viewer gets out of the way here. */
+  onLift?: () => void;
 }
 
 /**
@@ -91,6 +93,7 @@ function begin(current: Session, x: number, y: number) {
   const { source, store } = current;
   current.started = true;
   window.clearTimeout(current.timer);
+  source.onLift?.();
   const ghost = document.createElement('div');
   ghost.className = 'drag-ghost';
   ghost.setAttribute('aria-hidden', 'true');
