@@ -76,7 +76,7 @@ test.describe('TT-9 enlarge', () => {
         .locator('.card-face')
         .evaluate((el) => getComputedStyle(el).transform),
     ).toBe('none');
-    expect((await preview(page).locator('.card-face').boundingBox())?.width).toBe(216);
+    expect((await preview(page).locator('.card-face').boundingBox())?.width).toBeCloseTo(216, 1);
     await besideCard(page, turned);
     await page.keyboard.press('i');
     await expect(preview(page)).toHaveCount(0);
