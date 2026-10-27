@@ -120,6 +120,7 @@ describe('SP-6 draw', () => {
 
   it('says so when the deck is empty', async () => {
     const user = renderSession();
+    screen.getByRole('button', { name: 'Draw' }).focus();
     await user.keyboard('d');
     expect(screen.getByRole('status')).toHaveTextContent('P1 main deck is empty. No cards drawn.');
   });

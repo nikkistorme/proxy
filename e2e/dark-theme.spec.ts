@@ -137,6 +137,11 @@ test.describe('A11Y-9 dark theme', () => {
     await noViolations(page);
     await page.getByRole('menuitem', { name: 'Session log' }).click();
     await noViolations(page, 'dialog[open]');
+    await page.keyboard.press('Escape');
+
+    // The shortcut reference.
+    await page.getByRole('button', { name: 'Keyboard shortcuts (?)' }).click();
+    await noViolations(page, 'dialog[open]');
   });
 });
 

@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode, type Ref } from 'react';
 import { zoomPercent } from '../model/tableView';
 import { useSessionStore } from '../store/sessionStore';
+import { inShortcutScope } from './shortcutScope';
 import './TableTools.css';
 import { Tooltip } from './Tooltip';
 
@@ -12,6 +13,7 @@ const ICONS = {
   zoomIn: 'M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-4-4M8 11h6M11 8v6',
   fit: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',
   grid: 'M4 4h16v16H4zM9.3 4v16M14.7 4v16M4 9.3h16M4 14.7h16',
+  help: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM9.5 9.5a2.5 2.5 0 0 1 4.9.7c0 1.7-2.4 2.3-2.4 3.8M12 17h.01',
 };
 
 interface ToolProps {
@@ -46,13 +48,15 @@ interface TableToolsProps {
   /** SP-4: adds a pile to the table. Left out, there's no Add pile button. */
   onAddPile?: () => void;
   addPileRef?: Ref<HTMLButtonElement>;
+  /** A11Y-4: opens the shortcut reference. Left out, there's no Keyboard shortcuts button. */
+  onShortcuts?: () => void;
 }
 
 /**
  * The header's table tools, from the Main board: undo and redo (TT-15), zoom and
  * fit all (TT-1), grid snap (TT-2), and Add pile (SP-4), which puts a pile on the table.
  */
-export function TableTools({ onAddPile, addPileRef }: TableToolsProps = {}) {
+export function TableTools({ onAddPile, addPileRef, onShortcuts }: TableToolsProps = {}) {
   const canUndo = useSessionStore((s) => s.past.length > 0);
   const canRedo = useSessionStore((s) => s.future.length > 0);
   const undo = useSessionStore((s) => s.undo);
@@ -68,8 +72,9 @@ export function TableTools({ onAddPile, addPileRef }: TableToolsProps = {}) {
   };
 
   // Ctrl/⌘+Z undoes; Ctrl/⌘+Shift+Z and Ctrl+Y redo. + or =, −, 0 and G zoom, fit and
-  // snap. Fields keep their own keys, and nothing changes under an open dialog or
-  // menu, whose contents would go stale.
+  // snap, while focus is in the table, the hand or these tools (WCAG 2.1.4). Fields
+  // keep their own keys, and nothing changes under an open dialog or menu, whose
+  // contents would go stale.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.altKey) return;
@@ -82,6 +87,7 @@ export function TableTools({ onAddPile, addPileRef }: TableToolsProps = {}) {
       if (!isUndo && !isRedo && !viewKey) return;
       const target = event.target as HTMLElement;
       if (target.closest('input, textarea, select, [contenteditable]')) return;
+      if (viewKey && !inShortcutScope(target)) return;
       // Read what's open from the page, not React state, which can lag a dialog closing.
       if (document.querySelector('dialog[open], [role="menu"]')) return;
       event.preventDefault();
@@ -130,6 +136,11 @@ export function TableTools({ onAddPile, addPileRef }: TableToolsProps = {}) {
           </svg>
           Add pile
         </button>
+      )}
+      {onShortcuts && (
+        <Tool label="Keyboard shortcuts (?)" onClick={onShortcuts}>
+          <Icon d={ICONS.help} />
+        </Tool>
       )}
     </nav>
   );

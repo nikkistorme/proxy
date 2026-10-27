@@ -2,11 +2,19 @@
 
 ## Current state
 
-Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection (#29), stacks (#30) and shortcut remapping (#34, folded into #53) moved after V1. 3a to 3f-2, 3m-1 to 3m-3, 3i (#31) and 3j (#32) are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; merging piles by dropping one on another; card counters; enlarging a card, with the double-faced badge; reordering the hand; seat counters (3k-1); dice, a coin and the session log (3k-2, closing #33); and the dark theme, which follows the system setting (3n, #39). Only 3o (#61, close-out) is left. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases. The app has a favicon and an iPhone home-screen icon (#44, outside the phases).
+Phase 3 (Table) is done: a solo turn works by mouse and by keyboard. It was split into 3a to 3o, all under #20. Selection (#29), stacks (#30) and shortcut remapping (#34, folded into #53) moved after V1. 3a to 3f-2, 3m-1 to 3m-3, 3i (#31) and 3j (#32) are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; merging piles by dropping one on another; card counters; enlarging a card, with the double-faced badge; reordering the hand; seat counters (3k-1); dice, a coin and the session log (3k-2, closing #33); the dark theme, which follows the system setting (3n, #39); and the close-out (3o, #61): the ? shortcut reference, single-key shortcuts limited to the table, hand and toolbar for WCAG 2.1.4, the announcement audit and the solo-turn E2E. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases. The app has a favicon and an iPhone home-screen icon (#44, outside the phases).
 
 The V1 plan now makes the data model ready for games, card sets and accounts (#69): a play session is a "session" and "game" means the card game being designed. Saves will go through a storage interface over separate items, keyed by base path and profile (AR-6, PS-7), with card sets as their own model (AR-4) and one options resolver (AR-7). The code now says "session" for a play session (#73). The storage interface and card set model (#74) start Phase 6.
 
 ## Done
+
+### Phase 3o: Shortcut reference and Phase 3 close-out (#61, 2026-10-27)
+
+- **Shortcut reference (A11Y-4):** `ShortcutsDialog` lists every shortcut in six groups (anywhere; table, hand and toolbar; card on the table; pile; moving on the table; card in the hand). It opens with **?** and from a new Keyboard shortcuts (?) button at the end of the table tools, with the Main board's help icon and kbd style, and focus goes back to where it was. The list is hand-kept in `SHORTCUT_GROUPS`, beside the key handlers.
+- **Scrolling by keyboard:** `Dialog` has a new `bodyLabel` prop. It makes the body a named region and the first tab stop, so arrow keys and Page Down scroll a long read-only list in every browser, including Safari. Its focus ring is drawn inside, so the dialog's edge can't clip it.
+- **WCAG 2.1.4:** `inShortcutScope` in `shortcutScope.ts` lets D, ?, +, −, 0 and G work only while focus is in the table (`.session__main`, which holds the table and the hand) or the table tools. In the seat bar, the header or with nothing focused they do nothing. Ctrl and ⌘ shortcuts still work anywhere. Card, pile and hand keys already needed focus.
+- **Announcement audit (A11Y-5):** `actions/announcements.test.ts` runs all 28 game actions mid-turn and checks each changes the session and returns a whole sentence. All passed, so no action needed a fix. Undo, redo, rolls and the view keys (zoom, fit, snap) were already announced. Panning isn't, because it only scrolls.
+- **Tests:** `Shortcuts.test.tsx`; `e2e/shortcuts.spec.ts` (keyboard path, axe, 2.1.4, and 375 × 667); `e2e/solo-turn.spec.ts`, a solo turn by mouse and by keyboard only (draw, play, rotate, a counter, Life, Move to…, a roll, ? and undo); and the dialog joins the dark-theme axe pass. Unit and E2E tests that pressed D or G with nothing focused now focus the table, hand or toolbar first.
 
 ### App icon (#44, 2026-10-27)
 
@@ -604,8 +612,7 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 ## Next
 
 - **#74: storage interface, profile keys and card set model**, at the start of Phase 6.
-- **3o (#61)**, the last of Phase 3: the ? shortcut reference, a WCAG 2.1.4 fix for the page-wide D shortcut, the announcement audit, and the solo-turn E2E that closes Phase 3.
-- **#71: keys act on the hovered card or pile when nothing on the table has focus**, an owner request from the #70 review. Single-letter keys without focus need the shortcut switch (WCAG 2.1.4), so it goes with #61 and #53.
+- **#71: keys act on the hovered card or pile when nothing on the table has focus**, an owner request from the #70 review. Single-letter keys without focus need an off switch (WCAG 2.1.4), so it goes with #53.
 - **#68: no text-field focus on touch screens in the other dialogs** (Move to…, pile viewer, Draw/Mill/Peek count, pile name). It isn't tied to a phase, and the owner chooses when.
 - **After V1, as feature issues:** selection and group actions (#29), stacks (#30), and control settings with shortcut remapping (#53).
 - **Multi-select in the pile viewer (#57)**, a feature issue outside the phases, when the owner chooses. Open problems that belong to later issues:
@@ -613,6 +620,8 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 
 ## Open problems
 
+- Page-wide single keys (D, ?, zoom, fit, snap) need focus in the table, the hand or the table tools (WCAG 2.1.4). Straight after the page loads, or after a click on the seat bar, D does nothing until you Tab or click into the table. An off switch with #53 could let them work everywhere for those who want it.
+- The shortcut reference is a hand-kept list (`SHORTCUT_GROUPS`), so a new key needs adding there too. Remapping (#53) would make one list drive both.
 - The session log lists only rolls for now. The goal is every action (owner, 2026-10-27), which could reuse each action's announcement.
 - The session log isn't saved yet. Phase 6 should save it with the session.
 - The session log's times are worked out when it opens, so they don't tick while it stays open.
@@ -796,3 +805,5 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 | 2026-10-27 | Dark-theme axe checks live in one spec, `e2e/dark-theme.spec.ts`, that visits every screen | Running the whole E2E suite again in dark | Keeps CI time about the same. Colours come from tokens, so a screen that passes in dark here passes wherever it's used. |
 | 2026-10-27 | The dark E2E waits for animations to end before running axe | Turning motion off | axe read fading-in text as low contrast. Waiting checks the real final colours. |
 | 2026-10-27 | App icon: an SVG favicon with a dark version, plus a 32px PNG fallback and a PNG Apple touch icon, all static in `public/` | A `favicon.ico`, or generating PNGs in the build | A PNG link covers browsers without SVG favicons and stops requests to the root `/favicon.ico`. Rendering once with Playwright needs no new dependency. |
+| 2026-10-27 | Page-wide single keys work only while focus is in the table, the hand or the table tools (WCAG 2.1.4) | An on/off switch for single keys | Owner decision (#61). No setting to save before Phase 6. The switch comes with #53 and #71. |
+| 2026-10-27 | The shortcut reference's list is the first tab stop in its dialog | Focus on the close button | A long read-only list must scroll by keyboard in Safari, which doesn't focus scroll areas by itself. |

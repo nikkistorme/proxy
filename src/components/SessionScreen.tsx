@@ -21,6 +21,8 @@ import { PILE_HINT, PILE_HINT_ID, PileTile } from './PileTile';
 import { PileViewer } from './PileViewer';
 import { SeatCounter } from './SeatCounter';
 import { SessionMenu } from './SessionMenu';
+import { inShortcutScope } from './shortcutScope';
+import { ShortcutsDialog } from './ShortcutsDialog';
 import { seatIdentity } from './seatIdentity';
 import { TableSurface, type PileSlot } from './TableSurface';
 import { TableTools } from './TableTools';
@@ -59,6 +61,9 @@ export function SessionScreen() {
   const [peekRequest, setPeekRequest] = useState<PeekRequest>();
   const [diceOpen, setDiceOpen] = useState(false);
   const diceButtonRef = useRef<HTMLButtonElement>(null);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  /** Where focus was when the shortcut reference opened, to go back to when it closes. */
+  const shortcutsReturnRef = useRef<HTMLElement | null>(null);
   /** A pile id, or ADD_PILE, to focus once it has rendered (after adding or deleting a pile). */
   const pendingFocusRef = useRef<string>(undefined);
   const addPileRef = useRef<HTMLButtonElement>(null);
@@ -79,6 +84,16 @@ export function SessionScreen() {
     if (drawPile) dispatch((g) => draw(g, { pileId: drawPile.id }));
     else if (activeSeat) announce(`${activeSeat.name} has no pile to draw from.`);
   }, [dispatch, announce, drawPile, activeSeat]);
+
+  const openShortcuts = useCallback(() => {
+    shortcutsReturnRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setShortcutsOpen(true);
+  }, []);
+
+  function closeShortcuts() {
+    setShortcutsOpen(false);
+    if (shortcutsReturnRef.current?.isConnected) shortcutsReturnRef.current.focus();
+  }
 
   // Focus a pile, a table card or Add pile once it exists in the page. Runs after every render.
   useEffect(() => {
@@ -102,16 +117,22 @@ export function SessionScreen() {
     };
   }, []);
 
-  // D draws, and V on a focused pile opens its viewer, unless something else has
-  // the keyboard (a field, a menu or a dialog).
+  // D draws, ? opens the shortcut reference, and V on a focused pile opens its viewer,
+  // while focus is in the table, the hand or the table tools (WCAG 2.1.4) and no
+  // menu or dialog is open.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
-      if ((key !== 'd' && key !== 'v') || event.ctrlKey || event.metaKey || event.altKey) return;
+      if ((key !== 'd' && key !== 'v' && key !== '?') || event.ctrlKey || event.metaKey || event.altKey) return;
       const target = event.target as HTMLElement;
-      if (target.closest('input, textarea, select, [contenteditable]')) return;
+      if (!inShortcutScope(target)) return;
       // Read what's open from the page, not React state, which can lag a dialog closing.
       if (document.querySelector('dialog[open], [role="menu"]')) return;
+      if (key === '?') {
+        event.preventDefault();
+        openShortcuts();
+        return;
+      }
       if (key === 'v') {
         const pileId = Object.keys(tileRefs.current).find((id) => tileRefs.current[id] === target);
         if (!pileId) return;
@@ -124,7 +145,7 @@ export function SessionScreen() {
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [drawOne]);
+  }, [drawOne, openShortcuts]);
 
   const closeMenu = useCallback(() => {
     if (menuPileId) tileRefs.current[menuPileId]?.focus();
@@ -410,7 +431,7 @@ export function SessionScreen() {
         <h1 className="session__title">Proxy</h1>
         <span className="session__format">Solo PvE</span>
         <SessionMenu />
-        <TableTools addPileRef={addPileRef} onAddPile={() => setNameRequest({ mode: 'add', defaultOwnerId: session.activeSeatId })} />
+        <TableTools addPileRef={addPileRef} onShortcuts={openShortcuts} onAddPile={() => setNameRequest({ mode: 'add', defaultOwnerId: session.activeSeatId })} />
       </header>
 
       <section className="seat-bar" aria-label="Seats">
@@ -524,6 +545,7 @@ export function SessionScreen() {
           diceButtonRef.current?.focus();
         }}
       />
+      <ShortcutsDialog open={shortcutsOpen} onClose={closeShortcuts} />
       <PeekDialog key={peekRequest ? `peek-${peekRequest.pileId}` : 'closed'} request={peekRequest} onClose={closePeek} />
       <PileViewer key={viewerPileId ?? 'closed'} pileId={viewerPileId} onClose={closeViewer} />
       <Toast />
