@@ -33,16 +33,20 @@ async function nineOnTable(page: Page) {
 }
 
 async function allCardsInView(page: Page) {
-  for (let i = 1; i <= 9; i++) await expect(tableCard(page, `Card 0${i}`)).toBeInViewport({ ratio: 1 });
+  // Fit all can frame the table to the exact pixel, so allow for sub-pixel rounding at the edge.
+  for (let i = 1; i <= 9; i++) await expect(tableCard(page, `Card 0${i}`)).toBeInViewport({ ratio: 0.999 });
 }
 
 test.describe('TT-1 and TT-2 pan, zoom, fit all and grid snap', () => {
   test('mouse: zoom buttons, Ctrl+wheel, drag to pan, fit all and snap, with no axe violations', async ({ page }) => {
     await nineOnTable(page);
-    // Regression: auto-placed rows fill the table's width (8 cards at 1280 wide), not a fixed 6.
-    const [first, eighth, ninth] = await Promise.all(['Card 01', 'Card 08', 'Card 09'].map((n) => tableCard(page, n).boundingBox()));
-    expect(eighth?.y).toBe(first?.y);
-    expect(ninth?.x).toBe(first?.x);
+    // Regression: auto-placed rows fill the table's width (8 spots at 1280 wide), not a fixed 6.
+    // The three piles take the first three, so the first row holds five cards.
+    const [first, fifth, sixth, pile] = await Promise.all(
+      [tableCard(page, 'Card 01'), tableCard(page, 'Card 05'), tableCard(page, 'Card 06'), mainPile(page)].map((l) => l.boundingBox()),
+    );
+    expect(fifth?.y).toBe(first?.y);
+    expect(sixth?.x).toBe(pile?.x);
     // The app fills the window: the page itself doesn't scroll, and the hand stays in view.
     expect(await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight)).toBe(true);
     await expect(page.getByRole('region', { name: "Player 1's hand" })).toBeInViewport();
@@ -77,7 +81,7 @@ test.describe('TT-1 and TT-2 pan, zoom, fit all and grid snap', () => {
     expect(await viewport(page).evaluate((el) => el.scrollLeft)).toBe(before - 200);
 
     await page.getByRole('button', { name: 'Fit all cards (0)' }).click();
-    await expect(status(page)).toHaveText(/^Showing all 9 cards at \d+%\.$/);
+    await expect(status(page)).toHaveText(/^Showing all 9 cards and 3 piles at \d+%\.$/);
     await allCardsInView(page);
 
     const snap = page.getByRole('button', { name: 'Snap to grid (G)' });

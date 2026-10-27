@@ -28,20 +28,23 @@ async function loadIntoMain(user: ReturnType<typeof userEvent.setup>, text: stri
   await user.upload(screen.getByTestId('csv-file'), csvFile(text));
 }
 
+/** The piles on the table, by their names, in the order they're drawn. */
+const pileLabels = () => [...document.querySelectorAll('.table-pile .pile-tile__button')].map((b) => b.getAttribute('aria-label'));
+
 describe('App shell', () => {
   it('has the app heading, a seat bar, the table and the active hand', () => {
     renderGame();
     expect(screen.getByRole('banner')).toContainElement(screen.getByRole('heading', { level: 1, name: 'Proxy' }));
     const seats = screen.getByRole('region', { name: 'Seats' });
     expect(within(seats).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Player 1Active', 'Environment']);
-    expect(within(screen.getByRole('main')).getByRole('list', { name: 'Piles' })).toBeInTheDocument();
+    // Piles are on the table, with the cards (3m).
+    expect(within(screen.getByRole('main')).getByRole('group', { name: /^Table, 0 cards, 3 piles\. Arrow keys move between cards and piles\./ })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: "Player 1's hand" })).toBeInTheDocument();
   });
 
   it('SP-5: shows every pile of the Solo preset, empty to start', () => {
     renderGame();
-    const piles = within(screen.getByRole('list', { name: 'Piles' })).getAllByRole('button');
-    expect(piles.map((b) => b.getAttribute('aria-label'))).toEqual([
+    expect(pileLabels()).toEqual([
       'P1 main deck, empty, 0 cards, Player 1',
       'Environment deck, empty, 0 cards, Environment',
       'Board cards, empty, 0 cards, shared',
@@ -246,10 +249,7 @@ describe('SP-1 drop a file on a pile', () => {
 });
 
 describe('SP-4 manage piles', () => {
-  const pileNames = () =>
-    within(screen.getByRole('list', { name: 'Piles' }))
-      .getAllByRole('button')
-      .map((b) => b.getAttribute('aria-label'));
+  const pileNames = pileLabels;
 
   it('adds a pile and moves focus to it', async () => {
     const user = renderGame();
@@ -319,7 +319,7 @@ describe('SP-4 manage piles', () => {
       await user.click(screen.getByRole('button', { name }));
       await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
     }
-    expect(within(screen.getByRole('list', { name: 'Piles' })).queryAllByRole('button')).toEqual([]);
+    expect(pileLabels()).toEqual([]);
     expect(screen.getByRole('button', { name: 'Add pile' })).toHaveFocus();
 
     await user.click(screen.getByRole('button', { name: 'Draw' }));

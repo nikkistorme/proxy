@@ -11,7 +11,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 const pile = (page: Page, name: string) => page.getByRole('button', { name: new RegExp(`^${name},`) });
-const pileLabels = (page: Page) => page.getByRole('list', { name: 'Piles' }).getByRole('button').evaluateAll((b) => b.map((x) => x.getAttribute('aria-label')));
+/** The piles on the table (3m), by their names. */
+const pileLabels = (page: Page) => page.locator('.table-pile .pile-tile__button').evaluateAll((b) => b.map((x) => x.getAttribute('aria-label')));
 
 async function expectNoAxeViolations(page: Page) {
   const results = await new AxeBuilder({ page }).withTags(axeTags).analyze();

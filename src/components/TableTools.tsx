@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, type ReactNode, type Ref } from 'react';
 import { zoomPercent } from '../model/tableView';
 import { useGameStore } from '../store/gameStore';
 import './TableTools.css';
@@ -42,8 +42,17 @@ function Icon({ d }: { d: string }) {
   );
 }
 
-/** The header's table tools, from the Main board: undo and redo (TT-15), zoom and fit all (TT-1), and grid snap (TT-2). */
-export function TableTools() {
+interface TableToolsProps {
+  /** SP-4: adds a pile to the table. Left out, there's no Add pile button. */
+  onAddPile?: () => void;
+  addPileRef?: Ref<HTMLButtonElement>;
+}
+
+/**
+ * The header's table tools, from the Main board: undo and redo (TT-15), zoom and
+ * fit all (TT-1), grid snap (TT-2), and Add pile (SP-4), which puts a pile on the table.
+ */
+export function TableTools({ onAddPile, addPileRef }: TableToolsProps = {}) {
   const canUndo = useGameStore((s) => s.past.length > 0);
   const canRedo = useGameStore((s) => s.future.length > 0);
   const undo = useGameStore((s) => s.undo);
@@ -113,6 +122,15 @@ export function TableTools() {
       <Tool label="Snap to grid (G)" pressed={snap} onClick={toggleSnap}>
         <Icon d={ICONS.grid} />
       </Tool>
+      {onAddPile && (
+        // A visible label, not an icon alone: it's the only way to make a pile.
+        <button ref={addPileRef} type="button" className="table-tools__button table-tools__add" onClick={onAddPile}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          Add pile
+        </button>
+      )}
     </nav>
   );
 }

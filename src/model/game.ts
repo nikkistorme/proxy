@@ -47,6 +47,9 @@ export interface Pile {
   sourceName?: string;
   /** This pile's deck: every definition loaded into it, including missing ones. */
   definitionIds: string[];
+  /** Top-left corner on the table, in table px. Piles are card-sized and never turn. */
+  x: number;
+  y: number;
 }
 
 export interface GameState {
@@ -88,9 +91,10 @@ export function createSoloGame(): GameState {
     definitions: {},
     cards: {},
     piles: [
-      { id: 'pile-p1-main', name: 'P1 main deck', ownerSeatId: 'seat-p1', cardIds: [], definitionIds: [] },
-      { id: 'pile-env', name: 'Environment deck', ownerSeatId: 'seat-env', cardIds: [], definitionIds: [] },
-      { id: 'pile-board', name: 'Board cards', cardIds: [], definitionIds: [] },
+      // Along the top of the table, so cards placed later go below them.
+      { id: 'pile-p1-main', name: 'P1 main deck', ownerSeatId: 'seat-p1', cardIds: [], definitionIds: [], x: 16, y: 16 },
+      { id: 'pile-env', name: 'Environment deck', ownerSeatId: 'seat-env', cardIds: [], definitionIds: [], x: 158, y: 16 },
+      { id: 'pile-board', name: 'Board cards', cardIds: [], definitionIds: [], x: 300, y: 16 },
     ],
     hands: { 'seat-p1': [] },
     table: [],

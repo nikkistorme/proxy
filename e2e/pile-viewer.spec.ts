@@ -47,7 +47,7 @@ test.describe('SP-7, SP-8 pile viewer', () => {
     await expect(sheet).toBeHidden();
     await expect(mainPile(page)).toBeFocused();
     await expect(mainPile(page)).toHaveAccessibleName('P1 main deck, 57 cards, Player 1');
-    await expect(tableCards(page).getByRole('button')).toHaveAccessibleName('Card 37');
+    await expect(tableCards(page).locator('.table-card__button')).toHaveAccessibleName('Card 37');
   });
 
   test('keyboard only: V opens the viewer, arrows browse, T and Enter move, Esc closes', async ({ page }) => {
@@ -76,7 +76,7 @@ test.describe('SP-7, SP-8 pile viewer', () => {
     await expect(sheet).toBeHidden();
     await expect(mainPile(page)).toBeFocused();
     await expect(page.getByRole('list', { name: /^Player 1's hand, 1 card\./ })).toBeVisible();
-    await expect(tableCards(page).getByRole('button')).toHaveAccessibleName('Card 37');
+    await expect(tableCards(page).locator('.table-card__button')).toHaveAccessibleName('Card 37');
   });
 
   test('filters by column, and has no axe violations while filtered', async ({ page }) => {

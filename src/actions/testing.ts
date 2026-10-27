@@ -28,3 +28,11 @@ export function tableIds(state: GameState): string[] {
 export function gameWithDeck(csv = 'name\nImp\nOgre\nTroll\n'): GameState {
   return loadPile(createSoloGame(), { pileId: 'pile-p1-main', sourceName: 'deck.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
 }
+
+/**
+ * The game with its piles moved well below the top rows of the table, so tests
+ * that only draw the table see cards auto-placed from the top-left corner.
+ */
+export function pilesOutOfTheWay(state: GameState): GameState {
+  return { ...state, piles: state.piles.map((pile, i) => ({ ...pile, x: 16 + i * 142, y: 2000 })) };
+}

@@ -1,4 +1,5 @@
 import type { ActionContext, ActionResult, GameState, Pile } from '../model/game';
+import { freeSpot } from '../model/tablePlacement';
 import { getPile, plural, withPile } from './helpers';
 
 /** Pile names are unique, ignoring case and surrounding spaces. */
@@ -39,7 +40,8 @@ export function addPile(
   if (args.ownerSeatId !== undefined && !state.seats.some((s) => s.id === args.ownerSeatId)) {
     throw new Error(`Unknown seat: ${args.ownerSeatId}`);
   }
-  const pile: Pile = { id: context.newId(), name, cardIds: [], definitionIds: [] };
+  // Put on the table at the first free spot, like a card (TT-4).
+  const pile: Pile = { id: context.newId(), name, cardIds: [], definitionIds: [], ...freeSpot(state, context.placementColumns) };
   if (args.ownerSeatId !== undefined) pile.ownerSeatId = args.ownerSeatId;
   return {
     state: { ...state, piles: [...state.piles, pile] },

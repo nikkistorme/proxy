@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type DragEvent } from 'react';
+import { useCallback, useRef, useState, type DragEvent, type KeyboardEvent } from 'react';
 import type { CardFace as CardFaceData } from '../model/card';
 import type { Pile } from '../model/game';
 import { CardFace } from './CardFace';
@@ -20,6 +20,10 @@ interface PileTileProps {
   onDropFile: (pileId: string, file: File) => void;
   /** TT-4: a dragged card is over this pile, and would go on top. */
   cardOver?: boolean;
+  /** A11Y-3: on the table, only the current card or pile is in the Tab order. */
+  tabbable?: boolean;
+  onFocus?: () => void;
+  onKeyDown?: (event: KeyboardEvent<HTMLButtonElement>) => void;
 }
 
 /**
@@ -29,7 +33,19 @@ interface PileTileProps {
  * the button holds only the plate text. Its label then always starts with the
  * text you can see (WCAG 2.5.3), whatever the top card says.
  */
-export function PileTile({ pile, ownerName, revealedTop, menuOpen, onOpenMenu, registerTile, onDropFile, cardOver = false }: PileTileProps) {
+export function PileTile({
+  pile,
+  ownerName,
+  revealedTop,
+  menuOpen,
+  onOpenMenu,
+  registerTile,
+  onDropFile,
+  cardOver = false,
+  tabbable = true,
+  onFocus,
+  onKeyDown,
+}: PileTileProps) {
   const ref = useCallback((element: HTMLButtonElement | null) => registerTile(pile.id, element), [registerTile, pile.id]);
   const [dropTarget, setDropTarget] = useState(false);
   // dragenter and dragleave fire for every child, so count them to know when the drag really leaves.
@@ -105,7 +121,19 @@ export function PileTile({ pile, ownerName, revealedTop, menuOpen, onOpenMenu, r
         aria-label={label}
         aria-haspopup="menu"
         aria-expanded={menuOpen}
-        onClick={onOpenMenu}
+        tabIndex={tabbable ? 0 : -1}
+        // Safari doesn't focus a button on click, and a clicked pile must become the table's current one.
+        onClick={(event) => {
+          event.currentTarget.focus();
+          onOpenMenu();
+        }}
+        onFocus={onFocus}
+        onKeyDown={onKeyDown}
+        // The menu opens outside the tile, so its outside-press check would close it
+        // and this click reopen it. Pressing the pile with its menu open closes it instead.
+        onPointerDown={(event) => {
+          if (menuOpen) event.stopPropagation();
+        }}
       >
         {count === 0 ? (
           <span className="pile-tile__empty">

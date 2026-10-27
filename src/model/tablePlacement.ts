@@ -1,4 +1,4 @@
-import type { Rotation, TableEntry } from './game';
+import type { GameState, Pile, Rotation, TableEntry } from './game';
 
 /** Card size on the table at 100% zoom, from the design (`--card-w`, `--card-h`). */
 export const CARD_W = 126;
@@ -34,13 +34,18 @@ export function overlaps(a: Box, b: Box): boolean {
   return a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
 }
 
+/** The area a pile covers on the table. Piles are card-sized and never turn. */
+export function pileBox(pile: Pick<Pile, 'x' | 'y'>): Box {
+  return cardBox({ x: pile.x, y: pile.y, rotation: 0 });
+}
+
 /**
- * Where a card goes when it's put on the table without a position: the first
- * grid cell, left to right in rows `columns` cards wide and then top to
- * bottom, that no card covers.
+ * Where a card or pile goes when it's put on the table without a position: the
+ * first grid cell, left to right in rows `columns` cards wide and then top to
+ * bottom, that no card or pile covers.
  */
-export function freeSpot(table: readonly TableEntry[], columns = PLACEMENT_COLUMNS): { x: number; y: number } {
-  const boxes = table.map(cardBox);
+export function freeSpot(state: Pick<GameState, 'table' | 'piles'>, columns = PLACEMENT_COLUMNS): { x: number; y: number } {
+  const boxes = [...state.table.map(cardBox), ...state.piles.map(pileBox)];
   for (let row = 0; ; row++) {
     for (let column = 0; column < columns; column++) {
       const spot = { x: TABLE_GAP + column * (CARD_W + TABLE_GAP), y: TABLE_GAP + row * (CARD_H + TABLE_GAP) };

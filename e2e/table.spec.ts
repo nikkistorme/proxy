@@ -32,9 +32,9 @@ async function fourOnTable(page: Page) {
 
 test.describe('A11Y-3 and A11Y-6 cards on the table', () => {
   test('mouse: cards played from the viewer appear on the table, named, with no axe violations', async ({ page }) => {
-    await expect(table(page)).toHaveAccessibleName('Table, 0 cards');
+    await expect(table(page)).toHaveAccessibleName('Table, 0 cards, 3 piles. Arrow keys move between cards and piles. Shift and arrow keys pan.');
     await fourOnTable(page);
-    await expect(table(page)).toHaveAccessibleName('Table, 4 cards. Arrow keys move between cards. Shift and arrow keys pan.');
+    await expect(table(page)).toHaveAccessibleName('Table, 4 cards, 3 piles. Arrow keys move between cards and piles. Shift and arrow keys pan.');
     for (const name of ['Card 01', 'Card 02', 'Card 03', 'Card 04']) await expect(tableCard(page, name)).toBeVisible();
 
     // Each card lands in the next free spot, left to right.
@@ -53,10 +53,13 @@ test.describe('A11Y-3 and A11Y-6 cards on the table', () => {
     expect(results.violations).toEqual([]);
   });
 
-  test('keyboard only: one Tab stop, arrows between cards, Tab out, and back to the same card', async ({ page }) => {
+  test('keyboard only: one Tab stop, arrows between piles and cards, Tab out, and back to the same card', async ({ page }) => {
     await fourOnTable(page);
     await page.getByRole('button', { name: 'Add pile' }).focus();
     await page.keyboard.press('Tab');
+    // The piles come first, along the top of the table, then the cards after them.
+    await expect(table(page).getByRole('button', { name: /^P1 main deck,/ })).toBeFocused();
+    for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowRight');
     await expect(tableCard(page, 'Card 01')).toBeFocused();
     await page.keyboard.press('ArrowRight');
     await page.keyboard.press('ArrowRight');
@@ -75,7 +78,7 @@ test.describe('A11Y-3 and A11Y-6 cards on the table', () => {
 
     // Undo takes the last card off the table again.
     await page.keyboard.press('ControlOrMeta+z');
-    await expect(table(page)).toHaveAccessibleName('Table, 3 cards. Arrow keys move between cards. Shift and arrow keys pan.');
+    await expect(table(page)).toHaveAccessibleName('Table, 3 cards, 3 piles. Arrow keys move between cards and piles. Shift and arrow keys pan.');
   });
 });
 

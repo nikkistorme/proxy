@@ -53,7 +53,7 @@ async function pickUp(page: Page, from: Locator, to: { x: number; y: number }) {
 async function emptyTable(page: Page) {
   const area = await page.locator('.table-viewport').boundingBox();
   if (!area) throw new Error('No table');
-  return { x: area.x + 640, y: area.y + area.height / 2 };
+  return { x: area.x + 960, y: area.y + area.height / 2 };
 }
 
 test.describe('TT-4 drag and drop', () => {
@@ -128,6 +128,7 @@ test.describe('TT-4 drag and drop by touch at phone size', () => {
     test.skip(browserName !== 'chromium', 'Touch drags need the Chromium DevTools protocol');
     await setUp(page);
     await page.locator('.table-viewport').evaluate((el) => el.scrollTo(0, 0));
+    await tableCard(page, 'Ember Shard').scrollIntoViewIfNeeded();
     const from = await centreOf(tableCard(page, 'Ember Shard'));
     const area = await page.locator('.table-viewport').boundingBox();
     if (!area) throw new Error('No table');

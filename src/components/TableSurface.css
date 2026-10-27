@@ -5,7 +5,6 @@
 .table-viewport {
   position: relative;
   height: 60dvh;
-  margin-top: var(--space-5);
   overflow: auto;
   border-radius: 16px;
   touch-action: pan-x pan-y;
@@ -76,4 +75,17 @@
 .card-menu-anchor > .menu[data-placement='above'] {
   top: auto;
   bottom: calc(100% + var(--space-2));
+}
+
+/* A pile on the table (3m): card-sized, under the cards. */
+.table-pile {
+  position: absolute;
+  width: var(--card-w);
+  height: var(--card-h);
+}
+
+/* A focused pile, or one whose menu is open, comes to the front so its ring is never hidden (A11Y-7). */
+.table-pile:focus-within,
+.table-pile:has([aria-expanded='true']) {
+  z-index: 10000;
 }

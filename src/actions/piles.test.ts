@@ -10,7 +10,8 @@ const BOARD = 'pile-board';
 describe('SP-4 add a pile', () => {
   it('adds an empty pile owned by a seat', () => {
     const { state, announcement, pileId } = addPile(createSoloGame(), { name: '  Discard ', ownerSeatId: 'seat-p1' }, testContext());
-    expect(state.piles.at(-1)).toEqual({ id: pileId, name: 'Discard', ownerSeatId: 'seat-p1', cardIds: [], definitionIds: [] });
+    // On the table, at the first spot after the three piles already there.
+    expect(state.piles.at(-1)).toEqual({ id: pileId, name: 'Discard', ownerSeatId: 'seat-p1', cardIds: [], definitionIds: [], x: 442, y: 16 });
     expect(announcement).toBe('Added pile Discard (Player 1).');
   });
 

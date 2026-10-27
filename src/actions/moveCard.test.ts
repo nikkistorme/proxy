@@ -108,15 +108,16 @@ describe('SP-8 move a card', () => {
 });
 
 describe('TT-4 cards on the table', () => {
+  // The Solo game's three piles take the first three spots of the top row.
   it('places cards in the first free spot, or at a given position', () => {
     let game = gameWithDeck();
     game = moveCard(game, { cardId: idOf(game, 'Imp'), to: { zone: 'table' } }).state;
     game = moveCard(game, { cardId: idOf(game, 'Ogre'), to: { zone: 'table', position: { x: 400, y: 300 } } }).state;
     game = moveCard(game, { cardId: idOf(game, 'Troll'), to: { zone: 'table' } }).state;
     expect(game.table).toEqual([
-      { cardId: idOf(game, 'Imp'), x: 16, y: 16, rotation: 0 },
+      { cardId: idOf(game, 'Imp'), x: 442, y: 16, rotation: 0 },
       { cardId: idOf(game, 'Ogre'), x: 400, y: 300, rotation: 0 },
-      { cardId: idOf(game, 'Troll'), x: 158, y: 16, rotation: 0 },
+      { cardId: idOf(game, 'Troll'), x: 584, y: 16, rotation: 0 },
     ]);
     expect(locateCard(game, idOf(game, 'Ogre'))).toEqual({ zone: 'table' });
   });
@@ -130,7 +131,7 @@ describe('TT-4 cards on the table', () => {
     const { state, announcement } = moveCard(game, { cardId: imp, to: { zone: 'table', position: { x: 300, y: 200 } } });
     expect(state.table).toEqual([
       { cardId: imp, x: 300, y: 200, rotation: 90 },
-      { cardId: idOf(game, 'Ogre'), x: 158, y: 16, rotation: 0 },
+      { cardId: idOf(game, 'Ogre'), x: 584, y: 16, rotation: 0 },
     ]);
     expect(state.cards[imp]).toBe(game.cards[imp]);
     expect(announcement).toBe('Moved Imp on the table.');
@@ -154,7 +155,7 @@ describe('TT-4 cards on the table', () => {
     game = moveCard(game, { cardId: idOf(game, 'Imp'), to: { zone: 'table' } }).state;
     game = moveCard(game, { cardId: idOf(game, 'Ogre'), to: { zone: 'table' } }).state;
     game = moveCard(game, { cardId: idOf(game, 'Imp'), to: { zone: 'hand', seatId: 'seat-p1' } }).state;
-    expect(game.table).toEqual([{ cardId: idOf(game, 'Ogre'), x: 158, y: 16, rotation: 0 }]);
+    expect(game.table).toEqual([{ cardId: idOf(game, 'Ogre'), x: 584, y: 16, rotation: 0 }]);
   });
 });
 

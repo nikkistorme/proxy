@@ -56,3 +56,16 @@
   color: var(--accent);
   box-shadow: inset 0 0 0 1px var(--accent);
 }
+
+/* Add pile: icon and label, from the old Add pile button, sized to the toolbar. */
+.table-tools__add {
+  width: auto;
+  gap: 6px;
+  margin-left: var(--space-2);
+  padding: 0 10px 0 8px;
+  border: 1px solid var(--control);
+  background: var(--panel);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+}

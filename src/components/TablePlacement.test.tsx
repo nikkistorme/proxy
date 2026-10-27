@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { loadPile } from '../actions/loadPile';
 import { moveCard } from '../actions/moveCard';
 import { draw } from '../actions/pileActions';
-import { cardsFrom, testContext } from '../actions/testing';
+import { cardsFrom, testContext, pilesOutOfTheWay } from '../actions/testing';
 import { createSoloGame, type GameState } from '../model/game';
 import { CARD_H, CARD_W } from '../model/tablePlacement';
 import { createGameStore, GameStoreProvider } from '../store/gameStore';
@@ -15,7 +15,7 @@ const csv = 'name,type\nTroll,Creature\nOgre,Creature\nImp,Creature\n';
 
 /** Troll and Ogre on the table at (16, 16) and (158, 16), and Imp in Player 1's hand. */
 function setup() {
-  let game: GameState = loadPile(createSoloGame(), { pileId: 'pile-p1-main', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
+  let game: GameState = pilesOutOfTheWay(loadPile(createSoloGame(), { pileId: 'pile-p1-main', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state);
   for (const name of ['Troll', 'Ogre']) game = moveCard(game, { cardId: idOf(game, name), to: { zone: 'table' } }).state;
   game = draw(game, { pileId: 'pile-p1-main' }).state;
   const store = createGameStore(game, testContext());
