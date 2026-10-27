@@ -12,7 +12,7 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 
 - **Model (TT-13, FS-4):** `Seat` has `counters`, using the card counters' `Counter` type. The Solo preset gives Player 1 Life 20 and Energy 0, from the Main board, and the Environment none. Formats set these in Phase 5.
 - **Action:** `changeSeatCounter` in `actions/seatCounters.ts` steps a counter up or down, below zero too, and announces "Player 1 Life 20 → 19." Each step is one undo step.
-- **UI:** `SeatCounter` puts the board's label, − and + buttons (26px) and mono value beside each seat's name in the seat bar, named "Player 1 Life". On either button, ↑ or + steps up and ↓ or − steps down, and focus stays put. The value gets a short highlight on change, a colour fade only, so it stays under reduced motion. A seat's box wraps at phone width.
+- **UI:** `SeatCounter` puts the board's label, − and + buttons (26px) and mono value beside each seat's name in the seat bar, named "Player 1 Life". On either button, ↑ or + steps up and ↓ or − steps down, and focus stays put. The value gets a short highlight on change, a colour fade only, so it stays under reduced motion. At 520px wide and below, a seat's counters sit together on their own row under its name (from the owner's iPhone check).
 - **Tests:** `seatCounters.test.ts`, `SeatCounter.test.tsx`, and `e2e/seat-counters.spec.ts` (keyboard only with undo, axe, and 375 × 667). The table, placement and table-piles E2E now Tab past the counters with `tabTo`.
 
 ### Phase 3j: Hand reordering (2026-10-27)

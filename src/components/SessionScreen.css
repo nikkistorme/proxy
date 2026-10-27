@@ -60,6 +60,29 @@
   font-size: 14px;
 }
 
+.seat-bar__counters {
+  display: flex;
+  align-items: center;
+}
+
+/* Phones: a seat's counters sit together on their own row under its name, not split across lines. */
+@media (max-width: 520px) {
+  .seat-bar__seat {
+    padding-top: var(--space-1);
+    padding-bottom: var(--space-1);
+  }
+
+  .seat-bar__counters {
+    flex-basis: 100%;
+  }
+
+  .seat-bar__counters > .seat-counter:first-child {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
+}
+
 .seat-bar__name--active {
   font-weight: 700;
 }

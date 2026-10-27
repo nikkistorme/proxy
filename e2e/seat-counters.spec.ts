@@ -44,6 +44,12 @@ test.describe('TT-13 seat counters on a phone', () => {
     const box = await increase.boundingBox();
     expect(box && box.width >= 24 && box.height >= 24 && box.x + box.width <= 375).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+    // Regression (PR #78 review): the counters share one row under the seat's name, not split across lines.
+    const name = await page.getByRole('region', { name: 'Seats' }).getByText('Player 1', { exact: true }).boundingBox();
+    const lifeBox = await life(page).boundingBox();
+    const energyBox = await page.getByRole('group', { name: 'Player 1 Energy' }).boundingBox();
+    expect(lifeBox && energyBox && Math.abs(lifeBox.y - energyBox.y) < 2).toBe(true);
+    expect(name && lifeBox && lifeBox.y >= name.y + name.height).toBe(true);
     await increase.click();
     await expect(life(page)).toContainText('21');
   });

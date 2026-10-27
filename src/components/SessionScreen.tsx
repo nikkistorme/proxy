@@ -424,9 +424,13 @@ export function SessionScreen() {
                     Active
                   </span>
                 )}
-                {seat.counters.map((counter) => (
-                  <SeatCounter key={counter.id} seat={seat} counter={counter} />
-                ))}
+                {seat.counters.length > 0 && (
+                  <div className="seat-bar__counters">
+                    {seat.counters.map((counter) => (
+                      <SeatCounter key={counter.id} seat={seat} counter={counter} />
+                    ))}
+                  </div>
+                )}
               </li>
             );
           })}
