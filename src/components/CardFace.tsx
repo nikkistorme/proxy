@@ -3,7 +3,7 @@ import type { CardFace as CardFaceData } from '../model/card';
 import { CardArt } from './CardArt';
 import './CardFace.css';
 
-/** Columns the default face reads, in order of preference, until layouts arrive (Phase 4). */
+/** Columns the default face reads, in order of preference, until layouts arrive (Phase 5). */
 const TEXT_COLUMNS = ['text', 'rules', 'rules text'];
 
 interface CardFaceProps {
