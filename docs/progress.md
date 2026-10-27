@@ -22,6 +22,12 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 - **Tests:** 347 unit tests, including `PileMove.test.tsx` and `movePile` in `piles.test.ts`. The new `e2e/pile-move.spec.ts` covers a mouse drag with axe mid-drag, then a CSV drop, the menu and a click draw on the moved pile; keyboard only; and touch at 375 × 667 with axe. E2E specs open pile menus with a right-click now.
 - **Issues:** #49 is rewritten as "3f-2: Drag cards from the Pile Viewer". Dragging the top card straight off a pile is dropped. Merging piles is #56 (3m-3).
 
+### Workflow: requirements upkeep and phase-free issues (2026-10-27)
+
+- `CLAUDE.md`: every PR also updates `docs/requirements.md` when development changed something the spec covers, and lists the changed requirement IDs in the PR description.
+- The **Feature or task** issue form no longer asks for a phase or adds a "[Phase N]" title prefix, since work after V1 won't be organised in phases.
+- `CLAUDE.md` keeps the stay-in-the-current-phase rule only until V1 is finished. After that, work isn't restricted to phases.
+
 ### Phase 3m-1: Piles on the table (2026-10-27)
 
 - **One surface (owner decision):** the separate pile row is gone. Piles sit on the table with the cards, as on the Main board, card-sized and under the cards.
@@ -624,3 +630,4 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 | 2026-10-27 | No dragging the top card straight off a pile; #49 becomes dragging cards from the pile viewer | Dragging the top card off the tile | Owner decision. Click draws the card into the hand, and it can be dragged from there. |
 | 2026-10-27 | Piles must never overlap; dropping one on another merges them after a confirmation, in its own issue (#56) | Letting piles stack like cards; doing it in 3m-2 | Owner decision on #54 |
 | 2026-10-27 | A drag swallows the next pointer click until the next press, or a second at most | Swallowing only clicks in the same task | A touch's click arrives after the finger lifts and got through. Keyboard clicks (detail 0) are never swallowed. |
+| 2026-10-27 | Feature issues no longer name a phase; PRs keep `docs/requirements.md` in step with what was built | Keeping the phase dropdown after V1 | Work after V1 isn't organised in phases, and the spec should stay accurate as decisions change during development. |
