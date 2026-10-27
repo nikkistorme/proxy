@@ -4,9 +4,16 @@
 
 Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection (#29), stacks (#30) and shortcut remapping (#34, folded into #53) moved after V1. 3a to 3f-2, 3m-1 to 3m-3 and 3i (#31) are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; merging piles by dropping one on another; card counters; and enlarging a card, with the double-faced badge. 3j (#32), 3k (#33), 3o (#61, close-out) and 3n (#39, dark theme) are left. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases.
 
-The V1 plan now makes the data model ready for games, card sets and accounts (#69): a play session is a "session" and "game" means the card game being designed. Saves will go through a storage interface over separate items, keyed by base path and profile (AR-6, PS-7), with card sets as their own model (AR-4) and one options resolver (AR-7). None of this is built yet: the code rename (#73) comes before 3j, and the storage interface and card set model (#74) start Phase 6.
+The V1 plan now makes the data model ready for games, card sets and accounts (#69): a play session is a "session" and "game" means the card game being designed. Saves will go through a storage interface over separate items, keyed by base path and profile (AR-6, PS-7), with card sets as their own model (AR-4) and one options resolver (AR-7). The code now says "session" for a play session (#73). The storage interface and card set model (#74) start Phase 6.
 
 ## Done
+
+### #73: play-session code renamed to "session" (2026-10-27)
+
+- **Rename only, no behaviour change:** `GameState` is `SessionState`, and `model/game.ts`, `store/gameStore.ts` and `GameScreen` (with its CSS and `.game` classes) are `model/session.ts`, `store/sessionStore.ts` and `SessionScreen` (`.session`). The store's `game` field is `session`, `createSoloGame` is `createSoloSession`, and the `useGameStore…` hooks, test helpers, parameters, comments and test names follow. Files moved with `git mv`.
+- **Drag code:** `cardDrag.ts` had its own `Session` for a drag in progress. It's `ActiveDrag` now, so "session" only means a play session.
+- **Elsewhere:** the bug report form and CLAUDE.md's architecture rules say "session state" instead of "game state".
+- "Game" is now free for the card game being designed. No UI copy used it for a play session.
 
 ### #69: V1 data model ready for games, card sets and accounts (2026-10-27)
 
@@ -559,9 +566,8 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 
 ## Next
 
-- **#73: rename play-session code to "session"**, after the owner's go-ahead, before 3j. Mechanical, no behaviour change.
 - **#74: storage interface, profile keys and card set model**, at the start of Phase 6.
-- **3j (#32, hand reordering)**, after #73 and the owner's go-ahead. Then 3k (#33, seat counters, dice and roll log), 3n (#39, dark theme) at any point, and 3o (#61) last: the ? shortcut reference, a WCAG 2.1.4 fix for the page-wide D shortcut, the announcement audit, and the solo-turn E2E that closes Phase 3.
+- **3j (#32, hand reordering)**, next, after the owner's go-ahead. Then 3k (#33, seat counters, dice and roll log), 3n (#39, dark theme) at any point, and 3o (#61) last: the ? shortcut reference, a WCAG 2.1.4 fix for the page-wide D shortcut, the announcement audit, and the solo-turn E2E that closes Phase 3.
 - **#71: keys act on the hovered card or pile when nothing on the table has focus**, an owner request from the #70 review. Single-letter keys without focus need the shortcut switch (WCAG 2.1.4), so it goes with #61 and #53.
 - **#68: no text-field focus on touch screens in the other dialogs** (Move to…, pile viewer, Draw/Mill/Peek count, pile name). It isn't tied to a phase, and the owner chooses when.
 - **After V1, as feature issues:** selection and group actions (#29), stacks (#30), and control settings with shortcut remapping (#53).

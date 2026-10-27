@@ -3,25 +3,25 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { addCounter } from '../actions/counters';
 import { moveCard } from '../actions/moveCard';
-import { gameWithDeck, pilesOutOfTheWay, testContext } from '../actions/testing';
-import type { ActionContext, GameState } from '../model/game';
-import { createGameStore, GameStoreProvider } from '../store/gameStore';
+import { sessionWithDeck, pilesOutOfTheWay, testContext } from '../actions/testing';
+import type { ActionContext, SessionState } from '../model/session';
+import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
 import { TableSurface } from './TableSurface';
 
 /** Imp on the table. */
 function setup() {
-  let game = gameWithDeck();
-  game = pilesOutOfTheWay(
-    moveCard(game, {
-      cardId: game.piles[0]?.cardIds[0] ?? '',
+  let session = sessionWithDeck();
+  session = pilesOutOfTheWay(
+    moveCard(session, {
+      cardId: session.piles[0]?.cardIds[0] ?? '',
       to: { zone: 'table' },
     }).state,
   );
-  const store = createGameStore(game, testContext());
+  const store = createSessionStore(session, testContext());
   render(
-    <GameStoreProvider store={store}>
+    <SessionStoreProvider store={store}>
       <TableSurface />
-    </GameStoreProvider>,
+    </SessionStoreProvider>,
   );
   return store;
 }
@@ -29,11 +29,11 @@ function setup() {
 const table = () => screen.getByRole('group', { name: /^Table, / });
 const card = (name: RegExp | string) => within(table()).getByRole('button', { name });
 const dialog = () => screen.getByRole('dialog', { name: 'Counters on Imp' });
-function addTo(game: GameState, name: string, context: ActionContext) {
-  return addCounter(game, { cardId: game.table[0]?.cardId ?? '', name }, context);
+function addTo(session: SessionState, name: string, context: ActionContext) {
+  return addCounter(session, { cardId: session.table[0]?.cardId ?? '', name }, context);
 }
 
-const counters = (store: ReturnType<typeof setup>) => store.getState().game.table[0]?.counters?.map((c) => `${c.name} ${c.value}`);
+const counters = (store: ReturnType<typeof setup>) => store.getState().session.table[0]?.counters?.map((c) => `${c.name} ${c.value}`);
 
 describe('TT-8 card counters', () => {
   it('adds, steps and removes a counter by keyboard alone, announcing each change', async () => {

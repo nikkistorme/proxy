@@ -1,24 +1,24 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { gameWithDeck, namesOf, tableIds, testContext } from '../actions/testing';
-import { createGameStore, GameStoreProvider } from '../store/gameStore';
+import { sessionWithDeck, namesOf, tableIds, testContext } from '../actions/testing';
+import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
 import { PeekDialog } from './PeekDialog';
 
 const csv = 'name\nImp\nOgre\nTroll\nWisp\n';
 
 function renderPeek(count = 3) {
   const user = userEvent.setup();
-  const store = createGameStore(gameWithDeck(csv), testContext());
-  const cardIds = store.getState().game.piles[0]?.cardIds.slice(0, count) ?? [];
+  const store = createSessionStore(sessionWithDeck(csv), testContext());
+  const cardIds = store.getState().session.piles[0]?.cardIds.slice(0, count) ?? [];
   const onClose = vi.fn();
   render(
-    <GameStoreProvider store={store}>
+    <SessionStoreProvider store={store}>
       <PeekDialog request={{ pileId: 'pile-p1-main', cardIds }} onClose={onClose} />
-    </GameStoreProvider>,
+    </SessionStoreProvider>,
   );
   const dialog = screen.getByRole('dialog', { name: `Top ${count} of P1 main deck` });
-  const state = () => store.getState().game;
+  const state = () => store.getState().session;
   const pileNames = () => namesOf(state(), state().piles[0]?.cardIds);
   const shown = () => within(screen.getByRole('list', { name: 'Top cards, top first' })).getAllByRole('img').map((c) => c.getAttribute('aria-label'));
   return { user, dialog, onClose, state, pileNames, shown };
@@ -69,7 +69,7 @@ describe('SP-9 peek', () => {
     const { user, state } = renderPeek();
     const before = state();
     await user.click(screen.getByRole('button', { name: 'Done' }));
-    // No action ran, so the game is the very same object.
+    // No action ran, so the session is the very same object.
     expect(state()).toBe(before);
   });
 

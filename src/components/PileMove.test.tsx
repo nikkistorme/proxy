@@ -2,29 +2,29 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { moveCard } from '../actions/moveCard';
-import { gameWithDeck, testContext } from '../actions/testing';
-import type { GameState } from '../model/game';
+import { sessionWithDeck, testContext } from '../actions/testing';
+import type { SessionState } from '../model/session';
 import { snapToGrid } from '../model/tableView';
-import { createGameStore, GameStoreProvider } from '../store/gameStore';
+import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
 import { TOUCH_HOLD_MS } from './cardDrag';
-import { GameScreen } from './GameScreen';
+import { SessionScreen } from './SessionScreen';
 
 const MAIN = 'pile-p1-main';
 
-function idOf(game: GameState, name: string) {
-  return Object.values(game.cards).find((c) => game.definitions[c.definitionId]?.front.name === name)?.id ?? '';
+function idOf(session: SessionState, name: string) {
+  return Object.values(session.cards).find((c) => session.definitions[c.definitionId]?.front.name === name)?.id ?? '';
 }
 
-/** The Solo game's piles along the top row, from (16, 16), with Imp under P1 main deck and Ogre and Troll left in it. */
+/** The Solo session's piles along the top row, from (16, 16), with Imp under P1 main deck and Ogre and Troll left in it. */
 function setup() {
-  let game = gameWithDeck();
-  game = moveCard(game, { cardId: idOf(game, 'Imp'), to: { zone: 'table', position: { x: 16, y: 208 } } }).state;
-  const store = createGameStore(game, testContext());
+  let session = sessionWithDeck();
+  session = moveCard(session, { cardId: idOf(session, 'Imp'), to: { zone: 'table', position: { x: 16, y: 208 } } }).state;
+  const store = createSessionStore(session, testContext());
   const user = userEvent.setup();
   render(
-    <GameStoreProvider store={store}>
-      <GameScreen />
-    </GameStoreProvider>,
+    <SessionStoreProvider store={store}>
+      <SessionScreen />
+    </SessionStoreProvider>,
   );
   return { store, user };
 }
@@ -34,10 +34,10 @@ const table = () => screen.getByRole('group', { name: /^Table, / });
 const pile = (name: string) => within(table()).getByRole('button', { name: new RegExp(`^${name},`) });
 const status = (store: Store) => store.getState().announcement.text;
 const spotOf = (store: Store, pileId = MAIN) => {
-  const found = store.getState().game.piles.find((p) => p.id === pileId);
+  const found = store.getState().session.piles.find((p) => p.id === pileId);
   return found && { x: found.x, y: found.y };
 };
-const hand = (store: Store) => store.getState().game.hands['seat-p1'] ?? [];
+const hand = (store: Store) => store.getState().session.hands['seat-p1'] ?? [];
 
 /** What's under the pointer: another pile, the hand, or else the table. */
 let hit: 'table' | 'pile' | 'hand' = 'table';
@@ -77,7 +77,7 @@ describe('SP-6 pressing a pile', () => {
     const { store, user } = setup();
     const steps = store.getState().past.length;
     await user.click(pile('P1 main deck'));
-    expect(hand(store)).toEqual([idOf(store.getState().game, 'Ogre')]);
+    expect(hand(store)).toEqual([idOf(store.getState().session, 'Ogre')]);
     expect(status(store)).toBe('Player 1 drew Ogre from P1 main deck. 1 card left.');
     expect(store.getState().past).toHaveLength(steps + 1);
     expect(pile('P1 main deck')).toHaveFocus();
@@ -234,7 +234,7 @@ describe('TT-4 dragging a pile', () => {
 
 describe('TT-4 merging piles', () => {
   const ENV = 'pile-env';
-  const pileIds = (store: Store) => store.getState().game.piles.map((p) => p.id);
+  const pileIds = (store: Store) => store.getState().session.piles.map((p) => p.id);
 
   it('dropping a pile on another asks how to merge them, and the merge is one undo step', async () => {
     const { store, user } = setup();
@@ -254,7 +254,7 @@ describe('TT-4 merging piles', () => {
     await user.keyboard('{Enter}');
 
     expect(pileIds(store)).not.toContain(MAIN);
-    expect(store.getState().game.piles.find((p) => p.id === ENV)?.cardIds).toHaveLength(2);
+    expect(store.getState().session.piles.find((p) => p.id === ENV)?.cardIds).toHaveLength(2);
     expect(status(store)).toBe('Merged P1 main deck into Environment deck. 2 cards.');
     expect(store.getState().past).toHaveLength(steps + 1);
     await waitFor(() => expect(pile('Environment deck')).toHaveFocus());

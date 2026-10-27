@@ -2,26 +2,26 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { moveCard } from '../actions/moveCard';
-import { gameWithDeck, testContext } from '../actions/testing';
-import type { GameState } from '../model/game';
-import { createGameStore, GameStoreProvider } from '../store/gameStore';
-import { GameScreen } from './GameScreen';
+import { sessionWithDeck, testContext } from '../actions/testing';
+import type { SessionState } from '../model/session';
+import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
+import { SessionScreen } from './SessionScreen';
 
-function idOf(game: GameState, name: string) {
-  return Object.values(game.cards).find((c) => game.definitions[c.definitionId]?.front.name === name)?.id ?? '';
+function idOf(session: SessionState, name: string) {
+  return Object.values(session.cards).find((c) => session.definitions[c.definitionId]?.front.name === name)?.id ?? '';
 }
 
-/** The Solo game's piles along the top of the table, Imp under P1 main deck, and Ogre after Board cards. */
+/** The Solo session's piles along the top of the table, Imp under P1 main deck, and Ogre after Board cards. */
 function setup() {
-  let game = gameWithDeck();
-  game = moveCard(game, { cardId: idOf(game, 'Imp'), to: { zone: 'table', position: { x: 16, y: 208 } } }).state;
-  game = moveCard(game, { cardId: idOf(game, 'Ogre'), to: { zone: 'table' } }).state;
-  const store = createGameStore(game, testContext());
+  let session = sessionWithDeck();
+  session = moveCard(session, { cardId: idOf(session, 'Imp'), to: { zone: 'table', position: { x: 16, y: 208 } } }).state;
+  session = moveCard(session, { cardId: idOf(session, 'Ogre'), to: { zone: 'table' } }).state;
+  const store = createSessionStore(session, testContext());
   const user = userEvent.setup();
   render(
-    <GameStoreProvider store={store}>
-      <GameScreen />
-    </GameStoreProvider>,
+    <SessionStoreProvider store={store}>
+      <SessionScreen />
+    </SessionStoreProvider>,
   );
   return { store, user };
 }
@@ -90,6 +90,6 @@ describe('A11Y-3 piles on the table', () => {
     await user.click(screen.getByRole('button', { name: 'Add pile' }));
     await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Discard{Enter}');
     expect(pile('Discard')).toHaveFocus();
-    expect(store.getState().game.piles.at(-1)).toMatchObject({ name: 'Discard', x: 584, y: 16 });
+    expect(store.getState().session.piles.at(-1)).toMatchObject({ name: 'Discard', x: 584, y: 16 });
   });
 });

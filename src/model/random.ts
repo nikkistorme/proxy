@@ -24,7 +24,7 @@ export const cryptoRandomInt: RandomInt = (maxExclusive) => {
   }
 };
 
-/** Repeatable random integers for tests (QA-3). Not for real games. */
+/** Repeatable random integers for tests (QA-3). Not for real sessions. */
 export function seededRandomInt(seed: number): RandomInt {
   // mulberry32
   let state = seed >>> 0;

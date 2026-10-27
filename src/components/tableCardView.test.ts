@@ -2,23 +2,23 @@ import { describe, expect, it } from 'vitest';
 import { moveCard } from '../actions/moveCard';
 import { cardsFrom, testContext } from '../actions/testing';
 import { loadPile } from '../actions/loadPile';
-import type { CardSide, GameState, Rotation } from '../model/game';
-import { createSoloGame } from '../model/game';
+import type { CardSide, SessionState, Rotation } from '../model/session';
+import { createSoloSession } from '../model/session';
 import { tableCardView } from './tableCardView';
 
 const csv = 'name,id,back_of\nTroll,,\nMoonrise Hunter,,hunter\nDaylight Hunter,hunter,\n';
 
 /** One card on the table, with its side, rotation and definition changed as given. */
-function viewOf(name: string, side: CardSide, rotation: Rotation = 0, change: (g: GameState, definitionId: string) => GameState = (g) => g) {
-  let game = loadPile(createSoloGame(), { pileId: 'pile-p1-main', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
-  const card = Object.values(game.cards).find((c) => game.definitions[c.definitionId]?.front.name === name);
+function viewOf(name: string, side: CardSide, rotation: Rotation = 0, change: (g: SessionState, definitionId: string) => SessionState = (g) => g) {
+  let session = loadPile(createSoloSession(), { pileId: 'pile-p1-main', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
+  const card = Object.values(session.cards).find((c) => session.definitions[c.definitionId]?.front.name === name);
   if (!card) throw new Error(name);
-  game = moveCard(game, { cardId: card.id, to: { zone: 'table' } }).state;
-  game = { ...game, cards: { ...game.cards, [card.id]: { ...card, side } }, table: game.table.map((e) => ({ ...e, rotation })) };
-  game = change(game, card.definitionId);
-  const entry = game.table[0];
+  session = moveCard(session, { cardId: card.id, to: { zone: 'table' } }).state;
+  session = { ...session, cards: { ...session.cards, [card.id]: { ...card, side } }, table: session.table.map((e) => ({ ...e, rotation })) };
+  session = change(session, card.definitionId);
+  const entry = session.table[0];
   if (!entry) throw new Error('Nothing on the table');
-  return tableCardView(game, entry);
+  return tableCardView(session, entry);
 }
 
 describe('A11Y-6 table card names', () => {

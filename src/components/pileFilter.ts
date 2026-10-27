@@ -1,5 +1,5 @@
 import type { CardFace } from '../model/card';
-import type { GameState } from '../model/game';
+import type { SessionState } from '../model/session';
 
 /** One card in a pile, as the viewer shows it. */
 export interface PileEntry {
@@ -28,7 +28,7 @@ const MAX_FILTER_VALUES = 12;
 const TEXT_COLUMNS = new Set(['text', 'rules', 'rules text']);
 
 /** Every card in a pile, top first, with its position. */
-export function pileEntries(state: GameState, pileId: string): PileEntry[] {
+export function pileEntries(state: SessionState, pileId: string): PileEntry[] {
   const pile = state.piles.find((p) => p.id === pileId);
   return (pile?.cardIds ?? []).flatMap((cardId, index) => {
     const card = state.cards[cardId];

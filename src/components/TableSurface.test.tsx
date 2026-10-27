@@ -2,25 +2,25 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { moveCard } from '../actions/moveCard';
-import { gameWithDeck, testContext, pilesOutOfTheWay } from '../actions/testing';
-import type { GameState } from '../model/game';
-import { createGameStore, GameStoreProvider } from '../store/gameStore';
+import { sessionWithDeck, testContext, pilesOutOfTheWay } from '../actions/testing';
+import type { SessionState } from '../model/session';
+import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
 import { TableSurface } from './TableSurface';
 
-const idOf = (state: GameState, name: string) =>
+const idOf = (state: SessionState, name: string) =>
   Object.values(state.cards).find((card) => state.definitions[card.definitionId]?.front.name === name)?.id ?? '';
 
 /** Imp, Ogre and Troll in a row on the table, with a button before and after it. */
 function setup() {
-  let game = pilesOutOfTheWay(gameWithDeck());
-  for (const name of ['Imp', 'Ogre', 'Troll']) game = moveCard(game, { cardId: idOf(game, name), to: { zone: 'table' } }).state;
-  const store = createGameStore(game, testContext());
+  let session = pilesOutOfTheWay(sessionWithDeck());
+  for (const name of ['Imp', 'Ogre', 'Troll']) session = moveCard(session, { cardId: idOf(session, name), to: { zone: 'table' } }).state;
+  const store = createSessionStore(session, testContext());
   render(
-    <GameStoreProvider store={store}>
+    <SessionStoreProvider store={store}>
       <button type="button">Before</button>
       <TableSurface />
       <button type="button">After</button>
-    </GameStoreProvider>,
+    </SessionStoreProvider>,
   );
   return store;
 }
@@ -71,9 +71,9 @@ describe('A11Y-3 table focus', () => {
 
   it('shows the empty table with no Tab stop', async () => {
     render(
-      <GameStoreProvider store={createGameStore(gameWithDeck(), testContext())}>
+      <SessionStoreProvider store={createSessionStore(sessionWithDeck(), testContext())}>
         <TableSurface />
-      </GameStoreProvider>,
+      </SessionStoreProvider>,
     );
     expect(screen.getByRole('group', { name: 'Table, 0 cards' })).toHaveTextContent('No cards on the table yet.');
     expect(screen.queryByRole('button')).toBeNull();
@@ -139,11 +139,11 @@ describe('TT-1 panning and zooming the table', () => {
   });
 
   it('says so when there is nothing to fit', () => {
-    const store = createGameStore(gameWithDeck(), testContext());
+    const store = createSessionStore(sessionWithDeck(), testContext());
     render(
-      <GameStoreProvider store={store}>
+      <SessionStoreProvider store={store}>
         <TableSurface />
-      </GameStoreProvider>,
+      </SessionStoreProvider>,
     );
     act(() => store.getState().tableViewport?.fitAll());
     expect(store.getState().announcement.text).toBe('No cards on the table to fit.');

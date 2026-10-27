@@ -1,4 +1,4 @@
-import type { ActionContext, ActionResult, GameState, Pile } from '../model/game';
+import type { ActionContext, ActionResult, SessionState, Pile } from '../model/session';
 import { clampToTable, freeSpot, pileBox, pileUnder } from '../model/tablePlacement';
 import { getPile, plural, withPile } from './helpers';
 
@@ -11,7 +11,7 @@ function pileNameKey(name: string): string {
  * Why a pile name can't be used, or undefined if it can. Dialogs show this
  * message, and the actions enforce the same rule.
  */
-export function validatePileName(state: GameState, name: string, exceptPileId?: string): string | undefined {
+export function validatePileName(state: SessionState, name: string, exceptPileId?: string): string | undefined {
   const trimmed = name.trim();
   if (trimmed === '') return 'A pile needs a name';
   const clash = state.piles.find((p) => p.id !== exceptPileId && pileNameKey(p.name) === pileNameKey(trimmed));
@@ -19,20 +19,20 @@ export function validatePileName(state: GameState, name: string, exceptPileId?: 
   return undefined;
 }
 
-function checkName(state: GameState, name: string, exceptPileId?: string): string {
+function checkName(state: SessionState, name: string, exceptPileId?: string): string {
   const problem = validatePileName(state, name, exceptPileId);
   if (problem) throw new Error(problem);
   return name.trim();
 }
 
-function ownerLabel(state: GameState, pile: Pile): string {
+function ownerLabel(state: SessionState, pile: Pile): string {
   if (pile.ownerSeatId === undefined) return 'shared';
   return state.seats.find((s) => s.id === pile.ownerSeatId)?.name ?? pile.ownerSeatId;
 }
 
 /** SP-4: add an empty pile, owned by a seat or shared. */
 export function addPile(
-  state: GameState,
+  state: SessionState,
   args: { name: string; ownerSeatId?: string },
   context: ActionContext,
 ): ActionResult & { pileId: string } {
@@ -51,7 +51,7 @@ export function addPile(
 }
 
 /** SP-4: rename a pile. */
-export function renamePile(state: GameState, args: { pileId: string; name: string }): ActionResult {
+export function renamePile(state: SessionState, args: { pileId: string; name: string }): ActionResult {
   const pile = getPile(state, args.pileId);
   const name = checkName(state, args.name, pile.id);
   if (name === pile.name) return { state, announcement: `${pile.name} is already called that.` };
@@ -62,7 +62,7 @@ export function renamePile(state: GameState, args: { pileId: string; name: strin
  * TT-4: move a pile to a spot on the table, kept inside the table's top and left
  * edges. Piles never overlap: a spot over another pile is a merge (`mergePiles`).
  */
-export function movePile(state: GameState, args: { pileId: string; position: { x: number; y: number } }): ActionResult {
+export function movePile(state: SessionState, args: { pileId: string; position: { x: number; y: number } }): ActionResult {
   const pile = getPile(state, args.pileId);
   const { x, y } = clampToTable(args.position, 0);
   if (pile.x === x && pile.y === y) return { state, announcement: `${pile.name} is already there.` };
@@ -78,7 +78,7 @@ export function movePile(state: GameState, args: { pileId: string; position: { x
  * deleted pile's cards move to another pile.
  */
 export function mergePiles(
-  state: GameState,
+  state: SessionState,
   args: { fromPileId: string; intoPileId: string; end: 'top' | 'bottom' },
 ): ActionResult {
   const from = getPile(state, args.fromPileId);
@@ -93,7 +93,7 @@ export function mergePiles(
  * SP-4: delete a pile. A pile that still has cards needs another pile to take
  * them; they go to its bottom in their current order.
  */
-export function deletePile(state: GameState, args: { pileId: string; moveCardsToPileId?: string }): ActionResult {
+export function deletePile(state: SessionState, args: { pileId: string; moveCardsToPileId?: string }): ActionResult {
   const pile = getPile(state, args.pileId);
   const remaining = state.piles.filter((p) => p.id !== pile.id);
 

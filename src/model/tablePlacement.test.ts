@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { TableEntry } from './game';
+import type { TableEntry } from './session';
 import { CARD_H, CARD_W, cardBox, clampToTable, columnsFor, describeSpot, freeSpot, pileBox, pileUnder, PLACEMENT_COLUMNS, TABLE_GAP } from './tablePlacement';
 
 const at = (cardId: string, x: number, y: number, rotation: TableEntry['rotation'] = 0): TableEntry => ({ cardId, x, y, rotation });

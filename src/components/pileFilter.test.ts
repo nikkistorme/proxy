@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { gameWithDeck } from '../actions/testing';
+import { sessionWithDeck } from '../actions/testing';
 import { filterColumns, filterEntries, pileEntries } from './pileFilter';
 
 const csv = `name,type,cost,faction,rules
@@ -10,15 +10,15 @@ Kindle Ward,Ward,1,Ember,Prevent the first 2 damage.
 Banked Coals,Tactic,0,,Gain 2 Energy from embers.
 `;
 
-const game = gameWithDeck(csv);
-const entries = pileEntries(game, 'pile-p1-main');
+const session = sessionWithDeck(csv);
+const entries = pileEntries(session, 'pile-p1-main');
 const names = (list: typeof entries) => list.map((e) => e.face.name);
 
 describe('SP-7 pile viewer search and filters', () => {
   it('lists every card top first, with its position', () => {
     expect(names(entries)).toEqual(['Ember Scout', 'Tide Caller', 'Emberline Courier', 'Kindle Ward', 'Banked Coals']);
     expect(entries.map((e) => e.position)).toEqual([1, 2, 3, 4, 5]);
-    expect(pileEntries(game, 'pile-env')).toEqual([]);
+    expect(pileEntries(session, 'pile-env')).toEqual([]);
   });
 
   it('searches the name and every column, ignoring case and surrounding spaces', () => {
@@ -42,7 +42,7 @@ describe('SP-7 pile viewer search and filters', () => {
 
   it('skips columns with one value or more than 12', () => {
     const many = Array.from({ length: 13 }, (_, i) => `Card ${i},same,${i}`).join('\n');
-    const columns = filterColumns(pileEntries(gameWithDeck(`name,set,number\n${many}\n`), 'pile-p1-main'));
+    const columns = filterColumns(pileEntries(sessionWithDeck(`name,set,number\n${many}\n`), 'pile-p1-main'));
     expect(columns.map((c) => c.column)).toEqual([]);
   });
 

@@ -2,7 +2,7 @@ import { createContext, createElement, useContext, useState, type ReactNode } fr
 import { useStore } from 'zustand';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import type { Destination } from '../actions/moveCard';
-import { createSoloGame, type ActionContext, type ActionResult, type GameState } from '../model/game';
+import { createSoloSession, type ActionContext, type ActionResult, type SessionState } from '../model/session';
 import { cryptoRandomInt } from '../model/random';
 import { PLACEMENT_COLUMNS } from '../model/tablePlacement';
 
@@ -12,13 +12,13 @@ export interface Announcement {
   id: number;
 }
 
-/** One undo step: the game before (or, for redo, after) an action, and what that action said. */
+/** One undo step: the session before (or, for redo, after) an action, and what that action said. */
 export interface HistoryEntry {
-  game: GameState;
+  session: SessionState;
   announcement: string;
 }
 
-/** How the table is shown. Not part of the game: changing it is never an undo step. */
+/** How the table is shown. Not part of the session: changing it is never an undo step. */
 export interface TableView {
   zoom: number;
   /** TT-2: grid snapping, off by default. */
@@ -56,20 +56,20 @@ export interface CardDrag {
 /** TT-15 asks for at least 200 undo steps. */
 export const HISTORY_LIMIT = 200;
 
-export interface GameStore {
-  game: GameState;
+export interface SessionStore {
+  session: SessionState;
   announcement: Announcement;
-  /** Games before each action, oldest first. Actions never mutate, so these share unchanged parts. */
+  /** Sessions before each action, oldest first. Actions never mutate, so these share unchanged parts. */
   past: HistoryEntry[];
-  /** Games undone, most recently undone last. Cleared by any new action. */
+  /** Sessions undone, most recently undone last. Cleared by any new action. */
   future: HistoryEntry[];
   /**
-   * Runs a named action (AR-1) against the current game, stores the result and
+   * Runs a named action (AR-1) against the current session, stores the result and
    * announces it (AR-2). Returns the full result, for actions with extra output.
    * An action that changes nothing adds no undo step.
    */
-  dispatch: <R extends ActionResult>(action: (game: GameState, context: ActionContext) => R) => R;
-  /** Announces something that isn't a game change, like why nothing happened. */
+  dispatch: <R extends ActionResult>(action: (session: SessionState, context: ActionContext) => R) => R;
+  /** Announces something that isn't a session change, like why nothing happened. */
   announce: (text: string) => void;
   /** TT-15: goes back one action, or announces that there is nothing to undo. */
   undo: () => void;
@@ -96,11 +96,11 @@ export interface GameStore {
 
 export const liveContext: ActionContext = { randomInt: cryptoRandomInt, newId: () => crypto.randomUUID() };
 
-export function createGameStore(game: GameState = createSoloGame(), context: ActionContext = liveContext): StoreApi<GameStore> {
-  return createStore<GameStore>()((set, get) => {
+export function createSessionStore(session: SessionState = createSoloSession(), context: ActionContext = liveContext): StoreApi<SessionStore> {
+  return createStore<SessionStore>()((set, get) => {
     const next = (text: string): Announcement => ({ text, id: get().announcement.id + 1 });
     return {
-      game,
+      session,
       announcement: { text: '', id: 0 },
       past: [],
       future: [],
@@ -116,7 +116,7 @@ export function createGameStore(game: GameState = createSoloGame(), context: Act
       showToast: (text) => set({ toast: { text, id: (get().toast?.id ?? 0) + 1 } }),
       dismissToast: () => set({ toast: undefined }),
       dispatch: (action) => {
-        const { game: before, past } = get();
+        const { session: before, past } = get();
         const result = action(before, { ...context, placementColumns: get().view.columns });
         if (result.state === before) {
           set({ announcement: next(result.announcement) });
@@ -124,16 +124,16 @@ export function createGameStore(game: GameState = createSoloGame(), context: Act
         }
         set({
           toast: undefined,
-          game: result.state,
+          session: result.state,
           announcement: next(result.announcement),
-          past: [...past, { game: before, announcement: result.announcement }].slice(-HISTORY_LIMIT),
+          past: [...past, { session: before, announcement: result.announcement }].slice(-HISTORY_LIMIT),
           future: [],
         });
         return result;
       },
       announce: (text) => set({ announcement: next(text) }),
       undo: () => {
-        const { game: current, past, future } = get();
+        const { session: current, past, future } = get();
         const step = past.at(-1);
         if (!step) {
           set({ announcement: next('Nothing to undo.') });
@@ -141,14 +141,14 @@ export function createGameStore(game: GameState = createSoloGame(), context: Act
         }
         set({
           toast: undefined,
-          game: step.game,
+          session: step.session,
           announcement: next(`Undone: ${step.announcement}`),
           past: past.slice(0, -1),
-          future: [...future, { game: current, announcement: step.announcement }],
+          future: [...future, { session: current, announcement: step.announcement }],
         });
       },
       redo: () => {
-        const { game: current, past, future } = get();
+        const { session: current, past, future } = get();
         const step = future.at(-1);
         if (!step) {
           set({ announcement: next('Nothing to redo.') });
@@ -156,9 +156,9 @@ export function createGameStore(game: GameState = createSoloGame(), context: Act
         }
         set({
           toast: undefined,
-          game: step.game,
+          session: step.session,
           announcement: next(`Redone: ${step.announcement}`),
-          past: [...past, { game: current, announcement: step.announcement }],
+          past: [...past, { session: current, announcement: step.announcement }],
           future: future.slice(0, -1),
         });
       },
@@ -166,20 +166,20 @@ export function createGameStore(game: GameState = createSoloGame(), context: Act
   });
 }
 
-const GameStoreContext = createContext<StoreApi<GameStore> | null>(null);
+const SessionStoreContext = createContext<StoreApi<SessionStore> | null>(null);
 
-export function GameStoreProvider({ store, children }: { store?: StoreApi<GameStore>; children: ReactNode }) {
-  const [value] = useState(() => store ?? createGameStore());
-  return createElement(GameStoreContext.Provider, { value }, children);
+export function SessionStoreProvider({ store, children }: { store?: StoreApi<SessionStore>; children: ReactNode }) {
+  const [value] = useState(() => store ?? createSessionStore());
+  return createElement(SessionStoreContext.Provider, { value }, children);
 }
 
-export function useGameStore<T>(selector: (store: GameStore) => T): T {
-  return useStore(useGameStoreApi(), selector);
+export function useSessionStore<T>(selector: (store: SessionStore) => T): T {
+  return useStore(useSessionStoreApi(), selector);
 }
 
 /** The store itself, for handlers that read its latest state without re-rendering on every change. */
-export function useGameStoreApi(): StoreApi<GameStore> {
-  const store = useContext(GameStoreContext);
-  if (!store) throw new Error('useGameStore needs a GameStoreProvider');
+export function useSessionStoreApi(): StoreApi<SessionStore> {
+  const store = useContext(SessionStoreContext);
+  if (!store) throw new Error('useSessionStore needs a SessionStoreProvider');
   return store;
 }

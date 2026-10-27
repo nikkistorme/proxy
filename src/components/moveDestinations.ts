@@ -1,5 +1,5 @@
 import { locateCard, type Destination } from '../actions/moveCard';
-import type { GameState } from '../model/game';
+import type { SessionState } from '../model/session';
 
 export type DestinationGroup = 'Table' | 'Hands' | 'Piles';
 
@@ -35,7 +35,7 @@ function cardsWord(count: number): string {
  * left out, since moving there does nothing. Choosing a spot is always offered. Its own pile stays in, since its top and bottom are real moves.
  * `exceptTopOf` leaves out one pile's top, where reordering does the same job (SP-9).
  */
-export function moveDestinations(state: GameState, cardId: string, { exceptTopOf }: { exceptTopOf?: string } = {}): MoveOption[] {
+export function moveDestinations(state: SessionState, cardId: string, { exceptTopOf }: { exceptTopOf?: string } = {}): MoveOption[] {
   const from = locateCard(state, cardId);
   const options: MoveOption[] = [];
 

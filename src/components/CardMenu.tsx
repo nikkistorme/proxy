@@ -1,5 +1,5 @@
 import { flipKind, shownName } from '../actions/cardActions';
-import type { GameState } from '../model/game';
+import type { SessionState } from '../model/session';
 import { Menu, type MenuEntry } from './Menu';
 
 // Icons from the ActionMenu board, plus mirrored and extra ones in the same style.
@@ -23,23 +23,23 @@ const FLIP_LABELS = { 'to back': 'Flip to back', 'to front': 'Flip to front', 'f
 export type CardCommand = 'rotate' | 'rotate-back' | 'flip' | 'place' | 'move' | 'counters' | 'enlarge' | 'details' | 'duplicate' | 'front' | 'back' | 'delete';
 
 interface CardMenuProps {
-  game: GameState;
+  session: SessionState;
   cardId: string;
   onCommand: (command: CardCommand) => void;
   onClose: () => void;
 }
 
 /** The menu's accessible name and its header line, like "Troll · Player 1 · on table". */
-export function cardMenuLabel(game: GameState, cardId: string) {
-  const name = shownName(game, cardId);
+export function cardMenuLabel(session: SessionState, cardId: string) {
+  const name = shownName(session, cardId);
   const shown = name === 'a face-down card' ? 'face-down card' : name;
-  const owner = game.seats.find((s) => s.id === game.cards[cardId]?.ownerSeatId)?.name ?? 'shared';
+  const owner = session.seats.find((s) => s.id === session.cards[cardId]?.ownerSeatId)?.name ?? 'shared';
   return { label: `Actions for ${shown}`, header: `${shown.charAt(0).toUpperCase()}${shown.slice(1)} · ${owner} · on table` };
 }
 
 /** TT-5, TT-6, TT-8, TT-9, TT-10, TT-11 and SP-8: what you can do to a card on the table, from the ActionMenu board. */
-export function CardMenu({ game, cardId, onCommand, onClose }: CardMenuProps) {
-  const index = game.table.findIndex((entry) => entry.cardId === cardId);
+export function CardMenu({ session, cardId, onCommand, onClose }: CardMenuProps) {
+  const index = session.table.findIndex((entry) => entry.cardId === cardId);
   const item = (id: CardCommand, label: string, icon: string, shortcut?: string, disabled?: boolean): MenuEntry => ({
     kind: 'item',
     id,
@@ -52,18 +52,18 @@ export function CardMenu({ game, cardId, onCommand, onClose }: CardMenuProps) {
   const entries: MenuEntry[] = [
     item('rotate', 'Rotate 90° clockwise', ICONS.rotate, 'R'),
     item('rotate-back', 'Rotate 90° counter-clockwise', ICONS.rotateBack, 'Shift+R'),
-    item('flip', FLIP_LABELS[flipKind(game, cardId)], ICONS.flip, 'F'),
+    item('flip', FLIP_LABELS[flipKind(session, cardId)], ICONS.flip, 'F'),
     item('place', 'Move on table', ICONS.place, 'Space'),
     item('move', 'Move to…', ICONS.move, 'M'),
     item('counters', 'Counters…', ICONS.counters, 'C'),
     item('enlarge', 'Enlarge', ICONS.enlarge, 'I'),
     item('details', 'Details…', ICONS.details),
     item('duplicate', 'Duplicate', ICONS.duplicate, 'Ctrl+D'),
-    item('front', 'Bring to front', ICONS.front, undefined, index === game.table.length - 1),
+    item('front', 'Bring to front', ICONS.front, undefined, index === session.table.length - 1),
     item('back', 'Send to back', ICONS.back, undefined, index === 0),
     { kind: 'separator', id: 'sep' },
     item('delete', 'Delete', ICONS.delete, 'Del'),
   ];
-  const { label, header } = cardMenuLabel(game, cardId);
+  const { label, header } = cardMenuLabel(session, cardId);
   return <Menu label={label} header={header} entries={entries} onClose={onClose} />;
 }

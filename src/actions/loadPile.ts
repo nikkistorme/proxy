@@ -1,5 +1,5 @@
 import type { ImportedCard } from '../model/card';
-import type { ActionContext, ActionResult, CardInstance, GameState } from '../model/game';
+import type { ActionContext, ActionResult, CardInstance, SessionState } from '../model/session';
 import { mergeImport, type MergeResult } from '../model/mergeImport';
 import { shuffled } from '../model/shuffle';
 import { getPile, plural, withPile } from './helpers';
@@ -31,11 +31,11 @@ export interface LoadPileResult extends ActionResult {
  *
  * Definitions are merged so cards in play update in place. Copies on the
  * table, in hands or in other piles are never touched: this pile adds or
- * removes its own copies so the total across the game matches each card's
+ * removes its own copies so the total across the session matches each card's
  * new qty. New copies are shuffled in, or go to the bottom with `keepOrder`.
  * Cards already in the pile keep their order.
  */
-export function loadPile(state: GameState, args: LoadPileArgs, context: ActionContext): LoadPileResult {
+export function loadPile(state: SessionState, args: LoadPileArgs, context: ActionContext): LoadPileResult {
   const pile = getPile(state, args.pileId);
   const existing = pile.definitionIds.flatMap((id) => state.definitions[id] ?? []);
   const merge = mergeImport(existing, args.cards, context.newId);

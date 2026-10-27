@@ -1,13 +1,13 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { gameWithDeck } from '../actions/testing';
+import { sessionWithDeck } from '../actions/testing';
 import { MoveDialog, type MoveRequest } from './MoveDialog';
 import { moveDestinations } from './moveDestinations';
 
-const game = gameWithDeck();
-const cardId = game.piles[0]?.cardIds[0] ?? '';
-const request: MoveRequest = { cardId, face: { name: 'Imp', fields: {} }, fromName: 'P1 main deck', options: moveDestinations(game, cardId) };
+const session = sessionWithDeck();
+const cardId = session.piles[0]?.cardIds[0] ?? '';
+const request: MoveRequest = { cardId, face: { name: 'Imp', fields: {} }, fromName: 'P1 main deck', options: moveDestinations(session, cardId) };
 
 function renderDialog() {
   const user = userEvent.setup();

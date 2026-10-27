@@ -1,4 +1,4 @@
-import type { GameState, Pile, Rotation, TableEntry } from './game';
+import type { SessionState, Pile, Rotation, TableEntry } from './session';
 
 /** Card size on the table at 100% zoom, from the design (`--card-w`, `--card-h`). */
 export const CARD_W = 126;
@@ -63,7 +63,7 @@ export function pileUnder<P extends Pick<Pile, 'id' | 'x' | 'y'>>(piles: readonl
  * first grid cell, left to right in rows `columns` cards wide and then top to
  * bottom, that no card or pile covers.
  */
-export function freeSpot(state: Pick<GameState, 'table' | 'piles'>, columns = PLACEMENT_COLUMNS): { x: number; y: number } {
+export function freeSpot(state: Pick<SessionState, 'table' | 'piles'>, columns = PLACEMENT_COLUMNS): { x: number; y: number } {
   const boxes = [...state.table.map(cardBox), ...state.piles.map(pileBox)];
   for (let row = 0; ; row++) {
     for (let column = 0; column < columns; column++) {

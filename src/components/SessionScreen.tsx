@@ -4,11 +4,11 @@ import { peekTop } from '../actions/peek';
 import { draw, mill, revealTop, shuffle } from '../actions/pileActions';
 import { addPile, deletePile, mergePiles, renamePile, validatePileName } from '../actions/piles';
 import { importCards } from '../csv/importCards';
-import type { GameState, Pile } from '../model/game';
+import type { SessionState, Pile } from '../model/session';
 import { readingOrder, tableItems } from '../model/tableNavigation';
-import { useGameStore } from '../store/gameStore';
+import { useSessionStore } from '../store/sessionStore';
 import { DeletePileDialog, type DeletePileRequest, type MergeChoice, type MergePilesRequest } from './DeletePileDialog';
-import './GameScreen.css';
+import './SessionScreen.css';
 import { HandTray } from './HandTray';
 import { ImportResults, type ImportSummary } from './ImportResults';
 import { LiveRegion } from './LiveRegion';
@@ -23,26 +23,26 @@ import { TableSurface, type PileSlot } from './TableSurface';
 import { TableTools } from './TableTools';
 import { Toast } from './Toast';
 
-function faceOf(game: GameState, cardId: string) {
-  const card = game.cards[cardId];
-  return card && game.definitions[card.definitionId]?.front;
+function faceOf(session: SessionState, cardId: string) {
+  const card = session.cards[cardId];
+  return card && session.definitions[card.definitionId]?.front;
 }
 
 const ADD_PILE = 'add-pile';
 
 /** The pile the active seat draws from: its first owned pile (its main deck). */
-function drawPileFor(game: GameState): Pile | undefined {
-  return game.piles.find((p) => p.ownerSeatId === game.activeSeatId);
+function drawPileFor(session: SessionState): Pile | undefined {
+  return session.piles.find((p) => p.ownerSeatId === session.activeSeatId);
 }
 
 /** The table screen: seats, piles, cards in play and the active seat's hand. */
-export function GameScreen() {
-  const game = useGameStore((s) => s.game);
-  const dispatch = useGameStore((s) => s.dispatch);
-  const announce = useGameStore((s) => s.announce);
-  const setPlacing = useGameStore((s) => s.setPlacing);
-  const showToast = useGameStore((s) => s.showToast);
-  const drag = useGameStore((s) => s.drag);
+export function SessionScreen() {
+  const session = useSessionStore((s) => s.session);
+  const dispatch = useSessionStore((s) => s.dispatch);
+  const announce = useSessionStore((s) => s.announce);
+  const setPlacing = useSessionStore((s) => s.setPlacing);
+  const showToast = useSessionStore((s) => s.showToast);
+  const drag = useSessionStore((s) => s.drag);
 
   /** The pile whose menu is open, and where its tile was on screen when it opened. */
   const [pileMenu, setPileMenu] = useState<{ pileId: string; rect: DOMRect }>();
@@ -67,8 +67,8 @@ export function GameScreen() {
     tileRefs.current[pileId] = element;
   }, []);
 
-  const activeSeat = game.seats.find((s) => s.id === game.activeSeatId);
-  const drawPile = drawPileFor(game);
+  const activeSeat = session.seats.find((s) => s.id === session.activeSeatId);
+  const drawPile = drawPileFor(session);
 
   const drawOne = useCallback(() => {
     if (drawPile) dispatch((g) => draw(g, { pileId: drawPile.id }));
@@ -154,7 +154,7 @@ export function GameScreen() {
   /** SP-1: load a CSV into a pile, from the file picker or a drop. */
   async function loadFile(pileId: string, file: File) {
     returnFocusRef.current = pileId;
-    const pileName = game.piles.find((p) => p.id === pileId)?.name ?? '';
+    const pileName = session.piles.find((p) => p.id === pileId)?.name ?? '';
     const looksLikeCsv = file.name.toLowerCase().endsWith('.csv') || file.type === 'text/csv';
     if (!looksLikeCsv) {
       const problem = { row: 1, message: `${file.name} isn't a CSV file. Nothing was loaded.` };
@@ -197,27 +197,27 @@ export function GameScreen() {
 
   const openDrawMany = useCallback(
     (pileId: string) => {
-      const pile = game.piles.find((p) => p.id === pileId);
-      const seat = game.seats.find((s) => s.id === game.activeSeatId);
+      const pile = session.piles.find((p) => p.id === pileId);
+      const seat = session.seats.find((s) => s.id === session.activeSeatId);
       if (pile && seat) setCountRequest({ mode: 'draw', pile, handName: seat.name });
     },
-    [game],
+    [session],
   );
 
   const openMill = useCallback(
     (pileId: string) => {
-      const pile = game.piles.find((p) => p.id === pileId);
-      if (pile) setCountRequest({ mode: 'mill', pile, targets: game.piles.filter((p) => p.id !== pileId) });
+      const pile = session.piles.find((p) => p.id === pileId);
+      if (pile) setCountRequest({ mode: 'mill', pile, targets: session.piles.filter((p) => p.id !== pileId) });
     },
-    [game],
+    [session],
   );
 
   const openPeek = useCallback(
     (pileId: string) => {
-      const pile = game.piles.find((p) => p.id === pileId);
+      const pile = session.piles.find((p) => p.id === pileId);
       if (pile) setCountRequest({ mode: 'peek', pile });
     },
-    [game],
+    [session],
   );
 
   function confirmCount(count: number, toPileId?: string) {
@@ -225,7 +225,7 @@ export function GameScreen() {
     const pileId = countRequest.pile.id;
     if (countRequest.mode === 'peek') {
       // Looking changes nothing, so it's a read and an announcement, not an action (SP-9).
-      const peek = peekTop(game, { pileId, count });
+      const peek = peekTop(session, { pileId, count });
       announce(peek.announcement);
       setPeekRequest({ pileId, cardIds: peek.cardIds });
     } else if (countRequest.mode === 'draw') dispatch((g) => draw(g, { pileId, count }));
@@ -239,10 +239,10 @@ export function GameScreen() {
 
   const openRename = useCallback(
     (pileId: string) => {
-      const pile = game.piles.find((p) => p.id === pileId);
+      const pile = session.piles.find((p) => p.id === pileId);
       if (pile) setNameRequest({ mode: 'rename', pile });
     },
-    [game],
+    [session],
   );
 
   /**
@@ -251,29 +251,29 @@ export function GameScreen() {
    */
   const removePile = useCallback(
     (pileId: string, moveCardsToPileId?: string) => {
-      const order = readingOrder(tableItems(game));
+      const order = readingOrder(tableItems(session));
       const index = order.indexOf(pileId);
       const next = order[index + 1] ?? order[index - 1];
-      const name = game.piles.find((p) => p.id === pileId)?.name ?? '';
+      const name = session.piles.find((p) => p.id === pileId)?.name ?? '';
       dispatch((g) => deletePile(g, moveCardsToPileId === undefined ? { pileId } : { pileId, moveCardsToPileId }));
       showToast(`Deleted ${name}.`);
       pendingFocusRef.current = next ?? ADD_PILE;
     },
-    [game, dispatch, showToast],
+    [session, dispatch, showToast],
   );
 
   // An empty pile goes at once, with Undo in the toast. A pile with cards asks where they go.
   const openDelete = useCallback(
     (pileId: string) => {
-      const pile = game.piles.find((p) => p.id === pileId);
+      const pile = session.piles.find((p) => p.id === pileId);
       if (!pile) return;
       if (pile.cardIds.length === 0) removePile(pileId);
-      else setDeleteRequest({ pile, targets: game.piles.filter((p) => p.id !== pileId) });
+      else setDeleteRequest({ pile, targets: session.piles.filter((p) => p.id !== pileId) });
     },
-    [game, removePile],
+    [session, removePile],
   );
 
-  const validateName = useCallback((name: string, exceptPileId?: string) => validatePileName(game, name, exceptPileId), [game]);
+  const validateName = useCallback((name: string, exceptPileId?: string) => validatePileName(session, name, exceptPileId), [session]);
 
   function confirmName(name: string, ownerSeatId: string | undefined) {
     if (nameRequest?.mode === 'rename') {
@@ -301,16 +301,16 @@ export function GameScreen() {
   // TT-4: a pile dropped or placed on another pile. Nothing moves until the merge is confirmed.
   const requestMerge = useCallback(
     (pileId: string, otherPileId: string) => {
-      const pile = game.piles.find((p) => p.id === pileId);
-      const other = game.piles.find((p) => p.id === otherPileId);
+      const pile = session.piles.find((p) => p.id === pileId);
+      const other = session.piles.find((p) => p.id === otherPileId);
       if (pile && other) setDeleteRequest({ mode: 'merge', pile, other });
     },
-    [game],
+    [session],
   );
 
   function confirmMerge({ fromPileId, intoPileId, end }: MergeChoice) {
-    const from = game.piles.find((p) => p.id === fromPileId)?.name ?? '';
-    const into = game.piles.find((p) => p.id === intoPileId)?.name ?? '';
+    const from = session.piles.find((p) => p.id === fromPileId)?.name ?? '';
+    const into = session.piles.find((p) => p.id === intoPileId)?.name ?? '';
     dispatch((g) => mergePiles(g, { fromPileId, intoPileId, end }));
     showToast(`Merged ${from} into ${into}.`);
     pendingFocusRef.current = intoPileId;
@@ -320,7 +320,7 @@ export function GameScreen() {
     const pileId = deleteRequest?.pile.id;
     setDeleteRequest(undefined);
     // If the pile still exists, the delete was cancelled, or it took the other pile's cards in a merge.
-    if (pileId && game.piles.some((p) => p.id === pileId)) returnFocusToPile(pileId);
+    if (pileId && session.piles.some((p) => p.id === pileId)) returnFocusToPile(pileId);
   }
 
   function closePeek() {
@@ -363,12 +363,12 @@ export function GameScreen() {
     [dispatch],
   );
 
-  const seatName = (seatId: string | undefined) => game.seats.find((s) => s.id === seatId)?.name;
+  const seatName = (seatId: string | undefined) => session.seats.find((s) => s.id === seatId)?.name;
 
   // 3m: piles sit on the table with the cards, and share its one Tab stop.
   function renderPile(pile: Pile, slot: PileSlot) {
     const topId = pile.cardIds[0];
-    const revealedTop = topId && game.cards[topId]?.side === 'front' ? faceOf(game, topId) : undefined;
+    const revealedTop = topId && session.cards[topId]?.side === 'front' ? faceOf(session, topId) : undefined;
     return (
       <PileTile
         registerTile={(pileId, element) => {
@@ -392,26 +392,26 @@ export function GameScreen() {
     );
   }
 
-  const menuPile = game.piles.find((p) => p.id === menuPileId);
+  const menuPile = session.piles.find((p) => p.id === menuPileId);
 
   return (
-    <div className="game">
-      <header className="game__header">
+    <div className="session">
+      <header className="session__header">
         <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
           <rect x="3" y="5.5" width="13" height="18" rx="2.5" fill="none" stroke="var(--ink)" strokeWidth="1.6" strokeDasharray="3 2.2" />
           <rect x="9.5" y="2" width="13" height="18" rx="2.5" fill="var(--accent)" />
           <path d="M13.3 7.5h5.4M13.3 11h5.4M13.3 14.5h3.4" stroke="var(--accent-ink)" strokeWidth="1.6" strokeLinecap="round" />
         </svg>
-        <h1 className="game__title">Proxy</h1>
-        <span className="game__format">Solo PvE</span>
-        <TableTools addPileRef={addPileRef} onAddPile={() => setNameRequest({ mode: 'add', defaultOwnerId: game.activeSeatId })} />
+        <h1 className="session__title">Proxy</h1>
+        <span className="session__format">Solo PvE</span>
+        <TableTools addPileRef={addPileRef} onAddPile={() => setNameRequest({ mode: 'add', defaultOwnerId: session.activeSeatId })} />
       </header>
 
       <section className="seat-bar" aria-label="Seats">
         <ul className="seat-bar__list">
-          {game.seats.map((seat) => {
+          {session.seats.map((seat) => {
             const identity = seatIdentity(seat.id);
-            const active = seat.id === game.activeSeatId;
+            const active = seat.id === session.activeSeatId;
             return (
               <li key={seat.id} className="seat-bar__seat" style={active ? { boxShadow: `inset 0 -3px 0 ${identity.color}` } : undefined}>
                 <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
@@ -429,7 +429,7 @@ export function GameScreen() {
         </ul>
       </section>
 
-      <main className="game__main">
+      <main className="session__main">
         <section className="table-area" aria-labelledby="table-heading">
           <h2 id="table-heading" className="visually-hidden">
             Table
@@ -461,10 +461,10 @@ export function GameScreen() {
             onReveal={revealFrom}
             onPeek={openPeek}
             onMill={openMill}
-            canMill={game.piles.length > 1}
+            canMill={session.piles.length > 1}
             onRename={openRename}
             onDelete={openDelete}
-            canDelete={menuPile.cardIds.length === 0 || game.piles.length > 1}
+            canDelete={menuPile.cardIds.length === 0 || session.piles.length > 1}
             onClose={closeMenu}
           />
         </div>
@@ -474,7 +474,7 @@ export function GameScreen() {
       <PileNameDialog
         key={nameRequest ? (nameRequest.mode === 'rename' ? `rename-${nameRequest.pile.id}` : 'add') : 'closed'}
         request={nameRequest}
-        seats={game.seats}
+        seats={session.seats}
         validateName={validateName}
         onConfirm={confirmName}
         onClose={closeName}

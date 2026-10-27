@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Pile } from '../model/game';
+import type { Pile } from '../model/session';
 import { Dialog } from './Dialog';
 import './Form.css';
 

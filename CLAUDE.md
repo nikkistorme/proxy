@@ -33,10 +33,10 @@ This project runs on the owner's personal Claude usage. Be economical.
 
 ## Architecture rules
 
-- Every game-state change goes through a named action (`moveCard`, `shuffle`, `flip`, …). Pointer, keyboard and menu input call the same actions.
+- Every session-state change goes through a named action (`moveCard`, `shuffle`, `flip`, …). Pointer, keyboard and menu input call the same actions.
 - Actions return the screen-reader announcement text for the live region.
 - Randomness comes from an injectable source; tests use a fixed seed.
-- Card definitions, layouts and game state are separate models; table instances reference definitions and layouts by id.
+- Card definitions, layouts and session state are separate models; table instances reference definitions and layouts by id.
 - No network calls except card art URLs from the CSV and CSV URLs the user enters.
 
 ## Accessibility (WCAG 2.2 AA)

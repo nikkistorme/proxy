@@ -1,4 +1,4 @@
-import { useGameStore } from '../store/gameStore';
+import { useSessionStore } from '../store/sessionStore';
 import './Toast.css';
 
 /** The id of the toast's Undo button, for moving focus there when nothing else is left to focus. */
@@ -10,9 +10,9 @@ export const TOAST_UNDO_ID = 'toast-undo';
  * seen. It has no time limit (WCAG 2.2.1): it goes with the next action.
  */
 export function Toast() {
-  const toast = useGameStore((s) => s.toast);
-  const undo = useGameStore((s) => s.undo);
-  const dismiss = useGameStore((s) => s.dismissToast);
+  const toast = useSessionStore((s) => s.toast);
+  const undo = useSessionStore((s) => s.undo);
+  const dismiss = useSessionStore((s) => s.dismissToast);
   if (!toast) return null;
   return (
     <div className="toast" key={toast.id}>

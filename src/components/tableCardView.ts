@@ -1,5 +1,5 @@
 import type { CardFace } from '../model/card';
-import type { GameState, TableEntry } from '../model/game';
+import type { SessionState, TableEntry } from '../model/session';
 
 /** What a table card shows and how it's named (A11Y-6). */
 export interface TableCardView {
@@ -14,7 +14,7 @@ export interface TableCardView {
   label: string;
 }
 
-export function tableCardView(state: GameState, entry: TableEntry): TableCardView {
+export function tableCardView(state: SessionState, entry: TableEntry): TableCardView {
   const card = state.cards[entry.cardId];
   const definition = card && state.definitions[card.definitionId];
   if (!card || !definition) throw new Error(`Unknown card: ${entry.cardId}`);

@@ -1,9 +1,9 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { gameWithDeck, namesOf, tableIds, testContext } from '../actions/testing';
-import type { GameState } from '../model/game';
-import { createGameStore, GameStoreProvider } from '../store/gameStore';
+import { sessionWithDeck, namesOf, tableIds, testContext } from '../actions/testing';
+import type { SessionState } from '../model/session';
+import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
 import { PileViewer } from './PileViewer';
 
 const csv = `name,type,faction,rules
@@ -19,17 +19,17 @@ const short = (label: string | null) => label?.replace(/^([^.]+)\..* (#\d+ from 
 /** A card button by its name and position. */
 const card = (name: string, position: number) => new RegExp(`^${name}\\. .* #${position} from top$`);
 
-function renderViewer(game: GameState = gameWithDeck(csv), pileId = 'pile-p1-main') {
+function renderViewer(session: SessionState = sessionWithDeck(csv), pileId = 'pile-p1-main') {
   const user = userEvent.setup();
-  const store = createGameStore(game, testContext());
+  const store = createSessionStore(session, testContext());
   const onClose = vi.fn();
   render(
-    <GameStoreProvider store={store}>
+    <SessionStoreProvider store={store}>
       <PileViewer pileId={pileId} onClose={onClose} />
-    </GameStoreProvider>,
+    </SessionStoreProvider>,
   );
   const dialog = screen.getByRole('dialog', { name: 'P1 main deck' });
-  const state = () => store.getState().game;
+  const state = () => store.getState().session;
   const pileNames = () => namesOf(state(), state().piles[0]?.cardIds);
   const shown = () => within(dialog).queryAllByRole('button', { name: /from top$/ }).map((b) => short(b.getAttribute('aria-label')));
   return { user, dialog, onClose, store, state, pileNames, shown };
@@ -132,8 +132,8 @@ describe('SP-8 move a card from the pile viewer', () => {
   });
 
   it('says so when the active seat has no hand', async () => {
-    const game = { ...gameWithDeck(csv), activeSeatId: 'seat-env' };
-    const { user, dialog, state } = renderViewer(game);
+    const session = { ...sessionWithDeck(csv), activeSeatId: 'seat-env' };
+    const { user, dialog, state } = renderViewer(session);
     await user.click(screen.getByRole('button', { name: 'To hand: Ember Scout' }));
     expect(within(dialog).getByText('Environment has no hand.')).toBeInTheDocument();
     expect(state().piles[0]?.cardIds).toHaveLength(4);
@@ -188,7 +188,7 @@ describe('SP-6 pile viewer footer', () => {
   });
 
   it('disables the footer actions on an empty pile', async () => {
-    const { user, dialog, state } = renderViewer(gameWithDeck('name\n'));
+    const { user, dialog, state } = renderViewer(sessionWithDeck('name\n'));
     expect(dialog).toHaveTextContent('This pile is empty.');
     for (const name of ['Shuffle', 'Draw top card', 'Reveal top card']) {
       const button = screen.getByRole('button', { name });

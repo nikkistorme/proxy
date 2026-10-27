@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
-import type { GameState } from '../model/game';
+import type { SessionState } from '../model/session';
 import { CardFace } from './CardFace';
 import { enlargeSpot, type Box } from './enlargePlacement';
 import './CardEnlarge.css';
@@ -10,7 +10,7 @@ export const ENLARGE_WIDTH = 216;
 const FLIP_HALF_MS = 140;
 
 interface CardEnlargeProps {
-  game: GameState;
+  session: SessionState;
   cardId: string;
   /** Where the card is on screen. */
   anchor: Box;
@@ -32,9 +32,9 @@ function reducedMotion(): boolean {
  * upright, however the card is turned on the table. A double-faced card shows one
  * face at a time, with a button that flips the preview (not the card) to the other.
  */
-export function CardEnlarge({ game, cardId, anchor, takeFocus, onClose, onPointerEnter, onPointerLeave }: CardEnlargeProps) {
-  const card = game.cards[cardId];
-  const definition = card && game.definitions[card.definitionId];
+export function CardEnlarge({ session, cardId, anchor, takeFocus, onClose, onPointerEnter, onPointerLeave }: CardEnlargeProps) {
+  const card = session.cards[cardId];
+  const definition = card && session.definitions[card.definitionId];
   const back = definition?.back;
   // A face-down card opens on its front.
   const [side, setSide] = useState<'front' | 'back'>(card?.side === 'back' && back ? 'back' : 'front');
