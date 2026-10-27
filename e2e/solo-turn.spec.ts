@@ -87,7 +87,8 @@ test.describe('Phase 3 solo turn', () => {
 
   test('keyboard only', async ({ page }) => {
     await loadDeck(page);
-    await tabTo(page, mainPile(page));
+    // Closing the import results puts focus back on the deck.
+    await expect(mainPile(page)).toBeFocused();
     for (let i = 0; i < 3; i++) await page.keyboard.press('d');
     await expect(status(page)).toHaveText('Player 1 drew Ember Shard from P1 main deck. 1 card left.');
 
