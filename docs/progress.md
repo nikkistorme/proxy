@@ -2,11 +2,18 @@
 
 ## Current state
 
-Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection (#29), stacks (#30) and shortcut remapping (#34, folded into #53) moved after V1. 3a to 3f-2, 3m-1 to 3m-3, 3i (#31) and 3j (#32) are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; merging piles by dropping one on another; card counters; enlarging a card, with the double-faced badge; reordering the hand; seat counters (3k-1); dice, a coin and the session log (3k-2, closing #33); and the dark theme, which follows the system setting (3n, #39). Only 3o (#61, close-out) is left. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases.
+Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection (#29), stacks (#30) and shortcut remapping (#34, folded into #53) moved after V1. 3a to 3f-2, 3m-1 to 3m-3, 3i (#31) and 3j (#32) are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; merging piles by dropping one on another; card counters; enlarging a card, with the double-faced badge; reordering the hand; seat counters (3k-1); dice, a coin and the session log (3k-2, closing #33); and the dark theme, which follows the system setting (3n, #39). Only 3o (#61, close-out) is left. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases. The app has a favicon and an iPhone home-screen icon (#44, outside the phases).
 
 The V1 plan now makes the data model ready for games, card sets and accounts (#69): a play session is a "session" and "game" means the card game being designed. Saves will go through a storage interface over separate items, keyed by base path and profile (AR-6, PS-7), with card sets as their own model (AR-4) and one options resolver (AR-7). The code now says "session" for a play session (#73). The storage interface and card set model (#74) start Phase 6.
 
 ## Done
+
+### App icon (#44, 2026-10-27)
+
+- **Favicon (AR-8):** `public/favicon.svg` is the header mark redrawn on a 32px grid so it reads at 16px: a thicker, longer-dashed stand-in and two text lines instead of three. Colours are the `tokens.css` hex values, and an inline `prefers-color-scheme: dark` switches to the dark values, so the dashed outline stays visible on dark tabs.
+- **Fallbacks:** `favicon-32.png` for browsers without SVG favicons (Safari before 26), so none falls back to the domain root's `/favicon.ico`, and a 180 × 180 `apple-touch-icon.png` on solid `--bg` for iOS home screens. Both PNGs were rendered once from the SVG with Playwright and committed, with no build step.
+- **Links:** in `index.html` as root paths into `public/`, which Vite's build prefixes with `base`, so they resolve under `/proxy/` and `/proxy/pr-preview/pr-N/`.
+- **Tests:** `e2e/favicon.spec.ts` checks each link's path is under the base and each file loads with the right type, and that the SVG has its dark version. The smoke test's axe check covers the page.
 
 ### Phase 3n: Dark theme (2026-10-27)
 
@@ -648,6 +655,7 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 - The default card face uses the UI font, not the sample card's Bitter, which would be another font dependency. Phase 4 layouts will set card fonts.
 - The shared-pile back colour `#3F433D` isn't a design token. The design has no shared seat, so add a token if the design gets one.
 - The dark theme follows the system only. A manual light/dark toggle goes in the Settings screen when it exists (`applyTheme` already takes the choice).
+- The 32px PNG favicon fallback uses the light colours only, so on a dark tab in an older browser its dashed outline is faint. Browsers with SVG favicons use the SVG's dark version.
 - The dark theme is set by the app's script, so on a slow load the page background can show light for a moment first. An inline script in `index.html` would fix that if it's noticeable.
 - PR preview clean-up leaves an empty `pr-preview/pr-N/.nojekyll` on `gh-pages`. It's harmless (the URL returns 404), but it could be tidied later.
 - The app's PR monitor still shows an error cached from the old npm `gh`. CI was checked with the real `gh` instead.
@@ -787,3 +795,4 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 | 2026-10-27 | The header's session menu says "This session" until sessions have names | The format name, or no menu until then | Owner decision. |
 | 2026-10-27 | Dark-theme axe checks live in one spec, `e2e/dark-theme.spec.ts`, that visits every screen | Running the whole E2E suite again in dark | Keeps CI time about the same. Colours come from tokens, so a screen that passes in dark here passes wherever it's used. |
 | 2026-10-27 | The dark E2E waits for animations to end before running axe | Turning motion off | axe read fading-in text as low contrast. Waiting checks the real final colours. |
+| 2026-10-27 | App icon: an SVG favicon with a dark version, plus a 32px PNG fallback and a PNG Apple touch icon, all static in `public/` | A `favicon.ico`, or generating PNGs in the build | A PNG link covers browsers without SVG favicons and stops requests to the root `/favicon.ico`. Rendering once with Playwright needs no new dependency. |

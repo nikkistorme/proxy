@@ -312,6 +312,7 @@ Pointer, keyboard and import all call the same actions, which is what keeps the 
 - AR-5: No network calls except loading card art from the URLs in the CSV and fetching CSVs from URLs the user enters (CD-7).
 - AR-6: Saves go through one storage interface with `get`, `put`, `list` and `delete`, over separately saved items: sessions, snapshots, layouts, formats, card sets and settings. Every item has a stable id, an `updatedAt` time, the save format version (PS-5) and an optional `gameId`. IndexedDB is the only V1 implementation, and nothing outside the storage module touches IndexedDB directly. Pass: a test swaps in an in-memory implementation and the app saves and restores through it.
 - AR-7: Layouts, formats and control settings read their options through one resolver that checks the session, then the game, then the account level and returns the first value set. V1 has only the account level, so the resolver returns the account value. Pass: no component reads an option's stored value directly.
+- AR-8: The app has an icon: Proxy's mark (a finished card in front of its dashed stand-in) as an SVG favicon that switches to the dark token colours on dark browser chrome, a 32 × 32 PNG fallback, and a 180 × 180 Apple touch icon on the `--bg` colour. Icon files are served from the app's base path, never the domain root. Pass: the tab shows the mark at 16 × 16 on light and dark chrome, and an iPhone home-screen shortcut shows it.
 
 ## Demo sample data
 
