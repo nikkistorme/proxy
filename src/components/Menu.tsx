@@ -9,6 +9,8 @@ export type MenuEntry =
       /** 24 × 24 SVG path for the leading icon. */
       icon?: string;
       shortcut?: string;
+      /** The shortcut in `aria-keyshortcuts` form, when the shown one uses symbols like ←. */
+      keyshortcuts?: string;
       /** Shown and focusable, but does nothing (ARIA menu convention). */
       disabled?: boolean;
       onSelect: () => void;
@@ -169,7 +171,7 @@ export function Menu({ label, header, entries, onClose }: MenuProps) {
             role="menuitem"
             tabIndex={-1}
             className="menu__item"
-            aria-keyshortcuts={entry.shortcut}
+            aria-keyshortcuts={entry.keyshortcuts ?? entry.shortcut}
             aria-disabled={entry.disabled || undefined}
             onClick={() => {
               if (entry.disabled) return;

@@ -213,3 +213,59 @@ describe('TT-4 drag and drop', () => {
     expect(spotOf(store, 'Troll')).toEqual({ x: 16, y: 16 });
   });
 });
+
+describe('TT-12 dragging to reorder the hand', () => {
+  /** Troll, Ogre and Imp in Player 1's hand, each 104px wide with a 10px gap, from x = 0. */
+  function handSetup() {
+    const session = draw(loadPile(createSoloSession(), { pileId: 'pile-p1-main', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state, { pileId: 'pile-p1-main', count: 3 }).state;
+    const store = createSessionStore(session, testContext());
+    render(
+      <SessionStoreProvider store={store}>
+        <HandTray seatId="seat-p1" seatName="Player 1" onDraw={() => undefined} />
+      </SessionStoreProvider>,
+    );
+    const ids = session.hands['seat-p1'] ?? [];
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      const element = this.closest<HTMLElement>('[data-hand-card-id]');
+      const index = element ? ids.indexOf(element.dataset.handCardId ?? '') : -1;
+      return index < 0 ? new DOMRect(0, 0, 0, 0) : new DOMRect(index * 114, HAND_TOP, 104, 145);
+    });
+    hit = 'hand';
+    return store;
+  }
+
+  const order = (store: Store) => {
+    const { session } = store.getState();
+    return (session.hands['seat-p1'] ?? []).map((id) => session.definitions[session.cards[id]?.definitionId ?? '']?.front.name);
+  };
+
+  it('drops a card between the cards either side of the pointer, showing the line first, and it keeps focus', async () => {
+    const store = handSetup();
+    // Past Imp's middle (228 + 52): after Imp, at the end.
+    mouseDrag(handCard('Troll'), [52, HAND_TOP + 10], [300, HAND_TOP + 30], { release: false });
+    expect(document.querySelector('[data-hand-card-id].hand-tray__card--insert-after')).toHaveTextContent('Imp');
+    expect(document.querySelector('.hand-tray')).not.toHaveClass('hand-tray--drop-target');
+    fireEvent.pointerUp(document, { clientX: 300, clientY: HAND_TOP + 30, pointerId: 1, pointerType: 'mouse' });
+    expect(order(store)).toEqual(['Ogre', 'Imp', 'Troll']);
+    expect(status(store)).toBe("Moved Troll to position 3 of 3 in Player 1's hand.");
+    await waitFor(() => expect(handCard('Troll')).toHaveFocus());
+    store.getState().undo();
+    expect(order(store)).toEqual(['Troll', 'Ogre', 'Imp']);
+  });
+
+  it('drops a card to the left, before the card under the pointer', () => {
+    const store = handSetup();
+    // Left of Ogre's middle (114 + 52): between Troll and Ogre.
+    mouseDrag(handCard('Imp'), [280, HAND_TOP + 10], [150, HAND_TOP + 30], { release: false });
+    expect(document.querySelector('[data-hand-card-id].hand-tray__card--insert-before')).toHaveTextContent('Ogre');
+    fireEvent.pointerUp(document, { clientX: 150, clientY: HAND_TOP + 30, pointerId: 1, pointerType: 'mouse' });
+    expect(order(store)).toEqual(['Troll', 'Imp', 'Ogre']);
+  });
+
+  it('puts the card back when it lands in its own place', () => {
+    const store = handSetup();
+    mouseDrag(handCard('Ogre'), [166, HAND_TOP + 10], [200, HAND_TOP + 30]);
+    expect(order(store)).toEqual(['Troll', 'Ogre', 'Imp']);
+    expect(status(store)).toBe('Put Ogre back.');
+  });
+});

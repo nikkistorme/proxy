@@ -143,3 +143,24 @@
   transform: translateX(-50%);
   pointer-events: none;
 }
+
+/* TT-12: where a card dragged within the hand will land, a line in the gap beside this card. */
+.hand-tray__card--insert-before::before,
+.hand-tray__card--insert-after::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+  pointer-events: none;
+}
+
+.hand-tray__card--insert-before::before {
+  left: -7px;
+}
+
+.hand-tray__card--insert-after::before {
+  right: -7px;
+}
