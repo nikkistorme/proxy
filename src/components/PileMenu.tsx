@@ -59,7 +59,8 @@ export function PileMenu(props: PileMenuProps) {
     { kind: 'item', id: 'view', label: 'View cards…', icon: ICONS.view, shortcut: 'V', onSelect: () => onView(pile.id) },
     { kind: 'separator', id: 'sep-2' },
     { kind: 'item', id: 'rename', label: 'Rename…', icon: ICONS.rename, onSelect: () => onRename(pile.id) },
-    { kind: 'item', id: 'delete', label: 'Delete…', icon: ICONS.delete, disabled: !canDelete, onSelect: () => onDelete(pile.id) },
+    // An empty pile goes at once, with Undo; one with cards asks where they go, hence the ellipsis.
+    { kind: 'item', id: 'delete', label: empty ? 'Delete' : 'Delete…', icon: ICONS.delete, disabled: !canDelete, onSelect: () => onDelete(pile.id) },
   );
 
   const count = `${pile.cardIds.length} ${pile.cardIds.length === 1 ? 'card' : 'cards'}`;

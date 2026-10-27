@@ -2,10 +2,23 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type Keyboar
 import { cardBox, CARD_H, CARD_W, columnsFor } from '../model/tablePlacement';
 import { nearestInDirection, readingOrder, type Direction } from '../model/tableNavigation';
 import { clampZoom, fitAll, MAX_ZOOM, scrollAfterZoom, stepZoom, zoomPercent, type Scroll } from '../model/tableView';
+import { bringToFront, deleteCard, duplicate, flip, rotate, sendToBack, shownName } from '../actions/cardActions';
+import { moveCard, type Destination } from '../actions/moveCard';
 import { useGameStore } from '../store/gameStore';
+import { CardDetailsDialog } from './CardDetailsDialog';
+import { CardMenu, type CardCommand } from './CardMenu';
+import { moveDestinations } from './moveDestinations';
+import { MoveDialog, type MoveRequest } from './MoveDialog';
 import { TableCard } from './TableCard';
 import { tableCardView } from './tableCardView';
+import { TOAST_UNDO_ID } from './Toast';
 import './TableSurface.css';
+
+/**
+ * Where focus goes once the table has re-rendered: a card, the toast's Undo, or
+ * the table itself. 'none' leaves it to a dialog that has just opened.
+ */
+type FocusTarget = { card: string } | 'toast' | 'table' | 'none';
 
 const ARROWS: Record<string, Direction> = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' };
 /** How far Shift+arrow pans, in screen px. */
@@ -23,9 +36,17 @@ export function TableSurface() {
   const announce = useGameStore((s) => s.announce);
   const setTableViewport = useGameStore((s) => s.setTableViewport);
 
+  const dispatch = useGameStore((s) => s.dispatch);
+  const showToast = useGameStore((s) => s.showToast);
+
   const [activeId, setActiveId] = useState<string>();
   const [size, setSize] = useState({ width: 0, height: 0 });
+  const [menu, setMenu] = useState<{ cardId: string; rect: DOMRect }>();
+  const [moveRequest, setMoveRequest] = useState<MoveRequest>();
+  const [detailsCardId, setDetailsCardId] = useState<string>();
+  const pendingFocus = useRef<FocusTarget>(undefined);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const surfaceRef = useRef<HTMLDivElement>(null);
   const buttons = useRef<Record<string, HTMLButtonElement | null>>({});
   /** Scroll to apply once the new zoom has rendered. */
   const pendingScroll = useRef<Scroll>(undefined);
@@ -199,16 +220,145 @@ export function TableSurface() {
     else element.scrollTop += direction === 'up' ? -PAN_STEP : PAN_STEP;
   }
 
-  const onCardKeyDown = useCallback(
-    (cardId: string, event: KeyboardEvent<HTMLButtonElement>) => {
-      const direction = ARROWS[event.key];
-      if (!direction || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  // Move focus once the change has rendered: a card that was re-ordered or added, or what's left.
+  useEffect(() => {
+    const target = pendingFocus.current;
+    if (!target) return;
+    pendingFocus.current = undefined;
+    if (target === 'none') return;
+    if (target === 'toast') document.getElementById(TOAST_UNDO_ID)?.focus();
+    else if (target === 'table') surfaceRef.current?.focus();
+    else buttons.current[target.card]?.focus();
+  });
+
+  /** The card that takes a leaving card's place: the next in reading order, else the one before. */
+  const neighbourOf = (cardId: string) => {
+    const order = readingOrder(game.table);
+    const index = order.indexOf(cardId);
+    return order[index + 1] ?? order[index - 1];
+  };
+
+  function openMenu(cardId: string) {
+    const rect = buttons.current[cardId]?.getBoundingClientRect();
+    if (rect) setMenu((open) => (open?.cardId === cardId ? undefined : { cardId, rect }));
+  }
+
+  function closeMenu() {
+    // An action may already have said where focus goes; otherwise it returns to the card.
+    if (menu && !pendingFocus.current) pendingFocus.current = { card: menu.cardId };
+    setMenu(undefined);
+  }
+
+  /** TT-5, TT-6, TT-10, TT-11 and SP-8: one card command, from the menu or a key. */
+  function runCommand(cardId: string, command: CardCommand) {
+    switch (command) {
+      case 'rotate':
+      case 'rotate-back':
+        dispatch((g) => rotate(g, { cardId, direction: command === 'rotate' ? 'clockwise' : 'counter-clockwise' }));
+        break;
+      case 'flip':
+        dispatch((g) => flip(g, { cardId }));
+        break;
+      case 'front':
+        dispatch((g) => bringToFront(g, { cardId }));
+        break;
+      case 'back':
+        dispatch((g) => sendToBack(g, { cardId }));
+        break;
+      case 'duplicate': {
+        const result = dispatch((g, context) => duplicate(g, { cardId }, context));
+        pendingFocus.current = { card: result.cardId };
+        return;
+      }
+      case 'delete': {
+        const next = neighbourOf(cardId);
+        const name = shownName(game, cardId);
+        dispatch((g) => deleteCard(g, { cardId }));
+        showToast(`Deleted ${name}.`);
+        pendingFocus.current = next ? { card: next } : 'toast';
+        return;
+      }
+      case 'move': {
+        const entry = game.table.find((e) => e.cardId === cardId);
+        if (!entry) return;
+        // A face-down card stays hidden in the dialog too.
+        const face = tableCardView(game, entry).face ?? { name: 'Face-down card', fields: {} };
+        setMoveRequest({ cardId, face, fromName: 'the table', options: moveDestinations(game, cardId) });
+        pendingFocus.current = 'none';
+        return;
+      }
+      case 'details':
+        setDetailsCardId(cardId);
+        pendingFocus.current = 'none';
+        return;
+    }
+    // Re-ordering moves the card's element, which can drop focus, so put it back.
+    pendingFocus.current = { card: cardId };
+  }
+
+  /** The card a move took off the table leaves focus to its neighbour. */
+  const afterMove = useRef<string>(undefined);
+
+  function confirmMove(to: Destination) {
+    if (!moveRequest) return;
+    const { cardId } = moveRequest;
+    afterMove.current = neighbourOf(cardId) ?? '';
+    dispatch((g, context) => moveCard(g, { cardId, to }, context));
+  }
+
+  /** Puts focus back after a dialog: on the card if it's still here, else where the move left it. */
+  function focusAfterDialog(cardId: string | undefined) {
+    // The dialog closes before a move has re-rendered, and its close puts focus back
+    // where it was first, so decide once both are done.
+    window.setTimeout(() => {
+      const next = afterMove.current;
+      afterMove.current = undefined;
+      const stayed = cardId ? buttons.current[cardId] : undefined;
+      const element = stayed?.isConnected ? stayed : next ? buttons.current[next] : undefined;
+      (element?.isConnected ? element : surfaceRef.current)?.focus();
+    });
+  }
+
+  function closeMove() {
+    focusAfterDialog(moveRequest?.cardId);
+    setMoveRequest(undefined);
+  }
+
+  function closeDetails() {
+    focusAfterDialog(detailsCardId);
+    setDetailsCardId(undefined);
+  }
+
+  // Card keys only work while a card has focus, so single keys are safe (WCAG 2.1.4).
+  const CARD_KEYS: Record<string, CardCommand> = { r: 'rotate', R: 'rotate-back', f: 'flip', m: 'move', Delete: 'delete', Backspace: 'delete' };
+
+  function onCardKeyDown(cardId: string, event: KeyboardEvent<HTMLButtonElement>) {
+    const { key } = event;
+    if (event.altKey) return;
+    if (event.ctrlKey || event.metaKey) {
+      if (key.toLowerCase() === 'd' && !event.shiftKey) {
+        event.preventDefault();
+        runCommand(cardId, 'duplicate');
+      }
+      return;
+    }
+    if (key === 'Enter' || key === 'ContextMenu' || (key === 'F10' && event.shiftKey)) {
       event.preventDefault();
-      const next = nearestInDirection(game.table, cardId, direction);
-      if (next) buttons.current[next]?.focus();
-    },
-    [game.table],
-  );
+      openMenu(cardId);
+      return;
+    }
+    const cardCommand = CARD_KEYS[key];
+    if (cardCommand) {
+      event.preventDefault();
+      runCommand(cardId, cardCommand);
+      return;
+    }
+    const direction = ARROWS[key];
+    if (!direction || event.shiftKey) return;
+    event.preventDefault();
+    const next = nearestInDirection(game.table, cardId, direction);
+    if (next) buttons.current[next]?.focus();
+  }
 
   const count = game.table.length;
   const label = `Table, ${count} ${count === 1 ? 'card' : 'cards'}`;
@@ -220,40 +370,55 @@ export function TableSurface() {
   const height = Math.max(size.height / zoom, ...boxes.map((b) => b.bottom + CARD_H));
 
   return (
-    // The viewport only hears pointer and key events from inside it; the cards are the controls.
-    // Firefox makes any scrolling box a Tab stop, which would give the table two (A11Y-3).
-    <div
-      ref={viewportRef}
-      className="table-viewport"
-      role="presentation"
-      tabIndex={-1}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={endDrag}
-      onPointerCancel={endDrag}
-      onKeyDown={onViewportKeyDown}
-    >
-      <div className="table-viewport__sizer" style={{ width: width * zoom, height: height * zoom }}>
-        <div
-          className={snap ? 'table-surface table-surface--grid' : 'table-surface'}
-          role="group"
-          aria-label={count === 0 ? label : `${label}. Arrow keys move between cards. Shift and arrow keys pan.`}
-          style={{ width, height, transform: zoom === 1 ? undefined : `scale(${zoom})` }}
-        >
-          {count === 0 && <p className="table-surface__empty">No cards on the table yet.</p>}
-          {game.table.map((entry, index) => (
-            <TableCard
-              key={entry.cardId}
-              view={tableCardView(game, entry)}
-              layer={index + 1}
-              tabbable={entry.cardId === tabbableId}
-              register={register}
-              onFocus={setActiveId}
-              onKeyDown={onCardKeyDown}
-            />
-          ))}
+    <>
+      {/* The viewport only hears pointer and key events from inside it; the cards are the controls.
+          Firefox makes any scrolling box a Tab stop, which would give the table two (A11Y-3). */}
+      <div
+        ref={viewportRef}
+        className="table-viewport"
+        role="presentation"
+        tabIndex={-1}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onKeyDown={onViewportKeyDown}
+      >
+        <div className="table-viewport__sizer" style={{ width: width * zoom, height: height * zoom }}>
+          <div
+            ref={surfaceRef}
+            // Focusable from code only, for when the last card has gone.
+            tabIndex={-1}
+            className={snap ? 'table-surface table-surface--grid' : 'table-surface'}
+            role="group"
+            aria-label={count === 0 ? label : `${label}. Arrow keys move between cards. Shift and arrow keys pan.`}
+            style={{ width, height, transform: zoom === 1 ? undefined : `scale(${zoom})` }}
+          >
+            {count === 0 && <p className="table-surface__empty">No cards on the table yet.</p>}
+            {game.table.map((entry, index) => (
+              <TableCard
+                key={entry.cardId}
+                view={tableCardView(game, entry)}
+                layer={index + 1}
+                tabbable={entry.cardId === tabbableId}
+                register={register}
+                onFocus={setActiveId}
+                onKeyDown={onCardKeyDown}
+                menuOpen={menu?.cardId === entry.cardId}
+                onOpenMenu={openMenu}
+              />
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+      {/* The menu sits outside the zoomed mat, so it's the same size at any zoom. */}
+      {menu && game.table.some((e) => e.cardId === menu.cardId) && (
+        <div className="card-menu-anchor" style={{ left: menu.rect.left, top: menu.rect.top, width: menu.rect.width, height: menu.rect.height }}>
+          <CardMenu game={game} cardId={menu.cardId} onCommand={(command) => runCommand(menu.cardId, command)} onClose={closeMenu} />
+        </div>
+      )}
+      <MoveDialog key={moveRequest?.cardId ?? 'closed'} request={moveRequest} onConfirm={confirmMove} onClose={closeMove} />
+      <CardDetailsDialog game={game} cardId={detailsCardId} onClose={closeDetails} />
+    </>
   );
 }

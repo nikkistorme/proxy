@@ -1,8 +1,16 @@
-/* Card on the table, from the Main and CardStates boards. */
+/* Card on the table, from the Main and CardStates boards. The outer box is what it covers on screen. */
 .table-card {
   position: absolute;
+}
+
+/* The card itself, centred in its box and turned around its centre. */
+.table-card__body {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   width: var(--card-w);
   height: var(--card-h);
+  margin: calc(var(--card-h) / -2) 0 0 calc(var(--card-w) / -2);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
 }
@@ -81,4 +89,32 @@
   font-size: 11px;
   font-weight: 700;
   pointer-events: none;
+}
+
+/* The board's round Actions button, on the current card only. */
+.table-card__actions {
+  position: absolute;
+  right: -15px;
+  bottom: -15px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--control);
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.table-card:focus-within .table-card__actions,
+.table-card--menu-open .table-card__actions {
+  display: flex;
+}
+
+.table-card--menu-open {
+  z-index: 10000 !important;
 }

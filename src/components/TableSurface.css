@@ -56,3 +56,22 @@
   font-size: 14px;
   cursor: default;
 }
+
+/* Where a card's menu opens: over the card on screen, outside the zoomed mat. */
+.card-menu-anchor {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.card-menu-anchor > .menu {
+  top: calc(100% + var(--space-2));
+  left: 0;
+  pointer-events: auto;
+}
+
+/* Menu.tsx opens the menu upward when it only fits above the card. */
+.card-menu-anchor > .menu[data-placement='above'] {
+  top: auto;
+  bottom: calc(100% + var(--space-2));
+}

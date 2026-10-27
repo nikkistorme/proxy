@@ -1,0 +1,49 @@
+/* A dark bar above the hand tray, out of the way of the table's middle. */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-5);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: calc(100vw - 2 * var(--space-4));
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  border-radius: var(--radius-menu);
+  background: var(--ink);
+  box-shadow: var(--shadow-menu);
+  color: var(--panel);
+  font-size: 14px;
+  transform: translateX(-50%);
+}
+
+.toast__text {
+  min-width: 0;
+}
+
+.toast__undo,
+.toast__close {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--panel);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.toast__undo {
+  text-decoration: underline;
+}
+
+.toast__undo:hover,
+.toast__close:hover {
+  background: rgba(255, 255, 255, 0.14);
+}

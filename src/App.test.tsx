@@ -279,10 +279,15 @@ describe('SP-4 manage piles', () => {
   it('deletes an empty pile and moves focus to the next one', async () => {
     const user = renderGame();
     await user.click(screen.getByRole('button', { name: /^Environment deck,/ }));
-    await user.click(screen.getByRole('menuitem', { name: 'Delete…' }));
-    await user.click(screen.getByRole('button', { name: 'Delete pile' }));
+    // Empty, so it goes without asking, and the toast offers Undo.
+    await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
     expect(pileNames()).toEqual(['P1 main deck, empty, 0 cards, Player 1', 'Board cards, empty, 0 cards, shared']);
     expect(screen.getByRole('button', { name: /^Board cards,/ })).toHaveFocus();
+    expect(document.querySelector('.toast')).toHaveTextContent('Deleted Environment deck.');
+    await user.click(screen.getByRole('button', { name: 'Undo' }));
+    expect(pileNames()).toHaveLength(3);
+    expect(document.querySelector('.toast')).toBeNull();
   });
 
   it('deletes a pile with cards, moving them to the chosen pile', async () => {
@@ -299,9 +304,12 @@ describe('SP-4 manage piles', () => {
 
   it('keeps focus on the pile when a delete is cancelled', async () => {
     const user = renderGame();
+    await loadIntoMain(user, 'name\nImp\n');
+    await user.click(screen.getByRole('button', { name: 'Done' }));
     await user.click(mainTile());
     await user.click(screen.getByRole('menuitem', { name: 'Delete…' }));
-    await user.keyboard('{Escape}');
+    // jsdom doesn't close a dialog on Esc from a radio button; E2E covers Esc in real browsers.
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(mainTile()).toHaveFocus();
   });
 
@@ -309,8 +317,7 @@ describe('SP-4 manage piles', () => {
     const user = renderGame();
     for (const name of [/^P1 main deck,/, /^Environment deck,/, /^Board cards,/]) {
       await user.click(screen.getByRole('button', { name }));
-      await user.click(screen.getByRole('menuitem', { name: 'Delete…' }));
-      await user.click(screen.getByRole('button', { name: 'Delete pile' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
     }
     expect(within(screen.getByRole('list', { name: 'Piles' })).queryAllByRole('button')).toEqual([]);
     expect(screen.getByRole('button', { name: 'Add pile' })).toHaveFocus();
@@ -325,8 +332,7 @@ describe('SP-4 manage piles', () => {
     await user.click(screen.getByRole('button', { name: 'Done' }));
     for (const name of [/^Environment deck,/, /^Board cards,/]) {
       await user.click(screen.getByRole('button', { name }));
-      await user.click(screen.getByRole('menuitem', { name: 'Delete…' }));
-      await user.click(screen.getByRole('button', { name: 'Delete pile' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
     }
     await user.click(mainTile());
     expect(screen.getByRole('menuitem', { name: 'Delete…' })).toHaveAttribute('aria-disabled', 'true');

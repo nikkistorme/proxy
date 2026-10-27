@@ -62,6 +62,13 @@ export interface GameStore {
   setView: (view: Partial<TableView>) => void;
   tableViewport: TableViewport | undefined;
   setTableViewport: (viewport: TableViewport | undefined) => void;
+  /**
+   * A short note with an Undo button, shown after a destructive action instead
+   * of asking first. It stays until the next action, undo or redo.
+   */
+  toast: Announcement | undefined;
+  showToast: (text: string) => void;
+  dismissToast: () => void;
 }
 
 export const liveContext: ActionContext = { randomInt: cryptoRandomInt, newId: () => crypto.randomUUID() };
@@ -78,6 +85,9 @@ export function createGameStore(game: GameState = createSoloGame(), context: Act
       setView: (view) => set({ view: { ...get().view, ...view } }),
       tableViewport: undefined,
       setTableViewport: (tableViewport) => set({ tableViewport }),
+      toast: undefined,
+      showToast: (text) => set({ toast: { text, id: (get().toast?.id ?? 0) + 1 } }),
+      dismissToast: () => set({ toast: undefined }),
       dispatch: (action) => {
         const { game: before, past } = get();
         const result = action(before, { ...context, placementColumns: get().view.columns });
@@ -86,6 +96,7 @@ export function createGameStore(game: GameState = createSoloGame(), context: Act
           return result;
         }
         set({
+          toast: undefined,
           game: result.state,
           announcement: next(result.announcement),
           past: [...past, { game: before, announcement: result.announcement }].slice(-HISTORY_LIMIT),
@@ -102,6 +113,7 @@ export function createGameStore(game: GameState = createSoloGame(), context: Act
           return;
         }
         set({
+          toast: undefined,
           game: step.game,
           announcement: next(`Undone: ${step.announcement}`),
           past: past.slice(0, -1),
@@ -116,6 +128,7 @@ export function createGameStore(game: GameState = createSoloGame(), context: Act
           return;
         }
         set({
+          toast: undefined,
           game: step.game,
           announcement: next(`Redone: ${step.announcement}`),
           past: [...past, { game: current, announcement: step.announcement }],

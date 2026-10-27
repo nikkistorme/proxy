@@ -23,7 +23,8 @@ describe('SP-4 delete a pile', () => {
   it('confirms deleting an empty pile', async () => {
     const { user, onConfirm, onClose } = renderDialog({ pile: pile('a', 'Discard', 0), targets: [pile('b', 'Board cards', 1)] });
     const dialog = screen.getByRole('dialog', { name: 'Delete Discard?' });
-    expect(dialog).toHaveTextContent("This pile is empty. There's no undo yet");
+    expect(dialog).toHaveTextContent('This pile is empty.');
+    expect(dialog).not.toHaveTextContent('undo');
     expect(screen.queryByRole('radio')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Delete pile' }));
     expect(onConfirm).toHaveBeenCalledWith(undefined);

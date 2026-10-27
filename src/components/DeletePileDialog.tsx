@@ -44,11 +44,11 @@ export function DeletePileDialog({ request, onConfirm, onClose }: DeletePileDial
     >
       {request &&
         (count === 0 ? (
-          <p className="form-text">This pile is empty. There's no undo yet, so this can't be taken back.</p>
+          <p className="form-text">This pile is empty.</p>
         ) : (
           <>
             <p className="form-text">
-              It has {cardsWord(count)}. They'll go to the bottom of the pile you choose. There's no undo yet.
+              It has {cardsWord(count)}. They'll go to the bottom of the pile you choose.
             </p>
             <fieldset className="form-choices">
               <legend className="form-label">Move its cards to</legend>
