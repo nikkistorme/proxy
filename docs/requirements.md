@@ -203,6 +203,7 @@ Target: WCAG 2.2 Level AA across the whole app, including the layout editor. Dra
 - A11Y-9 (1.4.3, 1.4.11): text and controls meet contrast minimums in both light and dark themes. The layout editor warns when a text box fails contrast against its background.
 - A11Y-10: honor `prefers-reduced-motion` for shuffles, flips and card movement.
 - A11Y-11: the app works at 200% browser zoom and reflows its panels at 320 CSS px width (1.4.10). The table itself may scroll in two dimensions, which is an allowed exception.
+- A11Y-12: on touch screens, text fields and dropdowns use at least 16px text, so iOS Safari doesn't zoom the page when one takes focus. Pinch zoom stays on: the viewport tag never sets `maximum-scale` or `user-scalable=no` (1.4.4).
 
 **Acceptance criteria**
 
@@ -343,7 +344,7 @@ The build runs on a personal Claude account with usage limits, so work happens i
 | 4. Layouts | Layout editor, portrait and landscape, preview | LY-1 to LY-10 | A custom layout renders cards on the table |
 | 5. Formats | Seats, hands, presets, counters, dice | FS-1 to FS-4 | A 1v1 PvP game can be set up and played |
 | 6. Persistence and Sheets | Autosave, snapshots, JSON bundle, Google Sheets URLs | PS-1 to PS-6, CD-7 to CD-12 | Reload restores a game; a sheet URL loads a deck |
-| 7. Polish | Demo data, performance budgets, remaining accessibility | DM-1 to DM-6, PF-1 to PF-4, A11Y-7 to A11Y-11 | All budgets and axe checks pass |
+| 7. Polish | Demo data, performance budgets, remaining accessibility | DM-1 to DM-6, PF-1 to PF-4, A11Y-7 to A11Y-12 | All budgets and axe checks pass |
 
 **Rules for Claude Code**
 

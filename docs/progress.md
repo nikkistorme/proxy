@@ -6,6 +6,11 @@ Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection
 
 ## Done
 
+### #66: no iOS zoom on text fields (2026-10-27)
+
+- **A11Y-12 (new):** iOS Safari zooms the page into any focused field whose text is under 16px. On touch screens (`pointer: coarse`), `.form-input` goes from 15px to 16px and the pile viewer's filter dropdowns from 14px to 16px. Desktop keeps the design's sizes. The number fields were already 17px or more.
+- **Test:** a phone E2E in `e2e/pile-viewer.spec.ts` checks that every text field and dropdown in the pile viewer and the Move to… dialog is at least 16px. Playwright can't reproduce Safari's zoom, so it checks the size that causes it. It fails at 14px without the fix.
+
 ### Phase 3i-2: Enlarge and the double-faced badge (2026-10-27)
 
 - **Enlarge (TT-9):** `CardEnlarge` shows a card's face at 216px wide with "Name · Type" and an "I close" hint, from the Main and TableDark boards. It sits outside the zoomed mat, so it's the same size at any zoom, and it's always upright, however the card is turned. `enlargeSpot` puts it right of the card, then left, below or above, whichever fits, so it never covers the card. On a phone where nothing fits, it takes the side with the most room.
@@ -553,6 +558,7 @@ Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection
 
 ## Open problems
 
+- The iOS field zoom fix (#66, A11Y-12) needs a check on an iPhone: the E2E checks font sizes, not Safari's zoom itself.
 - A card's menu opened by a touch hold doesn't take focus, the same as a pile's: the browser's own mousedown after a touch moves focus back to the card.
 - The enlarge preview is sized in CSS px, so it shrinks with browser zoom like the rest of the page. The table's own zoom doesn't change it, as TT-9 asks (checked with the owner).
 - The enlarge preview's hover runs on a mouse only. The preview closes when the table scrolls or zooms, rather than following the card.
@@ -714,3 +720,4 @@ Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection
 | 2026-10-27 | Hover-plus-key actions are their own issue (#71) | Building them in #70 | Single-letter keys without focus need an off switch under WCAG 2.1.4 (#61, #53). Owner approved. |
 | 2026-10-27 | A hover preview stays open while the pointer is over it, and Escape closes it | Closing as soon as the pointer leaves the card | WCAG 1.4.13: hover content must be hoverable and dismissible, and the flip button must be reachable by mouse. |
 | 2026-10-27 | On touch screens, a dialog's focus goes to a button, never straight to a text field | Autofocusing the first field everywhere | Owner rule: the keyboard sliding up is jarring. Done in the counters dialog; the other dialogs follow in #68. |
+| 2026-10-27 | Fix iOS field zoom with 16px text on touch screens only (#66) | `maximum-scale=1` in the viewport tag; 16px on every screen | `maximum-scale` also blocks pinch zoom, which fails WCAG 1.4.4. Keeping desktop at the design's 15px and 14px leaves the boards matched where they were drawn. |
