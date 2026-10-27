@@ -8,6 +8,7 @@ const ICONS = {
   rotateBack: 'M4 12a8 8 0 1 0 2.3-5.7M4 4v5h5',
   flip: 'M12 3v18M8 7l-4 5 4 5M16 7l4 5-4 5',
   move: 'M5 12h14M13 6l6 6-6 6',
+  place: 'M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3',
   details: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM12 11v6M12 7.5v.01',
   duplicate: 'M8 8h12v12H8zM4 16V4h12',
   front: 'M12 19V5M6 11l6-6 6 6',
@@ -17,7 +18,7 @@ const ICONS = {
 
 const FLIP_LABELS = { 'to back': 'Flip to back', 'to front': 'Flip to front', 'face down': 'Flip face down', 'face up': 'Flip face up' };
 
-export type CardCommand = 'rotate' | 'rotate-back' | 'flip' | 'move' | 'details' | 'duplicate' | 'front' | 'back' | 'delete';
+export type CardCommand = 'rotate' | 'rotate-back' | 'flip' | 'place' | 'move' | 'details' | 'duplicate' | 'front' | 'back' | 'delete';
 
 interface CardMenuProps {
   game: GameState;
@@ -50,6 +51,7 @@ export function CardMenu({ game, cardId, onCommand, onClose }: CardMenuProps) {
     item('rotate', 'Rotate 90° clockwise', ICONS.rotate, 'R'),
     item('rotate-back', 'Rotate 90° counter-clockwise', ICONS.rotateBack, 'Shift+R'),
     item('flip', FLIP_LABELS[flipKind(game, cardId)], ICONS.flip, 'F'),
+    item('place', 'Move on table', ICONS.place, 'Space'),
     item('move', 'Move to…', ICONS.move, 'M'),
     item('details', 'Details…', ICONS.details),
     item('duplicate', 'Duplicate', ICONS.duplicate, 'Ctrl+D'),

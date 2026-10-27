@@ -30,7 +30,7 @@ export function cardBox(entry: Pick<TableEntry, 'x' | 'y' | 'rotation'>): Box {
   return { left: cx - w / 2, top: cy - h / 2, right: cx + w / 2, bottom: cy + h / 2 };
 }
 
-function overlaps(a: Box, b: Box): boolean {
+export function overlaps(a: Box, b: Box): boolean {
   return a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
 }
 
@@ -48,4 +48,27 @@ export function freeSpot(table: readonly TableEntry[], columns = PLACEMENT_COLUM
       if (!boxes.some((b) => overlaps(b, box))) return spot;
     }
   }
+}
+
+/** The spot nearest `position` that keeps the whole card, turned or not, inside the table's top and left edges. */
+export function clampToTable(position: { x: number; y: number }, rotation: Rotation): { x: number; y: number } {
+  const box = cardBox({ ...position, rotation });
+  return { x: position.x - Math.min(0, box.left), y: position.y - Math.min(0, box.top) };
+}
+
+/**
+ * A11Y-1: where a card being placed sits, for the announcement, in the rows and
+ * columns cards are auto-placed in: "Row 1, column 2", or "between columns 2 and 3".
+ */
+export function describeSpot(position: { x: number; y: number }): string {
+  const part = (value: number, step: number, word: string) => {
+    const index = (value - TABLE_GAP) / step + 1;
+    const nearest = Math.round(index);
+    if (Math.abs(index - nearest) < 0.01) return `${word} ${Math.max(1, nearest)}`;
+    const half = Math.floor(index);
+    if (Math.abs(index - half - 0.5) < 0.01 && half >= 1) return `between ${word}s ${half} and ${half + 1}`;
+    return `near ${word} ${Math.max(1, nearest)}`;
+  };
+  const text = `${part(position.y, CARD_H + TABLE_GAP, 'row')}, ${part(position.x, CARD_W + TABLE_GAP, 'column')}`;
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }

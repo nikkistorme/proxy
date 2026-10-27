@@ -1,14 +1,17 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
-import { cardBox, CARD_H, CARD_W, columnsFor } from '../model/tablePlacement';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
+import { cardBox, CARD_H, CARD_W, clampToTable, columnsFor, describeSpot, freeSpot, overlaps, TABLE_GAP } from '../model/tablePlacement';
 import { nearestInDirection, readingOrder, type Direction } from '../model/tableNavigation';
-import { clampZoom, fitAll, MAX_ZOOM, scrollAfterZoom, stepZoom, zoomPercent, type Scroll } from '../model/tableView';
+import { clampZoom, fitAll, GRID_X, GRID_Y, MAX_ZOOM, scrollAfterZoom, snapToGrid, stepZoom, zoomPercent, type Scroll } from '../model/tableView';
 import { bringToFront, deleteCard, duplicate, flip, rotate, sendToBack, shownName } from '../actions/cardActions';
+import { cardName } from '../actions/helpers';
 import { moveCard, type Destination } from '../actions/moveCard';
+import type { GameState, Rotation } from '../model/game';
 import { useGameStore } from '../store/gameStore';
 import { CardDetailsDialog } from './CardDetailsDialog';
 import { CardMenu, type CardCommand } from './CardMenu';
 import { moveDestinations } from './moveDestinations';
 import { MoveDialog, type MoveRequest } from './MoveDialog';
+import { PlacementBar } from './PlacementBar';
 import { TableCard } from './TableCard';
 import { tableCardView } from './tableCardView';
 import { TOAST_UNDO_ID } from './Toast';
@@ -23,6 +26,28 @@ type FocusTarget = { card: string } | 'toast' | 'table' | 'none';
 const ARROWS: Record<string, Direction> = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' };
 /** How far Shift+arrow pans, in screen px. */
 const PAN_STEP = 64;
+/** How far a click can wander and still count as a click, not a pan, in screen px. */
+const CLICK_SLOP = 5;
+
+/** The card being placed and where its outline is (A11Y-1). */
+interface Placement {
+  cardId: string;
+  x: number;
+  y: number;
+  rotation: Rotation;
+}
+
+/** The name a card being placed goes by: as it shows on the table, or as its owner sees it in the hand. */
+function placingName(game: GameState, cardId: string): string {
+  if (game.table.some((e) => e.cardId === cardId)) return shownName(game, cardId);
+  const name = shownName(game, cardId);
+  return name === 'a face-down card' ? cardName(game, cardId) : name;
+}
+
+/** Whether a card can still be placed: it's on the table or in a hand. */
+function placeable(game: GameState, cardId: string): boolean {
+  return game.table.some((e) => e.cardId === cardId) || Object.values(game.hands).some((hand) => hand.includes(cardId));
+}
 
 /**
  * The free-form table. Cards sit at their positions on a mat that pans and
@@ -38,12 +63,25 @@ export function TableSurface() {
 
   const dispatch = useGameStore((s) => s.dispatch);
   const showToast = useGameStore((s) => s.showToast);
+  const dismissToast = useGameStore((s) => s.dismissToast);
+  const placing = useGameStore((s) => s.placing);
+  const setPlacing = useGameStore((s) => s.setPlacing);
+  const columnsInView = useGameStore((s) => s.view.columns);
 
   const [activeId, setActiveId] = useState<string>();
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [menu, setMenu] = useState<{ cardId: string; rect: DOMRect }>();
   const [moveRequest, setMoveRequest] = useState<MoveRequest>();
   const [detailsCardId, setDetailsCardId] = useState<string>();
+  const [placement, setPlacement] = useState<Placement>();
+  const placementRef = useRef<HTMLButtonElement>(null);
+  /** Where the last pointer went down, so a pan isn't taken for a click. */
+  const pointerDownAt = useRef<{ x: number; y: number }>(undefined);
+  /** The latest game and outline, for effects that only run when placing starts. */
+  const latest = useRef({ game, placement });
+  useLayoutEffect(() => {
+    latest.current = { game, placement };
+  });
   const pendingFocus = useRef<FocusTarget>(undefined);
   const viewportRef = useRef<HTMLDivElement>(null);
   const surfaceRef = useRef<HTMLDivElement>(null);
@@ -291,9 +329,22 @@ export function TableSurface() {
         setDetailsCardId(cardId);
         pendingFocus.current = 'none';
         return;
+      case 'place':
+        setPlacing({ cardId });
+        pendingFocus.current = 'none';
+        return;
     }
     // Re-ordering moves the card's element, which can drop focus, so put it back.
     pendingFocus.current = { card: cardId };
+  }
+
+  /** Set when the Move to… dialog closes by choosing a spot, which starts placing. */
+  const choseSpot = useRef(false);
+
+  function chooseSpot() {
+    if (!moveRequest) return;
+    choseSpot.current = true;
+    setPlacing({ cardId: moveRequest.cardId });
   }
 
   /** The card a move took off the table leaves focus to its neighbour. */
@@ -320,13 +371,117 @@ export function TableSurface() {
   }
 
   function closeMove() {
-    focusAfterDialog(moveRequest?.cardId);
+    // Placing puts focus on the outline instead.
+    if (!choseSpot.current) focusAfterDialog(moveRequest?.cardId);
+    choseSpot.current = false;
     setMoveRequest(undefined);
   }
 
   function closeDetails() {
     focusAfterDialog(detailsCardId);
     setDetailsCardId(undefined);
+  }
+
+  // A11Y-1: placing starts when the store names a card, from here, the hand or the Move to… dialog.
+  // The outline starts where the card is, or at the next free spot for a card coming from the hand.
+  const placingId = placing && placeable(game, placing.cardId) ? placing.cardId : undefined;
+  if (placingId !== placement?.cardId) {
+    const entry = game.table.find((e) => e.cardId === placingId);
+    const start = entry ?? { ...freeSpot(game.table, columnsInView), rotation: 0 as Rotation };
+    setPlacement(placingId ? { cardId: placingId, x: start.x, y: start.y, rotation: start.rotation } : undefined);
+    if (placingId) setMenu(undefined);
+  }
+
+  // An undo can take away the card being placed.
+  useEffect(() => {
+    if (placing && !placeable(game, placing.cardId)) setPlacing(undefined);
+  }, [placing, game, setPlacing]);
+
+  const startedId = placement?.cardId;
+  useEffect(() => {
+    if (!startedId) return;
+    const { game: current } = latest.current;
+    const spot = latest.current.placement;
+    dismissToast();
+    if (spot) announce(`Picked up ${placingName(current, startedId)}. ${describeSpot(spot)}. Arrow keys move it, Enter places it, Escape cancels.`);
+    // After any dialog that started it has closed and put focus back.
+    window.setTimeout(() => placementRef.current?.focus());
+  }, [startedId, dismissToast, announce]);
+
+  // Keep the outline in view as it moves.
+  useEffect(() => {
+    if (placement) placementRef.current?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  }, [placement]);
+
+  /** Moves the outline to `to`, snapped if snap is on and kept inside the table's edges, and says where it is. */
+  function moveOutline(to: { x: number; y: number }) {
+    if (!placement) return;
+    const spot = clampToTable(snap ? snapToGrid(to) : to, placement.rotation);
+    setPlacement({ ...placement, ...spot });
+    const box = cardBox({ ...spot, rotation: placement.rotation });
+    // The topmost card under the outline.
+    const under = [...game.table].reverse().filter((e) => e.cardId !== placement.cardId && overlaps(cardBox(e), box));
+    const over = under[0] ? `, over ${shownName(game, under[0].cardId)}${under.length > 1 ? ` and ${under.length - 1} more` : ''}` : '';
+    announce(`${describeSpot(spot)}${over}.`);
+  }
+
+  function placeCard() {
+    if (!placement) return;
+    const { cardId, x, y } = placement;
+    dispatch((g, context) => moveCard(g, { cardId, to: { zone: 'table', position: { x, y } } }, context));
+    pendingFocus.current = { card: cardId };
+    setPlacing(undefined);
+  }
+
+  function cancelPlacing() {
+    if (!placement || !placing) return;
+    announce(`Put ${placingName(game, placement.cardId)} back.`);
+    if (game.table.some((e) => e.cardId === placement.cardId)) pendingFocus.current = { card: placement.cardId };
+    else placing.returnFocus?.();
+    setPlacing(undefined);
+  }
+
+  function onPlacementKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
+    if (!placement || event.altKey || event.ctrlKey || event.metaKey) return;
+    const direction = ARROWS[event.key];
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      cancelPlacing();
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      placeCard();
+    } else if (event.key === ' ') {
+      // Placed on keyup, so the same press doesn't pick the card up again from the card.
+      event.preventDefault();
+    } else if (direction) {
+      event.preventDefault();
+      // One grid step with snap on; otherwise a nudge, or a whole card with Shift.
+      const across = snap ? GRID_X * (event.shiftKey ? 2 : 1) : event.shiftKey ? CARD_W + TABLE_GAP : TABLE_GAP;
+      const down = snap ? GRID_Y * (event.shiftKey ? 2 : 1) : event.shiftKey ? CARD_H + TABLE_GAP : TABLE_GAP;
+      const dx = direction === 'left' ? -across : direction === 'right' ? across : 0;
+      const dy = direction === 'up' ? -down : direction === 'down' ? down : 0;
+      moveOutline({ x: placement.x + dx, y: placement.y + dy });
+    }
+  }
+
+  // While placing, a click or tap anywhere on the table moves the outline there, centred on the pointer.
+  function onTableClickCapture(event: MouseEvent<HTMLDivElement>) {
+    const surface = surfaceRef.current;
+    if (!placement || !surface) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const down = pointerDownAt.current;
+    if (down && Math.hypot(event.clientX - down.x, event.clientY - down.y) > CLICK_SLOP) return;
+    // A click from the keyboard or a screen reader on the outline places the card.
+    if (event.detail === 0) {
+      if (placementRef.current?.contains(event.target as Node)) placeCard();
+      return;
+    }
+    const rect = surface.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / zoom - CARD_W / 2;
+    const y = (event.clientY - rect.top) / zoom - CARD_H / 2;
+    moveOutline({ x, y });
+    placementRef.current?.focus();
   }
 
   // Card keys only work while a card has focus, so single keys are safe (WCAG 2.1.4).
@@ -347,6 +502,11 @@ export function TableSurface() {
       openMenu(cardId);
       return;
     }
+    if (key === ' ') {
+      // Picked up on keyup, so the Space press doesn't also click the outline.
+      event.preventDefault();
+      return;
+    }
     const cardCommand = CARD_KEYS[key];
     if (cardCommand) {
       event.preventDefault();
@@ -360,12 +520,19 @@ export function TableSurface() {
     if (next) buttons.current[next]?.focus();
   }
 
+  function onCardKeyUp(cardId: string, event: KeyboardEvent<HTMLButtonElement>) {
+    if (event.key !== ' ' || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    event.preventDefault();
+    runCommand(cardId, 'place');
+  }
+
   const count = game.table.length;
   const label = `Table, ${count} ${count === 1 ? 'card' : 'cards'}`;
   // The Tab stop is the last card focused, or the first in reading order once that card has gone.
   const tabbableId = activeId && game.table.some((e) => e.cardId === activeId) ? activeId : readingOrder(game.table)[0];
   // The mat reaches past the last card, so there's room to pan and drop, and always fills the view.
-  const boxes = game.table.map(cardBox);
+  const outline = placement && cardBox(placement);
+  const boxes = [...game.table.map(cardBox), ...(outline ? [outline] : [])];
   const width = Math.max(size.width / zoom, ...boxes.map((b) => b.right + 2 * CARD_W));
   const height = Math.max(size.height / zoom, ...boxes.map((b) => b.bottom + CARD_H));
 
@@ -378,6 +545,11 @@ export function TableSurface() {
         className="table-viewport"
         role="presentation"
         tabIndex={-1}
+        onPointerDownCapture={(event) => {
+          pointerDownAt.current = { x: event.clientX, y: event.clientY };
+        }}
+        // A mouse press on empty space captures the pointer to pan, so its click lands here, not on the mat.
+        onClickCapture={onTableClickCapture}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
@@ -404,10 +576,29 @@ export function TableSurface() {
                 register={register}
                 onFocus={setActiveId}
                 onKeyDown={onCardKeyDown}
+                onKeyUp={onCardKeyUp}
                 menuOpen={menu?.cardId === entry.cardId}
                 onOpenMenu={openMenu}
               />
             ))}
+            {placement && outline && (
+              // Last in the mat, so Tab goes from it to the bar's Place and Cancel.
+              <button
+                ref={placementRef}
+                type="button"
+                className="table-placement"
+                style={{ left: outline.left, top: outline.top, width: outline.right - outline.left, height: outline.bottom - outline.top }}
+                aria-label={`Placing ${placingName(game, placement.cardId)}, ${describeSpot(placement)}. Arrow keys move, Enter places, Escape cancels.`}
+                onKeyDown={onPlacementKeyDown}
+                onKeyUp={(event) => {
+                  if (event.key !== ' ' || event.altKey || event.ctrlKey || event.metaKey) return;
+                  event.preventDefault();
+                  placeCard();
+                }}
+              >
+                <span aria-hidden="true">{placingName(game, placement.cardId)}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -417,8 +608,9 @@ export function TableSurface() {
           <CardMenu game={game} cardId={menu.cardId} onCommand={(command) => runCommand(menu.cardId, command)} onClose={closeMenu} />
         </div>
       )}
-      <MoveDialog key={moveRequest?.cardId ?? 'closed'} request={moveRequest} onConfirm={confirmMove} onClose={closeMove} />
+      <MoveDialog key={moveRequest?.cardId ?? 'closed'} request={moveRequest} onConfirm={confirmMove} onChooseSpot={chooseSpot} onClose={closeMove} />
       <CardDetailsDialog game={game} cardId={detailsCardId} onClose={closeDetails} />
+      {placement && <PlacementBar name={placingName(game, placement.cardId)} onPlace={placeCard} onCancel={cancelPlacing} />}
     </>
   );
 }

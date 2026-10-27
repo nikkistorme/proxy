@@ -90,7 +90,7 @@ test.describe('SP-8 Move to… dialog on a phone', () => {
     const move = page.getByRole('dialog', { name: 'Card 01' });
     const box = await move.boundingBox();
     expect(box?.height).toBeLessThanOrEqual(667);
-    await expect(move.getByRole('button', { name: 'Move to Table' })).toBeInViewport();
+    await expect(move.getByRole('button', { name: 'Move to Table — next free spot' })).toBeInViewport();
     const last = move.getByRole('option', { name: /^Board cards — bottom/ });
     await last.scrollIntoViewIfNeeded();
     await expect(last).toBeInViewport();

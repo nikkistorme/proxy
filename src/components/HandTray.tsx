@@ -27,6 +27,7 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
   const identity = seatIdentity(seatId);
   const game = useGameStore((s) => s.game);
   const dispatch = useGameStore((s) => s.dispatch);
+  const setPlacing = useGameStore((s) => s.setPlacing);
 
   const [activeId, setActiveId] = useState<string>();
   const [menu, setMenu] = useState<{ cardId: string; rect: DOMRect }>();
@@ -38,6 +39,8 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
   const pendingFocus = useRef<string>(undefined);
   /** Where focus goes once a dialog that moved a card has closed. */
   const afterDialog = useRef<string>(undefined);
+  /** Set when the Move to… dialog closes by choosing a spot: the table takes focus. */
+  const choseSpot = useRef(false);
 
   const hand = game.hands[seatId] ?? [];
   const cards = hand.flatMap((id) => {
@@ -190,8 +193,16 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
         key={moveRequest?.cardId ?? 'closed'}
         request={moveRequest}
         onConfirm={confirmMove}
+        onChooseSpot={() => {
+          if (!moveRequest) return;
+          const { cardId } = moveRequest;
+          choseSpot.current = true;
+          // Cancelling comes back to the card in the hand.
+          setPlacing({ cardId, returnFocus: () => buttons.current[cardId]?.focus() });
+        }}
         onClose={() => {
-          focusAfterDialog(moveRequest?.cardId);
+          if (!choseSpot.current) focusAfterDialog(moveRequest?.cardId);
+          choseSpot.current = false;
           setMoveRequest(undefined);
         }}
       />

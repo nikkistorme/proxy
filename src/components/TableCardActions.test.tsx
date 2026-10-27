@@ -42,6 +42,7 @@ describe('TT-5, TT-6, TT-10 and TT-11 card menu', () => {
       'Rotate 90° clockwiseR',
       'Rotate 90° counter-clockwiseShift+R',
       'Flip face downF',
+      'Move on tableSpace',
       'Move to…M',
       'Details…',
       'DuplicateCtrl+D',
@@ -125,7 +126,8 @@ describe('TT-5, TT-6, TT-10 and TT-11 card menu', () => {
     card('Troll').focus();
     await userEvent.keyboard('m');
     const dialog = screen.getByRole('dialog', { name: 'Troll' });
-    expect(within(dialog).queryByRole('option', { name: /^Table/ })).toBeNull();
+    expect(within(dialog).queryByRole('option', { name: /^Table — next free spot/ })).toBeNull();
+    expect(within(dialog).getByRole('option', { name: /^Table — choose a spot/ })).toBeInTheDocument();
     await userEvent.click(within(dialog).getByRole('option', { name: /^Board cards — top/ }));
     await userEvent.click(within(dialog).getByRole('button', { name: 'Move to Board cards — top' }));
     expect(store.getState().game.piles.find((p) => p.id === 'pile-board')?.cardIds).toHaveLength(1);

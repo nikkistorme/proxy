@@ -11,7 +11,8 @@ describe('SP-8 move destinations', () => {
   it('lists the table, every hand, and the top and bottom of every pile, in that order', () => {
     const options = moveDestinations(game, topCard);
     expect(options.map((o) => [o.group, o.label, o.meta])).toEqual([
-      ['Table', 'Table', '0 cards'],
+      ['Table', 'Table — next free spot', '0 cards'],
+      ['Table', 'Table — choose a spot', '0 cards'],
       ['Hands', "Player 1's hand", '0 cards'],
       ['Piles', 'P1 main deck — top', '3 cards'],
       ['Piles', 'P1 main deck — bottom', '3 cards'],
@@ -29,13 +30,16 @@ describe('SP-8 move destinations', () => {
     expect(options.find((o) => o.label === 'Board cards — top')?.seatId).toBeUndefined();
   });
 
-  it('leaves out the table or hand the card is already in', () => {
+  it("leaves out the hand the card is in, and the table's next free spot for a table card", () => {
     const onTable = moveCard(game, { cardId: topCard, to: { zone: 'table' } }).state;
-    expect(labels(moveDestinations(onTable, topCard))).not.toContain('Table');
+    const fromTable = moveDestinations(onTable, topCard);
+    expect(labels(fromTable)).not.toContain('Table — next free spot');
+    // A11Y-1: a table card can still move to a spot you choose.
+    expect(fromTable.find((o) => o.label === 'Table — choose a spot')?.chooseSpot).toBe(true);
     const inHand = moveCard(game, { cardId: topCard, to: { zone: 'hand', seatId: 'seat-p1' } }).state;
     const options = moveDestinations(inHand, topCard);
     expect(labels(options)).not.toContain("Player 1's hand");
-    expect(labels(options)).toContain('Table');
+    expect(labels(options)).toContain('Table — next free spot');
   });
 
   it('matches the search anywhere in the label, ignoring case, and says where', () => {
@@ -44,7 +48,7 @@ describe('SP-8 move destinations', () => {
       ['P1 main deck — bottom', [8, 16]],
       ['Environment deck — bottom', [12, 20]],
     ]);
-    expect(matchDestinations(options, '')).toHaveLength(8);
+    expect(matchDestinations(options, '')).toHaveLength(9);
     expect(matchDestinations(options, 'nowhere')).toEqual([]);
   });
 
