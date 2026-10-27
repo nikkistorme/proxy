@@ -227,14 +227,15 @@ describe('SP-1 drop a file on a pile', () => {
   it('loads a dropped CSV into that pile', async () => {
     renderGame();
     drop(screen.getByRole('button', { name: /^Board cards,/ }), csvFile('name\nToken\nToken 2\n', 'tokens.csv'));
-    expect(await screen.findByRole('dialog', { name: 'Import results' })).toHaveTextContent('tokens.csv into Board cards');
+    // Reading the file is async, and CI under coverage can take over a second.
+    expect(await screen.findByRole('dialog', { name: 'Import results' }, { timeout: 5000 })).toHaveTextContent('tokens.csv into Board cards');
     expect(screen.getByRole('button', { name: /^Board cards,/ })).toHaveAccessibleName('Board cards, 2 cards, shared');
   });
 
   it('refuses a file that is not a CSV, and loads nothing', async () => {
     renderGame();
     drop(mainTile(), new File(['not a deck'], 'art.png', { type: 'image/png' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Import results' });
+    const dialog = await screen.findByRole('dialog', { name: 'Import results' }, { timeout: 5000 });
     expect(dialog).toHaveTextContent("art.png isn't a CSV file. Nothing was loaded.");
     expect(mainTile()).toHaveAccessibleName('P1 main deck, empty, 0 cards, Player 1');
   });
