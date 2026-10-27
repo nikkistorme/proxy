@@ -68,6 +68,8 @@ test.describe('A11Y-1 keyboard and single-pointer placement', () => {
 
   test('keyboard only: Space picks up, arrows move, Enter places, Esc cancels; Move to… places a hand card', async ({ page }) => {
     await setUp(page);
+    // Start before the table: Draw is last on the page, and Firefox tabs from there into its own toolbar.
+    await mainPile(page).focus();
     await tabTo(page, tableCard(page, 'Daylight Hunter, front face').first());
     await tableCard(page, 'Ember Shard').focus();
     const before = await spot(page, 'Ember Shard');
