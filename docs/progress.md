@@ -2,9 +2,16 @@
 
 ## Current state
 
-Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37, #39, #41, #49, #51 and #56, all under #20. 3a to 3f-2 and 3m-1 to 3m-3 are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; and merging piles by dropping one on another. 3g to 3l (#29 to #34) are next. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases.
+Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection (#29), stacks (#30) and shortcut remapping (#34, folded into #53) moved after V1. 3a to 3f-2 and 3m-1 to 3m-3 are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; and merging piles by dropping one on another. 3i (#31), 3j (#32), 3k (#33), 3o (#61, close-out) and 3n (#39, dark theme) are left. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases.
 
 ## Done
+
+### Planning: post-V1 issues (2026-10-27)
+
+- **Moved after V1 (owner decision):** #29 (selection and group actions, TT-3) and #30 (stacks, TT-7) are feature issues now, with no phase and no longer under #20. #29 has a suggested split and its open questions.
+- **#34 (3l) closed:** shortcut remapping is folded into #53 (control settings, after V1).
+- **New issue #61 (3o):** keeps #34's V1 work and closes Phase 3. It covers the ? shortcut reference, a WCAG 2.1.4 fix (D draws from anywhere on the page today), an announcement audit, and the solo-turn E2E.
+- `docs/requirements.md`: TT-3 and TT-7 are marked after V1, A11Y-4 drops remapping from V1, the Phase 3 row leaves out TT-3 and TT-7, and Out of scope lists the post-V1 work.
 
 ### Phase 3m-3: Merging piles (2026-10-27)
 
@@ -507,9 +514,10 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 
 ## Next
 
-- **3g to 3l (#29 to #34)**, after the owner's go-ahead, and 3n (#39, dark theme) at any point.
+- **3i: Card counters and enlarge (#31)**, after the owner's go-ahead. Then 3j (#32, hand reordering) and 3k (#33, seat counters, dice and roll log), 3n (#39, dark theme) at any point, and 3o (#61) last: the ? shortcut reference, a WCAG 2.1.4 fix for the page-wide D shortcut, the announcement audit, and the solo-turn E2E that closes Phase 3.
+- **After V1, as feature issues:** selection and group actions (#29), stacks (#30), and control settings with shortcut remapping (#53).
 - **Multi-select in the pile viewer (#57)**, a feature issue outside the phases, when the owner chooses. Open problems that belong to later issues:
-  - 3g: move the Actions button to the selected card
+  - #29 (after V1): move the Actions button to the selected card
   - 3i: a double-faced badge on table cards (from CardStates)
   - 3j: dragging to reorder the hand, where a click without a drag still opens the menu
 
@@ -658,3 +666,4 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 | 2026-10-27 | A pile that covers another pile merges with the one it covers most, whatever is under the pointer | Merging only when the pointer is over a pile | Piles must never overlap, and the landing spot is what decides that. The keyboard outline works the same way. |
 | 2026-10-27 | Merged cards go on top by default, the kept pile stays where it is, and a merge always asks first | Bottom by default, as Delete pile does; moving the kept pile to the drop spot | Dropping one pile on another is like stacking it on top. Owner approved the defaults. |
 | 2026-10-27 | The merge dialog is a mode of `DeletePileDialog` | A separate dialog | The issue asked to reuse it. They share the dialog, form and radio pattern. |
+| 2026-10-27 | Selection (#29), stacks (#30) and shortcut remapping (#34 into #53) move after V1, and #61 closes Phase 3 | Building them in Phase 3 | Owner decision. #61 keeps the V1 parts of #34, including WCAG 2.1.4, which V1's AA target needs. |

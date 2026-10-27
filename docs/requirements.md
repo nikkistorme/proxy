@@ -145,14 +145,14 @@ The table is a free-form surface with no fixed rows, zones or snapping. Location
 
 - TT-1: Pan by dragging empty space or with arrow keys; zoom with wheel, pinch, or + and −. A "fit all" control frames every card.
 - TT-2: Optional, toggleable grid snapping for tidy placement. Off by default.
-- TT-3: Select one card or many (click, Shift-click, marquee). Group actions apply to the selection.
+- TT-3 (after V1, #29): Select one card or many (click, Shift-click, marquee). Group actions apply to the selection.
 
 **Cards**
 
 - TT-4: Drag cards between the table, hands and piles, and drag piles to move them on the table. Cards come off a pile by drawing, Move to…, or dragging them out of the pile viewer, not by dragging the pile itself. Piles never overlap: dropping or placing a pile on another pile asks which pile is deleted and whether its cards go on the top or bottom of the other, and Cancel leaves both where they were. Cards may overlap piles and each other.
 - TT-5: Rotate in 90° steps, clockwise or counter-clockwise.
 - TT-6: Flip: a double-faced card shows its other face; a single-faced card turns face-down.
-- TT-7: Stack cards by dropping one on another; a stack moves as one and can be fanned out.
+- TT-7 (after V1, #30): Stack cards by dropping one on another; a stack moves as one and can be fanned out.
 - TT-8: Add named numeric counters to any card (for example, +1/+1 or damage), adjustable with buttons or keys.
 - TT-9: Enlarge a card on hover, long-press or a key, readable at full size regardless of table zoom. Landscape layouts are shown turned upright in the enlarged view.
 - TT-10: Change the z-order: bring to front, send to back.
@@ -195,7 +195,7 @@ Target: WCAG 2.2 Level AA across the whole app, including the layout editor. Dra
 - A11Y-1 (2.5.7 Dragging Movements): every drag has a single-pointer and keyboard alternative. Select a card, choose a destination (table position, hand, pile, top or bottom), confirm.
 - A11Y-2 (2.1.1 Keyboard, 2.1.2 No Keyboard Trap): every control and card is reachable and operable by keyboard. Focus never gets stuck in the table or a dialog.
 - A11Y-3: The table is one focusable region. Inside it, arrow keys move focus between cards by position, and Tab leaves the region (roving tabindex).
-- A11Y-4: Keyboard shortcuts for frequent actions (draw, rotate, flip, shuffle, undo). Single-key shortcuts can be turned off or remapped (2.1.4 Character Key Shortcuts). A shortcut reference opens with ?.
+- A11Y-4: Keyboard shortcuts for frequent actions (draw, rotate, flip, shuffle, undo). Single-key shortcuts meet 2.1.4 Character Key Shortcuts: they work only while their card, pile or region has focus, or they can be turned off. A shortcut reference opens with ?. Remapping shortcuts comes after V1, with the control settings (#53).
 - A11Y-5 (4.1.3 Status Messages): announce every game action in a polite live region, for example "Draw: Ember Scout to Player 1's hand. Deck: 41 cards."
 - A11Y-6: Each card has an accessible name that includes its name, face state and rotation, for example "Ember Scout, rotated 90°". A details command reads every bound column. Face-down cards announce only "face-down card".
 - A11Y-7 (2.4.7, 2.4.11): a clearly visible focus indicator on cards and controls that is never fully hidden behind other cards.
@@ -339,7 +339,7 @@ The build runs on a personal Claude account with usage limits, so work happens i
 | 0. Scaffold | Vite + React + TS, lint, Vitest, Playwright, CI pipeline, empty app shell | QA-2, QA-6, CI/CD steps 1–4 | CI runs green on a placeholder test |
 | 1. Card data | CSV parsing, card model, double-faced cards, import errors | CD-1 to CD-6 | Fixture CSVs import correctly in unit tests |
 | 2. Piles | Piles, shuffle, draw, pile viewer, default card rendering | SP-1 to SP-9 | A deck loads and cards can be drawn and searched |
-| 3. Table | Free-form table, card actions, keyboard moves, announcements, undo | TT-1 to TT-15, A11Y-1 to A11Y-6 | A solo turn works by mouse and keyboard |
+| 3. Table | Free-form table, card actions, keyboard moves, announcements, undo | TT-1 to TT-15 except TT-3 and TT-7, A11Y-1 to A11Y-6 | A solo turn works by mouse and keyboard |
 | 4. Layouts | Layout editor, portrait and landscape, preview | LY-1 to LY-10 | A custom layout renders cards on the table |
 | 5. Formats | Seats, hands, presets, counters, dice | FS-1 to FS-4 | A 1v1 PvP game can be set up and played |
 | 6. Persistence and Sheets | Autosave, snapshots, JSON bundle, Google Sheets URLs | PS-1 to PS-6, CD-7 to CD-12 | Reload restores a game; a sheet URL loads a deck |
@@ -366,6 +366,7 @@ Not in the first version; each may be revisited later.
 - Deck building from a larger card library (one CSV per deck covers the need for now).
 - Reading private or unpublished spreadsheets, or any import that needs a Google sign-in. Only published CSV URLs are supported.
 - Mobile-first touch play. Phones must not break, but the target is a laptop or desktop screen.
+- Selecting several table cards and group actions (TT-3, #29), stacks (TT-7, #30), and remapping shortcuts or customising menus and clicks (#53). These come after V1 as feature issues, not phases.
 
 ## Open questions
 
@@ -386,3 +387,4 @@ Not in the first version; each may be revisited later.
 | 2026-10-25 | Static, client-only app | Backend with accounts | No hosting cost; nothing to secure; fits solo use |
 | 2026-10-25 | Generic sandbox with format presets | App hardcoded to one game | The game is still changing; presets cover Solo PvE, Co-op PvE and 1v1 PvP |
 | 2026-10-25 | Cards rendered from layouts, with an art column | Pre-rendered card images only | Card text changes often during design; rendering avoids re-exporting images |
+| 2026-10-27 | Selection (TT-3), stacks (TT-7) and shortcut remapping move after V1 | Building them in Phase 3 | Owner decision. A solo turn works without them. Phase 3 closes with #61 (shortcut reference, 2.1.4, announcements, solo-turn E2E). |
