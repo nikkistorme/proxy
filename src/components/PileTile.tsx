@@ -18,6 +18,8 @@ interface PileTileProps {
   registerTile: (pileId: string, element: HTMLButtonElement | null) => void;
   /** SP-1: a file dropped on the pile. Load CSV… in the menu is the non-drag way. */
   onDropFile: (pileId: string, file: File) => void;
+  /** TT-4: a dragged card is over this pile, and would go on top. */
+  cardOver?: boolean;
 }
 
 /**
@@ -27,7 +29,7 @@ interface PileTileProps {
  * the button holds only the plate text. Its label then always starts with the
  * text you can see (WCAG 2.5.3), whatever the top card says.
  */
-export function PileTile({ pile, ownerName, revealedTop, menuOpen, onOpenMenu, registerTile, onDropFile }: PileTileProps) {
+export function PileTile({ pile, ownerName, revealedTop, menuOpen, onOpenMenu, registerTile, onDropFile, cardOver = false }: PileTileProps) {
   const ref = useCallback((element: HTMLButtonElement | null) => registerTile(pile.id, element), [registerTile, pile.id]);
   const [dropTarget, setDropTarget] = useState(false);
   // dragenter and dragleave fire for every child, so count them to know when the drag really leaves.
@@ -72,7 +74,12 @@ export function PileTile({ pile, ownerName, revealedTop, menuOpen, onOpenMenu, r
     .join(', ');
 
   return (
-    <div className={dropTarget ? 'pile-tile pile-tile--drop-target' : 'pile-tile'} {...dragHandlers}>
+    <div
+      className={dropTarget || cardOver ? 'pile-tile pile-tile--drop-target' : 'pile-tile'}
+      data-drop-zone="pile"
+      data-pile-id={pile.id}
+      {...dragHandlers}
+    >
       {count > 2 && <div className={`pile-tile__layer pile-tile__layer--2 ${identity.backClass}`} aria-hidden="true" />}
       {count > 1 && <div className={`pile-tile__layer pile-tile__layer--1 ${identity.backClass}`} aria-hidden="true" />}
       {count > 0 && (
@@ -119,9 +126,10 @@ export function PileTile({ pile, ownerName, revealedTop, menuOpen, onOpenMenu, r
           </span>
         )}
       </button>
-      {dropTarget && (
-        <span className="pile-tile__drop-label" aria-hidden="true">
-          Drop to load
+      {(dropTarget || cardOver) && (
+        // A dragged card covers the middle, so its label sits above the pile, as on CardStates.
+        <span className={dropTarget ? 'pile-tile__drop-label' : 'pile-tile__drop-label pile-tile__drop-label--above'} aria-hidden="true">
+          {dropTarget ? 'Drop to load' : 'Drop: top'}
         </span>
       )}
     </div>

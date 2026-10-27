@@ -7,6 +7,7 @@ import { cardName } from '../actions/helpers';
 import { moveCard, type Destination } from '../actions/moveCard';
 import type { GameState, Rotation } from '../model/game';
 import { useGameStore } from '../store/gameStore';
+import { useCardDrag } from './cardDrag';
 import { CardDetailsDialog } from './CardDetailsDialog';
 import { CardMenu, type CardCommand } from './CardMenu';
 import { moveDestinations } from './moveDestinations';
@@ -67,6 +68,8 @@ export function TableSurface() {
   const placing = useGameStore((s) => s.placing);
   const setPlacing = useGameStore((s) => s.setPlacing);
   const columnsInView = useGameStore((s) => s.view.columns);
+  const drag = useGameStore((s) => s.drag);
+  const startDrag = useCardDrag();
 
   const [activeId, setActiveId] = useState<string>();
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -484,6 +487,34 @@ export function TableSurface() {
     placementRef.current?.focus();
   }
 
+  // TT-4: dragging a card moves it on the table, or to a pile or a hand, through the same action as a keyboard move.
+  function onCardPointerDown(cardId: string, event: PointerEvent<HTMLButtonElement>) {
+    const entry = game.table.find((e) => e.cardId === cardId);
+    const visual = event.currentTarget.closest<HTMLElement>('.table-card');
+    if (!entry || !visual) return;
+    const name = shownName(game, cardId);
+    startDrag(event, {
+      cardId,
+      name,
+      visual,
+      scale: zoom,
+      rotation: entry.rotation,
+      from: { zone: 'table', position: { x: entry.x, y: entry.y } },
+      drop: (to) => {
+        if (to.zone === 'table') pendingFocus.current = { card: cardId };
+        else {
+          const next = neighbourOf(cardId);
+          pendingFocus.current = next ? { card: next } : 'table';
+        }
+        dispatch((g, context) => moveCard(g, { cardId, to }, context));
+      },
+      cancel: () => {
+        announce(`Put ${name} back.`);
+        pendingFocus.current = { card: cardId };
+      },
+    });
+  }
+
   // Card keys only work while a card has focus, so single keys are safe (WCAG 2.1.4).
   const CARD_KEYS: Record<string, CardCommand> = { r: 'rotate', R: 'rotate-back', f: 'flip', m: 'move', Delete: 'delete', Backspace: 'delete' };
 
@@ -532,7 +563,10 @@ export function TableSurface() {
   const tabbableId = activeId && game.table.some((e) => e.cardId === activeId) ? activeId : readingOrder(game.table)[0];
   // The mat reaches past the last card, so there's room to pan and drop, and always fills the view.
   const outline = placement && cardBox(placement);
-  const boxes = [...game.table.map(cardBox), ...(outline ? [outline] : [])];
+  // Where a dragged card would land, turned as it is now.
+  const dropAt = drag?.over?.zone === 'table' ? drag.over.position : undefined;
+  const dropBox = dropAt && cardBox({ ...dropAt, rotation: game.table.find((e) => e.cardId === drag?.cardId)?.rotation ?? 0 });
+  const boxes = [...game.table.map(cardBox), ...(outline ? [outline] : []), ...(dropBox ? [dropBox] : [])];
   const width = Math.max(size.width / zoom, ...boxes.map((b) => b.right + 2 * CARD_W));
   const height = Math.max(size.height / zoom, ...boxes.map((b) => b.bottom + CARD_H));
 
@@ -562,6 +596,7 @@ export function TableSurface() {
             // Focusable from code only, for when the last card has gone.
             tabIndex={-1}
             className={snap ? 'table-surface table-surface--grid' : 'table-surface'}
+            data-drop-zone="table"
             role="group"
             aria-label={count === 0 ? label : `${label}. Arrow keys move between cards. Shift and arrow keys pan.`}
             style={{ width, height, transform: zoom === 1 ? undefined : `scale(${zoom})` }}
@@ -579,8 +614,17 @@ export function TableSurface() {
                 onKeyUp={onCardKeyUp}
                 menuOpen={menu?.cardId === entry.cardId}
                 onOpenMenu={openMenu}
+                onPointerDown={onCardPointerDown}
+                dragging={drag?.cardId === entry.cardId}
               />
             ))}
+            {dropBox && (
+              <div
+                className="table-placement table-drop"
+                aria-hidden="true"
+                style={{ left: dropBox.left, top: dropBox.top, width: dropBox.right - dropBox.left, height: dropBox.bottom - dropBox.top }}
+              />
+            )}
             {placement && outline && (
               // Last in the mat, so Tab goes from it to the bar's Place and Cancel.
               <button

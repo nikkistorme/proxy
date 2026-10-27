@@ -9,6 +9,8 @@
   overflow: auto;
   border-radius: 16px;
   touch-action: pan-x pan-y;
+  /* Cards' layers stay inside the table, under menus and the card being dragged. */
+  isolation: isolate;
 }
 
 .table-viewport--panning,

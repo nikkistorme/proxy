@@ -1,0 +1,53 @@
+/*
+ * TT-4: the card under the pointer while dragging, from the CardStates "Dragging"
+ * state: scale 1.06, −3° tilt and a deep shadow. Reduced motion sets
+ * --motion-scale and --motion-tilt so it neither grows nor tilts.
+ */
+.drag-ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.drag-ghost__lift {
+  position: absolute;
+  inset: 0;
+  transform: rotate(var(--motion-tilt, -3deg)) scale(var(--motion-scale, 1.06));
+}
+
+.drag-ghost__card {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  transform-origin: 0 0;
+}
+
+/* A table card's body, or a hand card's face. */
+.drag-ghost .table-card__body,
+.drag-ghost__card > .card-face {
+  box-shadow: var(--shadow-card-drag);
+}
+
+/* Where the card came from, shown dashed while it's dragged. */
+.card-drag-origin {
+  opacity: 0.35;
+  outline: 2px dashed var(--muted);
+  outline-offset: 2px;
+  border-radius: var(--radius-card);
+}
+
+/* A long press lifts the card, so it mustn't select text or open the iOS callout. */
+.card-drag-source {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.is-dragging-card,
+.is-dragging-card * {
+  cursor: grabbing !important;
+  user-select: none;
+  -webkit-user-select: none;
+}

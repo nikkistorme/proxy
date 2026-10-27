@@ -109,3 +109,37 @@
   top: auto;
   bottom: calc(100% + var(--space-2));
 }
+
+/* TT-4: a dragged card is over the hand. The CardStates drop target: dashed accent ring, tint and a label. */
+.hand-tray {
+  position: relative;
+}
+
+.hand-tray--drop-target {
+  background: var(--accent-soft);
+}
+
+.hand-tray--drop-target::after {
+  content: '';
+  position: absolute;
+  inset: var(--space-1);
+  border: 3px dashed var(--accent);
+  border-radius: var(--radius-menu);
+  pointer-events: none;
+}
+
+.hand-tray__drop-label {
+  position: absolute;
+  left: 50%;
+  top: var(--space-2);
+  z-index: 1;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-control);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
