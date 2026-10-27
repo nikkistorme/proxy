@@ -1,6 +1,5 @@
 name: Feature or task
-description: One small slice of a build phase, sized for one Claude Code session and one PR.
-title: "[Phase N] "
+description: One small slice of work, sized for one Claude Code session and one PR.
 labels: ["feature"]
 body:
   - type: markdown
@@ -8,22 +7,6 @@ body:
       value: |
         Keep it small: if you can't write pass/fail acceptance criteria, the issue isn't ready.
         Requirement IDs come from `docs/requirements.md`.
-
-  - type: dropdown
-    id: phase
-    attributes:
-      label: Phase
-      options:
-        - "0. Scaffold"
-        - "1. Card data"
-        - "2. Piles"
-        - "3. Table"
-        - "4. Layouts"
-        - "5. Formats"
-        - "6. Persistence and Sheets"
-        - "7. Polish"
-    validations:
-      required: true
 
   - type: input
     id: requirements
