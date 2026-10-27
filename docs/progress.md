@@ -8,7 +8,20 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 
 The phases after 3 were reordered (2026-10-27): Phase 4 is now storage and card sets (#74), then layouts (5, #35), formats (6), session saves and Sheets (7) and polish (8). Item ids are random UUIDs so sync can come later (#45), and until V1 ships older saves are dropped rather than migrated.
 
+Phase 4 is split into 4a (#84) and 4b (#85). 4a is done: every save goes through one storage interface (`src/storage/storage.ts`) with keys built from the base path and the "guest" profile, older saves are dropped with a notice, a browser that can't save shows a one-line notice, and options are read through one resolver (`src/options/resolver.ts`). The theme is the first option read that way, from the account settings item. Nothing writes to storage yet; card sets (4b) are the first saved items.
+
 ## Done
+
+### Phase 4a: Storage interface, profile keys and options resolver (#84, 2026-10-27)
+
+- **Storage interface (AR-6):** `createStorage(backend)` in `src/storage/storage.ts` gives `get`, `put`, `list` and `delete` by item kind. `put` stamps `updatedAt` and `version` (`SAVE_VERSION`, now 1), and `newItemId()` makes UUIDs. Under it is a plain key-value backend: `indexedDbBackend()` (`idb-keyval`, the only file that touches IndexedDB) or `memoryBackend()` for tests. Both live in `src/storage/backends.ts`.
+- **Profile keys (PS-7):** `itemKey` builds `basePath|profile|kind|id`, with `import.meta.env.BASE_URL` and "guest". The separator after the base path keeps `/proxy/` from matching `/proxy/pr-preview/…` when listing.
+- **Older saves (PS-5 before V1):** reading an item with an older version deletes it and calls `onDropped`. The app then shows "Saves from an older version of Proxy were removed." An item from a newer version is skipped but kept.
+- **Storage unavailable (PS-6):** `StorageProvider` checks at start that the backend can save. If not, it switches to memory and `StorageNotice` shows "This browser can't save right now, so progress won't be saved." under the header (a `role="note"` line, tokens only).
+- **Options resolver (AR-7):** `resolveOption` checks session, game, then account, then `DEFAULT_OPTIONS`. `useOption` reads the account level from the settings item (fixed id `account`, `ACCOUNT_SETTINGS_ID`). The theme now comes from `useOption('theme')` in `App`, so `main.tsx` no longer calls `applyTheme`.
+- **Swapping storage (AR-6 pass):** `App` takes an optional `storageBackend`. A test seeds memory storage with a dark theme and the app reads it.
+- **Tests:** `storage.test.ts` (keys, UUIDs, the interface on both backends with `idb-keyval` mocked, the drop rule, the save check), `resolver.test.ts`, `StorageProvider.test.tsx` (App reads through memory storage; both notices), and `e2e/storage.spec.ts` (IndexedDB blocked by an init script: notice, axe, the table still works, 375 × 667 without sideways scroll).
+- **Changed requirement:** AR-6 (one-per-profile items have a fixed id).
 
 ### Planning: phase order after Phase 3 (2026-10-27)
 
@@ -619,7 +632,7 @@ The phases after 3 were reordered (2026-10-27): Phase 4 is now storage and card 
 
 ## Next
 
-- **Phase 4: storage and card sets (#74)**, planned and probably split in two: the storage interface with profile keys and the "can't save" notice (AR-6, PS-6, PS-7), then the card set model (AR-4). The options resolver (AR-7) goes in this phase too.
+- **Phase 4b: card sets (#85).** Card definitions and their source move into card set items saved through storage, and piles record a `cardSetId`. Decide in planning whether a session keeps its own copy of the definitions (4a planning recommended yes: it works offline and survives a deleted set).
 - **Phase 5: layouts (#35).** A first comparison with the repo is in the issue: nothing layout-related exists beyond the `layout` and `type` columns, and the suggested split is 5a to 5i there.
 - **After V1, in this order:** the demo on its own path (#63), the card set library (#67), games (#65), then accounts and sync (#45). #45's docs-only step 1 (confirming Supabase, writing the accounts requirements) can happen any time.
 - **#71: keys act on the hovered card or pile when nothing on the table has focus**, an owner request from the #70 review. Single-letter keys without focus need an off switch (WCAG 2.1.4), so it goes with #53.
@@ -630,6 +643,8 @@ The phases after 3 were reordered (2026-10-27): Phase 4 is now storage and card 
 
 ## Open problems
 
+- Nothing saves to storage yet, so the PS-5 notice and the theme option can only be seen with hand-made data. Card sets (4b) are the first saved items, and a theme choice needs the Settings screen.
+- The storage notice can't be dismissed. It's one line, and it matters for the whole visit, but a close button could come with the Settings screen.
 - Page-wide single keys (D, ?, zoom, fit, snap) need focus in the table, the hand or the table tools (WCAG 2.1.4). Straight after the page loads, or after a click on the seat bar, D does nothing until you Tab or click into the table. An off switch with #53 could let them work everywhere for those who want it.
 - The shortcut reference is a hand-kept list (`SHORTCUT_GROUPS`), so a new key needs adding there too. Remapping (#53) would make one list drive both.
 - The session log lists only rolls for now. The goal is every action (owner, 2026-10-27), which could reuse each action's announcement.
@@ -665,7 +680,7 @@ The phases after 3 were reordered (2026-10-27): Phase 4 is now storage and card 
 - `axe` scrolls the table while it checks contrast, so E2E tests that click cards after an axe check scroll the table back first.
 - **Saving undo history (PS-2, Phase 7):** each step is a whole game, so plain JSON would repeat the card definitions in every step. Phase 7 needs a compact form, such as saving definitions once or saving the differences between steps.
 - Local WebKit on macOS skips buttons when tabbing, unlike CI's Linux WebKit, so the keyboard-only E2E tests that press Tab fail locally in WebKit only. Use Chromium locally, as BP-4 says, and trust CI for WebKit.
-- E2E: under the full suite's load, `e2e/move-dialog.spec.ts` (keyboard only) and `e2e/manage-piles.spec.ts` (keyboard only) each failed once in 3a and passed on rerun and alone. Watch for flakiness.
+- E2E: under the full suite's load, `e2e/move-dialog.spec.ts` (keyboard only) and `e2e/manage-piles.spec.ts` (keyboard only) each failed once in 3a and passed on rerun and alone. Watch for flakiness. `e2e/counters.spec.ts` (keyboard only) did the same in 4a: a focus check failed once in the full run and passed six times alone.
 - The search-match highlight uses the board's `#FBE3A6` with ink text, which isn't a token. Add a highlight token if the design gets one.
 - axe's label-in-name check joins text from separate blocks with no spaces, so a button containing a whole card face fails it. The viewer and table cards avoid that with the overlay pattern.
 - In this cloud environment the pinned `@playwright/test` wants a newer Chromium than the one installed. Local E2E ran with a scratch config pointing `launchOptions.executablePath` at `/opt/pw-browsers/chromium`. That config isn't committed, and CI is unaffected.
@@ -820,3 +835,6 @@ The phases after 3 were reordered (2026-10-27): Phase 4 is now storage and card 
 | 2026-10-27 | Storage and card sets (#74) become Phase 4, ahead of layouts | Storage after layouts and formats | Layouts, formats and the resolver all save something; storage first avoids stand-in state, export-only layouts and rewiring the layout preview onto card sets |
 | 2026-10-27 | Until V1 ships, older saves are dropped with a notice, not migrated | Migrations from the first save | Models keep changing through Phases 5 to 7; migrations start at V1, before sync makes old data expensive to drop |
 | 2026-10-27 | After V1: #63, #67, #65, then #45 | Accounts earlier | Sync needs every item kind settled, and #45 builds on the demo path, games and card sets |
+| 2026-10-27 | One-per-profile items, such as the account settings, use a fixed id; everything else gets a UUID (AR-6) | A UUID for every item | The same settings item on two devices should stay one item when sync arrives |
+| 2026-10-27 | Storage is a thin layer (keys, stamps, the drop rule) over a key-value backend | One full implementation per store | Keys and the PS-5 rule live in one place, so the IndexedDB and memory versions can't drift |
+| 2026-10-27 | If the browser can't save, the app keeps going on memory storage | Turning saves off | Callers use one interface either way, and the notice says progress won't be kept (PS-6) |

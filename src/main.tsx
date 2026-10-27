@@ -4,9 +4,6 @@ import '../design/tokens.css';
 import './fonts';
 import './index.css';
 import { App } from './App';
-import { applyTheme } from './theme';
-
-applyTheme();
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Root element #root not found');

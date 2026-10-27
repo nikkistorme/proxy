@@ -1,0 +1,8 @@
+.storage-notice {
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--divider);
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-size: 13px;
+}
