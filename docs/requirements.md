@@ -109,8 +109,8 @@ A layout is a reusable card template: a set of boxes on the card, each bound to 
 
 - LY-1: Create, rename, duplicate and delete layouts.
 - LY-2: Add boxes by drawing them on the card. Move and resize them with pointer or keyboard (arrow keys move, Shift + arrow resizes).
-- LY-3: Each box binds to one column and renders it as text or as an image.
-- LY-4: Text boxes set font size, weight, alignment, text color and background color. Text that overflows shrinks to fit down to a minimum size, then clips with a visible warning in the editor.
+- LY-3: Each box binds to one column and renders it as text or as an image. The built-in default layout lists alternative column names for a box (such as `text`, `rules`, `rules text` and `card text`) and shows the first that isn't empty.
+- LY-4: Text boxes set font size (in points on the printed card), weight, horizontal and vertical alignment, text color and background color, and use the app's bundled text or numbers font (no font choice in V1). Text that overflows shrinks to fit down to a minimum size, then clips with a visible warning in the editor.
 - LY-5: Boxes can also hold fixed text or a solid color, for frame elements that don't come from the CSV.
 - LY-6: Box positions are stored as percentages of the card, so layouts render at any zoom.
 - LY-7: The editor shows a live preview using real cards from a loaded CSV, with next and previous controls.

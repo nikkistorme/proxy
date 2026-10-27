@@ -10,7 +10,19 @@ The phases after 3 were reordered (2026-10-27): Phase 4 is now storage and card 
 
 Phase 4 (#74) is done, split into 4a (#84) and 4b (#85). 4a: every save goes through one storage interface (`src/storage/storage.ts`) with keys built from the base path and the "guest" profile, older saves are dropped with a notice, a browser that can't save shows a one-line notice, and options are read through one resolver (`src/options/resolver.ts`). The theme is the first option read that way, from the account settings item. 4b: loading a CSV into a pile saves a card set item, the pile records its id, and the session keeps its own copy of the definitions. Card sets are the only items the app writes so far.
 
+Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) is done: every card face is drawn from a layout's boxes, through the built-in default layout, which looks close to the old face. Layouts can't be chosen, saved or edited yet.
+
 ## Done
+
+### Phase 5a: Layout model and renderer (#88, 2026-10-27)
+
+- **Layout model (LY-3, LY-5, LY-6):** `src/model/layout.ts` has `Layout` (a stored item), `LayoutDesign` (what draws), `LayoutBox` and `BoxStyle`. Box position and size are percentages of the card. A box shows a column as text or image, fixed text, or a solid colour. Text sizes are points on the 63 mm wide card (`CARD_WIDTH_PT`), so they scale with the card. A box can carry a `label`, read before its text by screen readers ("Cost 2").
+- **Column lists:** a column box lists columns and shows the first that isn't empty. The built-in default uses that so `text`, `rules`, `rules text` and `card text` all show as rules text, and `image`, `card art` and `art` as art. The editor will set one column.
+- **Renderer:** `CardFace` takes an optional `layout` (the default is `DEFAULT_LAYOUT`) and draws its boxes in order. A column box with nothing to show is left out, background and all, except image boxes, which keep the CD-6 placeholder. Every place that shows a face is unchanged.
+- **Labels:** `layoutLabel` reads text boxes top to bottom, then left to right. The default layout gives the same labels as before.
+- **Shared column reading:** `faceValue` in `src/model/card.ts` reads a column (`name`, `image`, `layout`, `type` or a field). The pile viewer's filters use it too.
+- **Tests:** `layout.test.ts` and new LY-3, LY-5 and LY-6 cases in `CardFace.test.tsx`.
+- **Changed requirements:** LY-3 (the built-in default's column lists) and LY-4 (font size in points, weight, horizontal and vertical alignment, colours, and the bundled sans or numbers font; no font choice in V1).
 
 ### Phase 4b: Card set model (#85, 2026-10-27)
 
@@ -640,7 +652,7 @@ Phase 4 (#74) is done, split into 4a (#84) and 4b (#85). 4a: every save goes thr
 
 ## Next
 
-- **Phase 5: layouts (#35).** A first comparison with the repo is in the issue: nothing layout-related exists beyond the `layout` and `type` columns, and the suggested split is 5a to 5i there.
+- **Phase 5b: layout choice, storage and autosave (#89)**, then 5c to 5i (#90 to #96) in order. 5b asks the owner first whether to work out a card's layout from its columns when drawing, instead of storing a layout id on table cards (AR-4). 5e asks whether the editor is full screen (recommended) or a panel beside the table.
 - **After V1, in this order:** the demo on its own path (#63), the card set library (#67), games (#65), then accounts and sync (#45). #45's docs-only step 1 (confirming Supabase, writing the accounts requirements) can happen any time.
 - **#71: keys act on the hovered card or pile when nothing on the table has focus**, an owner request from the #70 review. Single-letter keys without focus need an off switch (WCAG 2.1.4), so it goes with #53.
 - **#68: no text-field focus on touch screens in the other dialogs** (Move to…, pile viewer, Draw/Mill/Peek count, pile name). It isn't tied to a phase, and the owner chooses when.
@@ -696,7 +708,8 @@ Phase 4 (#74) is done, split into 4a (#84) and 4b (#85). 4a: every save goes thr
 - In this cloud environment the pinned `@playwright/test` wants a newer Chromium than the one installed. Local E2E ran with a scratch config pointing `launchOptions.executablePath` at `/opt/pw-browsers/chromium`. That config isn't committed, and CI is unaffected.
 - The form error colour uses `--seat-a` (5.4:1 on the panel), because the tokens have no error colour. Add an error token if the design gets one.
 - **Reload is two clicks, not one:** "Reload <file>…" reopens the file picker, because browsers can't re-read a chosen file. A true one-click reload needs the File System Access API, which works in Chromium only and falls back to the picker elsewhere. That fits with the card library (#67), where the file handle can be saved with the card set.
-- The default card face uses the UI font, not the sample card's Bitter, which would be another font dependency. Phase 5 layouts will set card fonts.
+- Until 5d's shrink-to-fit, text that doesn't fit its box clips at the end. A long name wraps and loses its second line, where the old face cut it off with an ellipsis.
+- The default layout has square corners on its plates and the cost and stats pills, since boxes have no corner radius (LY-4 doesn't list it).
 - The shared-pile back colour `#3F433D` isn't a design token. The design has no shared seat, so add a token if the design gets one.
 - The dark theme follows the system only. A manual light/dark toggle goes in the Settings screen when it exists (`applyTheme` already takes the choice).
 - The 32px PNG favicon fallback uses the light colours only, so on a dark tab in an older browser its dashed outline is faint. Browsers with SVG favicons use the SVG's dark version.

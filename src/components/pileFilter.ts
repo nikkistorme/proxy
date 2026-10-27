@@ -1,4 +1,4 @@
-import type { CardFace } from '../model/card';
+import { faceValue, type CardFace } from '../model/card';
 import type { SessionState } from '../model/session';
 
 /** One card in a pile, as the viewer shows it. */
@@ -37,11 +37,6 @@ export function pileEntries(state: SessionState, pileId: string): PileEntry[] {
   });
 }
 
-/** A column's value on a face, trimmed. `type` is a named column; the rest are fields. */
-function valueOf(face: CardFace, column: string): string {
-  return (column === 'type' ? face.type : face.fields[column])?.trim() ?? '';
-}
-
 function labelOf(column: string): string {
   return column.charAt(0).toUpperCase() + column.slice(1);
 }
@@ -56,7 +51,7 @@ export function filterColumns(entries: readonly PileEntry[]): FilterColumn[] {
 
   return [...columns].flatMap((column) => {
     if (TEXT_COLUMNS.has(column)) return [];
-    const values = new Set(entries.map(({ face }) => valueOf(face, column)).filter(Boolean));
+    const values = new Set(entries.map(({ face }) => faceValue(face, column)).filter(Boolean));
     if (values.size < 2 || values.size > MAX_FILTER_VALUES) return [];
     const sorted = [...values].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
     return [{ column, label: labelOf(column), values: sorted }];
@@ -71,7 +66,7 @@ export function filterEntries(entries: readonly PileEntry[], query: PileQuery): 
   const search = query.search.trim().toLowerCase();
   const chosen = Object.entries(query.filters).filter(([, value]) => value !== '');
   return entries.filter(({ face }) => {
-    if (chosen.some(([column, value]) => valueOf(face, column) !== value)) return false;
+    if (chosen.some(([column, value]) => faceValue(face, column) !== value)) return false;
     if (!search) return true;
     const text = [face.name, face.type ?? '', ...Object.values(face.fields)];
     return text.some((value) => value.toLowerCase().includes(search));

@@ -1,111 +1,29 @@
 /*
- * Default card face. Sizes are the design's 240 × 336 base values, scaled to
- * the rendered width. Colours are the sample card's neutral palette: this is
- * card content standing in for user layouts, not app chrome.
+ * A card face drawn from a layout. Colours and sizes come from the layout's
+ * boxes: this is card content, not app chrome. Only the card's edge is fixed.
  */
 .card-face {
   position: relative;
   flex: none;
   overflow: hidden;
-  border-radius: max(3px, calc(13px * var(--card-scale)));
+  border-radius: max(3px, calc(9.7 * var(--card-pt)));
   color: #1e1c1a;
 }
 
-.card-face__base {
+.card-face__box {
+  position: absolute;
+  overflow: hidden;
+}
+
+.card-face__box--text {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  width: 240px;
-  height: 336px;
-  padding: 9px;
-  border-radius: 13px;
-  background: #29303b;
-  transform: scale(var(--card-scale));
-  transform-origin: 0 0;
-}
-
-.card-face__bar {
-  display: flex;
-  flex: none;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  height: 30px;
-  padding: 0 5px 0 10px;
-  border-radius: 6px;
-  background: #e3e7ee;
-}
-
-.card-face__name {
-  overflow: hidden;
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.card-face__cost {
-  display: flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  min-width: 23px;
-  height: 23px;
-  padding: 0 4px;
-  border-radius: 12px;
-  background: #29303b;
-  color: #fff;
-  font-family: var(--font-num);
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.card-face__art {
-  flex: none;
-  height: 140px;
-  overflow: hidden;
-  border-radius: 4px;
-  background: #8e9db6;
-}
-
-.card-face__type {
-  display: flex;
-  flex: none;
-  align-items: center;
-  height: 22px;
-  padding: 0 10px;
-  overflow: hidden;
-  border-radius: 4px;
-  background: #e3e7ee;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.card-face__text {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  padding: 7px 10px;
-  overflow: hidden;
-  border-radius: 4px;
-  background: #fbf8f2;
-  font-size: 14.5px;
-  font-weight: 500;
+  padding: 0.3em 0.4em;
   line-height: 1.28;
   white-space: pre-line;
+  overflow-wrap: break-word;
 }
 
-.card-face__stats {
-  position: absolute;
-  right: 6px;
-  bottom: 6px;
-  padding: 2px 8px;
-  border-radius: 6px;
-  background: #29303b;
-  color: #fff;
+.card-face__box--mono {
   font-family: var(--font-num);
-  font-size: 15px;
-  font-weight: 700;
 }

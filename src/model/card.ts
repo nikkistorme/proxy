@@ -40,3 +40,17 @@ export interface CardDefinition extends ImportedCard {
 export function cardNameKey(name: string): string {
   return name.trim().toLowerCase();
 }
+
+/** A column's value on a face, trimmed. `name`, `image`, `layout` and `type` are named columns; the rest are fields. */
+export function faceValue(face: CardFace, column: string): string {
+  switch (column) {
+    case 'name':
+      return face.name.trim();
+    case 'image':
+    case 'layout':
+    case 'type':
+      return face[column]?.trim() ?? '';
+    default:
+      return face.fields[column]?.trim() ?? '';
+  }
+}
