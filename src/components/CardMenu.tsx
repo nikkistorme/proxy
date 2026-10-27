@@ -10,6 +10,7 @@ const ICONS = {
   move: 'M5 12h14M13 6l6 6-6 6',
   place: 'M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3',
   counters: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM12 8v8M8 12h8',
+  enlarge: 'M10 4a6 6 0 1 0 0 12a6 6 0 1 0 0-12zM14.5 14.5L20 20M10 7v6M7 10h6',
   details: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM12 11v6M12 7.5v.01',
   duplicate: 'M8 8h12v12H8zM4 16V4h12',
   front: 'M12 19V5M6 11l6-6 6 6',
@@ -19,7 +20,7 @@ const ICONS = {
 
 const FLIP_LABELS = { 'to back': 'Flip to back', 'to front': 'Flip to front', 'face down': 'Flip face down', 'face up': 'Flip face up' };
 
-export type CardCommand = 'rotate' | 'rotate-back' | 'flip' | 'place' | 'move' | 'counters' | 'details' | 'duplicate' | 'front' | 'back' | 'delete';
+export type CardCommand = 'rotate' | 'rotate-back' | 'flip' | 'place' | 'move' | 'counters' | 'enlarge' | 'details' | 'duplicate' | 'front' | 'back' | 'delete';
 
 interface CardMenuProps {
   game: GameState;
@@ -36,7 +37,7 @@ export function cardMenuLabel(game: GameState, cardId: string) {
   return { label: `Actions for ${shown}`, header: `${shown.charAt(0).toUpperCase()}${shown.slice(1)} · ${owner} · on table` };
 }
 
-/** TT-5, TT-6, TT-8, TT-10, TT-11 and SP-8: what you can do to a card on the table, from the ActionMenu board. */
+/** TT-5, TT-6, TT-8, TT-9, TT-10, TT-11 and SP-8: what you can do to a card on the table, from the ActionMenu board. */
 export function CardMenu({ game, cardId, onCommand, onClose }: CardMenuProps) {
   const index = game.table.findIndex((entry) => entry.cardId === cardId);
   const item = (id: CardCommand, label: string, icon: string, shortcut?: string, disabled?: boolean): MenuEntry => ({
@@ -55,6 +56,7 @@ export function CardMenu({ game, cardId, onCommand, onClose }: CardMenuProps) {
     item('place', 'Move on table', ICONS.place, 'Space'),
     item('move', 'Move to…', ICONS.move, 'M'),
     item('counters', 'Counters…', ICONS.counters, 'C'),
+    item('enlarge', 'Enlarge', ICONS.enlarge, 'I'),
     item('details', 'Details…', ICONS.details),
     item('duplicate', 'Duplicate', ICONS.duplicate, 'Ctrl+D'),
     item('front', 'Bring to front', ICONS.front, undefined, index === game.table.length - 1),

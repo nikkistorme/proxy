@@ -9,6 +9,8 @@ export interface TableCardView {
   ownerSeatId?: string;
   /** Its definition is no longer in the pile's CSV. */
   missing: boolean;
+  /** It has two faces and is face up, so it shows the double-faced badge (TT-6). */
+  doubleFaced: boolean;
   label: string;
 }
 
@@ -24,7 +26,7 @@ export function tableCardView(state: GameState, entry: TableEntry): TableCardVie
   if (card.side === 'down') {
     // Face down hides the card, but not whose it is: its back shows the owner's seat.
     const owner = state.seats.find((s) => s.id === ownerSeatId)?.name ?? 'shared';
-    return { entry, ownerSeatId, missing: false, label: `Face-down card, ${owner}${rotated}${counters}` };
+    return { entry, ownerSeatId, missing: false, doubleFaced: false, label: `Face-down card, ${owner}${rotated}${counters}` };
   }
 
   // A back lost on re-import falls back to the front.
@@ -33,5 +35,5 @@ export function tableCardView(state: GameState, entry: TableEntry): TableCardVie
   const side = definition.back ? (showsBack ? ', back face' : ', front face') : '';
   const missing = definition.missing === true;
   const gone = missing ? ', not in the CSV any more' : '';
-  return { entry, face, ownerSeatId, missing, label: `${face.name}${side}${rotated}${gone}${counters}` };
+  return { entry, face, ownerSeatId, missing, doubleFaced: definition.back !== undefined, label: `${face.name}${side}${rotated}${gone}${counters}` };
 }

@@ -154,7 +154,7 @@ The table is a free-form surface with no fixed rows, zones or snapping. Location
 - TT-6: Flip: a double-faced card shows its other face; a single-faced card turns face-down.
 - TT-7 (after V1, #30): Stack cards by dropping one on another; a stack moves as one and can be fanned out.
 - TT-8: Add named numeric counters to any card on the table (for example, +1/+1 or damage), adjustable with buttons or keys. A new counter starts at 1, names are unique on a card, and values are whole numbers that can go below zero. Counters stay with a card while it moves on the table and are copied by Duplicate, but are cleared when it leaves the table.
-- TT-9: Enlarge a card on hover, long-press or a key, readable at full size regardless of table zoom. Landscape layouts are shown turned upright in the enlarged view.
+- TT-9: Enlarge a card on hover (after 400ms), with the I key, or from the card's menu, which a long-press opens. It's readable at full size regardless of table zoom and sits beside the card, never over it. A double-faced card shows one face at a time, with a button that flips the preview (not the card). Cards turned on the table, and landscape layouts once they exist, are shown upright in the enlarged view. A face-down card can't be enlarged.
 - TT-10: Change the z-order: bring to front, send to back.
 - TT-11: Duplicate a card on the table (for tokens and quick tests) and delete it.
 

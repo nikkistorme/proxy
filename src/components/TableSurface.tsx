@@ -10,8 +10,10 @@ import type { GameState, Pile, Rotation } from '../model/game';
 import { useGameStore, type Placing } from '../store/gameStore';
 import { useCardDrag } from './cardDrag';
 import { CardDetailsDialog } from './CardDetailsDialog';
+import { CardEnlarge } from './CardEnlarge';
 import { CardMenu, type CardCommand } from './CardMenu';
 import { CountersDialog, type CountersRequest } from './CountersDialog';
+import type { Box } from './enlargePlacement';
 import { moveDestinations } from './moveDestinations';
 import { MoveDialog, type MoveRequest } from './MoveDialog';
 import { PlacementBar } from './PlacementBar';
@@ -31,6 +33,10 @@ const ARROWS: Record<string, Direction> = { ArrowLeft: 'left', ArrowRight: 'righ
 const PAN_STEP = 64;
 /** How far a click can wander and still count as a click, not a pan, in screen px. */
 const CLICK_SLOP = 5;
+/** TT-9: how long the mouse rests on a card before it's enlarged. */
+export const ENLARGE_HOVER_MS = 400;
+/** How long the pointer can be off both the card and its preview before the preview closes. */
+const ENLARGE_LEAVE_MS = 150;
 
 /** The card or pile being placed and where its outline is (A11Y-1). */
 interface Placement {
@@ -114,6 +120,10 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
   const [moveRequest, setMoveRequest] = useState<MoveRequest>();
   const [detailsCardId, setDetailsCardId] = useState<string>();
   const [countersRequest, setCountersRequest] = useState<CountersRequest>();
+  /** TT-9: the enlarged card. A key or the menu moves focus into it; a hover doesn't. */
+  const [enlarge, setEnlarge] = useState<{ cardId: string; anchor: Box; takeFocus: boolean; zoom: number }>();
+  const hoverTimer = useRef<number>(undefined);
+  const leaveTimer = useRef<number>(undefined);
   const [placement, setPlacement] = useState<Placement>();
   const placementRef = useRef<HTMLButtonElement>(null);
   /** Where the last pointer went down, so a pan isn't taken for a click. */
@@ -328,6 +338,7 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
   };
 
   function openMenu(cardId: string) {
+    window.clearTimeout(hoverTimer.current);
     const rect = buttons.current[cardId]?.getBoundingClientRect();
     if (rect) setMenu((open) => (open?.cardId === cardId ? undefined : { cardId, rect }));
   }
@@ -379,6 +390,10 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
       case 'counters':
         openCounters(cardId);
         return;
+      case 'enlarge':
+        if (enlarge?.cardId === cardId) closeEnlarge(true);
+        else openEnlarge(cardId, true);
+        return;
       case 'details':
         setDetailsCardId(cardId);
         pendingFocus.current = 'none';
@@ -391,6 +406,65 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
     // Re-ordering moves the card's element, which can drop focus, so put it back.
     pendingFocus.current = { card: cardId };
   }
+
+  /** TT-9: shows a card at full size beside it. A face-down card keeps its secret. */
+  function openEnlarge(cardId: string, takeFocus: boolean) {
+    window.clearTimeout(hoverTimer.current);
+    window.clearTimeout(leaveTimer.current);
+    if (game.cards[cardId]?.side === 'down') {
+      if (takeFocus) announce('A face-down card has nothing to enlarge. Flip it face up first.');
+      return;
+    }
+    const rect = buttons.current[cardId]?.closest('.table-card')?.getBoundingClientRect();
+    if (!rect) return;
+    setMenu(undefined);
+    setEnlarge({ cardId, anchor: { left: rect.left, top: rect.top, width: rect.width, height: rect.height }, takeFocus, zoom });
+    if (takeFocus) pendingFocus.current = 'none';
+  }
+
+  /** Closes the preview. Focus goes back to the card only if the preview had it and it isn't going elsewhere. */
+  function closeEnlarge(refocus: boolean) {
+    window.clearTimeout(hoverTimer.current);
+    window.clearTimeout(leaveTimer.current);
+    if (refocus && enlarge?.takeFocus) buttons.current[enlarge.cardId]?.focus();
+    setEnlarge(undefined);
+  }
+
+  /** TT-9: a mouse resting on a card enlarges it after a moment; leaving it and its preview closes it. */
+  function onCardHover(cardId: string, entering: boolean) {
+    window.clearTimeout(hoverTimer.current);
+    if (entering) {
+      if (drag || menu || enlarge?.takeFocus) return;
+      window.clearTimeout(leaveTimer.current);
+      if (enlarge?.cardId === cardId) return;
+      hoverTimer.current = window.setTimeout(() => openEnlarge(cardId, false), ENLARGE_HOVER_MS);
+    } else if (enlarge && !enlarge.takeFocus) {
+      leaveTimer.current = window.setTimeout(() => setEnlarge(undefined), ENLARGE_LEAVE_MS);
+    }
+  }
+
+  // A press anywhere but the preview, or the table scrolling or zooming under it, closes it.
+  useEffect(() => {
+    if (!enlarge) return;
+    const viewport = viewportRef.current;
+    const onPress = (event: Event) => {
+      if (!(event.target instanceof Element && event.target.closest('.card-enlarge'))) setEnlarge(undefined);
+    };
+    const onScroll = () => setEnlarge(undefined);
+    window.addEventListener('pointerdown', onPress, true);
+    viewport?.addEventListener('scroll', onScroll);
+    return () => {
+      window.removeEventListener('pointerdown', onPress, true);
+      viewport?.removeEventListener('scroll', onScroll);
+    };
+  }, [enlarge]);
+  useEffect(
+    () => () => {
+      window.clearTimeout(hoverTimer.current);
+      window.clearTimeout(leaveTimer.current);
+    },
+    [],
+  );
 
   /** TT-8: the card's counters, at one counter when its pill was pressed. */
   function openCounters(cardId: string, counterId?: string) {
@@ -572,6 +646,8 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
 
   // TT-4: dragging a card moves it on the table, or to a pile or a hand, through the same action as a keyboard move.
   function onCardPointerDown(cardId: string, event: PointerEvent<HTMLButtonElement>) {
+    // A press means the pointer is busy with the card, so a waiting hover preview doesn't open.
+    window.clearTimeout(hoverTimer.current);
     const entry = game.table.find((e) => e.cardId === cardId);
     const visual = event.currentTarget.closest<HTMLElement>('.table-card');
     if (!entry || !visual) return;
@@ -594,6 +670,11 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
       cancel: () => {
         announce(`Put ${name} back.`);
         pendingFocus.current = { card: cardId };
+      },
+      // Like a pile: a held finger let go in place opens the card's menu.
+      onHoldRelease: () => {
+        buttons.current[cardId]?.focus();
+        openMenu(cardId);
       },
     });
   }
@@ -631,7 +712,7 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
   }
 
   // Card keys only work while a card has focus, so single keys are safe (WCAG 2.1.4).
-  const CARD_KEYS: Record<string, CardCommand> = { r: 'rotate', R: 'rotate-back', f: 'flip', m: 'move', c: 'counters', Delete: 'delete', Backspace: 'delete' };
+  const CARD_KEYS: Record<string, CardCommand> = { r: 'rotate', R: 'rotate-back', f: 'flip', m: 'move', c: 'counters', i: 'enlarge', I: 'enlarge', Delete: 'delete', Backspace: 'delete' };
 
   function onCardKeyDown(cardId: string, event: KeyboardEvent<HTMLButtonElement>) {
     const { key } = event;
@@ -646,6 +727,11 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
     if (key === 'Enter' || key === 'ContextMenu' || (key === 'F10' && event.shiftKey)) {
       event.preventDefault();
       openMenu(cardId);
+      return;
+    }
+    if (key === 'Escape' && enlarge) {
+      event.preventDefault();
+      closeEnlarge(true);
       return;
     }
     if (key === ' ') {
@@ -777,6 +863,7 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
                 onPointerDown={onCardPointerDown}
                 dragging={drag?.cardId === entry.cardId}
                 onOpenCounters={openCounters}
+                onHover={onCardHover}
               />
             ))}
             {dropBox && (
@@ -815,6 +902,19 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
       )}
       <MoveDialog key={moveRequest?.cardId ?? 'closed'} request={moveRequest} onConfirm={confirmMove} onChooseSpot={chooseSpot} onClose={closeMove} />
       <CardDetailsDialog game={game} cardId={detailsCardId} onClose={closeDetails} />
+      {/* Zooming moves the card, so a preview from before the zoom is dropped. */}
+      {enlarge && enlarge.zoom === zoom && game.table.some((e) => e.cardId === enlarge.cardId) && (
+        <CardEnlarge
+          key={enlarge.cardId}
+          game={game}
+          cardId={enlarge.cardId}
+          anchor={enlarge.anchor}
+          takeFocus={enlarge.takeFocus}
+          onClose={closeEnlarge}
+          onPointerEnter={() => window.clearTimeout(leaveTimer.current)}
+          onPointerLeave={() => !enlarge.takeFocus && onCardHover(enlarge.cardId, false)}
+        />
+      )}
       <CountersDialog key={countersRequest ? `${countersRequest.cardId}-${countersRequest.counterId ?? ''}` : 'counters-closed'} request={countersRequest} onClose={closeCounters} />
       {placement && <PlacementBar name={placementName(game, placement)} onPlace={placeCard} onCancel={cancelPlacing} />}
     </>
