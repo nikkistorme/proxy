@@ -29,12 +29,14 @@ interface DragSourceBase {
   cancel: () => void;
   /** The card has lifted, before any target is looked for. The pile viewer gets out of the way here. */
   onLift?: () => void;
+  /** A finger lifted it and let go without moving it: open its menu instead (table cards and piles). */
+  onHoldRelease?: () => void;
 }
 
 /**
  * A card goes to the table, a pile or a hand. A pile moves on the table, or merges
- * with a pile it lands on (#56), and a finger that lifts it and lets go without
- * moving opens its menu instead.
+ * with a pile it lands on (#56). A finger that lifts a pile or table card and lets
+ * go without moving opens its menu instead.
  */
 export type DragSource = DragSourceBase & ({ cardId: string; pileId?: undefined } | { pileId: string; cardId?: undefined; onHoldRelease: () => void });
 
@@ -218,7 +220,7 @@ function finish(current: Session) {
   end();
   if (!started) return;
   swallowNextClick();
-  if (stillHeld && source.pileId !== undefined) source.onHoldRelease();
+  if (stillHeld && source.onHoldRelease) source.onHoldRelease();
   else if (over && !sameDestination(over, source.from)) source.drop(over);
   else source.cancel();
 }
@@ -248,7 +250,7 @@ function onTouchMove(event: TouchEvent) {
  * pointerdown. A mouse drags once it moves past `DRAG_SLOP`; a finger has to rest
  * on the card for `TOUCH_HOLD_MS` first, so a swipe still scrolls. Escape, or a
  * drop outside any target, leaves the card where it was. Letting go of a held
- * pile without moving it opens its menu.
+ * pile or table card without moving it opens its menu.
  */
 export function useCardDrag() {
   const store = useGameStoreApi();

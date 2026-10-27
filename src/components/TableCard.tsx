@@ -25,6 +25,8 @@ interface TableCardProps {
   dragging: boolean;
   /** TT-8: opens the card's counters, at one counter when its pill was pressed. */
   onOpenCounters: (cardId: string, counterId?: string) => void;
+  /** TT-9: a mouse came onto the card, or left it. */
+  onHover: (cardId: string, entering: boolean) => void;
 }
 
 /** Up to three pills show; with more, the first two and a "+N more" pill (CardStates). */
@@ -35,8 +37,8 @@ const MAX_PILLS = 3;
  * face is a decorative layer under a transparent button that carries the name,
  * so a face full of text never becomes the button's name (A11Y-6).
  */
-export function TableCard({ view, layer, tabbable, register, onFocus, onKeyDown, onKeyUp, menuOpen, onOpenMenu, onPointerDown, dragging, onOpenCounters }: TableCardProps) {
-  const { entry, face, ownerSeatId, missing, label } = view;
+export function TableCard({ view, layer, tabbable, register, onFocus, onKeyDown, onKeyUp, menuOpen, onOpenMenu, onPointerDown, dragging, onOpenCounters, onHover }: TableCardProps) {
+  const { entry, face, ownerSeatId, missing, doubleFaced, label } = view;
   const identity = seatIdentity(ownerSeatId);
   // The outer box is the area the card covers on screen, turned or not, so the
   // Actions button sits at its bottom-right corner. Only the card inside turns.
@@ -74,6 +76,15 @@ export function TableCard({ view, layer, tabbable, register, onFocus, onKeyDown,
             Not in CSV
           </span>
         )}
+        {doubleFaced && (
+          // The name already says which face shows, so the badge is for the eye only (CardStates).
+          <span className={missing ? 'table-card__badge table-card__badge--dfc table-card__badge--second' : 'table-card__badge table-card__badge--dfc'} aria-hidden="true">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 12a8 8 0 0 1 14-5.3M20 4v4h-4M20 12a8 8 0 0 1-14 5.3M4 20v-4h4" />
+            </svg>
+            2
+          </span>
+        )}
         <button
           ref={(element) => register(entry.cardId, element)}
           type="button"
@@ -86,6 +97,8 @@ export function TableCard({ view, layer, tabbable, register, onFocus, onKeyDown,
           onKeyDown={(event) => onKeyDown(entry.cardId, event)}
           onKeyUp={(event) => onKeyUp(entry.cardId, event)}
           onPointerDown={(event) => onPointerDown(entry.cardId, event)}
+          onPointerEnter={(event) => event.pointerType === 'mouse' && onHover(entry.cardId, true)}
+          onPointerLeave={(event) => event.pointerType === 'mouse' && onHover(entry.cardId, false)}
           onContextMenu={(event) => {
             event.preventDefault();
             event.currentTarget.focus();

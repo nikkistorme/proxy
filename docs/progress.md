@@ -2,9 +2,24 @@
 
 ## Current state
 
-Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection (#29), stacks (#30) and shortcut remapping (#34, folded into #53) moved after V1. 3a to 3f-2, 3m-1 to 3m-3 and 3i-1 are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; merging piles by dropping one on another; and card counters. #31 (3i) is split into 3i-1, counters, and 3i-2, enlarge and the double-faced badge. 3i-2 (#31), 3j (#32), 3k (#33), 3o (#61, close-out) and 3n (#39, dark theme) are left. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases.
+Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection (#29), stacks (#30) and shortcut remapping (#34, folded into #53) moved after V1. 3a to 3f-2, 3m-1 to 3m-3 and 3i (#31) are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; merging piles by dropping one on another; card counters; and enlarging a card, with the double-faced badge. 3j (#32), 3k (#33), 3o (#61, close-out) and 3n (#39, dark theme) are left. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases.
 
 ## Done
+
+### Phase 3i-2: Enlarge and the double-faced badge (2026-10-27)
+
+- **Enlarge (TT-9):** `CardEnlarge` shows a card's face at 216px wide with "Name · Type" and an "I close" hint, from the Main and TableDark boards. It sits outside the zoomed mat, so it's the same size at any zoom, and it's always upright, however the card is turned. `enlargeSpot` puts it right of the card, then left, below or above, whichever fits, so it never covers the card. On a phone where nothing fits, it takes the side with the most room.
+  - **Opening:** a mouse resting on a card for 400ms opens it without taking focus, and leaving both the card and the preview for 150ms closes it. **I** on a focused card, or **Enlarge** (I) in the card menu, opens it with focus inside. A press on the card, or a menu opening, cancels a waiting hover.
+  - **Closing:** I or Escape (focus goes back to the card), a press outside it, focus leaving it, or the table scrolling or zooming.
+  - **Double-faced cards (owner decision):** the preview starts on the face the card shows and has a **Show back** or **Show front** button that flips the preview only, with a half-turn animation. It's instant under `prefers-reduced-motion`. When the preview opens by key or menu, focus starts on that button.
+  - **Face-down cards (owner decision):** I or the menu shows the front, a quick look at a hidden card. The card stays face down. A hover never shows it.
+- **Escape on the table (owner decision):** Escape on a focused card (with no preview open) or pile moves focus back to the table itself.
+- **Touch hold (owner decision):** a finger held on a table card and let go without moving opens the card's menu, as on a pile, and the menu has Enlarge. `DragSource.onHoldRelease` now works for table cards too, and hand cards are unchanged.
+- **Double-faced badge (TT-6):** face-up double-faced table cards show the CardStates badge, a flip icon and "2". It sits below "Not in CSV" when a card has both. It's hidden face down, and the card's name already says which face shows.
+- **Tests:** 397 unit tests, including `TableEnlarge.test.tsx` and `enlargePlacement.test.ts`. The new `e2e/enlarge.spec.ts` covers:
+  - keyboard only: I, Show back, Escape, a turned card at 50% zoom shown upright at 216px beside the card, and Escape from a card and a pile back to the table
+  - mouse hover with axe, the badge, and the flip button by mouse
+  - a touch hold opening the menu, then Enlarge at 375 × 667 (Chromium)
 
 ### Phase 3i-1: Card counters (2026-10-27)
 
@@ -528,17 +543,20 @@ Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection
 
 ## Next
 
-- **3i-2: enlarge and the double-faced badge (#31)**, after the owner's go-ahead. The owner's notes from planning: the preview shows one face at a time, with a button that flips a double-faced card (with a flip animation that respects reduced motion); hover opens it after 400ms; I opens it from the keyboard (Space already moves a card); and a touch hold on a table card that lets go without moving opens the card's menu, as on a pile, with enlarge in the menu. Until Phase 4 layouts, "landscape" means a card turned on the table, shown upright.
-- Then 3j (#32, hand reordering) and 3k (#33, seat counters, dice and roll log), 3n (#39, dark theme) at any point, and 3o (#61) last: the ? shortcut reference, a WCAG 2.1.4 fix for the page-wide D shortcut, the announcement audit, and the solo-turn E2E that closes Phase 3.
+- **3j (#32, hand reordering)**, after the owner's go-ahead. Then 3k (#33, seat counters, dice and roll log), 3n (#39, dark theme) at any point, and 3o (#61) last: the ? shortcut reference, a WCAG 2.1.4 fix for the page-wide D shortcut, the announcement audit, and the solo-turn E2E that closes Phase 3.
+- **#71: keys act on the hovered card or pile when nothing on the table has focus**, an owner request from the #70 review. Single-letter keys without focus need the shortcut switch (WCAG 2.1.4), so it goes with #61 and #53.
 - **#68: no text-field focus on touch screens in the other dialogs** (Move to…, pile viewer, Draw/Mill/Peek count, pile name). It isn't tied to a phase, and the owner chooses when.
 - **After V1, as feature issues:** selection and group actions (#29), stacks (#30), and control settings with shortcut remapping (#53).
 - **Multi-select in the pile viewer (#57)**, a feature issue outside the phases, when the owner chooses. Open problems that belong to later issues:
   - #29 (after V1): move the Actions button to the selected card
-  - 3i-2: a double-faced badge on table cards (from CardStates)
   - 3j: dragging to reorder the hand, where a click without a drag still opens the menu
 
 ## Open problems
 
+- A card's menu opened by a touch hold doesn't take focus, the same as a pile's: the browser's own mousedown after a touch moves focus back to the card.
+- The enlarge preview is sized in CSS px, so it shrinks with browser zoom like the rest of the page. The table's own zoom doesn't change it, as TT-9 asks (checked with the owner).
+- The enlarge preview's hover runs on a mouse only. The preview closes when the table scrolls or zooms, rather than following the card.
+- Until Phase 4 layouts, "landscape" in TT-9 means a card turned on the table. Landscape layouts will need the preview's size to swap.
 - In the counters dialog, typing a minus in the value field steps it down rather than typing a negative number. Values below zero are reached with − or the arrow keys.
 - Counter pills scale with the table's zoom like the Actions button, so below 100% they're under 24px tall. C and the card menu always work.
 - Merging piles by touch needs a check on an iPhone, like the other touch drags.
@@ -690,4 +708,9 @@ Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection
 | 2026-10-27 | One counters dialog lists all of a card's counters, opened by C, the menu or a pill | The board's small popover for one counter | The shared `Dialog` brings focus, Escape and phone-size behaviour, and one place handles adding, changing and removing. |
 | 2026-10-27 | Every counter change is its own undo step and applies straight away | Applying the changes on Done | The board says Escape keeps the value, and each step is announced. |
 | 2026-10-27 | 3i-2 enlarge opens with I, and a still touch hold on a table card opens its menu | Space (moves a card); a hold that enlarges | Owner decision |
+| 2026-10-27 | The enlarge preview flips its own face, not the card's | Showing both faces at once | Owner decision: one face at a time is easier to read, and looking isn't a game action, so it's no undo step. |
+| 2026-10-27 | Enlarging a face-down card by key or menu shows its front; a hover doesn't | Not enlarging face-down cards | Owner decision: a quick way to check a hidden card. A passing hover mustn't reveal it. |
+| 2026-10-27 | Escape on a focused card or pile moves focus to the table | Leaving focus on the card | Owner decision. Focus stays in the table region, so the keyboard isn't lost. |
+| 2026-10-27 | Hover-plus-key actions are their own issue (#71) | Building them in #70 | Single-letter keys without focus need an off switch under WCAG 2.1.4 (#61, #53). Owner approved. |
+| 2026-10-27 | A hover preview stays open while the pointer is over it, and Escape closes it | Closing as soon as the pointer leaves the card | WCAG 1.4.13: hover content must be hoverable and dismissible, and the flip button must be reachable by mouse. |
 | 2026-10-27 | On touch screens, a dialog's focus goes to a button, never straight to a text field | Autofocusing the first field everywhere | Owner rule: the keyboard sliding up is jarring. Done in the counters dialog; the other dialogs follow in #68. |

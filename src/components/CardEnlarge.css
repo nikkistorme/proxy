@@ -1,0 +1,54 @@
+/* TT-9: the enlarged card, from the Main and TableDark boards. Outside the zoomed mat, so it's the same size at any zoom. */
+.card-enlarge {
+  position: fixed;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: calc(100dvh - 24px);
+  padding: 10px 10px 8px;
+  overflow-y: auto;
+  border: 1px solid var(--control);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+.card-enlarge:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer),
+    0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+.card-enlarge__face {
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.card-enlarge__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  max-width: 216px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.card-enlarge__footer kbd {
+  padding: 1px 5px;
+  border: 1px solid var(--control);
+  border-radius: 4px;
+  color: var(--ink);
+  font-family: var(--font-num);
+  font-size: 11px;
+}
+
+.card-enlarge__flip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}

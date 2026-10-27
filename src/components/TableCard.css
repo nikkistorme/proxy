@@ -161,3 +161,14 @@
   font-family: var(--font-num);
   font-size: 13px;
 }
+
+/* The double-faced badge (CardStates): a flip icon and "2". */
+.table-card__badge--dfc {
+  gap: 3px;
+  padding: 0 6px 0 4px;
+}
+
+/* Below the "Not in CSV" badge when a card has both. */
+.table-card__badge--second {
+  top: 60px;
+}
