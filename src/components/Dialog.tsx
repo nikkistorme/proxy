@@ -18,6 +18,11 @@ interface DialogProps {
   cancelLabel?: string;
   /** Makes the dialog a form: Enter or the main button submits. Return true to close. */
   onSubmit?: () => boolean;
+  /**
+   * For long read-only content with nothing focusable inside: names the body and
+   * makes it the first tab stop, so arrow keys can scroll it in every browser.
+   */
+  bodyLabel?: string;
   /** `narrow` for short forms; `medium` for pickers; `wide` for tables. */
   width?: 'narrow' | 'medium' | 'wide';
   children: ReactNode;
@@ -38,6 +43,7 @@ export function Dialog({
   primaryLabel,
   cancelLabel,
   onSubmit,
+  bodyLabel,
   width = 'wide',
   children,
 }: DialogProps) {
@@ -63,7 +69,15 @@ export function Dialog({
 
   const content = (
     <>
-      <div className="dialog__body">{children}</div>
+      {bodyLabel ? (
+        // A scrollable region needs a tab stop to scroll by keyboard in Safari (WCAG 2.1.1).
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+        <div className="dialog__body" role="region" aria-label={bodyLabel} tabIndex={0} data-autofocus>
+          {children}
+        </div>
+      ) : (
+        <div className="dialog__body">{children}</div>
+      )}
       <div className="dialog__footer">
         {hint && (
           <span className="dialog__hint" aria-hidden="true">

@@ -98,3 +98,10 @@
   gap: 10px;
   margin-left: auto;
 }
+
+/* A focusable body (bodyLabel) gets its ring inside, so the dialog's edge can't clip it. */
+.dialog__body:focus-visible {
+  box-shadow:
+    inset 0 0 0 3px var(--focus-outer),
+    inset 0 0 0 5px var(--focus-inner);
+}

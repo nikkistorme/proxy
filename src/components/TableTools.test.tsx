@@ -130,6 +130,7 @@ describe('TT-1 and TT-2 zoom, fit and snap controls', () => {
 
   it('zooms with + = and −, fits with 0, and snaps with G, but not in a field or with Ctrl', async () => {
     const { store, calls } = setupView();
+    screen.getByRole('button', { name: 'Zoom in (+)' }).focus();
     await userEvent.keyboard('+=-0g');
     expect(calls).toEqual(['zoom in', 'zoom in', 'zoom out', 'fit']);
     expect(store.getState().view.snap).toBe(true);
