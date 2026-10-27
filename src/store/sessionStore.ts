@@ -1,6 +1,7 @@
 import { createContext, createElement, useContext, useState, type ReactNode } from 'react';
 import { useStore } from 'zustand';
 import { createStore, type StoreApi } from 'zustand/vanilla';
+import { roll, type Die, type Roll } from '../actions/dice';
 import type { Destination } from '../actions/moveCard';
 import { createSoloSession, type ActionContext, type ActionResult, type SessionState } from '../model/session';
 import { cryptoRandomInt } from '../model/random';
@@ -17,6 +18,17 @@ export interface HistoryEntry {
   session: SessionState;
   announcement: string;
 }
+
+/** One line in the session log. Only rolls for now; other actions join it later (TT-14). */
+export interface LogEntry {
+  id: number;
+  text: string;
+  /** When it happened, in ms since the epoch. */
+  at: number;
+}
+
+/** The log keeps this many entries, newest last. */
+export const LOG_LIMIT = 50;
 
 /** How the table is shown. Not part of the session: changing it is never an undo step. */
 export interface TableView {
@@ -75,6 +87,12 @@ export interface SessionStore {
   undo: () => void;
   /** TT-15: replays the last undone action, or announces that there is nothing to redo. */
   redo: () => void;
+  /** TT-14: the session log, oldest first. Not part of the session, so undo leaves it alone. */
+  log: LogEntry[];
+  /** The latest roll, shown large in Dice & coins. */
+  lastRoll: (Roll & { id: number }) | undefined;
+  /** TT-14: rolls a die or flips a coin, logs and announces it. Never an undo step. */
+  roll: (die: Die) => Roll;
   view: TableView;
   setView: (view: Partial<TableView>) => void;
   tableViewport: TableViewport | undefined;
@@ -104,6 +122,19 @@ export function createSessionStore(session: SessionState = createSoloSession(), 
       announcement: { text: '', id: 0 },
       past: [],
       future: [],
+      log: [],
+      lastRoll: undefined,
+      roll: (die) => {
+        const result = roll(die, context.randomInt);
+        const { log } = get();
+        const id = (log.at(-1)?.id ?? 0) + 1;
+        set({
+          announcement: next(result.announcement),
+          lastRoll: { ...result, id },
+          log: [...log, { id, text: result.announcement.slice(0, -1), at: Date.now() }].slice(-LOG_LIMIT),
+        });
+        return result;
+      },
       view: { zoom: 1, snap: false, columns: PLACEMENT_COLUMNS },
       setView: (view) => set({ view: { ...get().view, ...view } }),
       tableViewport: undefined,

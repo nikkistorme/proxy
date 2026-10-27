@@ -1,0 +1,30 @@
+/* The session's menu in the header, opening below its button like the other menus. */
+.session-menu {
+  position: relative;
+}
+
+.session-menu__button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 32px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.session-menu > .menu {
+  top: calc(100% + var(--space-1));
+  left: 0;
+}
+
+.session-menu > .menu[data-placement='above'] {
+  top: auto;
+  bottom: calc(100% + var(--space-1));
+}

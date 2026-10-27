@@ -5,7 +5,7 @@ import { draw, revealTop, shuffle } from '../actions/pileActions';
 import { cardsFrom, sessionWithDeck, namesOf, testContext } from '../actions/testing';
 import { LiveRegion } from '../components/LiveRegion';
 import { createSoloSession } from '../model/session';
-import { createSessionStore, SessionStoreProvider, HISTORY_LIMIT, useSessionStore } from './sessionStore';
+import { createSessionStore, SessionStoreProvider, HISTORY_LIMIT, LOG_LIMIT, useSessionStore } from './sessionStore';
 
 describe('AR-2 store and live region', () => {
   it('dispatch runs an action, stores the new session and announces it', () => {
@@ -166,5 +166,37 @@ describe('TT-15 undo and redo', () => {
     expect(store.getState().announcement.text).toMatch(/^Undone: /);
     store.getState().undo();
     expect(store.getState().announcement.text).toBe('Nothing to undo.');
+  });
+});
+
+describe('TT-14 rolls in the session log', () => {
+  it('logs and announces a roll, with the latest kept for Dice & coins', () => {
+    const store = createSessionStore(createSoloSession(), testContext());
+    const first = store.getState().roll('d20');
+    store.getState().roll('Coin');
+    const { log, lastRoll, announcement } = store.getState();
+    expect(log.map((e) => e.text)).toEqual([first.announcement.slice(0, -1), expect.stringMatching(/^Flipped a coin: (heads|tails)$/)]);
+    expect(lastRoll?.die).toBe('Coin');
+    expect(lastRoll?.id).toBe(2);
+    expect(announcement.text).toMatch(/^Flipped a coin: (heads|tails)\.$/);
+  });
+
+  it('is not an undo step, and undo leaves the log alone', () => {
+    const store = createSessionStore(sessionWithDeck(), testContext());
+    store.getState().dispatch((g) => draw(g, { pileId: 'pile-p1-main' }));
+    store.getState().roll('d6');
+    expect(store.getState().past).toHaveLength(1);
+    store.getState().undo();
+    expect(store.getState().announcement.text).toBe('Undone: Player 1 drew Imp from P1 main deck. 2 cards left.');
+    expect(store.getState().log).toHaveLength(1);
+  });
+
+  it(`keeps the last ${LOG_LIMIT} entries`, () => {
+    const store = createSessionStore(createSoloSession(), testContext());
+    for (let i = 0; i < LOG_LIMIT + 5; i++) store.getState().roll('d4');
+    const { log } = store.getState();
+    expect(log).toHaveLength(LOG_LIMIT);
+    expect(log[0]?.id).toBe(6);
+    expect(log.at(-1)?.id).toBe(LOG_LIMIT + 5);
   });
 });

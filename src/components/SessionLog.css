@@ -1,0 +1,42 @@
+/* TT-14: the session log, from the Main board's log list. */
+.session-log {
+  margin: 0 -20px;
+  padding: 0;
+  list-style: none;
+}
+
+.session-log__entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 7px 20px;
+}
+
+.session-log__entry--latest {
+  background: var(--accent-soft);
+}
+
+.session-log__mark {
+  flex: none;
+  margin-top: 4px;
+  fill: var(--muted);
+}
+
+.session-log__text {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.session-log__time {
+  flex: none;
+  margin-top: 1px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.session-log__empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}

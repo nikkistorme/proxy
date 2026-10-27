@@ -73,6 +73,8 @@ export interface SessionState {
   hands: Record<string, string[]>;
   /** Cards on the table, bottom of the stacking order first (TT-10). */
   table: TableEntry[];
+  /** Shows Dice & coins (TT-14). A format setting, fixed in the Solo preset until Phase 5. */
+  usesDice: boolean;
 }
 
 /** Everything an action needs from outside the state, injectable for tests (AR-3). */
@@ -117,5 +119,6 @@ export function createSoloSession(): SessionState {
     ],
     hands: { 'seat-p1': [] },
     table: [],
+    usesDice: true,
   };
 }
