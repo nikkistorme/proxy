@@ -2,11 +2,18 @@
 
 ## Current state
 
-Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection (#29), stacks (#30) and shortcut remapping (#34, folded into #53) moved after V1. 3a to 3f-2, 3m-1 to 3m-3, 3i (#31) and 3j (#32) are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; merging piles by dropping one on another; card counters; enlarging a card, with the double-faced badge; reordering the hand; seat counters (3k-1); and dice, a coin and the session log (3k-2, closing #33). 3o (#61, close-out) and 3n (#39, dark theme) are left. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases.
+Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection (#29), stacks (#30) and shortcut remapping (#34, folded into #53) moved after V1. 3a to 3f-2, 3m-1 to 3m-3, 3i (#31) and 3j (#32) are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; merging piles by dropping one on another; card counters; enlarging a card, with the double-faced badge; reordering the hand; seat counters (3k-1); dice, a coin and the session log (3k-2, closing #33); and the dark theme, which follows the system setting (3n, #39). Only 3o (#61, close-out) is left. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases.
 
 The V1 plan now makes the data model ready for games, card sets and accounts (#69): a play session is a "session" and "game" means the card game being designed. Saves will go through a storage interface over separate items, keyed by base path and profile (AR-6, PS-7), with card sets as their own model (AR-4) and one options resolver (AR-7). The code now says "session" for a play session (#73). The storage interface and card set model (#74) start Phase 6.
 
 ## Done
+
+### Phase 3n: Dark theme (2026-10-27)
+
+- **Following the system (A11Y-9):** `applyTheme` in `src/theme.ts` sets `data-theme` on `<html>` from `prefers-color-scheme` before the first render, and follows changes while the app is open. It takes a preference (`system`, `light` or `dark`) so the Settings toggle can use it later. `index.css` sets `color-scheme` to match, so native controls and scrollbars follow.
+- **Colours:** the dark values in `design/tokens.css` were already right on every screen. The one fix is the toast's hover tint, which was a fixed white and vanished on the dark theme's light toast. It now uses the toast's text colour. Card faces, backs and the dark pills on cards stay the same in both themes, as the design says.
+- **Checked against TableDark** in the browser at 1440 × 900.
+- **Tests:** `theme.test.ts`, and `e2e/dark-theme.spec.ts`: axe with zero violations in dark on the import results, game screen, table and hand card menus, counters, enlarge, Move to…, toast, peek, Add pile, dice and the session log, and the game screen and pile viewer at 375 × 667. It also checks that the theme switches while the app is open.
 
 ### Phase 3k-2: Dice, coin and session log (2026-10-27)
 
@@ -590,7 +597,7 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 ## Next
 
 - **#74: storage interface, profile keys and card set model**, at the start of Phase 6.
-- **3n (#39, dark theme)** at any point, and **3o (#61)** last: the ? shortcut reference, a WCAG 2.1.4 fix for the page-wide D shortcut, the announcement audit, and the solo-turn E2E that closes Phase 3.
+- **3o (#61)**, the last of Phase 3: the ? shortcut reference, a WCAG 2.1.4 fix for the page-wide D shortcut, the announcement audit, and the solo-turn E2E that closes Phase 3.
 - **#71: keys act on the hovered card or pile when nothing on the table has focus**, an owner request from the #70 review. Single-letter keys without focus need the shortcut switch (WCAG 2.1.4), so it goes with #61 and #53.
 - **#68: no text-field focus on touch screens in the other dialogs** (Move to…, pile viewer, Draw/Mill/Peek count, pile name). It isn't tied to a phase, and the owner chooses when.
 - **After V1, as feature issues:** selection and group actions (#29), stacks (#30), and control settings with shortcut remapping (#53).
@@ -640,7 +647,8 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 - **Reload is two clicks, not one:** "Reload <file>…" reopens the file picker, because browsers can't re-read a chosen file. A true one-click reload needs the File System Access API, which works in Chromium only and falls back to the picker elsewhere. That fits with Phase 6, where the file handle can be saved with the game.
 - The default card face uses the UI font, not the sample card's Bitter, which would be another font dependency. Phase 4 layouts will set card fonts.
 - The shared-pile back colour `#3F433D` isn't a design token. The design has no shared seat, so add a token if the design gets one.
-- Dark theme isn't wired up. `tokens.css` has `[data-theme="dark"]` values, but nothing sets `data-theme` yet. #39 (3n) follows the system setting, with a toggle once Settings exists.
+- The dark theme follows the system only. A manual light/dark toggle goes in the Settings screen when it exists (`applyTheme` already takes the choice).
+- The dark theme is set by the app's script, so on a slow load the page background can show light for a moment first. An inline script in `index.html` would fix that if it's noticeable.
 - PR preview clean-up leaves an empty `pr-preview/pr-N/.nojekyll` on `gh-pages`. It's harmless (the URL returns 404), but it could be tidied later.
 - The app's PR monitor still shows an error cached from the old npm `gh`. CI was checked with the real `gh` instead.
 - Local Node is 22.12.0. Some ESLint deps want ≥ 22.13 (this is an engine warning only). CI uses the latest Node 22.
@@ -777,3 +785,5 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 | 2026-10-27 | Dice and the log are shown on demand: a Dice & coins dialog, and a Session log item in a menu on the session's name | The design's always-open right dock (HANDOFF decisions 2 and 3) | Owner decision: neither is needed all the time, and the dock takes table space. |
 | 2026-10-27 | Rolls go in a session log outside the undo history, and aren't undo steps | Rolls as session actions that undo removes | Undo would allow rerolls, and the log should keep what happened. |
 | 2026-10-27 | The header's session menu says "This session" until sessions have names | The format name, or no menu until then | Owner decision. |
+| 2026-10-27 | Dark-theme axe checks live in one spec, `e2e/dark-theme.spec.ts`, that visits every screen | Running the whole E2E suite again in dark | Keeps CI time about the same. Colours come from tokens, so a screen that passes in dark here passes wherever it's used. |
+| 2026-10-27 | The dark E2E waits for animations to end before running axe | Turning motion off | axe read fading-in text as low contrast. Waiting checks the real final colours. |

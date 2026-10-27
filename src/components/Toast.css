@@ -45,5 +45,6 @@
 
 .toast__undo:hover,
 .toast__close:hover {
-  background: rgba(255, 255, 255, 0.14);
+  /* The bar inverts the theme, so tint with its text colour to show in both. */
+  background: color-mix(in srgb, var(--panel) 14%, transparent);
 }

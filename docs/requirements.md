@@ -213,7 +213,7 @@ Target: WCAG 2.2 Level AA across the whole app, including the layout editor. Dra
 - A11Y-6: Each card has an accessible name that includes its name, face state and rotation, for example "Ember Scout, rotated 90°". A details command reads every bound column. Face-down cards announce only "face-down card".
 - A11Y-7 (2.4.7, 2.4.11): a clearly visible focus indicator on cards and controls that is never fully hidden behind other cards.
 - A11Y-8 (2.5.8 Target Size): interactive targets at least 24 × 24 CSS px at default zoom.
-- A11Y-9 (1.4.3, 1.4.11): text and controls meet contrast minimums in both light and dark themes. The layout editor warns when a text box fails contrast against its background.
+- A11Y-9 (1.4.3, 1.4.11): text and controls meet contrast minimums in both light and dark themes. The app follows the system's light or dark setting, including changes while it's open; a manual choice comes with the Settings screen. The layout editor warns when a text box fails contrast against its background.
 - A11Y-10: honor `prefers-reduced-motion` for shuffles, flips and card movement.
 - A11Y-11: the app works at 200% browser zoom and reflows its panels at 320 CSS px width (1.4.10). The table itself may scroll in two dimensions, which is an allowed exception.
 - A11Y-12: on touch screens, text fields and dropdowns use at least 16px text, so iOS Safari doesn't zoom the page when one takes focus. Pinch zoom stays on: the viewport tag never sets `maximum-scale` or `user-scalable=no` (1.4.4).
