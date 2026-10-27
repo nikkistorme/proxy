@@ -21,6 +21,8 @@ export interface CardInstance {
   side: CardSide;
   /** Seat of the pile it was loaded into, for its card back. Undefined for a shared pile. */
   ownerSeatId?: string;
+  /** Made with Duplicate (TT-11), so reloading a pile doesn't count it as one of the deck's copies. */
+  duplicate?: true;
 }
 
 /** Card rotation on the table, in 90° steps clockwise (TT-5). */

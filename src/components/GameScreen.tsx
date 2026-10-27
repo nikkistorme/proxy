@@ -20,6 +20,7 @@ import { PileViewer } from './PileViewer';
 import { seatIdentity } from './seatIdentity';
 import { TableSurface } from './TableSurface';
 import { TableTools } from './TableTools';
+import { Toast } from './Toast';
 
 function faceOf(game: GameState, cardId: string) {
   const card = game.cards[cardId];
@@ -38,6 +39,7 @@ export function GameScreen() {
   const game = useGameStore((s) => s.game);
   const dispatch = useGameStore((s) => s.dispatch);
   const announce = useGameStore((s) => s.announce);
+  const showToast = useGameStore((s) => s.showToast);
 
   const [menuPileId, setMenuPileId] = useState<string>();
   const [keepOrder, setKeepOrder] = useState<Record<string, boolean>>({});
@@ -226,12 +228,28 @@ export function GameScreen() {
     [game],
   );
 
+  /** Deletes a pile and offers Undo. Focus moves to the pile that takes its place, or Add pile if it was the last. */
+  const removePile = useCallback(
+    (pileId: string, moveCardsToPileId?: string) => {
+      const index = game.piles.findIndex((p) => p.id === pileId);
+      const next = game.piles[index + 1] ?? game.piles[index - 1];
+      const name = game.piles[index]?.name ?? '';
+      dispatch((g) => deletePile(g, moveCardsToPileId === undefined ? { pileId } : { pileId, moveCardsToPileId }));
+      showToast(`Deleted ${name}.`);
+      pendingFocusRef.current = next?.id ?? ADD_PILE;
+    },
+    [game, dispatch, showToast],
+  );
+
+  // An empty pile goes at once, with Undo in the toast. A pile with cards asks where they go.
   const openDelete = useCallback(
     (pileId: string) => {
       const pile = game.piles.find((p) => p.id === pileId);
-      if (pile) setDeleteRequest({ pile, targets: game.piles.filter((p) => p.id !== pileId) });
+      if (!pile) return;
+      if (pile.cardIds.length === 0) removePile(pileId);
+      else setDeleteRequest({ pile, targets: game.piles.filter((p) => p.id !== pileId) });
     },
-    [game],
+    [game, removePile],
   );
 
   const validateName = useCallback((name: string, exceptPileId?: string) => validatePileName(game, name, exceptPileId), [game]);
@@ -256,13 +274,7 @@ export function GameScreen() {
   }
 
   function confirmDelete(moveCardsToPileId: string | undefined) {
-    if (!deleteRequest) return;
-    const pileId = deleteRequest.pile.id;
-    // Focus moves to the pile that takes this one's place, or Add pile if it was the last.
-    const index = game.piles.findIndex((p) => p.id === pileId);
-    const next = game.piles[index + 1] ?? game.piles[index - 1];
-    dispatch((g) => deletePile(g, moveCardsToPileId === undefined ? { pileId } : { pileId, moveCardsToPileId }));
-    pendingFocusRef.current = next?.id ?? ADD_PILE;
+    if (deleteRequest) removePile(deleteRequest.pile.id, moveCardsToPileId);
   }
 
   function closeDelete() {
@@ -444,6 +456,7 @@ export function GameScreen() {
       />
       <PeekDialog key={peekRequest ? `peek-${peekRequest.pileId}` : 'closed'} request={peekRequest} onClose={closePeek} />
       <PileViewer key={viewerPileId ?? 'closed'} pileId={viewerPileId} onClose={closeViewer} />
+      <Toast />
       <LiveRegion />
     </div>
   );

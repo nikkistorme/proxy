@@ -2,9 +2,38 @@
 
 ## Current state
 
-Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37 and #39, all under #20. 3a to 3c are merged: undo and redo; placed table cards and table focus; and pan, zoom, fit all and grid snap. 3d (card action menu, #26) is next.
+Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37, #39 and #41, all under #20. 3a to 3d are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; and the table card menu. 3d-2 (hand card menu, #41) is next.
 
 ## Done
+
+### Phase 3d: Card action menu (2026-10-27)
+
+- **The hand card menu moved to #41 (3d-2),** by agreement.
+- **Actions (`src/actions/cardActions.ts`):**
+  - `rotate`: clockwise or counter-clockwise (TT-5)
+  - `flip` (TT-6): a double-faced card swaps faces, a single-faced card turns face down and back, and a face-down card turns front up. A card whose back was lost counts as single-faced. `flipKind` names the next flip for the menu.
+  - `bringToFront` and `sendToBack` (TT-10)
+  - `duplicate` (TT-11): a copy 24px down and to the right, on top, the same way up and turned the same way. It's flagged `duplicate`, so reloading a pile skips it when counting and removing copies.
+  - `deleteCard` (TT-11)
+  - `shownName` keeps face-down cards secret in announcements ("Turned Troll face down.", then "Rotated a face-down card to 90°.").
+- **`CardMenu`** follows the ActionMenu board:
+  - **Items:** Rotate 90° clockwise (R), Rotate 90° counter-clockwise (Shift+R), the flip item named for what it will do (F), Move to… (M), Details…, Duplicate (Ctrl+D), Bring to front, Send to back, then Delete (Del). Bring to front and Send to back are disabled at the ends.
+  - **Opening it:** Enter, Shift+F10 or the Menu key on a card, a right-click, or the round Actions button.
+  - **The Actions button** shows on the current card only, at the bottom-right of the area the card covers. It's out of the Tab order, because Enter does the same.
+  - **Placement:** the menu opens in a fixed anchor outside the zoomed mat, so it's the same size at any zoom.
+- **Table cards** have an outer box (what they cover on screen, from `cardBox`) and an inner `table-card__body` that turns. Before that change, the Actions button turned with the card and could land off the mat.
+- **Card keys:** R, Shift+R, F, M, Delete or Backspace, and Ctrl/⌘+D only work while a table card has focus, which WCAG 2.1.4 allows.
+- **Move to…** reuses `MoveDialog`. A face-down card shows as "Face-down card".
+- **`CardDetailsDialog`** lists every column of each face, notes a missing definition or a duplicate, and keeps a face-down card hidden.
+- **Toast (`Toast`, `store.toast`):** "Deleted Troll." with Undo and Dismiss. It goes with the next action, undo or redo, so it has no time limit.
+- **Pile delete:** an empty pile now deletes straight away with the toast, and its menu item reads "Delete" (with cards, "Delete…" still asks where they go, then shows the toast). The dialog no longer says there's no undo.
+- **Focus after each action:**
+  - rotate, flip and stacking order: stays on the card
+  - Duplicate: the copy
+  - Delete or Move to…: the next card in reading order, else the toast's Undo (delete) or the table itself (move)
+  - Dialogs: back to the card once they close
+- Tests: 298 unit (`TT-5 rotate`, `TT-6 flip`, `TT-10 stacking order`, `TT-11 duplicate and delete`, the card menu, keys, Details and toast tests, and updated pile-delete tests) and 40 E2E, including `e2e/card-actions.spec.ts` (mouse with axe, keyboard only, Details, and phone size).
+- Checked by hand from screenshots at 1280 × 800.
 
 ### Phase 3c: Pan, zoom, fit all and grid snap (2026-10-26)
 
@@ -373,14 +402,16 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 
 ## Next
 
-- **3d: Card action menu (#26)**, after the owner's go-ahead. Then 3e to 3l (#27 to #34), 3m (#37, movable piles) after 3e and 3f, and 3n (#39, dark theme) at any point. Open problems that belong to later issues:
-  - 3d: whether to drop the delete-pile confirmation in favour of an Undo toast, and a double-faced badge on table cards (from CardStates)
+- **3d-2: Hand card menu (#41)**, after the owner's go-ahead. Then 3e to 3l (#27 to #34), 3m (#37, movable piles) after 3e and 3f, and 3n (#39, dark theme) at any point. Open problems that belong to later issues:
   - 3e and 3f: use `snapToGrid` when snap is on
-  - 3n: choosing the dark theme
-- 3d's card menu can reuse `MoveDialog`, and covers hand cards too.
+  - 3g: move the Actions button to the selected card
+  - 3i: a double-faced badge on table cards (from CardStates)
 
 ## Open problems
 
+- The Actions button and card overlays scale with the table's zoom, so below 100% the button is smaller than 24 × 24px (A11Y-8 counts default zoom only). Enter and right-click always work. Revisit if it's a problem in play.
+- A card turned a quarter at the table's left or top edge reaches up to 25px past the mat edge, because it turns around its centre. 3e and 3f placement could keep turned cards inside the edge.
+- `axe` scrolls the table while it checks contrast, so E2E tests that click cards after an axe check scroll the table back first.
 - **Saving undo history (PS-2, Phase 6):** each step is a whole game, so plain JSON would repeat the card definitions in every step. Phase 6 needs a compact form, such as saving definitions once or saving the differences between steps.
 - Local WebKit on macOS skips buttons when tabbing, unlike CI's Linux WebKit, so the keyboard-only E2E tests that press Tab fail locally in WebKit only. Use Chromium locally, as BP-4 says, and trust CI for WebKit.
 - E2E: under the full suite's load, `e2e/move-dialog.spec.ts` (keyboard only) and `e2e/manage-piles.spec.ts` (keyboard only) each failed once in 3a and passed on rerun and alone. Watch for flakiness.
@@ -474,3 +505,10 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 | 2026-10-26 | The app fills the window at 768 × 600 and up; smaller screens scroll the page with a 60dvh table | Always filling the window | On phones, the wrapped piles and the hand would leave almost no table |
 | 2026-10-26 | Keyboard E2E tests reach controls with `tabTo`, not a fixed number of Tab presses | Counting Tab presses | Every new toolbar button broke the counts |
 | 2026-10-27 | Auto-placed rows are as wide as the visible table, passed to actions as `ActionContext.placementColumns` | A fixed 6 columns; a width in the game state | The owner's wide screen showed half an empty table. The width is outside the game, and the context already carries outside inputs to actions. |
+| 2026-10-27 | Hand card menu split from 3d into #41 (3d-2) | One 3d PR | The table card menu, actions, Details and the toast already filled a session. The owner agreed. |
+| 2026-10-27 | Move to… in the card menu opens the dialog | The board's submenu | `Menu` has no submenus, and the dialog already searches and works by keyboard. The owner agreed. |
+| 2026-10-27 | Ctrl/⌘+D duplicates a focused table card, as on the board | Another key, because browsers bookmark with it | It's blocked only while a table card has focus. The owner agreed. |
+| 2026-10-27 | The Actions button shows on the current card until selection exists (3g) | Only on selected cards | Touch and mouse need a way to open the menu now. The owner agreed. |
+| 2026-10-27 | Empty piles delete without asking, with an Undo toast | Always asking first | Undo exists now, and the brief asks for a toast instead of confirmations. A pile with cards still asks where they go. The owner agreed. |
+| 2026-10-27 | Duplicates are flagged and skipped when a reload counts copies | Counting them | Otherwise duplicating a token would make a reload remove a real copy from the pile |
+| 2026-10-27 | The toast stays until the next action, with no timer | Disappearing after a few seconds | No time limit to read or reach Undo (WCAG 2.2.1), and Ctrl+Z works anyway |

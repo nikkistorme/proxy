@@ -47,7 +47,7 @@ test.describe('A11Y-3 and A11Y-6 cards on the table', () => {
     await tableCard(page, 'Card 03').click();
     await expect(tableCard(page, 'Card 03')).toBeFocused();
     await expect(tableCard(page, 'Card 03')).toHaveCSS('box-shadow', /rgb\(17, 17, 17\) 0px 0px 0px 5px/);
-    const zIndex = await tableCard(page, 'Card 03').evaluate((b) => getComputedStyle(b.parentElement as HTMLElement).zIndex);
+    const zIndex = await tableCard(page, 'Card 03').evaluate((b) => getComputedStyle(b.closest('.table-card') as HTMLElement).zIndex);
     expect(Number(zIndex)).toBeGreaterThan(4);
     const results = await new AxeBuilder({ page }).withTags(axeTags).analyze();
     expect(results.violations).toEqual([]);
@@ -65,7 +65,7 @@ test.describe('A11Y-3 and A11Y-6 cards on the table', () => {
     await expect(tableCard(page, 'Card 02')).toBeFocused();
 
     // The focused card is drawn above the others.
-    const zIndex = await tableCard(page, 'Card 02').evaluate((b) => getComputedStyle(b.parentElement as HTMLElement).zIndex);
+    const zIndex = await tableCard(page, 'Card 02').evaluate((b) => getComputedStyle(b.closest('.table-card') as HTMLElement).zIndex);
     expect(Number(zIndex)).toBeGreaterThan(4);
 
     await page.keyboard.press('Tab');

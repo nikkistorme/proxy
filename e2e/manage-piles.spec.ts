@@ -75,20 +75,16 @@ test.describe('SP-4 manage piles', () => {
     await expect(pile(page, 'Tokens')).toBeFocused();
     await expect(pile(page, 'Tokens')).toHaveAccessibleName('Tokens, empty, 0 cards, shared');
 
+    // An empty pile deletes without asking. Undo, by key or in the toast, brings it back.
     await page.keyboard.press('Enter');
     await page.keyboard.press('End');
-    await expect(page.getByRole('menuitem', { name: 'Delete…' })).toBeFocused();
-    await page.keyboard.press('Enter');
-    await expect(page.getByRole('dialog', { name: 'Delete Tokens?' })).toBeVisible();
-    await page.keyboard.press('Escape');
-    await expect(pile(page, 'Tokens')).toBeFocused();
-
-    await page.keyboard.press('Enter');
-    await page.keyboard.press('End');
-    await page.keyboard.press('Enter');
-    await page.getByRole('button', { name: 'Delete pile' }).focus();
+    await expect(page.getByRole('menuitem', { name: 'Delete' })).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(pile(page, 'Tokens')).toHaveCount(0);
     await expect(page.getByRole('status')).toHaveText('Deleted Tokens.');
+    await expect(page.getByText('Deleted Tokens.', { exact: true }).last()).toBeVisible();
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(pile(page, 'Tokens')).toHaveCount(1);
+    await expect(page.getByRole('button', { name: 'Undo', exact: true })).toHaveCount(0);
   });
 });

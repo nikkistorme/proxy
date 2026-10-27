@@ -45,6 +45,7 @@ export function loadPile(state: GameState, args: LoadPileArgs, context: ActionCo
 
   const copiesByDefinition = new Map<string, number>();
   for (const card of Object.values(state.cards)) {
+    if (card.duplicate) continue;
     copiesByDefinition.set(card.definitionId, (copiesByDefinition.get(card.definitionId) ?? 0) + 1);
   }
 
@@ -69,7 +70,7 @@ export function loadPile(state: GameState, args: LoadPileArgs, context: ActionCo
       let toRemove = have - wanted;
       for (let i = cardIds.length - 1; i >= 0 && toRemove > 0; i--) {
         const id = cardIds[i] as string;
-        if (state.cards[id]?.definitionId !== definition.id) continue;
+        if (state.cards[id]?.definitionId !== definition.id || state.cards[id]?.duplicate) continue;
         cardIds.splice(i, 1);
         removedIds.add(id);
         toRemove--;
