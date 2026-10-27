@@ -11,15 +11,25 @@ Proxy is a browser-based tabletop for playtesting an in-development card game: l
 **Goals**
 
 - Go from an edited CSV to cards on the table in under a minute.
-- Change anything mid-game (piles, card positions, layouts) without restarting.
+- Change anything mid-session (piles, card positions, layouts) without restarting.
 - Make every action available without a mouse, to WCAG 2.2 AA.
-- Run entirely in the browser as a static site, with no accounts or server.
+- Run entirely in the browser as a static site, with no accounts or server in V1. Saved data is shaped so accounts can be added later (#45).
 
 **Non-goals**
 
 - Rules enforcement. The app is a sandbox; players apply the rules.
 - Online or networked multiplayer.
 - Print-and-play export (possible later, see Out of scope).
+
+## Glossary
+
+- **Game:** the card game being designed. V1 has no games screen, but saved layouts and card sets can be linked to a game (AR-6) so games can be added after V1 (#65).
+- **Session:** one play session on the table: its seats, piles, hands, table cards and undo history. Saved sessions are what PS-1 to PS-3 restore. The design brief's "New game" and "resume last game" are "New session" and "Resume last session".
+- **Card set:** the card definitions loaded from one CSV file or URL, with their source (AR-4). A pile is loaded from a card set.
+- **Layout:** a reusable card template (see Layouts).
+- **Format:** a preset of seats and starting piles (see Formats and seats).
+
+In the build rules (BP), a "Claude session" is one Claude Code work session, not a play session.
 
 ## Formats and seats
 
@@ -40,7 +50,7 @@ A format is a preset that defines the seats at the table and the piles each one 
 
 **Acceptance criteria**
 
-- [ ] Starting a 1v1 PvP game creates two seats, two empty hands and three empty piles.
+- [ ] Starting a 1v1 PvP session creates two seats, two empty hands and three empty piles.
 - [ ] Switching seats swaps the hand tray in one action, by click or keyboard shortcut.
 
 ## Card data
@@ -76,12 +86,12 @@ Each deck is its own CSV file. The file is loaded into a pile, so no column says
 
 A pile can read its CSV from a Google Sheet published to the web, so card edits in the sheet reach the table with one click. Each sheet tab is published separately, so one tab is still one deck.
 
-- CD-7: A pile's source can be a URL instead of a file. Accept Google Sheets' published-CSV link (File → Share → Publish to web, format CSV), which looks like `docs.google.com/spreadsheets/d/e/…/pub?gid=…&output=csv`. Any other public URL that returns CSV also works.
+- CD-7: A card set's source can be a URL instead of a file. Accept Google Sheets' published-CSV link (File → Share → Publish to web, format CSV), which looks like `docs.google.com/spreadsheets/d/e/…/pub?gid=…&output=csv`. Any other public URL that returns CSV also works.
 - CD-8: If the user pastes a normal edit or share link, don't try to read it. Show a short how-to for publishing the tab as CSV instead.
 - CD-9: Fetch on load and on "Reload". Show when the data was last fetched, and note that Google can take a few minutes to update published data after an edit.
 - CD-10: Reloading from a URL follows the same update rules as re-importing a file (CD-5).
-- CD-11: If a fetch fails (offline, unpublished, blocked), show what went wrong and keep the last good data. The URL and last fetched data save with the game, so a saved game opens offline.
-- CD-12: A format can store a default source URL per pile, and a "Reload all" control refreshes every URL-backed pile at once.
+- CD-11: If a fetch fails (offline, unpublished, blocked), show what went wrong and keep the last good data. The URL and last fetched data save with the card set, so a saved session opens offline.
+- CD-12: A format can store a default source URL per pile, and a "Reload all" control refreshes every URL-backed card set in the session at once.
 
 **Acceptance criteria**
 
@@ -125,7 +135,7 @@ Setup only fills piles; nothing is placed on the table automatically. The user p
 
 **Piles**
 
-- SP-4: Users can add, rename, delete and merge piles during a game, owned by a seat or shared. Merging deletes one pile and puts its cards on the top or bottom of the other.
+- SP-4: Users can add, rename, delete and merge piles during a session, owned by a seat or shared. Merging deletes one pile and puts its cards on the top or bottom of the other.
 - SP-5: A pile shows its name, card count and top card (face-down by default).
 - SP-6: One-click actions: shuffle, draw 1, draw N to the active seat's hand, reveal top card, and mill N to another pile. A click or tap on a pile draws 1. Right-click, Enter, or a touch held and let go opens the pile's menu with the rest.
 - SP-7: Open any pile at any time in a viewer that shows every card face-up, with search by name and filter by any column.
@@ -163,7 +173,7 @@ The table is a free-form surface with no fixed rows, zones or snapping. Location
 - TT-12: A hand tray along the bottom shows the active seat's hand; cards can be reordered.
 - TT-13: Seat counters (life, resources) always visible, editable with buttons or keys.
 - TT-14: Dice (d4, d6, d8, d10, d12, d20) and a coin, with results announced and shown in a short roll log.
-- TT-15: Undo and redo every game action, at least 200 steps.
+- TT-15: Undo and redo every action that changes the session, at least 200 steps.
 
 **Acceptance criteria**
 
@@ -174,17 +184,20 @@ The table is a free-form surface with no fixed rows, zones or snapping. Location
 
 All data stays in the user's browser, with file export as the durable backup.
 
-- PS-1: Autosave the current game, layouts and formats to IndexedDB after every change, debounced to at most once per second.
-- PS-2: Reopening the app restores the last game exactly, including undo history for the current session.
-- PS-3: Save named game snapshots and load them later (for example, "Turn 4, before combat").
-- PS-4: Export and import a single JSON bundle containing cards, layouts, formats and the game state.
-- PS-5: Version the saved data format and migrate older saves on load.
+- PS-1: Autosave the current session, layouts, formats, card sets and settings to IndexedDB after every change, debounced to at most once per second. Each is saved as its own item through the storage interface (AR-6), so a change rewrites only the items it touched.
+- PS-2: Reopening the app restores the last session exactly, including its undo history since the app was opened.
+- PS-3: Save named session snapshots and load them later (for example, "Turn 4, before combat").
+- PS-4: Export and import a single JSON bundle holding the saved items: card sets, layouts, formats, settings and the session.
+- PS-5: Version the saved data format and migrate older saves on load. Every saved item records the version it was written with.
 - PS-6: If storage is unavailable (private window, blocked site data), the app still works and shows a one-line notice that progress won't be saved.
+- PS-7: Saves are keyed by the app's base path and a profile, so a PR preview never reads or overwrites the live site's saves, and saves for different people on one browser can be kept apart later (#45). V1 has only the "guest" profile. Nothing outside the storage module builds these keys.
 
 **Acceptance criteria**
 
-- [ ] Closing the tab mid-game and reopening it restores every card position, rotation, counter and pile order.
+- [ ] Closing the tab mid-session and reopening it restores every card position, rotation, counter and pile order.
 - [ ] A bundle exported from version N loads in version N+1.
+- [ ] Changing one layout saves only that layout's item, and the session item is unchanged.
+- [ ] Saves made on the live site and on a PR preview, in the same browser, don't overwrite each other.
 
 ## Accessibility
 
@@ -196,7 +209,7 @@ Target: WCAG 2.2 Level AA across the whole app, including the layout editor. Dra
 - A11Y-2 (2.1.1 Keyboard, 2.1.2 No Keyboard Trap): every control and card is reachable and operable by keyboard. Focus never gets stuck in the table or a dialog.
 - A11Y-3: The table is one focusable region. Inside it, arrow keys move focus between cards by position, and Tab leaves the region (roving tabindex).
 - A11Y-4: Keyboard shortcuts for frequent actions (draw, rotate, flip, shuffle, undo). Single-key shortcuts meet 2.1.4 Character Key Shortcuts: they work only while their card, pile or region has focus, or they can be turned off. A shortcut reference opens with ?. Remapping shortcuts comes after V1, with the control settings (#53).
-- A11Y-5 (4.1.3 Status Messages): announce every game action in a polite live region, for example "Draw: Ember Scout to Player 1's hand. Deck: 41 cards."
+- A11Y-5 (4.1.3 Status Messages): announce every action on the table in a polite live region, for example "Draw: Ember Scout to Player 1's hand. Deck: 41 cards."
 - A11Y-6: Each card has an accessible name that includes its name, face state and rotation, for example "Ember Scout, rotated 90°". A details command reads every bound column. Face-down cards announce only "face-down card".
 - A11Y-7 (2.4.7, 2.4.11): a clearly visible focus indicator on cards and controls that is never fully hidden behind other cards.
 - A11Y-8 (2.5.8 Target Size): interactive targets at least 24 × 24 CSS px at default zoom.
@@ -207,7 +220,7 @@ Target: WCAG 2.2 Level AA across the whole app, including the layout editor. Dra
 
 **Acceptance criteria**
 
-- [ ] A complete solo game turn (draw, play a card to a location, rotate it, add a counter, undo) can be done with keyboard and screen reader alone in NVDA + Firefox and VoiceOver + Safari.
+- [ ] A complete solo turn (draw, play a card to a location, rotate it, add a counter, undo) can be done with keyboard and screen reader alone in NVDA + Firefox and VoiceOver + Safari.
 - [ ] Automated axe checks pass with zero violations on every screen.
 - [ ] A manual audit against WCAG 2.2 AA produces an accessibility conformance report (VPAT format) with no failing criteria.
 
@@ -251,7 +264,7 @@ The app ships with a full automated test suite that runs on every pull request; 
 - QA-1: Every requirement ID in this doc has at least one automated test or a documented manual check. Tests name the requirement they cover (for example, `describe('SP-6 shuffle')`).
 - QA-2: Coverage thresholds of 85% lines and branches for `src/model/`, `src/actions/` and `src/csv/`. CI fails below the threshold. UI code is covered by component and E2E tests instead.
 - QA-3: Tests are deterministic: randomness uses the injectable source (AR-3) with a fixed seed, and storage uses a fresh in-memory or test-scoped IndexedDB.
-- QA-4: Test fixtures live in `tests/fixtures/`: valid CSVs, CSVs with each import error, a double-faced pair, layouts and a saved game bundle.
+- QA-4: Test fixtures live in `tests/fixtures/`: valid CSVs, CSVs with each import error, a double-faced pair, layouts and a saved session bundle.
 - QA-5: E2E tests cover at least these flows, each run once by mouse and once by keyboard only: import a deck, shuffle and draw, find a card in a pile and place it, rotate and flip, add a counter, undo, save and reload, export and import a bundle, build a layout.
 - QA-6: Playwright records a trace and screenshot on failure, attached to the CI run.
 - QA-7: Bugs fixed during development get a regression test in the same PR.
@@ -283,7 +296,7 @@ Pointer, keyboard and import all call the same actions, which is what keeps the 
 | --- | --- | --- |
 | Build | Vite | Fast dev loop; static output |
 | UI | React 18 + TypeScript (strict) | Familiar stack; typed card and layout models |
-| State | Zustand with an action log | One store for game state; undo, redo and autosave fall out of the log |
+| State | Zustand with an action log | One store for session state; undo, redo and autosave fall out of the log |
 | CSV | Papa Parse | Handles quoting, line breaks and encodings |
 | Storage | IndexedDB via `idb-keyval` | Larger quota than localStorage; async |
 | Table movement | Custom pointer events + CSS transforms | Free-form placement with full control; keyboard moves call the same actions |
@@ -292,11 +305,13 @@ Pointer, keyboard and import all call the same actions, which is what keeps the 
 
 **Architecture rules**
 
-- AR-1: Every change to game state goes through a named action (for example `moveCard`, `shuffle`, `flip`). Pointer, keyboard and menu input all call the same actions.
+- AR-1: Every change to session state goes through a named action (for example `moveCard`, `shuffle`, `flip`). Pointer, keyboard and menu input all call the same actions.
 - AR-2: Actions produce the live-region announcement text, so screen-reader output can't drift from what happened.
 - AR-3: Random numbers come from an injectable source, so tests can shuffle deterministically.
-- AR-4: Card data, layouts and game state are separate models. A card instance on the table references its card definition and layout by id.
+- AR-4: Card sets, layouts, formats and session state are separate models. A card set holds the card definitions loaded from one CSV and its source (file name or URL). A pile records the id of the card set it was loaded from, and a card instance on the table references its card definition and layout by id. Whether a session also keeps its own copy of the definitions is decided when card sets are built (Phase 6).
 - AR-5: No network calls except loading card art from the URLs in the CSV and fetching CSVs from URLs the user enters (CD-7).
+- AR-6: Saves go through one storage interface with `get`, `put`, `list` and `delete`, over separately saved items: sessions, snapshots, layouts, formats, card sets and settings. Every item has a stable id, an `updatedAt` time, the save format version (PS-5) and an optional `gameId`. IndexedDB is the only V1 implementation, and nothing outside the storage module touches IndexedDB directly. Pass: a test swaps in an in-memory implementation and the app saves and restores through it.
+- AR-7: Layouts, formats and control settings read their options through one resolver that checks the session, then the game, then the account level and returns the first value set. V1 has only the account level, so the resolver returns the account value. Pass: no component reads an option's stored value directly.
 
 ## Demo sample data
 
@@ -306,7 +321,7 @@ The public demo ships with an original, generic sample game so the designer's ow
 - DM-2: Include three layouts: a portrait creature-style card, a portrait action card and a landscape location card.
 - DM-3: Include at least one double-faced card.
 - DM-4: Art is original or openly licensed (for example CC0), bundled with the app, with credits listed in the repo.
-- DM-5: A "Load demo" button on the start screen sets up a Co-op PvE game in one click.
+- DM-5: A "Load demo" button on the start screen sets up a Co-op PvE session in one click.
 - DM-6: The repo's `.gitignore` excludes a `private/` folder for the designer's real CSVs and layouts.
 
 ## Process and portfolio artifacts
@@ -341,20 +356,20 @@ The build runs on a personal Claude account with usage limits, so work happens i
 | 1. Card data | CSV parsing, card model, double-faced cards, import errors | CD-1 to CD-6 | Fixture CSVs import correctly in unit tests |
 | 2. Piles | Piles, shuffle, draw, pile viewer, default card rendering | SP-1 to SP-9 | A deck loads and cards can be drawn and searched |
 | 3. Table | Free-form table, card actions, keyboard moves, announcements, undo | TT-1 to TT-15 except TT-3 and TT-7, A11Y-1 to A11Y-6 | A solo turn works by mouse and keyboard |
-| 4. Layouts | Layout editor, portrait and landscape, preview | LY-1 to LY-10 | A custom layout renders cards on the table |
-| 5. Formats | Seats, hands, presets, counters, dice | FS-1 to FS-4 | A 1v1 PvP game can be set up and played |
-| 6. Persistence and Sheets | Autosave, snapshots, JSON bundle, Google Sheets URLs | PS-1 to PS-6, CD-7 to CD-12 | Reload restores a game; a sheet URL loads a deck |
+| 4. Layouts | Layout editor, portrait and landscape, preview; the layout model has an id, `updatedAt` and an optional `gameId` so Phase 6 saves it as its own item; layout options read through the resolver | LY-1 to LY-10, AR-7 | A custom layout renders cards on the table |
+| 5. Formats | Seats, hands, presets, counters, dice; format options read through the resolver | FS-1 to FS-4, AR-7 | A 1v1 PvP session can be set up and played |
+| 6. Persistence and Sheets | Storage interface and profile keys, card sets as their own model, autosave as separate items, snapshots, JSON bundle, Google Sheets URLs on card sets | AR-4, AR-6, PS-1 to PS-7, CD-7 to CD-12 | Reload restores a session from separately saved items; a sheet URL loads a card set into a pile |
 | 7. Polish | Demo data, performance budgets, remaining accessibility | DM-1 to DM-6, PF-1 to PF-4, A11Y-7 to A11Y-12 | All budgets and axe checks pass |
 
 **Rules for Claude Code**
 
-- BP-1: Work on one phase at a time, split into issues small enough for one session and one PR. Never start the next phase or issue without the owner's go-ahead.
-- BP-2: If a task looks bigger than one session, stop and propose how to split it before writing code.
+- BP-1: Work on one phase at a time, split into issues small enough for one Claude session and one PR. Never start the next phase or issue without the owner's go-ahead.
+- BP-2: If a task looks bigger than one Claude session, stop and propose how to split it before writing code.
 - BP-3: Read only the sections of this doc and the files the current issue needs. Don't re-read the whole repo or the whole requirements doc each session.
 - BP-4: While developing, run only the tests for the files being changed and Chromium-only E2E. Run the full suite once before opening the PR; CI covers all browsers.
 - BP-5: Don't rewrite or reformat files outside the issue's scope, and don't regenerate code that already works.
 - BP-6: Ask before adding a dependency not listed in the tech stack.
-- BP-7: End every session by updating `docs/progress.md`: what was done, what's next, open problems, and any decisions made. The next session starts by reading that file instead of exploring the codebase.
+- BP-7: End every Claude session by updating `docs/progress.md`: what was done, what's next, open problems, and any decisions made. The next Claude session starts by reading that file instead of exploring the codebase.
 - BP-8: When a fix fails twice, stop and report the problem instead of trying more variations.
 
 ## Out of scope
@@ -362,7 +377,7 @@ The build runs on a personal Claude account with usage limits, so work happens i
 Not in the first version; each may be revisited later.
 
 - Rules enforcement, turn structure or phase tracking.
-- Online or networked multiplayer, accounts or a backend.
+- Online or networked multiplayer, accounts or a backend. Accounts and sync come after V1 (#45); V1's saved data is shaped for them (AR-6, PS-7).
 - Print-and-play PDF export of rendered cards.
 - Deck building from a larger card library (one CSV per deck covers the need for now).
 - Reading private or unpublished spreadsheets, or any import that needs a Google sign-in. Only published CSV URLs are supported.
@@ -388,4 +403,6 @@ Not in the first version; each may be revisited later.
 | 2026-10-25 | Static, client-only app | Backend with accounts | No hosting cost; nothing to secure; fits solo use |
 | 2026-10-25 | Generic sandbox with format presets | App hardcoded to one game | The game is still changing; presets cover Solo PvE, Co-op PvE and 1v1 PvP |
 | 2026-10-25 | Cards rendered from layouts, with an art column | Pre-rendered card images only | Card text changes often during design; rendering avoids re-exporting images |
+| 2026-10-27 | V1 data model is ready for games, card sets and accounts (`docs/decisions/0001-v1-data-model-ready-for-accounts.md`) | Accounts in V1; migrating saves later | Avoids save migrations and a storage rewrite after V1, while V1 stays complete on its own |
+| 2026-10-27 | A play session is a "session"; "game" means the card game being designed | "Playtest" for a play session | Owner decision. Clearer and more flexible |
 | 2026-10-27 | Selection (TT-3), stacks (TT-7) and shortcut remapping move after V1 | Building them in Phase 3 | Owner decision. A solo turn works without them. Phase 3 closes with #61 (shortcut reference, 2.1.4, announcements, solo-turn E2E). |

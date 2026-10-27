@@ -81,4 +81,4 @@ Non-UI issues (parsing, model, actions) don't need the design files.
 - PRs that change anything visible or interactive include a **How to test** section: the preview link, then numbered steps saying what to click or press and what should happen. Cover the keyboard path too.
 - After opening a PR, subscribe to its activity so CI results and review comments reach the session. Fix CI failures and answer review comments as they arrive.
 - For those PRs, stop once CI is green and wait for the owner to test the preview. Only the owner merges, after their own check.
-- Previews share the live site's web address, so they share its browser storage. Anything saved (IndexedDB, localStorage) must be keyed by the app's base path, so a preview never reads or overwrites the live site's saves.
+- Previews share the live site's web address, so they share its browser storage. Anything saved (IndexedDB, localStorage) must be keyed by the app's base path and the profile (PS-7, only "guest" in V1), so a preview never reads or overwrites the live site's saves. Saves go through the storage interface (AR-6), never straight to IndexedDB.

@@ -4,7 +4,18 @@
 
 Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection (#29), stacks (#30) and shortcut remapping (#34, folded into #53) moved after V1. 3a to 3f-2, 3m-1 to 3m-3 and 3i (#31) are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; merging piles by dropping one on another; card counters; and enlarging a card, with the double-faced badge. 3j (#32), 3k (#33), 3o (#61, close-out) and 3n (#39, dark theme) are left. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases.
 
+The V1 plan now makes the data model ready for games, card sets and accounts (#69): a play session is a "session" and "game" means the card game being designed. Saves will go through a storage interface over separate items, keyed by base path and profile (AR-6, PS-7), with card sets as their own model (AR-4) and one options resolver (AR-7). None of this is built yet: the code rename (#73) comes before 3j, and the storage interface and card set model (#74) start Phase 6.
+
 ## Done
+
+### #69: V1 data model ready for games, card sets and accounts (2026-10-27)
+
+- **Decision record:** `docs/decisions/0001-v1-data-model-ready-for-accounts.md`, the first in `docs/decisions/`.
+- **Terms:** a glossary in the requirements defines game, session, card set, layout and format. Every requirement that said "game" for a play session now says "session". The owner chose "session" over #69's "playtest". The build rules say "Claude session" for a work session.
+- **New requirements:** AR-6 (storage interface with per-item saves), AR-7 (options resolver, account level only in V1) and PS-7 (saves keyed by base path and profile, "guest" only in V1).
+- **Changed:** AR-4 (card sets as their own model, a pile records its card set), PS-1, PS-2, PS-4, PS-5, CD-7, CD-11, CD-12, the Phase 4 to 6 rows, the Persistence acceptance criteria, the overview goal and Out of scope. CLAUDE.md's storage rule now names the profile and the storage interface.
+- **Corrections to #69, which was written against an older repo:** the UI copy had no "game" for a play session, so the copy rename and the code rename are one issue (#73). Phase 4 doesn't save anything yet, so it only gives the layout model its id, `updatedAt` and `gameId`; saving layouts as items is Phase 6 (#74).
+- **Issues:** filed #73 and #74, and commented on #45, #65 and #67 with what moved into V1.
 
 ### #66: no iOS zoom on text fields (2026-10-27)
 
@@ -548,7 +559,9 @@ Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection
 
 ## Next
 
-- **3j (#32, hand reordering)**, after the owner's go-ahead. Then 3k (#33, seat counters, dice and roll log), 3n (#39, dark theme) at any point, and 3o (#61) last: the ? shortcut reference, a WCAG 2.1.4 fix for the page-wide D shortcut, the announcement audit, and the solo-turn E2E that closes Phase 3.
+- **#73: rename play-session code to "session"**, after the owner's go-ahead, before 3j. Mechanical, no behaviour change.
+- **#74: storage interface, profile keys and card set model**, at the start of Phase 6.
+- **3j (#32, hand reordering)**, after #73 and the owner's go-ahead. Then 3k (#33, seat counters, dice and roll log), 3n (#39, dark theme) at any point, and 3o (#61) last: the ? shortcut reference, a WCAG 2.1.4 fix for the page-wide D shortcut, the announcement audit, and the solo-turn E2E that closes Phase 3.
 - **#71: keys act on the hovered card or pile when nothing on the table has focus**, an owner request from the #70 review. Single-letter keys without focus need the shortcut switch (WCAG 2.1.4), so it goes with #61 and #53.
 - **#68: no text-field focus on touch screens in the other dialogs** (Move to…, pile viewer, Draw/Mill/Peek count, pile name). It isn't tied to a phase, and the owner chooses when.
 - **After V1, as feature issues:** selection and group actions (#29), stacks (#30), and control settings with shortcut remapping (#53).
@@ -721,3 +734,6 @@ Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection
 | 2026-10-27 | A hover preview stays open while the pointer is over it, and Escape closes it | Closing as soon as the pointer leaves the card | WCAG 1.4.13: hover content must be hoverable and dismissible, and the flip button must be reachable by mouse. |
 | 2026-10-27 | On touch screens, a dialog's focus goes to a button, never straight to a text field | Autofocusing the first field everywhere | Owner rule: the keyboard sliding up is jarring. Done in the counters dialog; the other dialogs follow in #68. |
 | 2026-10-27 | Fix iOS field zoom with 16px text on touch screens only (#66) | `maximum-scale=1` in the viewport tag; 16px on every screen | `maximum-scale` also blocks pinch zoom, which fails WCAG 1.4.4. Keeping desktop at the design's 15px and 14px leaves the boards matched where they were drawn. |
+| 2026-10-27 | Make the V1 data model ready for games, card sets and accounts, with no backend in V1 ([decision record](decisions/0001-v1-data-model-ready-for-accounts.md), #69) | Accounts in V1; leaving the model and migrating later | Avoids save migrations and a storage rewrite after V1, while V1 stays complete on its own. |
+| 2026-10-27 | A play session is a "session" | "Playtest", as #45, #65, #67 and #69 proposed | Owner decision: clearer and more flexible. "Game" means the card game being designed. |
+| 2026-10-27 | The UI copy and code renames are one issue (#73) | Two issues, as #69 proposed | The UI had no "game" copy for a play session left to rename. |
