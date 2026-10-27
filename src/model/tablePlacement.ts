@@ -40,6 +40,25 @@ export function pileBox(pile: Pick<Pile, 'x' | 'y'>): Box {
 }
 
 /**
+ * TT-4: the pile a pile at `box` would cover the most of, leaving out `exceptId`.
+ * Piles never overlap, so landing there merges the two (#56).
+ */
+export function pileUnder<P extends Pick<Pile, 'id' | 'x' | 'y'>>(piles: readonly P[], box: Box, exceptId?: string): P | undefined {
+  let best: P | undefined;
+  let bestArea = 0;
+  for (const pile of piles) {
+    if (pile.id === exceptId) continue;
+    const other = pileBox(pile);
+    const area = Math.max(0, Math.min(box.right, other.right) - Math.max(box.left, other.left)) * Math.max(0, Math.min(box.bottom, other.bottom) - Math.max(box.top, other.top));
+    if (area > bestArea) {
+      best = pile;
+      bestArea = area;
+    }
+  }
+  return best;
+}
+
+/**
  * Where a card or pile goes when it's put on the table without a position: the
  * first grid cell, left to right in rows `columns` cards wide and then top to
  * bottom, that no card or pile covers.

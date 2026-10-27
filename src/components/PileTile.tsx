@@ -23,6 +23,8 @@ interface PileTileProps {
   onDropFile: (pileId: string, file: File) => void;
   /** TT-4: a dragged card is over this pile, and would go on top. */
   cardOver?: boolean;
+  /** TT-4: a pile being dragged or placed is over this pile, and would merge with it. */
+  mergeTarget?: boolean;
   /** A11Y-3: on the table, only the current card or pile is in the Tab order. */
   tabbable?: boolean;
   onFocus?: () => void;
@@ -54,6 +56,7 @@ export function PileTile({
   registerTile,
   onDropFile,
   cardOver = false,
+  mergeTarget = false,
   tabbable = true,
   onFocus,
   onKeyDown,
@@ -104,7 +107,7 @@ export function PileTile({
 
   return (
     <div
-      className={dropTarget || cardOver ? 'pile-tile pile-tile--drop-target' : 'pile-tile'}
+      className={dropTarget || cardOver || mergeTarget ? 'pile-tile pile-tile--drop-target' : 'pile-tile'}
       data-drop-zone="pile"
       data-pile-id={pile.id}
       {...dragHandlers}
@@ -185,10 +188,10 @@ export function PileTile({
           </span>
         )}
       </button>
-      {(dropTarget || cardOver) && (
+      {(dropTarget || cardOver || mergeTarget) && (
         // A dragged card covers the middle, so its label sits above the pile, as on CardStates.
         <span className={dropTarget ? 'pile-tile__drop-label' : 'pile-tile__drop-label pile-tile__drop-label--above'} aria-hidden="true">
-          {dropTarget ? 'Drop to load' : 'Drop: top'}
+          {dropTarget ? 'Drop to load' : mergeTarget ? 'Drop: merge' : 'Drop: top'}
         </span>
       )}
     </div>

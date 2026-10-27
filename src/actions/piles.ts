@@ -1,5 +1,5 @@
 import type { ActionContext, ActionResult, GameState, Pile } from '../model/game';
-import { clampToTable, freeSpot } from '../model/tablePlacement';
+import { clampToTable, freeSpot, pileBox, pileUnder } from '../model/tablePlacement';
 import { getPile, plural, withPile } from './helpers';
 
 /** Pile names are unique, ignoring case and surrounding spaces. */
@@ -58,12 +58,35 @@ export function renamePile(state: GameState, args: { pileId: string; name: strin
   return { state: withPile(state, { ...pile, name }), announcement: `Renamed ${pile.name} to ${name}.` };
 }
 
-/** TT-4: move a pile to a spot on the table, kept inside the table's top and left edges. */
+/**
+ * TT-4: move a pile to a spot on the table, kept inside the table's top and left
+ * edges. Piles never overlap: a spot over another pile is a merge (`mergePiles`).
+ */
 export function movePile(state: GameState, args: { pileId: string; position: { x: number; y: number } }): ActionResult {
   const pile = getPile(state, args.pileId);
   const { x, y } = clampToTable(args.position, 0);
   if (pile.x === x && pile.y === y) return { state, announcement: `${pile.name} is already there.` };
+  const under = pileUnder(state.piles, pileBox({ x, y }), pile.id);
+  if (under) throw new Error(`${pile.name} would cover ${under.name}; merge them instead`);
   return { state: withPile(state, { ...pile, x, y }), announcement: `Moved ${pile.name} on the table.` };
+}
+
+/**
+ * SP-4, TT-4: merge one pile into another. The `fromPileId` pile is deleted, and
+ * its cards go to the top or bottom of the other pile, keeping their order. The
+ * kept pile stays where it is and keeps its name, owner and deck, as when a
+ * deleted pile's cards move to another pile.
+ */
+export function mergePiles(
+  state: GameState,
+  args: { fromPileId: string; intoPileId: string; end: 'top' | 'bottom' },
+): ActionResult {
+  const from = getPile(state, args.fromPileId);
+  const into = getPile(state, args.intoPileId);
+  if (from.id === into.id) throw new Error('Cannot merge a pile into itself');
+  const cardIds = args.end === 'top' ? [...from.cardIds, ...into.cardIds] : [...into.cardIds, ...from.cardIds];
+  const next = withPile({ ...state, piles: state.piles.filter((p) => p.id !== from.id) }, { ...into, cardIds });
+  return { state: next, announcement: `Merged ${from.name} into ${into.name}. ${plural(cardIds.length, 'card')}.` };
 }
 
 /**

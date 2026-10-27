@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createSoloGame } from '../model/game';
-import { draw } from './pileActions';
-import { addPile, deletePile, movePile, renamePile, validatePileName } from './piles';
+import { draw, mill } from './pileActions';
+import { addPile, deletePile, mergePiles, movePile, renamePile, validatePileName } from './piles';
 import { gameWithDeck, namesOf, testContext } from './testing';
 
 const MAIN = 'pile-p1-main';
@@ -106,11 +106,51 @@ describe('TT-4 move a pile on the table', () => {
     expect(state.piles.find((p) => p.id === MAIN)).toMatchObject({ x: 0, y: 0 });
   });
 
+  it('never puts a pile over another pile', () => {
+    expect(() => movePile(gameWithDeck(), { pileId: MAIN, position: { x: 250, y: 40 } })).toThrow(
+      'P1 main deck would cover Board cards; merge them instead',
+    );
+  });
+
   it('changes nothing when the pile is already there', () => {
     const game = gameWithDeck();
     const { x, y } = game.piles.find((p) => p.id === MAIN) ?? { x: 0, y: 0 };
     const result = movePile(game, { pileId: MAIN, position: { x, y } });
     expect(result.state).toBe(game);
     expect(result.announcement).toBe('P1 main deck is already there.');
+  });
+});
+
+describe('TT-4 merging piles', () => {
+  /** Ogre and Troll left in P1 main deck, and Imp in Board cards. */
+  function twoPiles() {
+    return mill(gameWithDeck(), { pileId: MAIN, count: 1, toPileId: BOARD }).state;
+  }
+
+  it('deletes one pile and puts its cards on top of the other, in order', () => {
+    const game = twoPiles();
+    const board = game.piles.find((p) => p.id === BOARD);
+    const { state, announcement } = mergePiles(game, { fromPileId: MAIN, intoPileId: BOARD, end: 'top' });
+    expect(state.piles.map((p) => p.id)).not.toContain(MAIN);
+    expect(namesOf(state, state.piles.find((p) => p.id === BOARD)?.cardIds)).toEqual(['Ogre', 'Troll', 'Imp']);
+    // The kept pile stays where it was, with its name and deck.
+    expect(state.piles.find((p) => p.id === BOARD)).toMatchObject({ x: board?.x, y: board?.y, name: 'Board cards', definitionIds: board?.definitionIds });
+    expect(announcement).toBe('Merged P1 main deck into Board cards. 3 cards.');
+  });
+
+  it('can put them on the bottom', () => {
+    const { state } = mergePiles(twoPiles(), { fromPileId: MAIN, intoPileId: BOARD, end: 'bottom' });
+    expect(namesOf(state, state.piles.find((p) => p.id === BOARD)?.cardIds)).toEqual(['Imp', 'Ogre', 'Troll']);
+  });
+
+  it('merges either way round', () => {
+    const { state, announcement } = mergePiles(twoPiles(), { fromPileId: BOARD, intoPileId: MAIN, end: 'top' });
+    expect(state.piles.map((p) => p.id)).not.toContain(BOARD);
+    expect(namesOf(state, state.piles.find((p) => p.id === MAIN)?.cardIds)).toEqual(['Imp', 'Ogre', 'Troll']);
+    expect(announcement).toBe('Merged Board cards into P1 main deck. 3 cards.');
+  });
+
+  it('refuses to merge a pile into itself', () => {
+    expect(() => mergePiles(twoPiles(), { fromPileId: MAIN, intoPileId: MAIN, end: 'top' })).toThrow('Cannot merge a pile into itself');
   });
 });

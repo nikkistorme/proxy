@@ -2,7 +2,7 @@ import { useCallback, useEffect, type PointerEvent } from 'react';
 import type { StoreApi } from 'zustand/vanilla';
 import type { Destination } from '../actions/moveCard';
 import type { Rotation } from '../model/game';
-import { cardBox, clampToTable } from '../model/tablePlacement';
+import { cardBox, clampToTable, pileBox, pileUnder } from '../model/tablePlacement';
 import { snapToGrid } from '../model/tableView';
 import { useGameStoreApi, type GameStore } from '../store/gameStore';
 import './CardDrag.css';
@@ -32,8 +32,9 @@ interface DragSourceBase {
 }
 
 /**
- * A card goes to the table, a pile or a hand. A pile only moves on the table, and
- * a finger that lifts it and lets go without moving opens its menu instead.
+ * A card goes to the table, a pile or a hand. A pile moves on the table, or merges
+ * with a pile it lands on (#56), and a finger that lifts it and lets go without
+ * moving opens its menu instead.
  */
 export type DragSource = DragSourceBase & ({ cardId: string; pileId?: undefined } | { pileId: string; cardId?: undefined; onHoldRelease: () => void });
 
@@ -63,7 +64,7 @@ const sameDestination = (a: Destination | undefined, b: Destination | undefined)
 
 /** Where a drop at the pointer lands: a spot on the table, the top of a pile, or a hand. */
 function destinationAt(current: Session, x: number, y: number): Destination | undefined {
-  // A pile lands on the table wherever it's dropped, even over a card or another pile.
+  // A pile lands on the table wherever it's dropped, even over a card. Over another pile, it merges with it.
   const zone = document.elementFromPoint?.(x, y)?.closest<HTMLElement>(current.source.pileId === undefined ? '[data-drop-zone]' : '[data-drop-zone="table"]');
   if (!zone) return undefined;
   const { dropZone: kind, pileId, seatId } = zone.dataset;
@@ -78,7 +79,13 @@ function destinationAt(current: Session, x: number, y: number): Destination | un
   const left = (x - rect.left) / zoom - current.grab.x * (box.right - box.left);
   const top = (y - rect.top) / zoom - current.grab.y * (box.bottom - box.top);
   const spot = { x: Math.round(left - box.left), y: Math.round(top - box.top) };
-  return { zone: 'table', position: clampToTable(snap ? snapToGrid(spot) : spot, rotation) };
+  const position = clampToTable(snap ? snapToGrid(spot) : spot, rotation);
+  const { pileId: draggedPileId } = current.source;
+  if (draggedPileId !== undefined) {
+    const under = pileUnder(current.store.getState().game.piles, pileBox(position), draggedPileId);
+    if (under) return { zone: 'pile', pileId: under.id, position: 'top' };
+  }
+  return { zone: 'table', position };
 }
 
 function moveGhost(current: Session, x: number, y: number) {
