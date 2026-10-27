@@ -118,3 +118,46 @@
 .table-card--menu-open {
   z-index: 10000 !important;
 }
+
+/*
+ * TT-8: counter pills, centred above the card's text box and stacking upward
+ * (CardStates). They turn with the card. Dark pills with a white edge, like the badge.
+ */
+.table-card__counters {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 34px;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: var(--space-1);
+  pointer-events: none;
+}
+
+.table-card__counter {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  max-width: calc(var(--card-w) - 12px);
+  height: 24px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(18, 18, 18, 0.92);
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.8);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.table-card__counter-value {
+  font-family: var(--font-num);
+  font-size: 13px;
+}

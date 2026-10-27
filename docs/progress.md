@@ -2,9 +2,22 @@
 
 ## Current state
 
-Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37, #39, #41, #49, #51 and #56, all under #20. 3a to 3f-2 and 3m-1 to 3m-3 are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; and merging piles by dropping one on another. 3g to 3l (#29 to #34) are next. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases.
+Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37, #39, #41, #49, #51 and #56, all under #20. 3a to 3f-2, 3m-1 to 3m-3 and 3i-1 are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; merging piles by dropping one on another; and card counters. #31 (3i) is split into 3i-1, counters, and 3i-2, enlarge and the double-faced badge, which is next. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases.
 
 ## Done
+
+### Phase 3i-1: Card counters (2026-10-27)
+
+- **Issue split:** #31 (3i) became 3i-1, counters (this PR), and 3i-2, enlarge and the double-faced badge (owner approved).
+- **Model (TT-8):** a `TableEntry` has an optional list of counters, each with an id, a name and a whole-number value. They belong to the card's place on the table, so they stay as it moves on the table, Duplicate copies them, and they're cleared when the card leaves the table.
+- **Actions:** `addCounter`, `setCounter`, `renameCounter` and `removeCounter` in `src/actions/counters.ts`. A new counter starts at 1. Names are unique on a card, ignoring case. Values can go below zero. Every change is its own undo step, announced as "Added Damage 1 to Troll.", "Damage on Troll: 3.", "Renamed Damage on Troll to Wounds." or "Removed Damage from Troll.". A face-down card is "a face-down card".
+- **Pills:** dark pills with a white edge, centred above the card's text box and stacking upward, from CardStates. Four or more show the first two and "+2 more". They turn with the card. The card's name ends ", counters: Damage 3, Shield 1", face down too.
+- **Counters dialog:** `CountersDialog` on the shared `Dialog`, titled "Counters on Troll", following the CardStates "Edit counter" board. Each counter is a named group with its name field, − value +, and **Remove counter**. Below them, **New counter name** and **Add counter**.
+  - **Opening:** C on a focused card, **Counters…** (C) in the card menu, or clicking a pill. Pills are 24px tall and stay out of the Tab order, like the Actions button.
+  - **Focus:** opens on the clicked pill's counter, else the first counter, else the new counter's name. After Add, the new counter's value; after Remove, the new counter's name. On close, back to the card.
+  - **Keys:** + and − (and the arrow keys in the value field) step the value on the value controls. Typed names and values are kept on Enter, Escape or leaving the field. Escape closes and keeps everything.
+  - **Announcements:** the dialog has its own live region, like the pile viewer, because the page's region sits outside the modal.
+- **Tests:** 380 unit tests, including `counters.test.ts` and `TableCounters.test.tsx`. The new `e2e/counters.spec.ts` covers keyboard only (add, step, rename, remove, undo), mouse with axe on the dialog and a pill click, and the dialog at 375 × 667.
 
 ### Phase 3m-3: Merging piles (2026-10-27)
 
@@ -507,14 +520,17 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 
 ## Next
 
-- **3g to 3l (#29 to #34)**, after the owner's go-ahead, and 3n (#39, dark theme) at any point.
+- **3i-2: enlarge and the double-faced badge (#31)**, after the owner's go-ahead. The owner's notes from planning: the preview shows one face at a time, with a button that flips a double-faced card (with a flip animation that respects reduced motion); hover opens it after 400ms; I opens it from the keyboard (Space already moves a card); and a touch hold on a table card that lets go without moving opens the card's menu, as on a pile, with enlarge in the menu. Until Phase 4 layouts, "landscape" means a card turned on the table, shown upright.
+- **3g to 3l (#29 to #34)** after that, and 3n (#39, dark theme) at any point.
 - **Multi-select in the pile viewer (#57)**, a feature issue outside the phases, when the owner chooses. Open problems that belong to later issues:
   - 3g: move the Actions button to the selected card
-  - 3i: a double-faced badge on table cards (from CardStates)
+  - 3i-2: a double-faced badge on table cards (from CardStates)
   - 3j: dragging to reorder the hand, where a click without a drag still opens the menu
 
 ## Open problems
 
+- In the counters dialog, typing a minus in the value field steps it down rather than typing a negative number. Values below zero are reached with − or the arrow keys.
+- Counter pills scale with the table's zoom like the Actions button, so below 100% they're under 24px tall. C and the card menu always work.
 - Merging piles by touch needs a check on an iPhone, like the other touch drags.
 - A pile's menu opened by a touch hold doesn't take focus, because the browser's own mousedown after a touch moves focus back to the pile. A tap outside closes it. Enter on the pile, or a right-click, opens it with focus in the menu.
 - A screen reader's "activate" sends a click, so it draws rather than opening a pile's menu. The pile's description says Enter opens actions, and every draw is announced and can be undone. Check this with VoiceOver on a phone.
@@ -658,3 +674,8 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 | 2026-10-27 | A pile that covers another pile merges with the one it covers most, whatever is under the pointer | Merging only when the pointer is over a pile | Piles must never overlap, and the landing spot is what decides that. The keyboard outline works the same way. |
 | 2026-10-27 | Merged cards go on top by default, the kept pile stays where it is, and a merge always asks first | Bottom by default, as Delete pile does; moving the kept pile to the drop spot | Dropping one pile on another is like stacking it on top. Owner approved the defaults. |
 | 2026-10-27 | The merge dialog is a mode of `DeletePileDialog` | A separate dialog | The issue asked to reuse it. They share the dialog, form and radio pattern. |
+| 2026-10-27 | #31 (3i) split into 3i-1 counters and 3i-2 enlarge and the double-faced badge | One PR | Too much for one session and one small PR. Owner approved. |
+| 2026-10-27 | Counters belong to a card's place on the table and are cleared when it leaves | Keeping them on the card instance | Like a real game: counters come off a card that leaves play. |
+| 2026-10-27 | One counters dialog lists all of a card's counters, opened by C, the menu or a pill | The board's small popover for one counter | The shared `Dialog` brings focus, Escape and phone-size behaviour, and one place handles adding, changing and removing. |
+| 2026-10-27 | Every counter change is its own undo step and applies straight away | Applying the changes on Done | The board says Escape keeps the value, and each step is announced. |
+| 2026-10-27 | 3i-2 enlarge opens with I, and a still touch hold on a table card opens its menu | Space (moves a card); a hold that enlarges | Owner decision |

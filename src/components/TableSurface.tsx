@@ -11,6 +11,7 @@ import { useGameStore, type Placing } from '../store/gameStore';
 import { useCardDrag } from './cardDrag';
 import { CardDetailsDialog } from './CardDetailsDialog';
 import { CardMenu, type CardCommand } from './CardMenu';
+import { CountersDialog, type CountersRequest } from './CountersDialog';
 import { moveDestinations } from './moveDestinations';
 import { MoveDialog, type MoveRequest } from './MoveDialog';
 import { PlacementBar } from './PlacementBar';
@@ -112,6 +113,7 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
   const [menu, setMenu] = useState<{ cardId: string; rect: DOMRect }>();
   const [moveRequest, setMoveRequest] = useState<MoveRequest>();
   const [detailsCardId, setDetailsCardId] = useState<string>();
+  const [countersRequest, setCountersRequest] = useState<CountersRequest>();
   const [placement, setPlacement] = useState<Placement>();
   const placementRef = useRef<HTMLButtonElement>(null);
   /** Where the last pointer went down, so a pan isn't taken for a click. */
@@ -374,6 +376,9 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
         pendingFocus.current = 'none';
         return;
       }
+      case 'counters':
+        openCounters(cardId);
+        return;
       case 'details':
         setDetailsCardId(cardId);
         pendingFocus.current = 'none';
@@ -385,6 +390,13 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
     }
     // Re-ordering moves the card's element, which can drop focus, so put it back.
     pendingFocus.current = { card: cardId };
+  }
+
+  /** TT-8: the card's counters, at one counter when its pill was pressed. */
+  function openCounters(cardId: string, counterId?: string) {
+    setMenu(undefined);
+    setCountersRequest({ cardId, ...(counterId && { counterId }) });
+    pendingFocus.current = 'none';
   }
 
   /** Set when the Move to… dialog closes by choosing a spot, which starts placing. */
@@ -429,6 +441,11 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
   function closeDetails() {
     focusAfterDialog(detailsCardId);
     setDetailsCardId(undefined);
+  }
+
+  function closeCounters() {
+    focusAfterDialog(countersRequest?.cardId);
+    setCountersRequest(undefined);
   }
 
   // A11Y-1: placing starts when the store names a card or pile, from here, the hand, a pile's
@@ -614,7 +631,7 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
   }
 
   // Card keys only work while a card has focus, so single keys are safe (WCAG 2.1.4).
-  const CARD_KEYS: Record<string, CardCommand> = { r: 'rotate', R: 'rotate-back', f: 'flip', m: 'move', Delete: 'delete', Backspace: 'delete' };
+  const CARD_KEYS: Record<string, CardCommand> = { r: 'rotate', R: 'rotate-back', f: 'flip', m: 'move', c: 'counters', Delete: 'delete', Backspace: 'delete' };
 
   function onCardKeyDown(cardId: string, event: KeyboardEvent<HTMLButtonElement>) {
     const { key } = event;
@@ -759,6 +776,7 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
                 onOpenMenu={openMenu}
                 onPointerDown={onCardPointerDown}
                 dragging={drag?.cardId === entry.cardId}
+                onOpenCounters={openCounters}
               />
             ))}
             {dropBox && (
@@ -797,6 +815,7 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
       )}
       <MoveDialog key={moveRequest?.cardId ?? 'closed'} request={moveRequest} onConfirm={confirmMove} onChooseSpot={chooseSpot} onClose={closeMove} />
       <CardDetailsDialog game={game} cardId={detailsCardId} onClose={closeDetails} />
+      <CountersDialog key={countersRequest ? `${countersRequest.cardId}-${countersRequest.counterId ?? ''}` : 'counters-closed'} request={countersRequest} onClose={closeCounters} />
       {placement && <PlacementBar name={placementName(game, placement)} onPlace={placeCard} onCancel={cancelPlacing} />}
     </>
   );

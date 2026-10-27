@@ -44,6 +44,7 @@ describe('TT-5, TT-6, TT-10 and TT-11 card menu', () => {
       'Flip face downF',
       'Move on tableSpace',
       'Move to…M',
+      'Counters…C',
       'Details…',
       'DuplicateCtrl+D',
       'Bring to front',
