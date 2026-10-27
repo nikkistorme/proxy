@@ -129,7 +129,7 @@ Setup only fills piles; nothing is placed on the table automatically. The user p
 - SP-5: A pile shows its name, card count and top card (face-down by default).
 - SP-6: One-click actions: shuffle, draw 1, draw N to the active seat's hand, reveal top card, and mill N to another pile. A click or tap on a pile draws 1. Right-click, Enter, or a touch held and let go opens the pile's menu with the rest.
 - SP-7: Open any pile at any time in a viewer that shows every card face-up, with search by name and filter by any column.
-- SP-8: From the viewer, move a card to the table, a hand, the top or bottom of any pile. Order inside the pile is kept unless shuffled.
+- SP-8: From the viewer, move a card to the table, a hand, the top or bottom of any pile. Order inside the pile is kept unless shuffled. A card can also be dragged out of the viewer onto the table, a hand or the top of a pile; the viewer steps aside during the drag and comes back afterwards.
 - SP-9: Peek at the top N cards and reorder or move them before closing.
 
 **Acceptance criteria**
