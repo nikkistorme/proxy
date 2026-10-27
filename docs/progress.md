@@ -4,9 +4,17 @@
 
 Phase 3 (Table) is done: a solo turn works by mouse and by keyboard. It was split into 3a to 3o, all under #20. Selection (#29), stacks (#30) and shortcut remapping (#34, folded into #53) moved after V1. 3a to 3f-2, 3m-1 to 3m-3, 3i (#31) and 3j (#32) are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; merging piles by dropping one on another; card counters; enlarging a card, with the double-faced badge; reordering the hand; seat counters (3k-1); dice, a coin and the session log (3k-2, closing #33); the dark theme, which follows the system setting (3n, #39); and the close-out (3o, #61): the ? shortcut reference, single-key shortcuts limited to the table, hand and toolbar for WCAG 2.1.4, the announcement audit and the solo-turn E2E. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases. The app has a favicon and an iPhone home-screen icon (#44, outside the phases).
 
-The V1 plan now makes the data model ready for games, card sets and accounts (#69): a play session is a "session" and "game" means the card game being designed. Saves will go through a storage interface over separate items, keyed by base path and profile (AR-6, PS-7), with card sets as their own model (AR-4) and one options resolver (AR-7). The code now says "session" for a play session (#73). The storage interface and card set model (#74) start Phase 6.
+The V1 plan now makes the data model ready for games, card sets and accounts (#69): a play session is a "session" and "game" means the card game being designed. Saves will go through a storage interface over separate items, keyed by base path and profile (AR-6, PS-7), with card sets as their own model (AR-4) and one options resolver (AR-7). The code now says "session" for a play session (#73).
+
+The phases after 3 were reordered (2026-10-27): Phase 4 is now storage and card sets (#74), then layouts (5, #35), formats (6), session saves and Sheets (7) and polish (8). Item ids are random UUIDs so sync can come later (#45), and until V1 ships older saves are dropped rather than migrated.
 
 ## Done
+
+### Planning: phase order after Phase 3 (2026-10-27)
+
+- **New order:** 4. Storage and card sets (#74), 5. Layouts (#35), 6. Formats, 7. Session saves and Sheets, 8. Polish. The requirements' phase table, AR-4 and the open problems here now use these numbers. Done entries below keep the numbers they had at the time.
+- **Changed requirements:** AR-6 (item ids are random UUIDs, ids inside an item stay local), PS-5 (older saves are dropped, not migrated, until V1 ships), and the phase table rows for Phases 4 to 8.
+- **Issues:** #35 has a comparison with the repo and a suggested split. #74 is retitled as Phase 4 and lists the sync-ready item rules.
 
 ### Phase 3o: Shortcut reference and Phase 3 close-out (#61, 2026-10-27)
 
@@ -611,7 +619,9 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 
 ## Next
 
-- **#74: storage interface, profile keys and card set model**, at the start of Phase 6.
+- **Phase 4: storage and card sets (#74)**, planned and probably split in two: the storage interface with profile keys and the "can't save" notice (AR-6, PS-6, PS-7), then the card set model (AR-4). The options resolver (AR-7) goes in this phase too.
+- **Phase 5: layouts (#35).** A first comparison with the repo is in the issue: nothing layout-related exists beyond the `layout` and `type` columns, and the suggested split is 5a to 5i there.
+- **After V1, in this order:** the demo on its own path (#63), the card set library (#67), games (#65), then accounts and sync (#45). #45's docs-only step 1 (confirming Supabase, writing the accounts requirements) can happen any time.
 - **#71: keys act on the hovered card or pile when nothing on the table has focus**, an owner request from the #70 review. Single-letter keys without focus need an off switch (WCAG 2.1.4), so it goes with #53.
 - **#68: no text-field focus on touch screens in the other dialogs** (Move to…, pile viewer, Draw/Mill/Peek count, pile name). It isn't tied to a phase, and the owner chooses when.
 - **After V1, as feature issues:** selection and group actions (#29), stacks (#30), and control settings with shortcut remapping (#53).
@@ -623,7 +633,7 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 - Page-wide single keys (D, ?, zoom, fit, snap) need focus in the table, the hand or the table tools (WCAG 2.1.4). Straight after the page loads, or after a click on the seat bar, D does nothing until you Tab or click into the table. An off switch with #53 could let them work everywhere for those who want it.
 - The shortcut reference is a hand-kept list (`SHORTCUT_GROUPS`), so a new key needs adding there too. Remapping (#53) would make one list drive both.
 - The session log lists only rolls for now. The goal is every action (owner, 2026-10-27), which could reuse each action's announcement.
-- The session log isn't saved yet. Phase 6 should save it with the session.
+- The session log isn't saved yet. Phase 7 should save it with the session.
 - The session log's times are worked out when it opens, so they don't tick while it stays open.
 - Seat counters step one at a time. Typing an exact value (for example Life 20 to 5) could reuse the card counters' value field, as a follow-up.
 - A card dragged from the table or a pile into a hand always goes to the end of the hand. Only a drag within the hand chooses a place.
@@ -633,7 +643,7 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 - A card's menu opened by a touch hold doesn't take focus, the same as a pile's: the browser's own mousedown after a touch moves focus back to the card.
 - The enlarge preview is sized in CSS px, so it shrinks with browser zoom like the rest of the page. The table's own zoom doesn't change it, as TT-9 asks (checked with the owner).
 - The enlarge preview's hover runs on a mouse only. The preview closes when the table scrolls or zooms, rather than following the card.
-- Until Phase 4 layouts, "landscape" in TT-9 means a card turned on the table. Landscape layouts will need the preview's size to swap.
+- Until Phase 5 layouts, "landscape" in TT-9 means a card turned on the table. Landscape layouts will need the preview's size to swap.
 - In the counters dialog, typing a minus in the value field steps it down rather than typing a negative number. Values below zero are reached with − or the arrow keys.
 - Counter pills scale with the table's zoom like the Actions button, so below 100% they're under 24px tall. C and the card menu always work.
 - Merging piles by touch needs a check on an iPhone, like the other touch drags.
@@ -653,15 +663,15 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 - Dragging from the pile viewer by touch needs a check on an iPhone, like the other touch drags.
 - In jsdom, the search in a Move to… dialog opened from the hand card menu doesn't always get focus before typing, so unit tests type into it directly. Browsers focus it, and the E2E covers that.
 - `axe` scrolls the table while it checks contrast, so E2E tests that click cards after an axe check scroll the table back first.
-- **Saving undo history (PS-2, Phase 6):** each step is a whole game, so plain JSON would repeat the card definitions in every step. Phase 6 needs a compact form, such as saving definitions once or saving the differences between steps.
+- **Saving undo history (PS-2, Phase 7):** each step is a whole game, so plain JSON would repeat the card definitions in every step. Phase 7 needs a compact form, such as saving definitions once or saving the differences between steps.
 - Local WebKit on macOS skips buttons when tabbing, unlike CI's Linux WebKit, so the keyboard-only E2E tests that press Tab fail locally in WebKit only. Use Chromium locally, as BP-4 says, and trust CI for WebKit.
 - E2E: under the full suite's load, `e2e/move-dialog.spec.ts` (keyboard only) and `e2e/manage-piles.spec.ts` (keyboard only) each failed once in 3a and passed on rerun and alone. Watch for flakiness.
 - The search-match highlight uses the board's `#FBE3A6` with ink text, which isn't a token. Add a highlight token if the design gets one.
 - axe's label-in-name check joins text from separate blocks with no spaces, so a button containing a whole card face fails it. The viewer and table cards avoid that with the overlay pattern.
 - In this cloud environment the pinned `@playwright/test` wants a newer Chromium than the one installed. Local E2E ran with a scratch config pointing `launchOptions.executablePath` at `/opt/pw-browsers/chromium`. That config isn't committed, and CI is unaffected.
 - The form error colour uses `--seat-a` (5.4:1 on the panel), because the tokens have no error colour. Add an error token if the design gets one.
-- **Reload is two clicks, not one:** "Reload <file>…" reopens the file picker, because browsers can't re-read a chosen file. A true one-click reload needs the File System Access API, which works in Chromium only and falls back to the picker elsewhere. That fits with Phase 6, where the file handle can be saved with the game.
-- The default card face uses the UI font, not the sample card's Bitter, which would be another font dependency. Phase 4 layouts will set card fonts.
+- **Reload is two clicks, not one:** "Reload <file>…" reopens the file picker, because browsers can't re-read a chosen file. A true one-click reload needs the File System Access API, which works in Chromium only and falls back to the picker elsewhere. That fits with card sets (Phase 4), where the file handle can be saved with the set.
+- The default card face uses the UI font, not the sample card's Bitter, which would be another font dependency. Phase 5 layouts will set card fonts.
 - The shared-pile back colour `#3F433D` isn't a design token. The design has no shared seat, so add a token if the design gets one.
 - The dark theme follows the system only. A manual light/dark toggle goes in the Settings screen when it exists (`applyTheme` already takes the choice).
 - The 32px PNG favicon fallback uses the light colours only, so on a dark tab in an older browser its dashed outline is faint. Browsers with SVG favicons use the SVG's dark version.
@@ -807,3 +817,6 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 | 2026-10-27 | App icon: an SVG favicon with a dark version, plus a 32px PNG fallback and a PNG Apple touch icon, all static in `public/` | A `favicon.ico`, or generating PNGs in the build | A PNG link covers browsers without SVG favicons and stops requests to the root `/favicon.ico`. Rendering once with Playwright needs no new dependency. |
 | 2026-10-27 | Page-wide single keys work only while focus is in the table, the hand or the table tools (WCAG 2.1.4) | An on/off switch for single keys | Owner decision (#61). No setting to save before Phase 6. The switch comes with #53 and #71. |
 | 2026-10-27 | The shortcut reference's list is the first tab stop in its dialog | Focus on the close button | A long read-only list must scroll by keyboard in Safari, which doesn't focus scroll areas by itself. |
+| 2026-10-27 | Storage and card sets (#74) become Phase 4, ahead of layouts | Storage after layouts and formats | Layouts, formats and the resolver all save something; storage first avoids stand-in state, export-only layouts and rewiring the layout preview onto card sets |
+| 2026-10-27 | Until V1 ships, older saves are dropped with a notice, not migrated | Migrations from the first save | Models keep changing through Phases 5 to 7; migrations start at V1, before sync makes old data expensive to drop |
+| 2026-10-27 | After V1: #63, #67, #65, then #45 | Accounts earlier | Sync needs every item kind settled, and #45 builds on the demo path, games and card sets |

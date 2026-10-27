@@ -73,7 +73,7 @@ export interface SessionState {
   hands: Record<string, string[]>;
   /** Cards on the table, bottom of the stacking order first (TT-10). */
   table: TableEntry[];
-  /** Shows Dice & coins (TT-14). A format setting, fixed in the Solo preset until Phase 5. */
+  /** Shows Dice & coins (TT-14). A format setting, fixed in the Solo preset until Phase 6. */
   usesDice: boolean;
 }
 
@@ -92,7 +92,7 @@ export interface ActionResult {
 }
 
 /**
- * The Solo PvE preset (FS-1), fixed in code until formats arrive in Phase 5.
+ * The Solo PvE preset (FS-1), fixed in code until formats arrive in Phase 6.
  */
 export function createSoloSession(): SessionState {
   return {
