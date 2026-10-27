@@ -36,7 +36,7 @@ describe('App shell', () => {
     renderSession();
     expect(screen.getByRole('banner')).toContainElement(screen.getByRole('heading', { level: 1, name: 'Proxy' }));
     const seats = screen.getByRole('region', { name: 'Seats' });
-    expect(within(seats).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Player 1Active', 'Environment']);
+    expect(within(seats).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Player 1ActiveLife20Energy0', 'Environment']);
     // Piles are on the table, with the cards (3m).
     expect(within(screen.getByRole('main')).getByRole('group', { name: /^Table, 0 cards, 3 piles\. Arrow keys move between cards and piles\./ })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: "Player 1's hand" })).toBeInTheDocument();

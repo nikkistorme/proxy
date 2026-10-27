@@ -68,10 +68,9 @@ test.describe('A11Y-1 keyboard and single-pointer placement', () => {
 
   test('keyboard only: Space picks up, arrows move, Enter places, Esc cancels; Move to… places a hand card', async ({ page }) => {
     await setUp(page);
-    // Tab into the table from Add pile, the last tool: the first pile has the Tab stop.
+    // Tab into the table from Add pile, past the seat counters: the first pile has the Tab stop.
     await page.getByRole('button', { name: 'Add pile' }).focus();
-    await page.keyboard.press('Tab');
-    await expect(mainPile(page)).toBeFocused();
+    await tabTo(page, mainPile(page));
     await tableCard(page, 'Ember Shard').focus();
     const before = await spot(page, 'Ember Shard');
     await page.keyboard.press('Space');

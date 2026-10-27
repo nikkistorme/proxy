@@ -18,6 +18,7 @@ import { PileMenu } from './PileMenu';
 import { PileNameDialog, type PileNameRequest } from './PileNameDialog';
 import { PILE_HINT, PILE_HINT_ID, PileTile } from './PileTile';
 import { PileViewer } from './PileViewer';
+import { SeatCounter } from './SeatCounter';
 import { seatIdentity } from './seatIdentity';
 import { TableSurface, type PileSlot } from './TableSurface';
 import { TableTools } from './TableTools';
@@ -423,6 +424,9 @@ export function SessionScreen() {
                     Active
                   </span>
                 )}
+                {seat.counters.map((counter) => (
+                  <SeatCounter key={counter.id} seat={seat} counter={counter} />
+                ))}
               </li>
             );
           })}

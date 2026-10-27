@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
+import { tabTo } from './keyboard';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../tests/fixtures/csv/${name}`, import.meta.url));
 const axeTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -56,9 +57,8 @@ test.describe('A11Y-3 and A11Y-6 cards on the table', () => {
   test('keyboard only: one Tab stop, arrows between piles and cards, Tab out, and back to the same card', async ({ page }) => {
     await fourOnTable(page);
     await page.getByRole('button', { name: 'Add pile' }).focus();
-    await page.keyboard.press('Tab');
-    // The piles come first, along the top of the table, then the cards after them.
-    await expect(table(page).getByRole('button', { name: /^P1 main deck,/ })).toBeFocused();
+    // Past the seat counters; the piles come first, along the top of the table, then the cards after them.
+    await tabTo(page, table(page).getByRole('button', { name: /^P1 main deck,/ }));
     for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowRight');
     await expect(tableCard(page, 'Card 01')).toBeFocused();
     await page.keyboard.press('ArrowRight');

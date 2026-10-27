@@ -1,0 +1,53 @@
+/* TT-13: seat counters in the seat bar, from the Main board. */
+.seat-counter {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin-left: var(--space-1);
+  padding-left: var(--space-2);
+  border-left: 1px solid var(--divider);
+}
+
+.seat-counter__label {
+  margin-right: 3px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.seat-counter__step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--control);
+  border-radius: var(--radius-control);
+  background: var(--panel);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.seat-counter__value {
+  min-width: 30px;
+  border-radius: 4px;
+  font-family: var(--font-num);
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* A brief highlight on change. It's a colour fade, not motion, so it stays under reduced motion. */
+.seat-counter__value--changed {
+  animation: seat-counter-changed 900ms ease-out;
+}
+
+@keyframes seat-counter-changed {
+  from {
+    background: var(--accent-soft);
+  }
+  to {
+    background: transparent;
+  }
+}

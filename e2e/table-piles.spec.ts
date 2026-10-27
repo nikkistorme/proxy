@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { tabTo } from './keyboard';
 
 const axeTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
@@ -40,8 +41,7 @@ test.describe('3m piles on the table', () => {
 
   test('keyboard only: Tab reaches the first pile, arrows move between piles, and Enter opens the menu', async ({ page }) => {
     await addPile(page).focus();
-    await page.keyboard.press('Tab');
-    await expect(pile(page, 'P1 main deck')).toBeFocused();
+    await tabTo(page, pile(page, 'P1 main deck'));
     await page.keyboard.press('ArrowRight');
     await expect(pile(page, 'Environment deck')).toBeFocused();
     await page.keyboard.press('Enter');

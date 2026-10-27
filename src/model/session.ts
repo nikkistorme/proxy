@@ -6,6 +6,8 @@ export interface Seat {
   name: string;
   /** Player seats have a hand; the environment doesn't (FS-3). */
   hasHand: boolean;
+  /** Seat counters like Life, always shown in the seat bar (TT-13, FS-4). */
+  counters: Counter[];
 }
 
 /**
@@ -93,8 +95,16 @@ export interface ActionResult {
 export function createSoloSession(): SessionState {
   return {
     seats: [
-      { id: 'seat-p1', name: 'Player 1', hasHand: true },
-      { id: 'seat-env', name: 'Environment', hasHand: false },
+      {
+        id: 'seat-p1',
+        name: 'Player 1',
+        hasHand: true,
+        counters: [
+          { id: 'p1-life', name: 'Life', value: 20 },
+          { id: 'p1-energy', name: 'Energy', value: 0 },
+        ],
+      },
+      { id: 'seat-env', name: 'Environment', hasHand: false, counters: [] },
     ],
     activeSeatId: 'seat-p1',
     definitions: {},
