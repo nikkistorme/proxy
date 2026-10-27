@@ -124,3 +124,29 @@ test.describe('SP-7 pile viewer on a phone', () => {
     expect(sideways).toBe(false);
   });
 });
+
+test.describe('A11Y-12 text fields on a touch screen', () => {
+  test.use({ viewport: { width: 375, height: 667 }, hasTouch: true, isMobile: true });
+
+  /** iOS Safari zooms the page into a focused field whose text is under 16px (#66). */
+  async function smallestFieldText(dialog: ReturnType<typeof viewer>) {
+    return dialog
+      .locator('input[type="text"], input[type="number"], input[type="search"], select')
+      .evaluateAll((fields) => Math.min(...fields.map((f) => parseFloat(getComputedStyle(f).fontSize))));
+  }
+
+  test('the pile viewer and Move to… fields are at least 16px, so iOS does not zoom in', async ({ page }) => {
+    await loadSixty(page);
+    await mainPile(page).click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'View cards…' }).click();
+    const sheet = viewer(page);
+    await expect(sheet.getByRole('textbox', { name: 'Search name or text' })).toBeVisible();
+    await expect(sheet.locator('select')).not.toHaveCount(0);
+    expect(await smallestFieldText(sheet)).toBeGreaterThanOrEqual(16);
+
+    await sheet.getByRole('button', { name: 'Move to…: Card 01' }).click();
+    const move = page.getByRole('dialog', { name: 'Card 01' });
+    await expect(move.locator('input[type="text"]')).toBeVisible();
+    expect(await smallestFieldText(move)).toBeGreaterThanOrEqual(16);
+  });
+});
