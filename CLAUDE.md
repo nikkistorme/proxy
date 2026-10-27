@@ -8,7 +8,8 @@ The full spec is `docs/requirements.md`. Requirement IDs (`CD-3`, `A11Y-1`, `BP-
 
 This project runs on the owner's personal Claude usage. Be economical.
 
-- Work on **one issue at a time**, in the current phase only (see "Build phases" in the requirements). One issue = one branch = one small PR.
+- Work on **one issue at a time**. One issue = one branch = one small PR.
+- Until V1 is finished, stay in the current phase only (see "Build phases" in the requirements). Once the existing phases are done, work is no longer organised in phases, so the phase restriction no longer applies.
 - **Start every session by reading `docs/progress.md`**, then only the requirement sections and files the current issue needs. Do not explore the whole repo or re-read the whole spec.
 - `docs/progress.md` holds the current state, what's next, **open problems** and the **decision log** from earlier sessions. Check them before re-deciding anything or reopening a settled question.
 - The PR workflow (preview links, How to test steps, waiting for the owner to test, and the storage rule for previews) is under **Pull requests** below.
@@ -17,7 +18,7 @@ This project runs on the owner's personal Claude usage. Be economical.
 - Do not touch files outside the issue's scope. No drive-by refactors or reformatting.
 - **Ask before adding any dependency** not listed under Stack.
 - If a fix fails twice, stop and report the problem instead of trying more variations.
-- Never start the next issue or phase without the owner's go-ahead.
+- Never start the next issue (or, during V1, the next phase) without the owner's go-ahead.
 - **End every session by updating `docs/progress.md`**: done, next, open problems, decisions made.
 - **Every PR updates `docs/progress.md`**, docs-only PRs included. Write it as it will read after the merge: Current state and Next must still be true once the owner merges, so never write "in review".
 - **Every PR also updates `docs/requirements.md` when needed**, so the spec matches what was built. If development changed behaviour, scope, copy or a decision the spec covers (a requirement added, changed, split, dropped or deferred), edit the affected requirements in the same PR and list the changed IDs in the PR description.

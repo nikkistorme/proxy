@@ -10,6 +10,7 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 
 - `CLAUDE.md`: every PR also updates `docs/requirements.md` when development changed something the spec covers, and lists the changed requirement IDs in the PR description.
 - The **Feature or task** issue form no longer asks for a phase or adds a "[Phase N]" title prefix, since work after V1 won't be organised in phases.
+- `CLAUDE.md` keeps the stay-in-the-current-phase rule only until V1 is finished. After that, work isn't restricted to phases.
 
 ### Phase 3m-1: Piles on the table (2026-10-27)
 
