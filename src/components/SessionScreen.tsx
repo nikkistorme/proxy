@@ -18,6 +18,7 @@ import { PileMenu } from './PileMenu';
 import { PileNameDialog, type PileNameRequest } from './PileNameDialog';
 import { PILE_HINT, PILE_HINT_ID, PileTile } from './PileTile';
 import { PileViewer } from './PileViewer';
+import { SeatCounter } from './SeatCounter';
 import { seatIdentity } from './seatIdentity';
 import { TableSurface, type PileSlot } from './TableSurface';
 import { TableTools } from './TableTools';
@@ -422,6 +423,13 @@ export function SessionScreen() {
                   <span className="seat-bar__badge" style={{ background: identity.color }}>
                     Active
                   </span>
+                )}
+                {seat.counters.length > 0 && (
+                  <div className="seat-bar__counters">
+                    {seat.counters.map((counter) => (
+                      <SeatCounter key={counter.id} seat={seat} counter={counter} />
+                    ))}
+                  </div>
                 )}
               </li>
             );

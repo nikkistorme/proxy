@@ -2,11 +2,18 @@
 
 ## Current state
 
-Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection (#29), stacks (#30) and shortcut remapping (#34, folded into #53) moved after V1. 3a to 3f-2, 3m-1 to 3m-3, 3i (#31) and 3j (#32) are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; merging piles by dropping one on another; card counters; enlarging a card, with the double-faced badge; and reordering the hand. 3k (#33), 3o (#61, close-out) and 3n (#39, dark theme) are left. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases.
+Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection (#29), stacks (#30) and shortcut remapping (#34, folded into #53) moved after V1. 3a to 3f-2, 3m-1 to 3m-3, 3i (#31) and 3j (#32) are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; merging piles by dropping one on another; card counters; enlarging a card, with the double-faced badge; reordering the hand; and seat counters (3k-1, part of #33). 3k-2 (#33, dice, coin and roll log), 3o (#61, close-out) and 3n (#39, dark theme) are left. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases.
 
 The V1 plan now makes the data model ready for games, card sets and accounts (#69): a play session is a "session" and "game" means the card game being designed. Saves will go through a storage interface over separate items, keyed by base path and profile (AR-6, PS-7), with card sets as their own model (AR-4) and one options resolver (AR-7). The code now says "session" for a play session (#73). The storage interface and card set model (#74) start Phase 6.
 
 ## Done
+
+### Phase 3k-1: Seat counters (2026-10-27)
+
+- **Model (TT-13, FS-4):** `Seat` has `counters`, using the card counters' `Counter` type. The Solo preset gives Player 1 Life 20 and Energy 0, from the Main board, and the Environment none. Formats set these in Phase 5.
+- **Action:** `changeSeatCounter` in `actions/seatCounters.ts` steps a counter up or down, below zero too, and announces "Player 1 Life 20 → 19." Each step is one undo step.
+- **UI:** `SeatCounter` puts the board's label, − and + buttons (26px) and mono value beside each seat's name in the seat bar, named "Player 1 Life". On either button, ↑ or + steps up and ↓ or − steps down, and focus stays put. The value gets a short highlight on change, a colour fade only, so it stays under reduced motion. At 520px wide and below, a seat's counters sit together on their own row under its name (from the owner's iPhone check).
+- **Tests:** `seatCounters.test.ts`, `SeatCounter.test.tsx`, and `e2e/seat-counters.spec.ts` (keyboard only with undo, axe, and 375 × 667). The table, placement and table-piles E2E now Tab past the counters with `tabTo`.
 
 ### Phase 3j: Hand reordering (2026-10-27)
 
@@ -575,7 +582,7 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 ## Next
 
 - **#74: storage interface, profile keys and card set model**, at the start of Phase 6.
-- **3k (#33, seat counters, dice and roll log)**, next, after the owner's go-ahead. Then 3n (#39, dark theme) at any point, and 3o (#61) last: the ? shortcut reference, a WCAG 2.1.4 fix for the page-wide D shortcut, the announcement audit, and the solo-turn E2E that closes Phase 3.
+- **3k-2 (#33, dice, coin and roll log)**, next, after the owner's go-ahead. The owner changed the layout (see Decisions): no right dock. A **Dice & coins** button opens a dialog to roll d4 to d20 or flip a coin, with the result shown large. A menu on the session's name in the header has **Session log**, which shows the log. Settle at the start of 3k-2: whether the log lists only rolls (all TT-14 asks) or every action, and where the header control sits until named sessions exist. Update TT-14 in that PR. Then 3n (#39, dark theme) at any point, and 3o (#61) last: the ? shortcut reference, a WCAG 2.1.4 fix for the page-wide D shortcut, the announcement audit, and the solo-turn E2E that closes Phase 3.
 - **#71: keys act on the hovered card or pile when nothing on the table has focus**, an owner request from the #70 review. Single-letter keys without focus need the shortcut switch (WCAG 2.1.4), so it goes with #61 and #53.
 - **#68: no text-field focus on touch screens in the other dialogs** (Move to…, pile viewer, Draw/Mill/Peek count, pile name). It isn't tied to a phase, and the owner chooses when.
 - **After V1, as feature issues:** selection and group actions (#29), stacks (#30), and control settings with shortcut remapping (#53).
@@ -584,6 +591,7 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 
 ## Open problems
 
+- Seat counters step one at a time. Typing an exact value (for example Life 20 to 5) could reuse the card counters' value field, as a follow-up.
 - A card dragged from the table or a pile into a hand always goes to the end of the hand. Only a drag within the hand chooses a place.
 - Dragging to reorder the hand by touch needs a check on an iPhone, like the other touch drags.
 
@@ -753,3 +761,6 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 | 2026-10-27 | Make the V1 data model ready for games, card sets and accounts, with no backend in V1 ([decision record](decisions/0001-v1-data-model-ready-for-accounts.md), #69) | Accounts in V1; leaving the model and migrating later | Avoids save migrations and a storage rewrite after V1, while V1 stays complete on its own. |
 | 2026-10-27 | A play session is a "session" | "Playtest", as #45, #65, #67 and #69 proposed | Owner decision: clearer and more flexible. "Game" means the card game being designed. |
 | 2026-10-27 | The UI copy and code renames are one issue (#73) | Two issues, as #69 proposed | The UI had no "game" copy for a play session left to rename. |
+| 2026-10-27 | #33 (3k) split into 3k-1 seat counters and 3k-2 dice, coin and roll log | One PR | There was no log dock yet, so it was too much for one small PR. Owner approved. |
+| 2026-10-27 | Seat counters are stepped with buttons and keys on the buttons, with no page-wide shortcut | New single-letter shortcuts | Page-wide single-letter keys wait on the WCAG 2.1.4 fix in #61. |
+| 2026-10-27 | Dice and the log are shown on demand: a Dice & coins dialog, and a Session log item in a menu on the session's name | The design's always-open right dock (HANDOFF decisions 2 and 3) | Owner decision: neither is needed all the time, and the dock takes table space. |
