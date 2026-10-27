@@ -1,4 +1,4 @@
-import type { CSSProperties, KeyboardEvent } from 'react';
+import type { CSSProperties, KeyboardEvent, PointerEvent } from 'react';
 import { cardBox } from '../model/tablePlacement';
 import { CardFace } from './CardFace';
 import { seatIdentity } from './seatIdentity';
@@ -19,6 +19,10 @@ interface TableCardProps {
   menuOpen: boolean;
   /** Opens this card's action menu (right-click, or the Actions button). */
   onOpenMenu: (cardId: string) => void;
+  /** TT-4: a press that may become a drag. */
+  onPointerDown: (cardId: string, event: PointerEvent<HTMLButtonElement>) => void;
+  /** TT-4: this card is being dragged, so it shows where it came from. */
+  dragging: boolean;
 }
 
 /**
@@ -26,7 +30,7 @@ interface TableCardProps {
  * face is a decorative layer under a transparent button that carries the name,
  * so a face full of text never becomes the button's name (A11Y-6).
  */
-export function TableCard({ view, layer, tabbable, register, onFocus, onKeyDown, onKeyUp, menuOpen, onOpenMenu }: TableCardProps) {
+export function TableCard({ view, layer, tabbable, register, onFocus, onKeyDown, onKeyUp, menuOpen, onOpenMenu, onPointerDown, dragging }: TableCardProps) {
   const { entry, face, ownerSeatId, missing, label } = view;
   const identity = seatIdentity(ownerSeatId);
   // The outer box is the area the card covers on screen, turned or not, so the
@@ -36,8 +40,8 @@ export function TableCard({ view, layer, tabbable, register, onFocus, onKeyDown,
   const bodyStyle = entry.rotation === 0 ? undefined : { transform: `rotate(${entry.rotation}deg)` };
 
   return (
-    <div className={menuOpen ? 'table-card table-card--menu-open' : 'table-card'} style={style} data-card-id={entry.cardId}>
-      <div className="table-card__body" style={bodyStyle}>
+    <div className={menuOpen ? 'table-card card-drag-source table-card--menu-open' : 'table-card card-drag-source'} style={style} data-card-id={entry.cardId}>
+      <div className={dragging ? 'table-card__body card-drag-origin' : 'table-card__body'} style={bodyStyle}>
         <div className={face ? 'table-card__face' : `table-card__face ${identity.backClass}`} aria-hidden="true">
           {face ? (
             <CardFace face={face} />
@@ -68,6 +72,7 @@ export function TableCard({ view, layer, tabbable, register, onFocus, onKeyDown,
           onFocus={() => onFocus(entry.cardId)}
           onKeyDown={(event) => onKeyDown(entry.cardId, event)}
           onKeyUp={(event) => onKeyUp(entry.cardId, event)}
+          onPointerDown={(event) => onPointerDown(entry.cardId, event)}
           onContextMenu={(event) => {
             event.preventDefault();
             event.currentTarget.focus();

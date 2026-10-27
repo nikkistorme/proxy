@@ -1,6 +1,7 @@
 import { createContext, createElement, useContext, useState, type ReactNode } from 'react';
 import { useStore } from 'zustand';
 import { createStore, type StoreApi } from 'zustand/vanilla';
+import type { Destination } from '../actions/moveCard';
 import { createSoloGame, type ActionContext, type ActionResult, type GameState } from '../model/game';
 import { cryptoRandomInt } from '../model/random';
 import { PLACEMENT_COLUMNS } from '../model/tablePlacement';
@@ -43,6 +44,12 @@ export interface Placing {
   returnFocus?: () => void;
 }
 
+/** TT-4: a card being dragged, and the drop target under the pointer, if any. */
+export interface CardDrag {
+  cardId: string;
+  over?: Destination;
+}
+
 /** TT-15 asks for at least 200 undo steps. */
 export const HISTORY_LIMIT = 200;
 
@@ -72,6 +79,9 @@ export interface GameStore {
   /** A11Y-1: the card being placed, shown by the table as an outline you move and then place. */
   placing: Placing | undefined;
   setPlacing: (placing: Placing | undefined) => void;
+  /** TT-4: the card being dragged, so its origin and the drop target can show it. */
+  drag: CardDrag | undefined;
+  setDrag: (drag: CardDrag | undefined) => void;
   /**
    * A short note with an Undo button, shown after a destructive action instead
    * of asking first. It stays until the next action, undo or redo.
@@ -97,6 +107,8 @@ export function createGameStore(game: GameState = createSoloGame(), context: Act
       setTableViewport: (tableViewport) => set({ tableViewport }),
       placing: undefined,
       setPlacing: (placing) => set({ placing }),
+      drag: undefined,
+      setDrag: (drag) => set({ drag }),
       toast: undefined,
       showToast: (text) => set({ toast: { text, id: (get().toast?.id ?? 0) + 1 } }),
       dismissToast: () => set({ toast: undefined }),
@@ -159,7 +171,12 @@ export function GameStoreProvider({ store, children }: { store?: StoreApi<GameSt
 }
 
 export function useGameStore<T>(selector: (store: GameStore) => T): T {
+  return useStore(useGameStoreApi(), selector);
+}
+
+/** The store itself, for handlers that read its latest state without re-rendering on every change. */
+export function useGameStoreApi(): StoreApi<GameStore> {
   const store = useContext(GameStoreContext);
   if (!store) throw new Error('useGameStore needs a GameStoreProvider');
-  return useStore(store, selector);
+  return store;
 }

@@ -2,9 +2,24 @@
 
 ## Current state
 
-Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37, #39 and #41, all under #20. 3a to 3e are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; and keyboard and single-pointer placement. 3f (pointer dragging, #28) is next.
+Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37, #39, #41 and #49, all under #20. 3a to 3f-1 are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; and dragging table and hand cards. 3f-2 (dragging cards off piles, #49) is next.
 
 ## Done
+
+### Phase 3f-1: Dragging table and hand cards (2026-10-27)
+
+- **Dragging (TT-4):** table cards and hand cards can be dragged by mouse and touch to a spot on the table, the top of a pile, or the hand. Every drop goes through `moveCard`, so it's one undo step with the same announcement as a keyboard move.
+  - **Mouse:** a drag starts after the pointer moves 5px. A click without a drag still focuses a table card or opens a hand card's menu.
+  - **Touch:** a finger has to rest on a card for 250ms before it lifts. Moving sooner scrolls the table as before, and a tap works as before. Once a card has lifted, the page doesn't scroll and the browser's long-press menu doesn't open.
+  - **On the table:** the card keeps the point you took hold of under the pointer, snaps to the grid when snap is on, and never goes past the top or left edge (`clampToTable`).
+  - **Cancelling:** Escape, or dropping outside the table, piles and hand, leaves the card where it was: "Put Imp back." Dropping a hand card on its own hand does the same.
+  - **Focus:** after a drop on the table, the card has focus. A table card dropped elsewhere leaves focus to its neighbour, and a hand card to the next card in the hand, as Move to… does.
+  - **Announcements:** "Dragging Imp. Escape cancels." on lifting, then the move or "Put Imp back."
+- **Look (CardStates):** the dragged card is a copy that follows the pointer, scaled 1.06 and tilted −3° with the deep drag shadow. Where it came from shows faded and dashed. Under reduced motion it isn't scaled or tilted.
+- **Drop targets:** only the target under the pointer is highlighted. The table shows the landing outline, a pile its accent ring with "Drop: top" above it, and the hand a dashed accent ring, tint and "Drop: Player 1's hand".
+- **Code:** `useCardDrag` in `cardDrag.ts` runs one drag at a time with window listeners, hit-tests `[data-drop-zone]` elements with `elementFromPoint`, and hands the destination to the source's own `drop`. The store has a `drag` field for the origin and target highlights, and a `useGameStoreApi` accessor. The table viewport now isolates its cards' layers, so the dragged copy and menus stay above them.
+- **Tests:** 326 unit tests, including 10 in `CardDrag.test.tsx`. `e2e/drag.spec.ts` covers mouse drags between every zone with an axe check mid-drag, Escape, reduced motion, and a touch drag at 375 × 667 (Chromium only).
+- **Split:** dragging the top card off a pile is 3f-2 (#49).
 
 ### Phase 3e: Keyboard and single-pointer placement (2026-10-27)
 
@@ -435,14 +450,17 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 
 ## Next
 
-- **3f: Pointer dragging (#28)**, after the owner's go-ahead. Then 3g to 3l (#29 to #34), 3m (#37, movable piles) after 3f, and 3n (#39, dark theme) at any point. Open problems that belong to later issues:
-  - 3f: use `snapToGrid` when snap is on, and `clampToTable` to keep dropped cards inside the edge
+- **3f-2: Dragging cards off piles (#49)**, after the owner's go-ahead. Then 3g to 3l (#29 to #34), 3m (#37, movable piles) after 3f-2, and 3n (#39, dark theme) at any point. Open problems that belong to later issues:
+  - 3f-2: a pile tile's press opens its menu and takes CSV file drops, so the drag has to start without breaking either
   - 3g: move the Actions button to the selected card
   - 3i: a double-faced badge on table cards (from CardStates)
   - 3j: dragging to reorder the hand, where a click without a drag still opens the menu
 
 ## Open problems
 
+- Dragging doesn't scroll the table when the pointer nears its edge. To drop beyond the visible table, pan or zoom out first.
+- The touch drag E2E test runs in Chromium only, because Playwright sends multi-step touches through Chromium's DevTools protocol. Unit tests cover the touch rules, and iOS needs a check on a phone.
+- The hand's "Drop: Player 1's hand" label sits mid-tray, so the dragged card can cover it. The ring and tint still show.
 - The Actions button and card overlays scale with the table's zoom, so below 100% the button is smaller than 24 × 24px (A11Y-8 counts default zoom only). Enter and right-click always work. Revisit if it's a problem in play.
 - A card turned a quarter at the table's left or top edge reaches up to 25px past the mat edge, because it turns around its centre. Placing keeps cards inside the edge (`clampToTable`), but turning a card in place doesn't move it.
 - Pile viewer and peek cards can't choose a spot straight away, because those dialogs would have to close first. Send the card to the table, then press Space on it.
@@ -555,3 +573,7 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 | 2026-10-27 | Space picks up a table card, on keyup | A letter key | Space is the usual key for picking something up to move it. On keyup, the same press doesn't also click the outline. |
 | 2026-10-27 | "Choose a spot" is offered only from the table and the hand | Also from the pile viewer and peek | Those are modal, and closing peek puts its cards back, so placing from them is its own change |
 | 2026-10-27 | Arrows move the outline 16px, Shift+arrows a whole card; with snap on, one or two grid steps | Pixel steps only | Fine control and quick travel, and snapped steps line up with the grid |
+| 2026-10-27 | Dragging uses pointer events and a copy of the card that follows the pointer | HTML5 drag and drop, or a drag library | HTML5 drag doesn't work for touch on iOS, and no new dependency is needed |
+| 2026-10-27 | Touch drags start after resting on a card for 250ms | Starting on any touch move | A swipe that starts on a card must still scroll the table |
+| 2026-10-27 | Only the drop target under the pointer is highlighted | Highlighting every valid target while dragging | Every pile, the hand and the table are always valid, so highlighting them all says nothing |
+| 2026-10-27 | 3f is split: 3f-1 drags table and hand cards, 3f-2 (#49) drags cards off piles | One PR | At the owner's go-ahead, to keep the PR small |

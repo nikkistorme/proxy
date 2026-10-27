@@ -49,3 +49,8 @@
   /* Above every card, so it and its focus ring are never hidden (A11Y-7). */
   z-index: 10001;
 }
+
+/* TT-4: where a dragged card would land. The pointer passes through it to the table. */
+.table-drop {
+  pointer-events: none;
+}

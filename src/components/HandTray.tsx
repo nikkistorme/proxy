@@ -1,6 +1,8 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import { cardName } from '../actions/helpers';
 import { moveCard, type Destination } from '../actions/moveCard';
 import { useGameStore } from '../store/gameStore';
+import { useCardDrag } from './cardDrag';
 import { CardDetailsDialog } from './CardDetailsDialog';
 import { CardFace } from './CardFace';
 import { HandCardMenu, type HandCommand } from './HandCardMenu';
@@ -28,6 +30,9 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
   const game = useGameStore((s) => s.game);
   const dispatch = useGameStore((s) => s.dispatch);
   const setPlacing = useGameStore((s) => s.setPlacing);
+  const announce = useGameStore((s) => s.announce);
+  const drag = useGameStore((s) => s.drag);
+  const startDrag = useCardDrag();
 
   const [activeId, setActiveId] = useState<string>();
   const [menu, setMenu] = useState<{ cardId: string; rect: DOMRect }>();
@@ -48,6 +53,7 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
     return definition ? [{ id, face: definition.front, name: definition.back ? `${definition.front.name}, double-faced` : definition.front.name }] : [];
   });
   const count = `${cards.length} ${cards.length === 1 ? 'card' : 'cards'}`;
+  const dropTarget = drag?.over?.zone === 'hand' && drag.over.seatId === seatId;
   const tabbableId = activeId && hand.includes(activeId) ? activeId : hand[0];
 
   useEffect(() => {
@@ -104,6 +110,32 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
     });
   }
 
+  // TT-4: dragging a hand card to the table or a pile, through the same action as Move to….
+  function onCardPointerDown(cardId: string, event: PointerEvent<HTMLButtonElement>) {
+    const visual = event.currentTarget.previousElementSibling;
+    if (!(visual instanceof HTMLElement)) return;
+    const name = cardName(game, cardId);
+    startDrag(event, {
+      cardId,
+      name,
+      visual,
+      scale: 1,
+      rotation: 0,
+      from: { zone: 'hand', seatId },
+      drop: (to) => {
+        if (to.zone === 'table') {
+          // On the table, focus follows the card.
+          window.setTimeout(() => document.querySelector<HTMLElement>(`.table-card[data-card-id="${cardId}"] .table-card__button`)?.focus());
+        } else pendingFocus.current = afterLeaving(cardId);
+        dispatch((g, context) => moveCard(g, { cardId, to }, context));
+      },
+      cancel: () => {
+        announce(`Put ${name} back.`);
+        buttons.current[cardId]?.focus();
+      },
+    });
+  }
+
   function onCardKeyDown(cardId: string, event: KeyboardEvent<HTMLButtonElement>) {
     const { key } = event;
     if (event.altKey || event.ctrlKey || event.metaKey) return;
@@ -127,7 +159,13 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
   }
 
   return (
-    <section className="hand-tray" aria-labelledby={headingId} style={{ borderTopColor: identity.color }}>
+    <section
+      className={dropTarget ? 'hand-tray hand-tray--drop-target' : 'hand-tray'}
+      aria-labelledby={headingId}
+      style={{ borderTopColor: identity.color }}
+      data-drop-zone="hand"
+      data-seat-id={seatId}
+    >
       <div className="hand-tray__header">
         <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
           <path d={identity.shape} fill={identity.color} />
@@ -148,7 +186,7 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
       ) : (
         <ul className="hand-tray__cards" aria-label={`${seatName}'s hand, ${count}. Arrow keys move between cards.`}>
           {cards.map((card) => (
-            <li key={card.id} className="hand-tray__card">
+            <li key={card.id} className={drag?.cardId === card.id ? 'hand-tray__card card-drag-source card-drag-origin' : 'hand-tray__card card-drag-source'}>
               <div aria-hidden="true">
                 <CardFace face={card.face} width={104} />
               </div>
@@ -173,10 +211,16 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
                   if (menu?.cardId !== card.id) openMenu(card.id);
                 }}
                 onKeyDown={(event) => onCardKeyDown(card.id, event)}
+                onPointerDown={(event) => onCardPointerDown(card.id, event)}
               />
             </li>
           ))}
         </ul>
+      )}
+      {dropTarget && (
+        <span className="hand-tray__drop-label" aria-hidden="true">
+          Drop: {seatName}'s hand
+        </span>
       )}
       {/* Outside the scrolling row, which would clip it. */}
       {menu && hand.includes(menu.cardId) && (

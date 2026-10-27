@@ -40,6 +40,7 @@ export function GameScreen() {
   const dispatch = useGameStore((s) => s.dispatch);
   const announce = useGameStore((s) => s.announce);
   const showToast = useGameStore((s) => s.showToast);
+  const drag = useGameStore((s) => s.drag);
 
   const [menuPileId, setMenuPileId] = useState<string>();
   const [keepOrder, setKeepOrder] = useState<Record<string, boolean>>({});
@@ -376,6 +377,7 @@ export function GameScreen() {
                     <PileTile
                       registerTile={registerTile}
                       onDropFile={(id, file) => void loadFile(id, file)}
+                      cardOver={drag?.over?.zone === 'pile' && drag.over.pileId === pile.id}
                       pile={pile}
                       ownerName={seatName(pile.ownerSeatId)}
                       revealedTop={revealedTop}
