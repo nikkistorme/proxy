@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import { reorderHand } from '../actions/handActions';
 import { cardName } from '../actions/helpers';
 import { moveCard, type Destination } from '../actions/moveCard';
 import { useSessionStore } from '../store/sessionStore';
@@ -22,7 +23,8 @@ const HAND_KEYS: Record<string, HandCommand> = { p: 'play', m: 'move' };
 /**
  * The active seat's hand (FS-3), with Draw (SP-6). Follows the Main board's hand
  * tray. The cards are one Tab stop with ← and → between them, and each opens a
- * menu to play it or move it (TT-4, SP-8).
+ * menu to play it or move it (TT-4, SP-8). Shift with the same keys, the menu or a
+ * drag within the hand reorders it (TT-12).
  */
 export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
   const headingId = useId();
@@ -53,7 +55,16 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
     return definition ? [{ id, face: definition.front, name: definition.back ? `${definition.front.name}, double-faced` : definition.front.name }] : [];
   });
   const count = `${cards.length} ${cards.length === 1 ? 'card' : 'cards'}`;
-  const dropTarget = drag?.over?.zone === 'hand' && drag.over.seatId === seatId;
+  const over = drag?.over?.zone === 'hand' && drag.over.seatId === seatId ? drag.over : undefined;
+  // Reordering shows where the card will land instead of the whole-tray drop target.
+  const dropTarget = over !== undefined && over.index === undefined;
+  const insertAt = over?.index;
+  const draggedIndex = drag?.cardId === undefined ? -1 : hand.indexOf(drag.cardId);
+  /** The card the insertion line sits beside, and on which side. */
+  const insertMark = (cardId: string) => {
+    if (insertAt === undefined || draggedIndex < 0 || hand[insertAt] !== cardId) return '';
+    return insertAt < draggedIndex ? ' hand-tray__card--insert-before' : ' hand-tray__card--insert-after';
+  };
   const tabbableId = activeId && hand.includes(activeId) ? activeId : hand[0];
 
   useEffect(() => {
@@ -74,8 +85,15 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
     dispatch((g, context) => moveCard(g, { cardId, to }, context));
   }
 
+  /** TT-12: the card moves to `toIndex` and keeps focus. */
+  function reorder(cardId: string, toIndex: number) {
+    pendingFocus.current = cardId;
+    dispatch((g) => reorderHand(g, { seatId, cardId, toIndex }));
+  }
+
   function runCommand(cardId: string, command: HandCommand) {
-    if (command === 'play') move(cardId, { zone: 'table' });
+    if (command === 'left' || command === 'right') reorder(cardId, hand.indexOf(cardId) + (command === 'left' ? -1 : 1));
+    else if (command === 'play') move(cardId, { zone: 'table' });
     else if (command === 'move') {
       const face = cards.find((c) => c.id === cardId)?.face;
       if (face) setMoveRequest({ cardId, face, fromName: `${seatName}'s hand`, options: moveDestinations(session, cardId) });
@@ -123,6 +141,10 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
       rotation: 0,
       from: { zone: 'hand', seatId },
       drop: (to) => {
+        if (to.zone === 'hand' && to.index !== undefined) {
+          reorder(cardId, to.index);
+          return;
+        }
         if (to.zone === 'table') {
           // On the table, focus follows the card.
           window.setTimeout(() => document.querySelector<HTMLElement>(`.table-card[data-card-id="${cardId}"] .table-card__button`)?.focus());
@@ -152,8 +174,15 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
     }
     const index = hand.indexOf(cardId);
     const next = { ArrowLeft: index - 1, ArrowRight: index + 1, Home: 0, End: hand.length - 1 }[key];
-    if (next === undefined || event.shiftKey) return;
+    if (next === undefined) return;
     event.preventDefault();
+    if (event.shiftKey) {
+      // Shift moves the card itself (TT-12). At either end there's nowhere to go.
+      const toIndex = Math.max(0, Math.min(hand.length - 1, next));
+      if (toIndex === index) announce(`${cardName(session, cardId)} is already ${toIndex === 0 ? 'first' : 'last'} in ${seatName}'s hand.`);
+      else reorder(cardId, toIndex);
+      return;
+    }
     const target = hand[Math.max(0, Math.min(hand.length - 1, next))];
     if (target) buttons.current[target]?.focus();
   }
@@ -184,9 +213,13 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
       {cards.length === 0 ? (
         <p className="hand-tray__empty">No cards in hand. Draw from {seatName}'s deck to start.</p>
       ) : (
-        <ul className="hand-tray__cards" aria-label={`${seatName}'s hand, ${count}. Arrow keys move between cards.`}>
+        <ul className="hand-tray__cards" aria-label={`${seatName}'s hand, ${count}. Arrow keys move between cards. Shift and arrow keys reorder.`}>
           {cards.map((card) => (
-            <li key={card.id} className={drag?.cardId === card.id ? 'hand-tray__card card-drag-source card-drag-origin' : 'hand-tray__card card-drag-source'}>
+            <li
+              key={card.id}
+              className={`hand-tray__card card-drag-source${drag?.cardId === card.id ? ' card-drag-origin' : ''}${insertMark(card.id)}`}
+              data-hand-card-id={card.id}
+            >
               <div aria-hidden="true">
                 <CardFace face={card.face} width={104} />
               </div>
@@ -228,6 +261,8 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
           <HandCardMenu
             name={cards.find((c) => c.id === menu.cardId)?.name ?? ''}
             seatName={seatName}
+            index={hand.indexOf(menu.cardId)}
+            count={hand.length}
             onCommand={(command) => runCommand(menu.cardId, command)}
             onClose={closeMenu}
           />

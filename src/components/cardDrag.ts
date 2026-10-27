@@ -64,6 +64,25 @@ const dragged = ({ cardId, pileId }: DragSource) => (pileId === undefined ? { ca
 
 const sameDestination = (a: Destination | undefined, b: Destination | undefined) => JSON.stringify(a) === JSON.stringify(b);
 
+/**
+ * TT-12: a card dragged within its own hand lands between the cards either side
+ * of the pointer. Back in its own place, it's the hand it came from: no move.
+ */
+function handDestination(current: ActiveDrag, zone: HTMLElement, seatId: string, x: number): Destination {
+  const { cardId, from } = current.source;
+  const hand = current.store.getState().session.hands[seatId] ?? [];
+  const fromIndex = cardId === undefined ? -1 : hand.indexOf(cardId);
+  if (from?.zone !== 'hand' || from.seatId !== seatId || fromIndex < 0) return { zone: 'hand', seatId };
+  // How many cards' middles are left of the pointer: the gap the card drops into.
+  let gap = 0;
+  for (const card of zone.querySelectorAll<HTMLElement>('[data-hand-card-id]')) {
+    const rect = card.getBoundingClientRect();
+    if (x > rect.left + rect.width / 2) gap++;
+  }
+  const index = gap > fromIndex ? gap - 1 : gap;
+  return index === fromIndex ? { zone: 'hand', seatId } : { zone: 'hand', seatId, index };
+}
+
 /** Where a drop at the pointer lands: a spot on the table, the top of a pile, or a hand. */
 function destinationAt(current: ActiveDrag, x: number, y: number): Destination | undefined {
   // A pile lands on the table wherever it's dropped, even over a card. Over another pile, it merges with it.
@@ -71,7 +90,7 @@ function destinationAt(current: ActiveDrag, x: number, y: number): Destination |
   if (!zone) return undefined;
   const { dropZone: kind, pileId, seatId } = zone.dataset;
   if (kind === 'pile' && pileId) return { zone: 'pile', pileId, position: 'top' };
-  if (kind === 'hand' && seatId) return { zone: 'hand', seatId };
+  if (kind === 'hand' && seatId) return handDestination(current, zone, seatId, x);
   if (kind !== 'table') return undefined;
   const { zoom, snap } = current.store.getState().view;
   const { rotation } = current.source;

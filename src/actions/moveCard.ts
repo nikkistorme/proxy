@@ -13,7 +13,12 @@ export type Destination =
       /** Top-left corner in table px. The first free spot when left out. */
       position?: { x: number; y: number };
     }
-  | { zone: 'hand'; seatId: string }
+  | {
+      zone: 'hand';
+      seatId: string;
+      /** TT-12: where a card dragged within its own hand lands. Only those drags set it; reorderHand moves it. */
+      index?: number;
+    }
   | {
       zone: 'pile';
       pileId: string;

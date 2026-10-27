@@ -32,7 +32,7 @@ describe('FS-3 hand tray', () => {
   it("shows the seat's cards by name, and the count", () => {
     setup();
     expect(within(hand()).getByText('3 cards')).toBeInTheDocument();
-    const list = within(hand()).getByRole('list', { name: "Player 1's hand, 3 cards. Arrow keys move between cards." });
+    const list = within(hand()).getByRole('list', { name: "Player 1's hand, 3 cards. Arrow keys move between cards. Shift and arrow keys reorder." });
     expect(within(list).getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual(['Imp', 'Daylight Hunter, double-faced', 'Ogre']);
   });
 
@@ -68,7 +68,7 @@ describe('TT-4 and SP-8 hand card menu', () => {
     setup();
     await userEvent.click(card('Ogre'));
     const menu = screen.getByRole('menu', { name: 'Actions for Ogre' });
-    expect(within(menu).getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['Play to tableP', 'Move to…M', 'Details…']);
+    expect(within(menu).getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['Play to tableP', 'Move to…M', 'Move leftShift+←', 'Move rightShift+→', 'Details…']);
     await userEvent.keyboard('{Escape}');
     expect(screen.queryByRole('menu')).toBeNull();
     expect(card('Ogre')).toHaveFocus();
@@ -119,5 +119,46 @@ describe('TT-4 and SP-8 hand card menu', () => {
     expect(details).toHaveTextContent('Night side.');
     await userEvent.click(within(details).getByRole('button', { name: 'Done' }));
     await waitFor(() => expect(card('Daylight Hunter, double-faced')).toHaveFocus());
+  });
+});
+
+describe('TT-12 hand reordering', () => {
+  const order = (store: ReturnType<typeof setup>['store']) =>
+    (store.getState().session.hands['seat-p1'] ?? []).map((id) => {
+      const { session } = store.getState();
+      return session.definitions[session.cards[id]?.definitionId ?? '']?.front.name;
+    });
+
+  it('moves the focused card with Shift and ←, →, Home and End, and it keeps focus', async () => {
+    const { store } = setup();
+    card('Imp').focus();
+    await userEvent.keyboard('{Shift>}{ArrowRight}{/Shift}');
+    expect(order(store)).toEqual(['Daylight Hunter', 'Imp', 'Ogre']);
+    expect(store.getState().announcement.text).toBe("Moved Imp to position 2 of 3 in Player 1's hand.");
+    await waitFor(() => expect(card('Imp')).toHaveFocus());
+    await userEvent.keyboard('{Shift>}{End}{/Shift}');
+    expect(order(store)).toEqual(['Daylight Hunter', 'Ogre', 'Imp']);
+    await userEvent.keyboard('{Shift>}{ArrowRight}{/Shift}');
+    expect(store.getState().announcement.text).toBe("Imp is already last in Player 1's hand.");
+    await userEvent.keyboard('{Shift>}{Home}{/Shift}');
+    expect(order(store)).toEqual(['Imp', 'Daylight Hunter', 'Ogre']);
+    await userEvent.keyboard('{Shift>}{ArrowLeft}{/Shift}');
+    expect(store.getState().announcement.text).toBe("Imp is already first in Player 1's hand.");
+    store.getState().undo();
+    expect(order(store)).toEqual(['Daylight Hunter', 'Ogre', 'Imp']);
+  });
+
+  it('moves a card from the menu, with the end it is at disabled', async () => {
+    const { store } = setup();
+    await userEvent.click(card('Imp'));
+    expect(screen.getByRole('menuitem', { name: 'Move left' })).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('menuitem', { name: 'Move right' })).toHaveAttribute('aria-keyshortcuts', 'Shift+ArrowRight');
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Move right' }));
+    expect(order(store)).toEqual(['Daylight Hunter', 'Imp', 'Ogre']);
+    await waitFor(() => expect(card('Imp')).toHaveFocus());
+    await userEvent.click(card('Ogre'));
+    expect(screen.getByRole('menuitem', { name: 'Move right' })).toHaveAttribute('aria-disabled', 'true');
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Move left' }));
+    expect(order(store)).toEqual(['Daylight Hunter', 'Ogre', 'Imp']);
   });
 });

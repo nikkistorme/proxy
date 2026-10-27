@@ -2,11 +2,19 @@
 
 ## Current state
 
-Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection (#29), stacks (#30) and shortcut remapping (#34, folded into #53) moved after V1. 3a to 3f-2, 3m-1 to 3m-3 and 3i (#31) are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; merging piles by dropping one on another; card counters; and enlarging a card, with the double-faced badge. 3j (#32), 3k (#33), 3o (#61, close-out) and 3n (#39, dark theme) are left. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases.
+Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection (#29), stacks (#30) and shortcut remapping (#34, folded into #53) moved after V1. 3a to 3f-2, 3m-1 to 3m-3, 3i (#31) and 3j (#32) are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; merging piles by dropping one on another; card counters; enlarging a card, with the double-faced badge; and reordering the hand. 3k (#33), 3o (#61, close-out) and 3n (#39, dark theme) are left. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases.
 
 The V1 plan now makes the data model ready for games, card sets and accounts (#69): a play session is a "session" and "game" means the card game being designed. Saves will go through a storage interface over separate items, keyed by base path and profile (AR-6, PS-7), with card sets as their own model (AR-4) and one options resolver (AR-7). The code now says "session" for a play session (#73). The storage interface and card set model (#74) start Phase 6.
 
 ## Done
+
+### Phase 3j: Hand reordering (2026-10-27)
+
+- **Action (TT-12):** `reorderHand` in `actions/handActions.ts` moves a hand card to a new place, keeps the others in order, and announces "Moved Imp to position 2 of 3 in Player 1's hand." Each reorder is one undo step.
+- **Keyboard:** Shift with ← or → moves the focused card one place, and Shift with Home or End moves it to either end. Focus stays on the card. At either end, it announces that the card is already first or last. The hand's label says "Shift and arrow keys reorder."
+- **Single pointer:** the hand card menu has **Move left** and **Move right**, showing Shift+← and Shift+→, and each is disabled at its end of the hand. `MenuEntry` gained `keyshortcuts` for an `aria-keyshortcuts` value that differs from the shown key.
+- **Dragging:** a hand card dragged within its own hand drops between the cards either side of the pointer (the hand destination's new optional `index`). A line in the accent colour shows where it will land, in place of the whole-tray drop target. Landing back in its own place puts it back. A click without a drag still opens the menu.
+- **Tests:** `handActions.test.ts`, more in `HandTray.test.tsx` and `CardDrag.test.tsx`. `e2e/hand.spec.ts` adds keyboard only (with axe and undo), a mouse drag, and the menu's Move left at 375 × 667.
 
 ### #73: play-session code renamed to "session" (2026-10-27)
 
@@ -567,15 +575,17 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 ## Next
 
 - **#74: storage interface, profile keys and card set model**, at the start of Phase 6.
-- **3j (#32, hand reordering)**, next, after the owner's go-ahead. Then 3k (#33, seat counters, dice and roll log), 3n (#39, dark theme) at any point, and 3o (#61) last: the ? shortcut reference, a WCAG 2.1.4 fix for the page-wide D shortcut, the announcement audit, and the solo-turn E2E that closes Phase 3.
+- **3k (#33, seat counters, dice and roll log)**, next, after the owner's go-ahead. Then 3n (#39, dark theme) at any point, and 3o (#61) last: the ? shortcut reference, a WCAG 2.1.4 fix for the page-wide D shortcut, the announcement audit, and the solo-turn E2E that closes Phase 3.
 - **#71: keys act on the hovered card or pile when nothing on the table has focus**, an owner request from the #70 review. Single-letter keys without focus need the shortcut switch (WCAG 2.1.4), so it goes with #61 and #53.
 - **#68: no text-field focus on touch screens in the other dialogs** (Move to…, pile viewer, Draw/Mill/Peek count, pile name). It isn't tied to a phase, and the owner chooses when.
 - **After V1, as feature issues:** selection and group actions (#29), stacks (#30), and control settings with shortcut remapping (#53).
 - **Multi-select in the pile viewer (#57)**, a feature issue outside the phases, when the owner chooses. Open problems that belong to later issues:
   - #29 (after V1): move the Actions button to the selected card
-  - 3j: dragging to reorder the hand, where a click without a drag still opens the menu
 
 ## Open problems
+
+- A card dragged from the table or a pile into a hand always goes to the end of the hand. Only a drag within the hand chooses a place.
+- Dragging to reorder the hand by touch needs a check on an iPhone, like the other touch drags.
 
 - The iOS field zoom fix (#66, A11Y-12) needs a check on an iPhone: the E2E checks font sizes, not Safari's zoom itself.
 - A card's menu opened by a touch hold doesn't take focus, the same as a pile's: the browser's own mousedown after a touch moves focus back to the card.
