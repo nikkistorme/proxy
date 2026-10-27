@@ -2,9 +2,23 @@
 
 ## Current state
 
-Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37, #39, #41 and #49, all under #20. 3a to 3f-1 are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; and dragging table and hand cards. 3f-2 (dragging cards off piles, #49) is next.
+Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37, #39, #41, #49 and #51, all under #20. 3a to 3f-1 and 3m-1 are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; and piles on the table. 3m-2 (moving piles, #51) is next, then 3f-2 (dragging cards off piles, #49).
 
 ## Done
+
+### Phase 3m-1: Piles on the table (2026-10-27)
+
+- **One surface (owner decision):** the separate pile row is gone. Piles sit on the table with the cards, as on the Main board, card-sized and under the cards.
+  - **Positions:** each `Pile` has `x` and `y`. The Solo game's three piles start along the top row. Add pile puts a new pile at the next free spot, and `freeSpot` never puts a card or pile on a pile.
+  - **Keyboard (A11Y-3):** piles and cards share the table's one Tab stop, and arrow keys move between them by position (`tableItems` in `tableNavigation.ts`). The table is named "Table, 2 cards, 3 piles. Arrow keys move between cards and piles. …".
+  - **Pile behaviour is unchanged:** click or Enter opens the menu, V opens the viewer, CSV files drop on a pile, and dragged cards drop on top. A second press on a pile with its menu open closes it.
+  - **Menus:** a pile's menu opens outside the zoomed table, like the card menu, so it's full size at any zoom and never clipped.
+  - **Focus after deleting a pile:** the next pile or card in reading order, else the one before, else Add pile.
+  - **Fit all (TT-1)** frames piles too: "Showing all 9 cards and 3 piles at 86%."
+- **Add pile** is in the table toolbar, after grid snap, with its icon and visible label.
+- **Code:** `TableSurface` takes a `renderPile` prop. `GameScreen` still owns pile menus, dialogs and loading, and draws each pile through it.
+- **Tests:** 333 unit tests, including `TablePiles.test.tsx`. New `e2e/table-piles.spec.ts` covers the toolbar's Add pile, menus at 80% zoom with axe, the keyboard path, and phone size. E2E specs that relied on the pile row, Tab order or first-row positions are updated.
+- **Split:** moving piles is 3m-2 (#51).
 
 ### Phase 3f-1: Dragging table and hand cards (2026-10-27)
 
@@ -450,14 +464,17 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 
 ## Next
 
-- **3f-2: Dragging cards off piles (#49)**, after the owner's go-ahead. Then 3g to 3l (#29 to #34), 3m (#37, movable piles) after 3f-2, and 3n (#39, dark theme) at any point. Open problems that belong to later issues:
-  - 3f-2: a pile tile's press opens its menu and takes CSV file drops, so the drag has to start without breaking either
+- **3m-2: Moving piles on the table (#51)**, after the owner's go-ahead. Then 3f-2 (#49, dragging cards off piles), 3g to 3l (#29 to #34), and 3n (#39, dark theme) at any point. Open problems that belong to later issues:
+  - 3m-2: decide what dragging a pile means (move the pile) so 3f-2 can pull the top card off without clashing; a pile's press already opens its menu and takes CSV file drops
+  - 3f-2: builds on 3m-2's pile drag
   - 3g: move the Actions button to the selected card
   - 3i: a double-faced badge on table cards (from CardStates)
   - 3j: dragging to reorder the hand, where a click without a drag still opens the menu
 
 ## Open problems
 
+- The toolbar's "Fit all cards (0)" also fits piles now. Its label could say so if that confuses.
+- Unit tests that draw only the table move the Solo piles out of the way (`pilesOutOfTheWay` in `actions/testing.ts`), so cards still auto-place from the top-left there.
 - Dragging doesn't scroll the table when the pointer nears its edge. To drop beyond the visible table, pan or zoom out first.
 - The touch drag E2E test runs in Chromium only, because Playwright sends multi-step touches through Chromium's DevTools protocol. Unit tests cover the touch rules, and iOS needs a check on a phone.
 - The hand's "Drop: Player 1's hand" label sits mid-tray, so the dragged card can cover it. The ring and tint still show.
@@ -577,3 +594,6 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 | 2026-10-27 | Touch drags start after resting on a card for 250ms | Starting on any touch move | A swipe that starts on a card must still scroll the table |
 | 2026-10-27 | Only the drop target under the pointer is highlighted | Highlighting every valid target while dragging | Every pile, the hand and the table are always valid, so highlighting them all says nothing |
 | 2026-10-27 | 3f is split: 3f-1 drags table and hand cards, 3f-2 (#49) drags cards off piles | One PR | At the owner's go-ahead, to keep the PR small |
+| 2026-10-27 | Piles and cards share one table surface, with no separate pile row | Keeping the pile row above the table | Owner decision: pile dragging (3f-2, 3m-2) works on the same surface as cards |
+| 2026-10-27 | 3m is split: 3m-1 puts piles on the table, 3m-2 (#51) moves them; both come before 3f-2 | One PR | At the owner's go-ahead, to keep the PR small |
+| 2026-10-27 | Add pile lives in the table toolbar, with a visible label | A button on the table | The table is only for cards and piles, and the toolbar is always in view |

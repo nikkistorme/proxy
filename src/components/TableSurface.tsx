@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
-import { cardBox, CARD_H, CARD_W, clampToTable, columnsFor, describeSpot, freeSpot, overlaps, TABLE_GAP } from '../model/tablePlacement';
-import { nearestInDirection, readingOrder, type Direction } from '../model/tableNavigation';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
+import { cardBox, CARD_H, CARD_W, clampToTable, columnsFor, describeSpot, freeSpot, overlaps, pileBox, TABLE_GAP } from '../model/tablePlacement';
+import { nearestInDirection, readingOrder, tableItems, type Direction } from '../model/tableNavigation';
 import { clampZoom, fitAll, GRID_X, GRID_Y, MAX_ZOOM, scrollAfterZoom, snapToGrid, stepZoom, zoomPercent, type Scroll } from '../model/tableView';
 import { bringToFront, deleteCard, duplicate, flip, rotate, sendToBack, shownName } from '../actions/cardActions';
 import { cardName } from '../actions/helpers';
 import { moveCard, type Destination } from '../actions/moveCard';
-import type { GameState, Rotation } from '../model/game';
+import type { GameState, Pile, Rotation } from '../model/game';
 import { useGameStore } from '../store/gameStore';
 import { useCardDrag } from './cardDrag';
 import { CardDetailsDialog } from './CardDetailsDialog';
@@ -38,6 +38,16 @@ interface Placement {
   rotation: Rotation;
 }
 
+/** What the table gives each pile it draws, so the pile joins the table's one Tab stop (A11Y-3). */
+export interface PileSlot {
+  tabbable: boolean;
+  register: (element: HTMLButtonElement | null) => void;
+  onFocus: () => void;
+  onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => void;
+}
+
+const plural = (count: number, word: string) => `${count} ${count === 1 ? word : `${word}s`}`;
+
 /** The name a card being placed goes by: as it shows on the table, or as its owner sees it in the hand. */
 function placingName(game: GameState, cardId: string): string {
   if (game.table.some((e) => e.cardId === cardId)) return shownName(game, cardId);
@@ -50,12 +60,17 @@ function placeable(game: GameState, cardId: string): boolean {
   return game.table.some((e) => e.cardId === cardId) || Object.values(game.hands).some((hand) => hand.includes(cardId));
 }
 
+interface TableSurfaceProps {
+  /** Draws a pile on the table. The game screen owns piles' menus and dialogs, so it draws them. */
+  renderPile?: (pile: Pile, slot: PileSlot) => ReactNode;
+}
+
 /**
- * The free-form table. Cards sit at their positions on a mat that pans and
- * zooms (TT-1) inside its own viewport. The table is one Tab stop, and arrow
- * keys move focus to the nearest card in that direction (A11Y-3).
+ * The free-form table. Cards and piles sit at their positions on a mat that pans
+ * and zooms (TT-1) inside its own viewport. The table is one Tab stop, and arrow
+ * keys move focus to the nearest card or pile in that direction (A11Y-3).
  */
-export function TableSurface() {
+export function TableSurface({ renderPile }: TableSurfaceProps = {}) {
   const game = useGameStore((s) => s.game);
   const { zoom, snap } = useGameStore((s) => s.view);
   const setView = useGameStore((s) => s.setView);
@@ -93,10 +108,14 @@ export function TableSurface() {
   const pendingScroll = useRef<Scroll>(undefined);
   // The latest zoom and cards, for handlers registered once.
   const zoomRef = useRef(zoom);
+  // Piles are on the table only when something draws them.
+  const piles = renderPile ? game.piles : [];
   const tableRef = useRef(game.table);
+  const pilesRef = useRef(piles);
   useLayoutEffect(() => {
     zoomRef.current = zoom;
     tableRef.current = game.table;
+    pilesRef.current = piles;
   });
 
   const register = useCallback((cardId: string, element: HTMLButtonElement | null) => {
@@ -157,7 +176,9 @@ export function TableSurface() {
       fitAll: () => {
         const element = viewportRef.current;
         const table = tableRef.current;
-        const fit = element && fitAll(table.map(cardBox), { width: element.clientWidth, height: element.clientHeight });
+        const shownPiles = pilesRef.current;
+        const boxes = [...table.map(cardBox), ...shownPiles.map(pileBox)];
+        const fit = element && fitAll(boxes, { width: element.clientWidth, height: element.clientHeight });
         if (!element || !fit) {
           announce('No cards on the table to fit.');
           return;
@@ -170,7 +191,8 @@ export function TableSurface() {
           zoomRef.current = fit.zoom;
           setView({ zoom: fit.zoom });
         }
-        announce(`Showing all ${table.length} ${table.length === 1 ? 'card' : 'cards'} at ${zoomPercent(fit.zoom)}.`);
+        const what = shownPiles.length === 0 ? plural(table.length, 'card') : `${plural(table.length, 'card')} and ${plural(shownPiles.length, 'pile')}`;
+        announce(`Showing all ${what} at ${zoomPercent(fit.zoom)}.`);
       },
     });
     return () => setTableViewport(undefined);
@@ -233,7 +255,7 @@ export function TableSurface() {
   function onPointerDown(event: PointerEvent<HTMLDivElement>) {
     const element = viewportRef.current;
     if (!element || event.pointerType !== 'mouse' || event.button !== 0) return;
-    if ((event.target as HTMLElement).closest('.table-card')) return;
+    if ((event.target as HTMLElement).closest('.table-card, .table-pile')) return;
     event.preventDefault();
     dragRef.current = { x: event.clientX, y: event.clientY, left: element.scrollLeft, top: element.scrollTop };
     element.setPointerCapture?.(event.pointerId);
@@ -272,9 +294,12 @@ export function TableSurface() {
     else buttons.current[target.card]?.focus();
   });
 
-  /** The card that takes a leaving card's place: the next in reading order, else the one before. */
+  // A11Y-3: arrow keys move between cards and piles alike.
+  const items = tableItems({ table: game.table, piles });
+
+  /** The card or pile that takes a leaving card's place: the next in reading order, else the one before. */
   const neighbourOf = (cardId: string) => {
-    const order = readingOrder(game.table);
+    const order = readingOrder(items);
     const index = order.indexOf(cardId);
     return order[index + 1] ?? order[index - 1];
   };
@@ -390,7 +415,7 @@ export function TableSurface() {
   const placingId = placing && placeable(game, placing.cardId) ? placing.cardId : undefined;
   if (placingId !== placement?.cardId) {
     const entry = game.table.find((e) => e.cardId === placingId);
-    const start = entry ?? { ...freeSpot(game.table, columnsInView), rotation: 0 as Rotation };
+    const start = entry ?? { ...freeSpot(game, columnsInView), rotation: 0 as Rotation };
     setPlacement(placingId ? { cardId: placingId, x: start.x, y: start.y, rotation: start.rotation } : undefined);
     if (placingId) setMenu(undefined);
   }
@@ -422,9 +447,12 @@ export function TableSurface() {
     const spot = clampToTable(snap ? snapToGrid(to) : to, placement.rotation);
     setPlacement({ ...placement, ...spot });
     const box = cardBox({ ...spot, rotation: placement.rotation });
-    // The topmost card under the outline.
-    const under = [...game.table].reverse().filter((e) => e.cardId !== placement.cardId && overlaps(cardBox(e), box));
-    const over = under[0] ? `, over ${shownName(game, under[0].cardId)}${under.length > 1 ? ` and ${under.length - 1} more` : ''}` : '';
+    // The topmost card under the outline, then any pile.
+    const under = [
+      ...[...game.table].reverse().filter((e) => e.cardId !== placement.cardId && overlaps(cardBox(e), box)).map((e) => shownName(game, e.cardId)),
+      ...piles.filter((p) => overlaps(pileBox(p), box)).map((p) => p.name),
+    ];
+    const over = under[0] ? `, over ${under[0]}${under.length > 1 ? ` and ${under.length - 1} more` : ''}` : '';
     announce(`${describeSpot(spot)}${over}.`);
   }
 
@@ -547,7 +575,16 @@ export function TableSurface() {
     const direction = ARROWS[key];
     if (!direction || event.shiftKey) return;
     event.preventDefault();
-    const next = nearestInDirection(game.table, cardId, direction);
+    const next = nearestInDirection(items, cardId, direction);
+    if (next) buttons.current[next]?.focus();
+  }
+
+  // On a pile, plain arrows move between cards and piles; its other keys are the pile's own.
+  function onPileKeyDown(pileId: string, event: KeyboardEvent<HTMLButtonElement>) {
+    const direction = ARROWS[event.key];
+    if (!direction || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) return;
+    event.preventDefault();
+    const next = nearestInDirection(items, pileId, direction);
     if (next) buttons.current[next]?.focus();
   }
 
@@ -558,15 +595,15 @@ export function TableSurface() {
   }
 
   const count = game.table.length;
-  const label = `Table, ${count} ${count === 1 ? 'card' : 'cards'}`;
+  const label = `Table, ${plural(count, 'card')}${renderPile ? `, ${plural(piles.length, 'pile')}` : ''}`;
   // The Tab stop is the last card focused, or the first in reading order once that card has gone.
-  const tabbableId = activeId && game.table.some((e) => e.cardId === activeId) ? activeId : readingOrder(game.table)[0];
+  const tabbableId = activeId && items.some((item) => item.id === activeId) ? activeId : readingOrder(items)[0];
   // The mat reaches past the last card, so there's room to pan and drop, and always fills the view.
   const outline = placement && cardBox(placement);
   // Where a dragged card would land, turned as it is now.
   const dropAt = drag?.over?.zone === 'table' ? drag.over.position : undefined;
   const dropBox = dropAt && cardBox({ ...dropAt, rotation: game.table.find((e) => e.cardId === drag?.cardId)?.rotation ?? 0 });
-  const boxes = [...game.table.map(cardBox), ...(outline ? [outline] : []), ...(dropBox ? [dropBox] : [])];
+  const boxes = [...game.table.map(cardBox), ...piles.map(pileBox), ...(outline ? [outline] : []), ...(dropBox ? [dropBox] : [])];
   const width = Math.max(size.width / zoom, ...boxes.map((b) => b.right + 2 * CARD_W));
   const height = Math.max(size.height / zoom, ...boxes.map((b) => b.bottom + CARD_H));
 
@@ -598,10 +635,23 @@ export function TableSurface() {
             className={snap ? 'table-surface table-surface--grid' : 'table-surface'}
             data-drop-zone="table"
             role="group"
-            aria-label={count === 0 ? label : `${label}. Arrow keys move between cards. Shift and arrow keys pan.`}
+            aria-label={items.length === 0 ? label : `${label}. Arrow keys move between ${renderPile ? 'cards and piles' : 'cards'}. Shift and arrow keys pan.`}
             style={{ width, height, transform: zoom === 1 ? undefined : `scale(${zoom})` }}
           >
-            {count === 0 && <p className="table-surface__empty">No cards on the table yet.</p>}
+            {items.length === 0 && <p className="table-surface__empty">No cards on the table yet.</p>}
+            {/* Under the cards, so a card put on a pile shows on top of it. */}
+            {renderPile &&
+              piles.map((pile) => (
+                <TablePile
+                  key={pile.id}
+                  pile={pile}
+                  render={renderPile}
+                  tabbable={pile.id === tabbableId}
+                  register={(element) => register(pile.id, element)}
+                  onFocus={() => setActiveId(pile.id)}
+                  onKeyDown={(event) => onPileKeyDown(pile.id, event)}
+                />
+              ))}
             {game.table.map((entry, index) => (
               <TableCard
                 key={entry.cardId}
@@ -656,5 +706,14 @@ export function TableSurface() {
       <CardDetailsDialog game={game} cardId={detailsCardId} onClose={closeDetails} />
       {placement && <PlacementBar name={placingName(game, placement.cardId)} onPlace={placeCard} onCancel={cancelPlacing} />}
     </>
+  );
+}
+
+/** A pile's spot on the table, drawn by whoever owns the pile's menus and dialogs. */
+function TablePile({ pile, render, ...slot }: PileSlot & { pile: Pile; render: (pile: Pile, slot: PileSlot) => ReactNode }) {
+  return (
+    <div className="table-pile" style={{ left: pile.x, top: pile.y }}>
+      {render(pile, slot)}
+    </div>
   );
 }

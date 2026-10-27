@@ -53,10 +53,10 @@ test.describe('A11Y-1 keyboard and single-pointer placement', () => {
 
     const area = await page.locator('.table-viewport').boundingBox();
     if (!area) throw new Error('No table');
-    // Empty table to the right of the cards.
-    const target = { x: area.x + 640, y: area.y + area.height / 2 };
+    // Empty table to the right of the piles and cards.
+    const target = { x: area.x + 960, y: area.y + area.height / 2 };
     await page.mouse.click(target.x, target.y);
-    await expect(status(page)).toHaveText(/^(Row|Near row) 1, near column 5\.$/);
+    await expect(status(page)).toHaveText(/^(Row|Near row) 1, near column 7\.$/);
     await expect(outline(page)).toBeFocused();
     await bar(page).getByRole('button', { name: 'Place' }).click();
     await expect(status(page)).toHaveText('Moved Ember Shard on the table.');
@@ -68,9 +68,10 @@ test.describe('A11Y-1 keyboard and single-pointer placement', () => {
 
   test('keyboard only: Space picks up, arrows move, Enter places, Esc cancels; Move to… places a hand card', async ({ page }) => {
     await setUp(page);
-    // Start before the table: Draw is last on the page, and Firefox tabs from there into its own toolbar.
-    await mainPile(page).focus();
-    await tabTo(page, tableCard(page, 'Daylight Hunter, front face').first());
+    // Tab into the table from Add pile, the last tool: the first pile has the Tab stop.
+    await page.getByRole('button', { name: 'Add pile' }).focus();
+    await page.keyboard.press('Tab');
+    await expect(mainPile(page)).toBeFocused();
     await tableCard(page, 'Ember Shard').focus();
     const before = await spot(page, 'Ember Shard');
     await page.keyboard.press('Space');

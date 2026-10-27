@@ -104,7 +104,7 @@ export function moveCard(state: GameState, args: { cardId: string; to: Destinati
   let side: CardSide = card.side;
   if (to.zone === 'table') {
     side = 'front';
-    const { x, y } = to.position ?? freeSpot(next.table, context?.placementColumns);
+    const { x, y } = to.position ?? freeSpot(next, context?.placementColumns);
     next = { ...next, table: [...next.table, { cardId, x, y, rotation: 0 }] };
   }
   if (to.zone === 'hand') next = { ...next, hands: { ...next.hands, [to.seatId]: [...(next.hands[to.seatId] ?? []), cardId] } };

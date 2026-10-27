@@ -9,6 +9,8 @@ const pile = (id: string, name: string, count: number): Pile => ({
   name,
   cardIds: Array.from({ length: count }, (_, i) => `${id}-${i}`),
   definitionIds: [],
+  x: 0,
+  y: 0,
 });
 
 const main = pile('main', 'P1 main deck', 5);

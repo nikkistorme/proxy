@@ -5,6 +5,7 @@ import { draw, mill, revealTop, shuffle } from '../actions/pileActions';
 import { addPile, deletePile, renamePile, validatePileName } from '../actions/piles';
 import { importCards } from '../csv/importCards';
 import type { GameState, Pile } from '../model/game';
+import { readingOrder, tableItems } from '../model/tableNavigation';
 import { useGameStore } from '../store/gameStore';
 import { DeletePileDialog, type DeletePileRequest } from './DeletePileDialog';
 import './GameScreen.css';
@@ -18,7 +19,7 @@ import { PileNameDialog, type PileNameRequest } from './PileNameDialog';
 import { PileTile } from './PileTile';
 import { PileViewer } from './PileViewer';
 import { seatIdentity } from './seatIdentity';
-import { TableSurface } from './TableSurface';
+import { TableSurface, type PileSlot } from './TableSurface';
 import { TableTools } from './TableTools';
 import { Toast } from './Toast';
 
@@ -42,7 +43,9 @@ export function GameScreen() {
   const showToast = useGameStore((s) => s.showToast);
   const drag = useGameStore((s) => s.drag);
 
-  const [menuPileId, setMenuPileId] = useState<string>();
+  /** The pile whose menu is open, and where its tile was on screen when it opened. */
+  const [pileMenu, setPileMenu] = useState<{ pileId: string; rect: DOMRect }>();
+  const menuPileId = pileMenu?.pileId;
   const [keepOrder, setKeepOrder] = useState<Record<string, boolean>>({});
   const [summary, setSummary] = useState<ImportSummary>();
   const [countRequest, setCountRequest] = useState<CountRequest>();
@@ -71,12 +74,13 @@ export function GameScreen() {
     else if (activeSeat) announce(`${activeSeat.name} has no pile to draw from.`);
   }, [dispatch, announce, drawPile, activeSeat]);
 
-  // Focus a pile (or Add pile) once it exists in the page. Runs after every render.
+  // Focus a pile, a table card or Add pile once it exists in the page. Runs after every render.
   useEffect(() => {
     const pending = pendingFocusRef.current;
     if (!pending) return;
     pendingFocusRef.current = undefined;
-    (pending === ADD_PILE ? addPileRef.current : tileRefs.current[pending])?.focus();
+    const card = document.querySelector<HTMLElement>(`.table-card[data-card-id="${pending}"] .table-card__button`);
+    (pending === ADD_PILE ? addPileRef.current : (tileRefs.current[pending] ?? card))?.focus();
   });
 
   // A file dropped anywhere but a pile must not make the browser open it instead.
@@ -118,8 +122,14 @@ export function GameScreen() {
 
   const closeMenu = useCallback(() => {
     if (menuPileId) tileRefs.current[menuPileId]?.focus();
-    setMenuPileId(undefined);
+    setPileMenu(undefined);
   }, [menuPileId]);
+
+  // The menu opens outside the zoomed table, so it's the same size at any zoom and never clipped.
+  function togglePileMenu(pileId: string) {
+    const rect = tileRefs.current[pileId]?.getBoundingClientRect();
+    setPileMenu((open) => (open?.pileId === pileId || !rect ? undefined : { pileId, rect }));
+  }
 
   const chooseFile = useCallback((pileId: string) => {
     loadTargetRef.current = pileId;
@@ -229,15 +239,19 @@ export function GameScreen() {
     [game],
   );
 
-  /** Deletes a pile and offers Undo. Focus moves to the pile that takes its place, or Add pile if it was the last. */
+  /**
+   * Deletes a pile and offers Undo. Focus moves to the next pile or card on the
+   * table in reading order, else the one before, or Add pile if the table is empty.
+   */
   const removePile = useCallback(
     (pileId: string, moveCardsToPileId?: string) => {
-      const index = game.piles.findIndex((p) => p.id === pileId);
-      const next = game.piles[index + 1] ?? game.piles[index - 1];
-      const name = game.piles[index]?.name ?? '';
+      const order = readingOrder(tableItems(game));
+      const index = order.indexOf(pileId);
+      const next = order[index + 1] ?? order[index - 1];
+      const name = game.piles.find((p) => p.id === pileId)?.name ?? '';
       dispatch((g) => deletePile(g, moveCardsToPileId === undefined ? { pileId } : { pileId, moveCardsToPileId }));
       showToast(`Deleted ${name}.`);
-      pendingFocusRef.current = next?.id ?? ADD_PILE;
+      pendingFocusRef.current = next ?? ADD_PILE;
     },
     [game, dispatch, showToast],
   );
@@ -327,6 +341,32 @@ export function GameScreen() {
 
   const seatName = (seatId: string | undefined) => game.seats.find((s) => s.id === seatId)?.name;
 
+  // 3m: piles sit on the table with the cards, and share its one Tab stop.
+  function renderPile(pile: Pile, slot: PileSlot) {
+    const topId = pile.cardIds[0];
+    const revealedTop = topId && game.cards[topId]?.side === 'front' ? faceOf(game, topId) : undefined;
+    return (
+      <PileTile
+        registerTile={(pileId, element) => {
+          registerTile(pileId, element);
+          slot.register(element);
+        }}
+        tabbable={slot.tabbable}
+        onFocus={slot.onFocus}
+        onKeyDown={slot.onKeyDown}
+        onDropFile={(id, file) => void loadFile(id, file)}
+        cardOver={drag?.over?.zone === 'pile' && drag.over.pileId === pile.id}
+        pile={pile}
+        ownerName={seatName(pile.ownerSeatId)}
+        revealedTop={revealedTop}
+        menuOpen={menuPileId === pile.id}
+        onOpenMenu={() => togglePileMenu(pile.id)}
+      />
+    );
+  }
+
+  const menuPile = game.piles.find((p) => p.id === menuPileId);
+
   return (
     <div className="game">
       <header className="game__header">
@@ -337,7 +377,7 @@ export function GameScreen() {
         </svg>
         <h1 className="game__title">Proxy</h1>
         <span className="game__format">Solo PvE</span>
-        <TableTools />
+        <TableTools addPileRef={addPileRef} onAddPile={() => setNameRequest({ mode: 'add', defaultOwnerId: game.activeSeatId })} />
       </header>
 
       <section className="seat-bar" aria-label="Seats">
@@ -367,62 +407,7 @@ export function GameScreen() {
           <h2 id="table-heading" className="visually-hidden">
             Table
           </h2>
-          <div className="pile-area">
-            <ul className="pile-row" aria-label="Piles">
-              {game.piles.map((pile) => {
-                const topId = pile.cardIds[0];
-                const revealedTop = topId && game.cards[topId]?.side === 'front' ? faceOf(game, topId) : undefined;
-                return (
-                  <li key={pile.id} className="pile-row__slot">
-                    <PileTile
-                      registerTile={registerTile}
-                      onDropFile={(id, file) => void loadFile(id, file)}
-                      cardOver={drag?.over?.zone === 'pile' && drag.over.pileId === pile.id}
-                      pile={pile}
-                      ownerName={seatName(pile.ownerSeatId)}
-                      revealedTop={revealedTop}
-                      menuOpen={menuPileId === pile.id}
-                      onOpenMenu={() => setMenuPileId((open) => (open === pile.id ? undefined : pile.id))}
-                    />
-                    {menuPileId === pile.id && (
-                      <PileMenu
-                        pile={pile}
-                        ownerName={seatName(pile.ownerSeatId)}
-                        keepOrder={keepOrder[pile.id] ?? false}
-                        onView={setViewerPileId}
-                        onLoad={chooseFile}
-                        onToggleKeepOrder={toggleKeepOrder}
-                        onDraw={drawFrom}
-                        onDrawMany={openDrawMany}
-                        onShuffle={shuffleFrom}
-                        onReveal={revealFrom}
-                        onPeek={openPeek}
-                        onMill={openMill}
-                        canMill={game.piles.length > 1}
-                        onRename={openRename}
-                        onDelete={openDelete}
-                        canDelete={pile.cardIds.length === 0 || game.piles.length > 1}
-                        onClose={closeMenu}
-                      />
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-            <button
-              ref={addPileRef}
-              type="button"
-              className="add-pile"
-              onClick={() => setNameRequest({ mode: 'add', defaultOwnerId: game.activeSeatId })}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-              Add pile
-            </button>
-          </div>
-
-          <TableSurface />
+          <TableSurface renderPile={renderPile} />
         </section>
 
         {activeSeat?.hasHand && (
@@ -430,6 +415,29 @@ export function GameScreen() {
         )}
       </main>
 
+      {pileMenu && menuPile && (
+        <div className="pile-menu-anchor" style={{ left: pileMenu.rect.left, top: pileMenu.rect.top, width: pileMenu.rect.width, height: pileMenu.rect.height }}>
+          <PileMenu
+            pile={menuPile}
+            ownerName={seatName(menuPile.ownerSeatId)}
+            keepOrder={keepOrder[menuPile.id] ?? false}
+            onView={setViewerPileId}
+            onLoad={chooseFile}
+            onToggleKeepOrder={toggleKeepOrder}
+            onDraw={drawFrom}
+            onDrawMany={openDrawMany}
+            onShuffle={shuffleFrom}
+            onReveal={revealFrom}
+            onPeek={openPeek}
+            onMill={openMill}
+            canMill={game.piles.length > 1}
+            onRename={openRename}
+            onDelete={openDelete}
+            canDelete={menuPile.cardIds.length === 0 || game.piles.length > 1}
+            onClose={closeMenu}
+          />
+        </div>
+      )}
       <input ref={fileRef} type="file" accept=".csv,text/csv" hidden data-testid="csv-file" onChange={(e) => void handleFile(e)} />
       <ImportResults summary={summary} onClose={closeResults} />
       <PileNameDialog

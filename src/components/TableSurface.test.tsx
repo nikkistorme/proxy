@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { moveCard } from '../actions/moveCard';
-import { gameWithDeck, testContext } from '../actions/testing';
+import { gameWithDeck, testContext, pilesOutOfTheWay } from '../actions/testing';
 import type { GameState } from '../model/game';
 import { createGameStore, GameStoreProvider } from '../store/gameStore';
 import { TableSurface } from './TableSurface';
@@ -12,7 +12,7 @@ const idOf = (state: GameState, name: string) =>
 
 /** Imp, Ogre and Troll in a row on the table, with a button before and after it. */
 function setup() {
-  let game = gameWithDeck();
+  let game = pilesOutOfTheWay(gameWithDeck());
   for (const name of ['Imp', 'Ogre', 'Troll']) game = moveCard(game, { cardId: idOf(game, name), to: { zone: 'table' } }).state;
   const store = createGameStore(game, testContext());
   render(

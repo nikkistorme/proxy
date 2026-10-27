@@ -86,52 +86,23 @@
   background: var(--table);
 }
 
-.pile-area {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: var(--space-6);
+/* Where a pile's menu opens: over the pile on screen, outside the zoomed table. */
+.pile-menu-anchor {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
 }
 
-/* A plain button, not a dashed outline: dashed means an empty pile. */
-.add-pile {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 40px;
-  padding: 0 var(--space-4);
-  border: 1px solid var(--control);
-  border-radius: var(--radius-control);
-  background: var(--panel);
-  color: var(--ink);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.pile-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-6);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.pile-row__slot {
-  position: relative;
-}
-
-.pile-row__slot > .menu {
-  top: calc(var(--card-h) + var(--space-3));
+.pile-menu-anchor > .menu {
+  top: calc(100% + var(--space-2));
   left: 0;
+  pointer-events: auto;
 }
 
 /* Menu.tsx opens the menu upward when it only fits above the pile. */
-.pile-row__slot > .menu[data-placement='above'] {
+.pile-menu-anchor > .menu[data-placement='above'] {
   top: auto;
-  bottom: calc(100% + var(--space-3));
+  bottom: calc(100% + var(--space-2));
 }
 
 /*

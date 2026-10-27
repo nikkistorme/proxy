@@ -10,6 +10,8 @@ const pile = (count: number, extra: Partial<Pile> = {}): Pile => ({
   ownerSeatId: 'seat-p1',
   cardIds: Array.from({ length: count }, (_, i) => `c${i}`),
   definitionIds: [],
+  x: 0,
+  y: 0,
   ...extra,
 });
 
