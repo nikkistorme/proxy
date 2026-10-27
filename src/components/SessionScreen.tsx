@@ -6,6 +6,7 @@ import { addPile, deletePile, mergePiles, renamePile, validatePileName } from '.
 import { importCards } from '../csv/importCards';
 import type { SessionState, Pile } from '../model/session';
 import { readingOrder, tableItems } from '../model/tableNavigation';
+import { StorageNotice } from '../storage/StorageNotice';
 import { useSessionStore } from '../store/sessionStore';
 import { DiceDialog } from './DiceDialog';
 import { DeletePileDialog, type DeletePileRequest, type MergeChoice, type MergePilesRequest } from './DeletePileDialog';
@@ -433,6 +434,7 @@ export function SessionScreen() {
         <SessionMenu />
         <TableTools addPileRef={addPileRef} onShortcuts={openShortcuts} onAddPile={() => setNameRequest({ mode: 'add', defaultOwnerId: session.activeSeatId })} />
       </header>
+      <StorageNotice />
 
       <section className="seat-bar" aria-label="Seats">
         <ul className="seat-bar__list">
