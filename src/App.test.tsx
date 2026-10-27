@@ -1,22 +1,35 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { testContext } from './actions/testing';
 import { SessionScreen } from './components/SessionScreen';
+import type { CardSet } from './model/cardSet';
+import { memoryBackend } from './storage/backends';
+import { createStorage } from './storage/storage';
+import { StorageProvider } from './storage/StorageProvider';
 import { createSessionStore, SessionStoreProvider } from './store/sessionStore';
 
 function csvFile(text: string, name = 'deck.csv'): File {
   return new File([text], name, { type: 'text/csv' });
 }
 
-function renderSession() {
+function renderSession(children = <SessionScreen />) {
   const user = userEvent.setup();
-  render(
-    <SessionStoreProvider store={createSessionStore(undefined, testContext())}>
-      <SessionScreen />
-    </SessionStoreProvider>,
-  );
+  render(<SessionStoreProvider store={createSessionStore(undefined, testContext())}>{children}</SessionStoreProvider>);
   return user;
+}
+
+/** The session over in-memory storage, once its startup check has read the settings. */
+async function renderWithStorage() {
+  const backend = memoryBackend();
+  const read = vi.spyOn(backend, 'get');
+  const user = renderSession(
+    <StorageProvider backend={backend}>
+      <SessionScreen />
+    </StorageProvider>,
+  );
+  await waitFor(() => expect(read).toHaveBeenCalled());
+  return { user, storage: createStorage(backend) };
 }
 
 const mainTile = () => screen.getByRole('button', { name: /^P1 main deck,/ });
@@ -88,6 +101,34 @@ describe('SP-1 load a deck into a pile', () => {
     await user.click(screen.getByRole('menuitem', { name: 'Reload deck.csv…' }));
     await user.upload(screen.getByTestId('csv-file'), csvFile('name,qty\nImp,1\n'));
     expect(screen.getByRole('dialog')).toHaveTextContent('More copies in play than the new qty, so these stay: Imp (1 extra copy)');
+  });
+});
+
+describe('AR-4 card sets', () => {
+  it('saves a card set through storage when a CSV is loaded, and the pile records it (AR-6)', async () => {
+    const { user, storage } = await renderWithStorage();
+    await loadIntoMain(user, 'name,qty\nImp,2\nOgre,1\n');
+    await waitFor(async () => expect(await storage.list('cardSet')).toHaveLength(1));
+    const [saved] = await storage.list<CardSet>('cardSet');
+    expect(saved?.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    expect(saved).toMatchObject({ name: 'deck.csv', source: { kind: 'file', name: 'deck.csv' } });
+    expect(saved?.definitions.map((d) => [d.front.name, d.qty])).toEqual([['Imp', 2], ['Ogre', 1]]);
+  });
+
+  it('CD-5: reloading the pile updates the same card set rather than making another', async () => {
+    const { user, storage } = await renderWithStorage();
+    await loadIntoMain(user, 'name,rules\nImp,Old\n');
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    await waitFor(async () => expect(await storage.list('cardSet')).toHaveLength(1));
+    const [first] = await storage.list<CardSet>('cardSet');
+
+    await user.pointer({ keys: '[MouseRight]', target: mainTile() });
+    await user.click(screen.getByRole('menuitem', { name: 'Reload deck.csv…' }));
+    await user.upload(screen.getByTestId('csv-file'), csvFile('name,rules\nImp,New\n'));
+    await waitFor(async () => expect((await storage.list<CardSet>('cardSet'))[0]?.definitions[0]?.front.fields.rules).toBe('New'));
+    const sets = await storage.list<CardSet>('cardSet');
+    expect(sets.map((set) => set.id)).toEqual([first?.id]);
+    expect(sets[0]?.definitions[0]?.id).toBe(first?.definitions[0]?.id);
   });
 });
 

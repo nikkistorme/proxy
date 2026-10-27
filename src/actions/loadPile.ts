@@ -1,4 +1,5 @@
 import type { ImportedCard } from '../model/card';
+import { fileCardSet } from '../model/cardSet';
 import type { ActionContext, ActionResult, CardInstance, SessionState } from '../model/session';
 import { mergeImport, type MergeResult } from '../model/mergeImport';
 import { shuffled } from '../model/shuffle';
@@ -6,7 +7,9 @@ import { getPile, plural, withPile } from './helpers';
 
 export interface LoadPileArgs {
   pileId: string;
-  /** File name or sheet URL, shown on the pile and offered for reload (SP-2). */
+  /** The card set to record on the pile: its current one on a reload, else a new UUID (AR-4). */
+  cardSetId: string;
+  /** File name, offered for reload (SP-2). */
   sourceName: string;
   cards: readonly ImportedCard[];
   /** SP-3: keep CSV order instead of shuffling. */
@@ -92,8 +95,8 @@ export function loadPile(state: SessionState, args: LoadPileArgs, context: Actio
     Object.entries({ ...state.cards, ...newCards }).filter(([id]) => !removedIds.has(id)),
   );
   const next = withPile(
-    { ...state, definitions, cards },
-    { ...pile, cardIds, sourceName: args.sourceName, definitionIds: merge.definitions.map((d) => d.id) },
+    { ...state, definitions, cardSets: { ...state.cardSets, [args.cardSetId]: fileCardSet(args.cardSetId, args.sourceName) }, cards },
+    { ...pile, cardIds, cardSetId: args.cardSetId, definitionIds: merge.definitions.map((d) => d.id) },
   );
 
   const isReload = pile.definitionIds.length > 0;

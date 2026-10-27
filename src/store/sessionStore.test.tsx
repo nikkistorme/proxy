@@ -105,7 +105,7 @@ describe('TT-15 undo and redo', () => {
   it('undoes a pile load, definitions included', () => {
     const store = createSessionStore(createSoloSession(), testContext());
     store.getState().dispatch((g, context) =>
-      loadPile(g, { pileId: p1, sourceName: 'deck.csv', cards: cardsFrom('name\nImp\n'), keepOrder: true }, context),
+      loadPile(g, { pileId: p1, cardSetId: 'set-1', sourceName: 'deck.csv', cards: cardsFrom('name\nImp\n'), keepOrder: true }, context),
     );
     expect(Object.keys(store.getState().session.definitions)).toHaveLength(1);
     store.getState().undo();

@@ -15,7 +15,7 @@ const csv = 'name,type\nTroll,Creature\nOgre,Creature\nImp,Creature\n';
 
 /** Troll and Ogre on the table at (16, 16) and (158, 16), and Imp in Player 1's hand. */
 function setup() {
-  let session: SessionState = pilesOutOfTheWay(loadPile(createSoloSession(), { pileId: 'pile-p1-main', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state);
+  let session: SessionState = pilesOutOfTheWay(loadPile(createSoloSession(), { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state);
   for (const name of ['Troll', 'Ogre']) session = moveCard(session, { cardId: idOf(session, name), to: { zone: 'table' } }).state;
   session = draw(session, { pileId: 'pile-p1-main' }).state;
   const store = createSessionStore(session, testContext());

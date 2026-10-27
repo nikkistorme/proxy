@@ -14,7 +14,7 @@ const csv = 'name,id,back_of,type,text\nTroll,,,Creature,Smash.\nMoonrise Hunter
 
 /** Troll and Daylight Hunter on the table. */
 function setup() {
-  let session: SessionState = loadPile(createSoloSession(), { pileId: 'pile-p1-main', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
+  let session: SessionState = loadPile(createSoloSession(), { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
   for (const name of ['Troll', 'Daylight Hunter']) {
     const card = Object.values(session.cards).find((c) => session.definitions[c.definitionId]?.front.name === name);
     if (card) session = moveCard(session, { cardId: card.id, to: { zone: 'table' } }).state;

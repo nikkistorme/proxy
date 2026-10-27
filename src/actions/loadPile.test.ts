@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import sixtyRows from '../../tests/fixtures/csv/sixty-rows-two-dfc.csv?raw';
 import { importCards } from '../csv/importCards';
+import { fileCardSet } from '../model/cardSet';
 import { createSoloSession, type SessionState } from '../model/session';
 import { loadPile } from './loadPile';
 import { draw } from './pileActions';
@@ -16,16 +17,16 @@ function pileNames(state: SessionState, pileId = MAIN): string[] {
 function load(state: SessionState, csv: string, options: { keepOrder?: boolean; context?: ReturnType<typeof testContext> } = {}) {
   return loadPile(
     state,
-    { pileId: MAIN, sourceName: 'deck.csv', cards: cardsFrom(csv), keepOrder: options.keepOrder ?? false },
+    { pileId: MAIN, cardSetId: 'set-1', sourceName: 'deck.csv', cards: cardsFrom(csv), keepOrder: options.keepOrder ?? false },
     options.context ?? testContext(),
   );
 }
 
 describe('SP-3 load a pile', () => {
   it("gives each copy its pile's seat as owner, for its card back", () => {
-    const owned = loadPile(createSoloSession(), { pileId: 'pile-p1-main', sourceName: 'a.csv', cards: cardsFrom('name\nImp\n'), keepOrder: true }, testContext()).state;
+    const owned = loadPile(createSoloSession(), { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'a.csv', cards: cardsFrom('name\nImp\n'), keepOrder: true }, testContext()).state;
     expect(Object.values(owned.cards).map((c) => c.ownerSeatId)).toEqual(['seat-p1']);
-    const shared = loadPile(createSoloSession(), { pileId: 'pile-board', sourceName: 'a.csv', cards: cardsFrom('name\nImp\n'), keepOrder: true }, testContext()).state;
+    const shared = loadPile(createSoloSession(), { pileId: 'pile-board', cardSetId: 'set-1', sourceName: 'a.csv', cards: cardsFrom('name\nImp\n'), keepOrder: true }, testContext()).state;
     expect(Object.values(shared.cards)[0]).not.toHaveProperty('ownerSeatId');
   });
 
@@ -49,13 +50,13 @@ describe('SP-3 load a pile', () => {
     const before = createSoloSession();
     const { state } = load(before, 'name\nImp\nOgre\n');
     const pile = state.piles.find((p) => p.id === MAIN);
-    expect(pile?.sourceName).toBe('deck.csv');
+    expect(pile?.cardSetId).toBe('set-1');
     expect(pile?.definitionIds.map((id) => state.definitions[id]?.front.name)).toEqual(['Imp', 'Ogre']);
     expect(state.piles.filter((p) => p.id !== MAIN)).toEqual(before.piles.filter((p) => p.id !== MAIN));
   });
 
   it('loads the 60-row acceptance deck as 58 cards', () => {
-    const { state } = loadPile(createSoloSession(), { pileId: MAIN, sourceName: 'sixty.csv', cards: importCards(sixtyRows).cards }, testContext());
+    const { state } = loadPile(createSoloSession(), { pileId: MAIN, cardSetId: 'set-1', sourceName: 'sixty.csv', cards: importCards(sixtyRows).cards }, testContext());
     expect(state.piles.find((p) => p.id === MAIN)?.cardIds).toHaveLength(58);
   });
 
@@ -67,7 +68,24 @@ describe('SP-3 load a pile', () => {
   });
 
   it('throws for an unknown pile', () => {
-    expect(() => loadPile(createSoloSession(), { pileId: 'nope', sourceName: 'x', cards: [] }, testContext())).toThrow('Unknown pile: nope');
+    expect(() => loadPile(createSoloSession(), { pileId: 'nope', cardSetId: 'set-1', sourceName: 'x', cards: [] }, testContext())).toThrow('Unknown pile: nope');
+  });
+});
+
+describe('AR-4 a pile records its card set', () => {
+  it('records the card set on the pile and keeps a copy of it in the session', () => {
+    const { state } = load(createSoloSession(), 'name\nImp\n');
+    expect(state.piles.find((p) => p.id === MAIN)?.cardSetId).toBe('set-1');
+    expect(state.cardSets).toEqual({ 'set-1': fileCardSet('set-1', 'deck.csv') });
+    expect(Object.values(state.definitions).map((d) => d.front.name)).toEqual(['Imp']);
+  });
+
+  it('keeps the same card set on a reload and takes the new file name', () => {
+    const context = testContext();
+    const first = load(createSoloSession(), 'name\nImp\n', { context }).state;
+    const { state } = loadPile(first, { pileId: MAIN, cardSetId: 'set-1', sourceName: 'deck-v2.csv', cards: cardsFrom('name\nImp\n') }, context);
+    expect(state.piles.find((p) => p.id === MAIN)?.cardSetId).toBe('set-1');
+    expect(state.cardSets).toEqual({ 'set-1': fileCardSet('set-1', 'deck-v2.csv') });
   });
 });
 
