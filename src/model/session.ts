@@ -1,4 +1,5 @@
 import type { CardDefinition } from './card';
+import type { CardSetSummary } from './cardSet';
 import type { RandomInt } from './random';
 
 export interface Seat {
@@ -54,8 +55,8 @@ export interface Pile {
   ownerSeatId?: string;
   /** Card instance ids, top of the pile first. */
   cardIds: string[];
-  /** File or sheet the pile was last loaded from (SP-2). */
-  sourceName?: string;
+  /** The card set the pile was last loaded from (AR-4). Its source is offered for reload (SP-2). */
+  cardSetId?: string;
   /** This pile's deck: every definition loaded into it, including missing ones. */
   definitionIds: string[];
   /** Top-left corner on the table, in table px. Piles are card-sized and never turn. */
@@ -66,7 +67,10 @@ export interface Pile {
 export interface SessionState {
   seats: Seat[];
   activeSeatId: string;
+  /** The session's own copy of every definition it loaded, so it plays without the card sets (AR-4). */
   definitions: Record<string, CardDefinition>;
+  /** Each card set the session loaded, by id. */
+  cardSets: Record<string, CardSetSummary>;
   cards: Record<string, CardInstance>;
   piles: Pile[];
   /** Card instance ids in each player seat's hand, keyed by seat id. */
@@ -110,6 +114,7 @@ export function createSoloSession(): SessionState {
     ],
     activeSeatId: 'seat-p1',
     definitions: {},
+    cardSets: {},
     cards: {},
     piles: [
       // Along the top of the table, so cards placed later go below them.

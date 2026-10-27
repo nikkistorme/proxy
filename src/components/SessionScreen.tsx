@@ -4,9 +4,12 @@ import { peekTop } from '../actions/peek';
 import { draw, mill, revealTop, shuffle } from '../actions/pileActions';
 import { addPile, deletePile, mergePiles, renamePile, validatePileName } from '../actions/piles';
 import { importCards } from '../csv/importCards';
+import { cardSetItem } from '../model/cardSet';
 import type { SessionState, Pile } from '../model/session';
 import { readingOrder, tableItems } from '../model/tableNavigation';
 import { StorageNotice } from '../storage/StorageNotice';
+import { useStorage } from '../storage/StorageProvider';
+import { newItemId } from '../storage/storage';
 import { useSessionStore } from '../store/sessionStore';
 import { DiceDialog } from './DiceDialog';
 import { DeletePileDialog, type DeletePileRequest, type MergeChoice, type MergePilesRequest } from './DeletePileDialog';
@@ -49,6 +52,7 @@ export function SessionScreen() {
   const setPlacing = useSessionStore((s) => s.setPlacing);
   const showToast = useSessionStore((s) => s.showToast);
   const drag = useSessionStore((s) => s.drag);
+  const storage = useStorage();
 
   /** The pile whose menu is open, and where its tile was on screen when it opened. */
   const [pileMenu, setPileMenu] = useState<{ pileId: string; rect: DOMRect }>();
@@ -190,9 +194,15 @@ export function SessionScreen() {
     }
 
     const { cards, problems } = importCards(await file.text());
-    const result = dispatch((g, context) =>
-      loadPile(g, { pileId, sourceName: file.name, cards, keepOrder: keepOrder[pileId] ?? false }, context),
-    );
+    // A reload updates the pile's card set; a first load makes a new one (AR-4).
+    const result = dispatch((g, context) => {
+      const cardSetId = g.piles.find((p) => p.id === pileId)?.cardSetId ?? newItemId();
+      return loadPile(g, { pileId, cardSetId, sourceName: file.name, cards, keepOrder: keepOrder[pileId] ?? false }, context);
+    });
+    const cardSetId = result.state.piles.find((p) => p.id === pileId)?.cardSetId;
+    const cardSet = cardSetId === undefined ? undefined : result.state.cardSets[cardSetId];
+    // The session has its own copy of the cards, so play goes on if the save fails (AR-4, PS-6).
+    if (storage && cardSet) void storage.put('cardSet', cardSetItem(cardSet, result.merge.definitions)).catch(() => undefined);
     setSummary({
       fileName: file.name,
       pileName: result.state.piles.find((p) => p.id === pileId)?.name ?? '',
@@ -497,6 +507,7 @@ export function SessionScreen() {
         <div className="pile-menu-anchor" style={{ left: pileMenu.rect.left, top: pileMenu.rect.top, width: pileMenu.rect.width, height: pileMenu.rect.height }}>
           <PileMenu
             pile={menuPile}
+            sourceName={menuPile.cardSetId && session.cardSets[menuPile.cardSetId]?.source.name}
             ownerName={seatName(menuPile.ownerSeatId)}
             keepOrder={keepOrder[menuPile.id] ?? false}
             onView={setViewerPileId}

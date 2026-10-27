@@ -130,7 +130,7 @@ Setup only fills piles; nothing is placed on the table automatically. The user p
 **Setup**
 
 - SP-1: Pick a format, then load a CSV into each of its piles by file picker, by dropping the file on the pile, or from a published Google Sheet URL (CD-7).
-- SP-2: Remember the last file name per pile and offer "Reload" for a quick re-import.
+- SP-2: Remember the last file name per pile, through the card set the pile records (AR-4), and offer "Reload" for a quick re-import.
 - SP-3: Shuffle each pile on load, with an option to keep CSV order.
 
 **Piles**
@@ -308,7 +308,7 @@ Pointer, keyboard and import all call the same actions, which is what keeps the 
 - AR-1: Every change to session state goes through a named action (for example `moveCard`, `shuffle`, `flip`). Pointer, keyboard and menu input all call the same actions.
 - AR-2: Actions produce the live-region announcement text, so screen-reader output can't drift from what happened.
 - AR-3: Random numbers come from an injectable source, so tests can shuffle deterministically.
-- AR-4: Card sets, layouts, formats and session state are separate models. A card set holds the card definitions loaded from one CSV and its source (file name or URL). A pile records the id of the card set it was loaded from, and a card instance on the table references its card definition and layout by id. Whether a session also keeps its own copy of the definitions is decided when card sets are built (Phase 4).
+- AR-4: Card sets, layouts, formats and session state are separate models. A card set holds the card definitions loaded from one CSV and its source (file name or URL). A pile records the id of the card set it was loaded from, and a card instance on the table references its card definition and layout by id. The session also keeps its own copy of the definitions it loaded, with each card set's name and source, so it plays without the card set items and survives one being deleted. Loading a CSV into a pile creates a card set item with a new UUID, and re-importing into that pile updates the same item (CD-5).
 - AR-5: No network calls except loading card art from the URLs in the CSV and fetching CSVs from URLs the user enters (CD-7).
 - AR-6: Saves go through one storage interface with `get`, `put`, `list` and `delete`, over separately saved items: sessions, snapshots, layouts, formats, card sets and settings. Every item has a stable id, an `updatedAt` time, the save format version (PS-5) and an optional `gameId`. Item ids are random UUIDs, never counters, so items made on different devices can't clash when sync arrives (#45). An item there is only one of per profile, such as the account settings, has a fixed id instead, so the same item on two devices stays one item. Ids inside an item, such as a session's card instances, stay local to it. IndexedDB is the only V1 implementation, and nothing outside the storage module touches IndexedDB directly. Pass: a test swaps in an in-memory implementation and the app saves and restores through it.
 - AR-7: Layouts, formats and control settings read their options through one resolver that checks the session, then the game, then the account level and returns the first value set. V1 has only the account level, so the resolver returns the account value. Pass: no component reads an option's stored value directly.
@@ -413,3 +413,4 @@ Not in the first version; each may be revisited later.
 | 2026-10-27 | Until V1 ships, older saves are dropped with a notice, not migrated (PS-5) | Migrations from the first save | Models keep changing through Phases 5 to 7. Migrations start at V1, before sync makes old data expensive to drop |
 | 2026-10-27 | After V1: the demo path (#63), card sets (#67), games (#65), then accounts (#45) | Accounts earlier | Sync is a second storage implementation and needs every item kind settled first. #45 builds on the demo's own path and on games and card sets. Its docs-only step 1 can happen any time |
 | 2026-10-27 | One-per-profile items, such as the account settings, use a fixed id; everything else gets a UUID (AR-6) | A UUID for every item | A settings item made on two devices should be the same item when sync arrives, not two to choose between |
+| 2026-10-27 | A session keeps its own copy of the card definitions it loaded, as well as recording each pile's card set (AR-4) | Referencing the card set only | The session plays offline, survives a deleted set, and a Phase 7 session save is complete on its own |

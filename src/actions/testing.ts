@@ -26,7 +26,7 @@ export function tableIds(state: SessionState): string[] {
 
 /** A Solo session with the given cards in P1 main deck, top to bottom in CSV order. */
 export function sessionWithDeck(csv = 'name\nImp\nOgre\nTroll\n'): SessionState {
-  return loadPile(createSoloSession(), { pileId: 'pile-p1-main', sourceName: 'deck.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
+  return loadPile(createSoloSession(), { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'deck.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
 }
 
 /**

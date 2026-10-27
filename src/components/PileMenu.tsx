@@ -18,6 +18,8 @@ const ICONS = {
 
 interface PileMenuProps {
   pile: Pile;
+  /** The file the pile was last loaded from, offered for reload (SP-2). */
+  sourceName?: string;
   ownerName: string | undefined;
   keepOrder: boolean;
   onView: (pileId: string) => void;
@@ -42,13 +44,13 @@ interface PileMenuProps {
 
 /** Actions for one pile (SP-1, SP-2, SP-3, SP-4, SP-6, SP-7, SP-9). */
 export function PileMenu(props: PileMenuProps) {
-  const { pile, ownerName, keepOrder, onView, onLoad, onToggleKeepOrder, onDraw, onDrawMany, onShuffle, onReveal, onMill, canMill } = props;
+  const { pile, sourceName, ownerName, keepOrder, onView, onLoad, onToggleKeepOrder, onDraw, onDrawMany, onShuffle, onReveal, onMill, canMill } = props;
   const { onPeek, onMoveOnTable } = props;
   const { onRename, onDelete, canDelete, onClose } = props;
   const empty = pile.cardIds.length === 0;
   const entries: MenuEntry[] = [{ kind: 'item', id: 'load', label: 'Load CSV…', icon: ICONS.load, onSelect: () => onLoad(pile.id) }];
-  if (pile.sourceName) {
-    entries.push({ kind: 'item', id: 'reload', label: `Reload ${pile.sourceName}…`, icon: ICONS.reload, onSelect: () => onLoad(pile.id) });
+  if (sourceName) {
+    entries.push({ kind: 'item', id: 'reload', label: `Reload ${sourceName}…`, icon: ICONS.reload, onSelect: () => onLoad(pile.id) });
   }
   entries.push(
     { kind: 'checkbox', id: 'keep-order', label: 'Keep CSV order', checked: keepOrder, onToggle: () => onToggleKeepOrder(pile.id) },

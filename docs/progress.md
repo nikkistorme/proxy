@@ -8,9 +8,17 @@ The V1 plan now makes the data model ready for games, card sets and accounts (#6
 
 The phases after 3 were reordered (2026-10-27): Phase 4 is now storage and card sets (#74), then layouts (5, #35), formats (6), session saves and Sheets (7) and polish (8). Item ids are random UUIDs so sync can come later (#45), and until V1 ships older saves are dropped rather than migrated.
 
-Phase 4 is split into 4a (#84) and 4b (#85). 4a is done: every save goes through one storage interface (`src/storage/storage.ts`) with keys built from the base path and the "guest" profile, older saves are dropped with a notice, a browser that can't save shows a one-line notice, and options are read through one resolver (`src/options/resolver.ts`). The theme is the first option read that way, from the account settings item. Nothing writes to storage yet; card sets (4b) are the first saved items.
+Phase 4 (#74) is done, split into 4a (#84) and 4b (#85). 4a: every save goes through one storage interface (`src/storage/storage.ts`) with keys built from the base path and the "guest" profile, older saves are dropped with a notice, a browser that can't save shows a one-line notice, and options are read through one resolver (`src/options/resolver.ts`). The theme is the first option read that way, from the account settings item. 4b: loading a CSV into a pile saves a card set item, the pile records its id, and the session keeps its own copy of the definitions. Card sets are the only items the app writes so far.
 
 ## Done
+
+### Phase 4b: Card set model (#85, 2026-10-27)
+
+- **Card set item (AR-4):** `src/model/cardSet.ts` has `CardSet` (a stored item with `name`, `source: { kind: 'file', name }` and `definitions`), the session's `CardSetSummary`, `fileCardSet` and `cardSetItem`. The saved set holds only the cards in the CSV as last loaded. Definitions flagged `missing` stay in the session for the copies still in play.
+- **Piles record their set:** `Pile.sourceName` is now `Pile.cardSetId`, and `SessionState.cardSets` holds each loaded set's name and source. `SessionState.definitions` stays as the session's own copy (decision below). The pile menu's "Reload deck.csv…" reads the name from `cardSets`.
+- **Saving:** `SessionScreen.loadFile` uses the pile's `cardSetId`, or `newItemId()` on a first load, passes it to `loadPile` and then calls `storage.put('cardSet', …)`. A reload updates the same item and takes the new file name (CD-5 matching is unchanged). If storage isn't ready yet or the save fails, the session carries on with its copy.
+- **Tests:** `cardSet.test.ts`, AR-4 tests in `loadPile.test.ts`, and two `App.test.tsx` tests over memory storage: a load saves one set with a UUID, and a reload updates that set and keeps its definition ids.
+- **Changed requirements:** AR-4 (the session keeps a copy; load creates and reload updates the set), SP-2 (the file name comes through the card set).
 
 ### Phase 4a: Storage interface, profile keys and options resolver (#84, 2026-10-27)
 
@@ -632,7 +640,6 @@ Phase 4 is split into 4a (#84) and 4b (#85). 4a is done: every save goes through
 
 ## Next
 
-- **Phase 4b: card sets (#85).** Card definitions and their source move into card set items saved through storage, and piles record a `cardSetId`. Decide in planning whether a session keeps its own copy of the definitions (4a planning recommended yes: it works offline and survives a deleted set).
 - **Phase 5: layouts (#35).** A first comparison with the repo is in the issue: nothing layout-related exists beyond the `layout` and `type` columns, and the suggested split is 5a to 5i there.
 - **After V1, in this order:** the demo on its own path (#63), the card set library (#67), games (#65), then accounts and sync (#45). #45's docs-only step 1 (confirming Supabase, writing the accounts requirements) can happen any time.
 - **#71: keys act on the hovered card or pile when nothing on the table has focus**, an owner request from the #70 review. Single-letter keys without focus need an off switch (WCAG 2.1.4), so it goes with #53.
@@ -643,7 +650,10 @@ Phase 4 is split into 4a (#84) and 4b (#85). 4a is done: every save goes through
 
 ## Open problems
 
-- Nothing saves to storage yet, so the PS-5 notice and the theme option can only be seen with hand-made data. Card sets (4b) are the first saved items, and a theme choice needs the Settings screen.
+- Only card sets are saved so far, and nothing reads them back yet: the card library (#67) will list them. A theme choice needs the Settings screen, so the theme option can only be seen with hand-made data.
+- Undoing a CSV load reverts the session but leaves the saved card set as loaded. The set belongs to the library, not to the session.
+- A card set saved before the startup storage check finishes (the first moments after the page loads) isn't saved. The session still has its copy.
+- Loading a different file into a pile updates that pile's card set and renames it after the new file, rather than making a new set. The card library (#67) may want to split them.
 - The storage notice can't be dismissed. It's one line, and it matters for the whole visit, but a close button could come with the Settings screen.
 - Page-wide single keys (D, ?, zoom, fit, snap) need focus in the table, the hand or the table tools (WCAG 2.1.4). Straight after the page loads, or after a click on the seat bar, D does nothing until you Tab or click into the table. An off switch with #53 could let them work everywhere for those who want it.
 - The shortcut reference is a hand-kept list (`SHORTCUT_GROUPS`), so a new key needs adding there too. Remapping (#53) would make one list drive both.
@@ -685,7 +695,7 @@ Phase 4 is split into 4a (#84) and 4b (#85). 4a is done: every save goes through
 - axe's label-in-name check joins text from separate blocks with no spaces, so a button containing a whole card face fails it. The viewer and table cards avoid that with the overlay pattern.
 - In this cloud environment the pinned `@playwright/test` wants a newer Chromium than the one installed. Local E2E ran with a scratch config pointing `launchOptions.executablePath` at `/opt/pw-browsers/chromium`. That config isn't committed, and CI is unaffected.
 - The form error colour uses `--seat-a` (5.4:1 on the panel), because the tokens have no error colour. Add an error token if the design gets one.
-- **Reload is two clicks, not one:** "Reload <file>…" reopens the file picker, because browsers can't re-read a chosen file. A true one-click reload needs the File System Access API, which works in Chromium only and falls back to the picker elsewhere. That fits with card sets (Phase 4), where the file handle can be saved with the set.
+- **Reload is two clicks, not one:** "Reload <file>…" reopens the file picker, because browsers can't re-read a chosen file. A true one-click reload needs the File System Access API, which works in Chromium only and falls back to the picker elsewhere. That fits with the card library (#67), where the file handle can be saved with the card set.
 - The default card face uses the UI font, not the sample card's Bitter, which would be another font dependency. Phase 5 layouts will set card fonts.
 - The shared-pile back colour `#3F433D` isn't a design token. The design has no shared seat, so add a token if the design gets one.
 - The dark theme follows the system only. A manual light/dark toggle goes in the Settings screen when it exists (`applyTheme` already takes the choice).
@@ -838,3 +848,5 @@ Phase 4 is split into 4a (#84) and 4b (#85). 4a is done: every save goes through
 | 2026-10-27 | One-per-profile items, such as the account settings, use a fixed id; everything else gets a UUID (AR-6) | A UUID for every item | The same settings item on two devices should stay one item when sync arrives |
 | 2026-10-27 | Storage is a thin layer (keys, stamps, the drop rule) over a key-value backend | One full implementation per store | Keys and the PS-5 rule live in one place, so the IndexedDB and memory versions can't drift |
 | 2026-10-27 | If the browser can't save, the app keeps going on memory storage | Turning saves off | Callers use one interface either way, and the notice says progress won't be kept (PS-6) |
+| 2026-10-27 | A session keeps its own copy of the card definitions, and each pile records its card set's id (AR-4, #85) | Referencing the card set only | Works offline, survives a deleted set, and a Phase 7 session save is complete on its own |
+| 2026-10-27 | Reloading a pile updates the card set it records, even from a differently named file | A new set per file name | Keeps one set per pile until the card library (#67) can manage sets |
