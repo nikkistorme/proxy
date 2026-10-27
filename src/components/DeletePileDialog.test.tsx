@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { Pile } from '../model/game';
-import { DeletePileDialog, type DeletePileRequest } from './DeletePileDialog';
+import { DeletePileDialog, type DeletePileRequest, type MergePilesRequest } from './DeletePileDialog';
 
 const pile = (id: string, name: string, count: number): Pile => ({
   id,
@@ -58,6 +58,46 @@ describe('SP-4 delete a pile', () => {
     const { user, onConfirm, onClose } = renderDialog({ pile: pile('a', 'Discard', 0), targets: [] });
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(onConfirm).not.toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('TT-4 merge piles', () => {
+  function renderMerge(request: MergePilesRequest) {
+    const user = userEvent.setup();
+    const onMerge = vi.fn();
+    const onClose = vi.fn();
+    render(<DeletePileDialog request={request} onConfirm={vi.fn()} onMerge={onMerge} onClose={onClose} />);
+    return { user, onMerge, onClose };
+  }
+  const request: MergePilesRequest = { mode: 'merge', pile: pile('a', 'Env discard', 2), other: pile('b', 'P1 main deck', 10) };
+
+  it('deletes the dragged pile and puts its cards on top by default', async () => {
+    const { user, onMerge, onClose } = renderMerge(request);
+    const dialog = screen.getByRole('dialog', { name: 'Merge Env discard and P1 main deck?' });
+    expect(dialog).toHaveTextContent('Env discard will be deleted, and its 2 cards will go to the top of P1 main deck.');
+    expect(screen.getByRole('radio', { name: 'Env discard 2 cards' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Env discard 2 cards' })).toHaveFocus();
+    expect(screen.getByRole('radio', { name: 'Top' })).toBeChecked();
+    await user.keyboard('{Enter}');
+    expect(onMerge).toHaveBeenCalledWith({ fromPileId: 'a', intoPileId: 'b', end: 'top' });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('can delete the other pile instead, and put the cards on the bottom', async () => {
+    const { user, onMerge } = renderMerge(request);
+    await user.click(screen.getByRole('radio', { name: 'P1 main deck 10 cards' }));
+    expect(screen.getByRole('group', { name: 'Put its cards on Env discard' })).toBeInTheDocument();
+    await user.click(screen.getByRole('radio', { name: 'Bottom' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('P1 main deck will be deleted, and its 10 cards will go to the bottom of Env discard.');
+    await user.click(screen.getByRole('button', { name: 'Merge piles' }));
+    expect(onMerge).toHaveBeenCalledWith({ fromPileId: 'b', intoPileId: 'a', end: 'bottom' });
+  });
+
+  it('cancels without merging', async () => {
+    const { user, onMerge, onClose } = renderMerge(request);
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(onMerge).not.toHaveBeenCalled();
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

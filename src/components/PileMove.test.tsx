@@ -115,7 +115,7 @@ describe('A11Y-1 moving a pile by keyboard', () => {
     await user.keyboard('{Shift>}{ArrowRight}{/Shift}');
     // The pile doesn't count itself as under the outline, but Environment deck is there.
     await user.keyboard('{Shift>}{ArrowUp}{/Shift}');
-    expect(status(store)).toBe('Row 1, column 2, over Environment deck.');
+    expect(status(store)).toBe('Row 1, column 2, over Environment deck. Enter merges them.');
     await user.keyboard('{Shift>}{ArrowDown}{/Shift}{Enter}');
 
     expect(spotOf(store)).toEqual({ x: 158, y: 208 });
@@ -229,5 +229,72 @@ describe('TT-4 dragging a pile', () => {
     fireEvent.pointerUp(document, touch(330, 330));
     expect(spotOf(store)).toEqual({ x: 316, y: 316 });
     expect(screen.queryByRole('menu')).toBeNull();
+  });
+});
+
+describe('TT-4 merging piles', () => {
+  const ENV = 'pile-env';
+  const pileIds = (store: Store) => store.getState().game.piles.map((p) => p.id);
+
+  it('dropping a pile on another asks how to merge them, and the merge is one undo step', async () => {
+    const { store, user } = setup();
+    const steps = store.getState().past.length;
+    // P1 main deck's corner lands at (166, 26), over Environment deck at (158, 16).
+    mouseDrag(pile('P1 main deck'), [30, 30], [180, 40], { release: false });
+    expect(store.getState().drag).toEqual({ pileId: MAIN, over: { zone: 'pile', pileId: ENV, position: 'top' } });
+    const target = pile('Environment deck').closest('.pile-tile');
+    expect(target).toHaveClass('pile-tile--drop-target');
+    expect(target).toHaveTextContent('Drop: merge');
+
+    fireEvent.pointerUp(document, mouse(180, 40));
+    const dialog = await screen.findByRole('dialog', { name: 'Merge P1 main deck and Environment deck?' });
+    // Nothing has moved yet.
+    expect(spotOf(store)).toEqual({ x: 16, y: 16 });
+    await waitFor(() => expect(within(dialog).getByRole('radio', { name: 'P1 main deck 2 cards' })).toHaveFocus());
+    await user.keyboard('{Enter}');
+
+    expect(pileIds(store)).not.toContain(MAIN);
+    expect(store.getState().game.piles.find((p) => p.id === ENV)?.cardIds).toHaveLength(2);
+    expect(status(store)).toBe('Merged P1 main deck into Environment deck. 2 cards.');
+    expect(store.getState().past).toHaveLength(steps + 1);
+    await waitFor(() => expect(pile('Environment deck')).toHaveFocus());
+
+    await user.keyboard('{Control>}z{/Control}');
+    expect(pileIds(store)).toContain(MAIN);
+    expect(spotOf(store)).toEqual({ x: 16, y: 16 });
+  });
+
+  it('Cancel leaves both piles where they were, with focus on the dragged pile', async () => {
+    const { store, user } = setup();
+    const steps = store.getState().past.length;
+    mouseDrag(pile('P1 main deck'), [30, 30], [180, 40]);
+    await user.click(await screen.findByRole('button', { name: 'Cancel' }));
+    expect(pileIds(store)).toEqual([MAIN, ENV, 'pile-board']);
+    expect(spotOf(store)).toEqual({ x: 16, y: 16 });
+    expect(store.getState().past).toHaveLength(steps);
+    await waitFor(() => expect(pile('P1 main deck')).toHaveFocus());
+  });
+
+  it('by keyboard: Enter with the outline over a pile asks how to merge them', async () => {
+    const { store, user } = setup();
+    pile('Environment deck').focus();
+    await user.keyboard(' ');
+    await waitFor(() => expect(screen.getByRole('button', { name: /^Placing Environment deck/ })).toHaveFocus());
+    await user.keyboard('{Shift>}{ArrowLeft}{/Shift}');
+    expect(status(store)).toBe('Row 1, column 1, over P1 main deck. Enter merges them.');
+    expect(pile('P1 main deck').closest('.pile-tile')).toHaveTextContent('Drop: merge');
+    await user.keyboard('{Enter}');
+
+    await screen.findByRole('dialog', { name: 'Merge Environment deck and P1 main deck?' });
+    // Keep the dragged pile this time, and put P1 main deck's cards on its bottom.
+    await user.click(screen.getByRole('radio', { name: 'P1 main deck 2 cards' }));
+    await user.click(screen.getByRole('radio', { name: 'Bottom' }));
+    await user.click(screen.getByRole('button', { name: 'Merge piles' }));
+
+    expect(pileIds(store)).toEqual([ENV, 'pile-board']);
+    // The kept pile stays where it was.
+    expect(spotOf(store, ENV)).toEqual({ x: 158, y: 16 });
+    expect(status(store)).toBe('Merged P1 main deck into Environment deck. 2 cards.');
+    await waitFor(() => expect(pile('Environment deck')).toHaveFocus());
   });
 });

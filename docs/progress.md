@@ -2,9 +2,20 @@
 
 ## Current state
 
-Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37, #39, #41, #49, #51 and #56, all under #20. 3a to 3f-2, 3m-1 and 3m-2 are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; and moving piles, with a click on a pile drawing its top card. 3m-3 (merging piles, #56) is next. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases.
+Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37, #39, #41, #49, #51 and #56, all under #20. 3a to 3f-2 and 3m-1 to 3m-3 are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; and merging piles by dropping one on another. 3g to 3l (#29 to #34) are next. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases.
 
 ## Done
+
+### Phase 3m-3: Merging piles (2026-10-27)
+
+- **Piles never overlap (TT-4):** a pile dropped or placed so that it covers another pile merges with the one it covers most (`pileUnder` in `tablePlacement.ts`). `movePile` refuses a spot over another pile. Cards may still overlap piles and each other.
+  - **Mouse and touch:** the pile under a dragged pile shows the drop ring with "Drop: merge". Dropping there opens the merge dialog.
+  - **Keyboard and single pointer:** with Space or **Move on table**, the outline over a pile says "Row 1, column 2, over Environment deck. Enter merges them." and that pile shows "Drop: merge". Enter, Space or **Place** opens the merge dialog.
+- **Merge dialog:** `DeletePileDialog` has a merge mode, "Merge Board cards and Environment deck?". It asks which pile is deleted (the dragged one first) and whether its cards go on the **Top** (the default) or **Bottom** of the other, with a sentence saying what will happen. **Merge piles** confirms.
+- **Merging (SP-4):** `mergePiles` deletes one pile and puts its cards on the kept pile, keeping their order. The kept pile stays where it is and keeps its name, owner and deck, as when a deleted pile's cards move to another pile. It's one undo step, announced as "Merged Board cards into Environment deck. 2 cards.", with a toast that has Undo.
+  - **Focus:** the kept pile after a merge. After Cancel, nothing has moved, and focus goes back to the dragged pile.
+- **Owner defaults:** the cards go on top by default, the kept pile doesn't move, and merging always asks, even when a pile is empty.
+- **Tests:** 366 unit tests, including the merge tests in `piles.test.ts`, `tablePlacement.test.ts`, `DeletePileDialog.test.tsx` and `PileMove.test.tsx`. The new `e2e/pile-merge.spec.ts` covers a mouse drag with axe mid-drag and on the dialog, Cancel, undo, keyboard only, and touch at 375 × 667 (Chromium only).
 
 ### Phase 3f-2: Dragging cards from the pile viewer (2026-10-27)
 
@@ -496,8 +507,7 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 
 ## Next
 
-- **3m-3: Merging piles by dropping one on another (#56)**, after the owner's go-ahead. Piles must never overlap. Dropping a pile on another asks which is deleted and where its cards go, perhaps reusing the Delete pile dialog.
-- Then 3g to 3l (#29 to #34), and 3n (#39, dark theme) at any point.
+- **3g to 3l (#29 to #34)**, after the owner's go-ahead, and 3n (#39, dark theme) at any point.
 - **Multi-select in the pile viewer (#57)**, a feature issue outside the phases, when the owner chooses. Open problems that belong to later issues:
   - 3g: move the Actions button to the selected card
   - 3i: a double-faced badge on table cards (from CardStates)
@@ -505,7 +515,7 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 
 ## Open problems
 
-- A pile dropped or placed on another pile still lands on top of it. #56 (3m-3) stops piles overlapping and merges them instead.
+- Merging piles by touch needs a check on an iPhone, like the other touch drags.
 - A pile's menu opened by a touch hold doesn't take focus, because the browser's own mousedown after a touch moves focus back to the pile. A tap outside closes it. Enter on the pile, or a right-click, opens it with focus in the menu.
 - A screen reader's "activate" sends a click, so it draws rather than opening a pile's menu. The pile's description says Enter opens actions, and every draw is announced and can be undone. Check this with VoiceOver on a phone.
 - Touch holds on piles, and Space with iOS Full Keyboard Access, need a check on an iPhone. The touch E2E runs in Chromium only.
@@ -645,3 +655,6 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 | 2026-10-27 | The pile viewer closes while a card is dragged out of it, and opens again after the drop | Fading it but leaving it modal; closing it for good | A modal makes the page inert, so drop zones can't be hit. Coming back lets you drag several cards in a row, as To hand and To table allow. Owner decision. |
 | 2026-10-27 | A viewer card dropped on its own pile goes to the top; the top card is put back | Ignoring drops on its own pile | Matches Move to…'s "own pile — top". Owner decision. |
 | 2026-10-27 | Multi-select in the pile viewer is its own feature issue (#57), not tied to a phase | Adding it to 3f-2 | Owner request. Keeps 3f-2 small. |
+| 2026-10-27 | A pile that covers another pile merges with the one it covers most, whatever is under the pointer | Merging only when the pointer is over a pile | Piles must never overlap, and the landing spot is what decides that. The keyboard outline works the same way. |
+| 2026-10-27 | Merged cards go on top by default, the kept pile stays where it is, and a merge always asks first | Bottom by default, as Delete pile does; moving the kept pile to the drop spot | Dropping one pile on another is like stacking it on top. Owner approved the defaults. |
+| 2026-10-27 | The merge dialog is a mode of `DeletePileDialog` | A separate dialog | The issue asked to reuse it. They share the dialog, form and radio pattern. |

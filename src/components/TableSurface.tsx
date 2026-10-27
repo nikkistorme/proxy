@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
-import { cardBox, CARD_H, CARD_W, clampToTable, columnsFor, describeSpot, freeSpot, overlaps, pileBox, TABLE_GAP } from '../model/tablePlacement';
+import { cardBox, CARD_H, CARD_W, clampToTable, columnsFor, describeSpot, freeSpot, overlaps, pileBox, pileUnder, TABLE_GAP } from '../model/tablePlacement';
 import { nearestInDirection, readingOrder, tableItems, type Direction } from '../model/tableNavigation';
 import { clampZoom, fitAll, GRID_X, GRID_Y, MAX_ZOOM, scrollAfterZoom, snapToGrid, stepZoom, zoomPercent, type Scroll } from '../model/tableView';
 import { bringToFront, deleteCard, duplicate, flip, rotate, sendToBack, shownName } from '../actions/cardActions';
@@ -48,6 +48,8 @@ export interface PileSlot {
   onFocus: () => void;
   onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => void;
   onKeyUp: (event: KeyboardEvent<HTMLButtonElement>) => void;
+  /** TT-4: a pile being dragged or placed is over this one, and would merge with it. */
+  mergeTarget: boolean;
 }
 
 const plural = (count: number, word: string) => `${count} ${count === 1 ? word : `${word}s`}`;
@@ -80,6 +82,8 @@ interface TableSurfaceProps {
   renderPile?: (pile: Pile, slot: PileSlot) => ReactNode;
   /** A finger held a pile and let go without moving it. */
   openPileMenu?: (pileId: string) => void;
+  /** TT-4: a pile was dropped or placed on another pile. The game screen asks how to merge them. */
+  requestMerge?: (pileId: string, otherPileId: string) => void;
 }
 
 /**
@@ -87,7 +91,7 @@ interface TableSurfaceProps {
  * and zooms (TT-1) inside its own viewport. The table is one Tab stop, and arrow
  * keys move focus to the nearest card or pile in that direction (A11Y-3).
  */
-export function TableSurface({ renderPile, openPileMenu }: TableSurfaceProps = {}) {
+export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSurfaceProps = {}) {
   const game = useGameStore((s) => s.game);
   const { zoom, snap } = useGameStore((s) => s.view);
   const setView = useGameStore((s) => s.setView);
@@ -466,6 +470,12 @@ export function TableSurface({ renderPile, openPileMenu }: TableSurfaceProps = {
     const spot = clampToTable(snap ? snapToGrid(to) : to, placement.rotation);
     setPlacement({ ...placement, ...spot });
     const box = cardBox({ ...spot, rotation: placement.rotation });
+    // A pile over another pile merges with it, so say which.
+    const mergeWith = placement.pile ? pileUnder(piles, box, placement.id) : undefined;
+    if (mergeWith) {
+      announce(`${describeSpot(spot)}, over ${mergeWith.name}. Enter merges them.`);
+      return;
+    }
     // The topmost card under the outline, then any pile.
     const under = [
       ...[...game.table].reverse().filter((e) => e.cardId !== placement.id && overlaps(cardBox(e), box)).map((e) => shownName(game, e.cardId)),
@@ -478,6 +488,14 @@ export function TableSurface({ renderPile, openPileMenu }: TableSurfaceProps = {
   function placeCard() {
     if (!placement) return;
     const { id, x, y } = placement;
+    const mergeWith = placement.pile ? pileUnder(piles, pileBox({ x, y }), id) : undefined;
+    if (mergeWith) {
+      // Piles never overlap: the dialog asks how to merge them, and Cancel leaves the pile where it was.
+      setPlacing(undefined);
+      pendingFocus.current = 'none';
+      requestMerge?.(id, mergeWith.id);
+      return;
+    }
     if (placement.pile) dispatch((g) => movePile(g, { pileId: id, position: { x, y } }));
     else dispatch((g, context) => moveCard(g, { cardId: id, to: { zone: 'table', position: { x, y } } }, context));
     pendingFocus.current = { card: id };
@@ -575,6 +593,11 @@ export function TableSurface({ renderPile, openPileMenu }: TableSurfaceProps = {
       rotation: 0,
       from: { zone: 'table', position: { x: pile.x, y: pile.y } },
       drop: (to) => {
+        if (to.zone === 'pile') {
+          pendingFocus.current = 'none';
+          requestMerge?.(pileId, to.pileId);
+          return;
+        }
         if (to.zone !== 'table' || !to.position) return;
         pendingFocus.current = { card: pileId };
         dispatch((g) => movePile(g, { pileId, position: to.position ?? pile }));
@@ -661,6 +684,13 @@ export function TableSurface({ renderPile, openPileMenu }: TableSurfaceProps = {
   const outline = placement && cardBox(placement);
   // Where a dragged card would land, turned as it is now.
   const dropAt = drag?.over?.zone === 'table' ? drag.over.position : undefined;
+  // TT-4: the pile a dragged or placed pile would merge with.
+  const mergeTargetId =
+    drag?.pileId !== undefined && drag.over?.zone === 'pile'
+      ? drag.over.pileId
+      : placement?.pile
+        ? pileUnder(piles, pileBox(placement), placement.id)?.id
+        : undefined;
   const dropBox = dropAt && cardBox({ ...dropAt, rotation: game.table.find((e) => e.cardId === drag?.cardId)?.rotation ?? 0 });
   const boxes = [...game.table.map(cardBox), ...piles.map(pileBox), ...(outline ? [outline] : []), ...(dropBox ? [dropBox] : [])];
   const width = Math.max(size.width / zoom, ...boxes.map((b) => b.right + 2 * CARD_W));
@@ -712,6 +742,7 @@ export function TableSurface({ renderPile, openPileMenu }: TableSurfaceProps = {
                   onKeyUp={(event) => onPileKeyUp(pile.id, event)}
                   onPointerDown={(event) => onPilePointerDown(pile.id, event)}
                   dragging={drag?.pileId === pile.id}
+                  mergeTarget={pile.id === mergeTargetId}
                 />
               ))}
             {game.table.map((entry, index) => (

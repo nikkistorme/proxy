@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { TableEntry } from './game';
-import { CARD_H, CARD_W, cardBox, clampToTable, columnsFor, describeSpot, freeSpot, PLACEMENT_COLUMNS, TABLE_GAP } from './tablePlacement';
+import { CARD_H, CARD_W, cardBox, clampToTable, columnsFor, describeSpot, freeSpot, pileBox, pileUnder, PLACEMENT_COLUMNS, TABLE_GAP } from './tablePlacement';
 
 const at = (cardId: string, x: number, y: number, rotation: TableEntry['rotation'] = 0): TableEntry => ({ cardId, x, y, rotation });
 const column = (n: number) => TABLE_GAP + n * (CARD_W + TABLE_GAP);
@@ -61,5 +61,23 @@ describe('A11Y-1 placing a card by keyboard', () => {
     expect(describeSpot({ x: column(2), y: row(1) })).toBe('Row 2, column 3');
     expect(describeSpot({ x: (column(1) + column(2)) / 2, y: row(0) })).toBe('Row 1, between columns 2 and 3');
     expect(describeSpot({ x: column(1) + 16, y: 0 })).toBe('Near row 1, near column 2');
+  });
+});
+
+describe('TT-4 the pile a pile lands on', () => {
+  const piles = [
+    { id: 'a', x: 0, y: 0 },
+    { id: 'b', x: 200, y: 0 },
+  ];
+
+  it('is the pile it covers the most of, leaving itself out', () => {
+    expect(pileUnder(piles, pileBox({ x: 60, y: 10 }))?.id).toBe('a');
+    expect(pileUnder(piles, pileBox({ x: 120, y: 10 }))?.id).toBe('b');
+    expect(pileUnder(piles, pileBox({ x: 10, y: 10 }), 'a')).toBeUndefined();
+  });
+
+  it('is none when the piles only touch', () => {
+    expect(pileUnder(piles, pileBox({ x: 0, y: CARD_H }))).toBeUndefined();
+    expect(pileUnder(piles, pileBox({ x: 200 + CARD_W, y: 0 }))).toBeUndefined();
   });
 });

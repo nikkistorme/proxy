@@ -2,12 +2,12 @@ import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'reac
 import { loadPile } from '../actions/loadPile';
 import { peekTop } from '../actions/peek';
 import { draw, mill, revealTop, shuffle } from '../actions/pileActions';
-import { addPile, deletePile, renamePile, validatePileName } from '../actions/piles';
+import { addPile, deletePile, mergePiles, renamePile, validatePileName } from '../actions/piles';
 import { importCards } from '../csv/importCards';
 import type { GameState, Pile } from '../model/game';
 import { readingOrder, tableItems } from '../model/tableNavigation';
 import { useGameStore } from '../store/gameStore';
-import { DeletePileDialog, type DeletePileRequest } from './DeletePileDialog';
+import { DeletePileDialog, type DeletePileRequest, type MergeChoice, type MergePilesRequest } from './DeletePileDialog';
 import './GameScreen.css';
 import { HandTray } from './HandTray';
 import { ImportResults, type ImportSummary } from './ImportResults';
@@ -51,7 +51,7 @@ export function GameScreen() {
   const [summary, setSummary] = useState<ImportSummary>();
   const [countRequest, setCountRequest] = useState<CountRequest>();
   const [nameRequest, setNameRequest] = useState<PileNameRequest>();
-  const [deleteRequest, setDeleteRequest] = useState<DeletePileRequest>();
+  const [deleteRequest, setDeleteRequest] = useState<DeletePileRequest | MergePilesRequest>();
   const [viewerPileId, setViewerPileId] = useState<string>();
   const [peekRequest, setPeekRequest] = useState<PeekRequest>();
   /** A pile id, or ADD_PILE, to focus once it has rendered (after adding or deleting a pile). */
@@ -298,10 +298,28 @@ export function GameScreen() {
     if (deleteRequest) removePile(deleteRequest.pile.id, moveCardsToPileId);
   }
 
+  // TT-4: a pile dropped or placed on another pile. Nothing moves until the merge is confirmed.
+  const requestMerge = useCallback(
+    (pileId: string, otherPileId: string) => {
+      const pile = game.piles.find((p) => p.id === pileId);
+      const other = game.piles.find((p) => p.id === otherPileId);
+      if (pile && other) setDeleteRequest({ mode: 'merge', pile, other });
+    },
+    [game],
+  );
+
+  function confirmMerge({ fromPileId, intoPileId, end }: MergeChoice) {
+    const from = game.piles.find((p) => p.id === fromPileId)?.name ?? '';
+    const into = game.piles.find((p) => p.id === intoPileId)?.name ?? '';
+    dispatch((g) => mergePiles(g, { fromPileId, intoPileId, end }));
+    showToast(`Merged ${from} into ${into}.`);
+    pendingFocusRef.current = intoPileId;
+  }
+
   function closeDelete() {
     const pileId = deleteRequest?.pile.id;
     setDeleteRequest(undefined);
-    // If the pile still exists, the delete was cancelled.
+    // If the pile still exists, the delete was cancelled, or it took the other pile's cards in a merge.
     if (pileId && game.piles.some((p) => p.id === pileId)) returnFocusToPile(pileId);
   }
 
@@ -363,7 +381,8 @@ export function GameScreen() {
         onKeyUp={slot.onKeyUp}
         onDraw={() => drawFrom(pile.id)}
         onDropFile={(id, file) => void loadFile(id, file)}
-        cardOver={drag?.over?.zone === 'pile' && drag.over.pileId === pile.id}
+        cardOver={drag?.cardId !== undefined && drag.over?.zone === 'pile' && drag.over.pileId === pile.id}
+        mergeTarget={slot.mergeTarget}
         pile={pile}
         ownerName={seatName(pile.ownerSeatId)}
         revealedTop={revealedTop}
@@ -415,7 +434,7 @@ export function GameScreen() {
           <h2 id="table-heading" className="visually-hidden">
             Table
           </h2>
-          <TableSurface renderPile={renderPile} openPileMenu={openPileMenu} />
+          <TableSurface renderPile={renderPile} openPileMenu={openPileMenu} requestMerge={requestMerge} />
           <span id={PILE_HINT_ID} hidden>
             {PILE_HINT}
           </span>
@@ -461,9 +480,10 @@ export function GameScreen() {
         onClose={closeName}
       />
       <DeletePileDialog
-        key={deleteRequest ? `delete-${deleteRequest.pile.id}` : 'closed'}
+        key={deleteRequest ? `${deleteRequest.mode ?? 'delete'}-${deleteRequest.pile.id}` : 'closed'}
         request={deleteRequest}
         onConfirm={confirmDelete}
+        onMerge={confirmMerge}
         onClose={closeDelete}
       />
       <PileCountDialog
