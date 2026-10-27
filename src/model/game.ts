@@ -28,12 +28,21 @@ export interface CardInstance {
 /** Card rotation on the table, in 90° steps clockwise (TT-5). */
 export type Rotation = 0 | 90 | 180 | 270;
 
+/** A named number on a table card, like "Damage 3" (TT-8). */
+export interface Counter {
+  id: string;
+  name: string;
+  value: number;
+}
+
 /** A card on the table. Its top-left corner is at x, y in table px at 100% zoom. */
 export interface TableEntry {
   cardId: string;
   x: number;
   y: number;
   rotation: Rotation;
+  /** Counters belong to the card's place on the table, so they go when it leaves (TT-8). */
+  counters?: Counter[];
 }
 
 export interface Pile {

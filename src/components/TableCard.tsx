@@ -23,14 +23,19 @@ interface TableCardProps {
   onPointerDown: (cardId: string, event: PointerEvent<HTMLButtonElement>) => void;
   /** TT-4: this card is being dragged, so it shows where it came from. */
   dragging: boolean;
+  /** TT-8: opens the card's counters, at one counter when its pill was pressed. */
+  onOpenCounters: (cardId: string, counterId?: string) => void;
 }
+
+/** Up to three pills show; with more, the first two and a "+N more" pill (CardStates). */
+const MAX_PILLS = 3;
 
 /**
  * A card on the table, at its position and rotation. Like the viewer's cards, the
  * face is a decorative layer under a transparent button that carries the name,
  * so a face full of text never becomes the button's name (A11Y-6).
  */
-export function TableCard({ view, layer, tabbable, register, onFocus, onKeyDown, onKeyUp, menuOpen, onOpenMenu, onPointerDown, dragging }: TableCardProps) {
+export function TableCard({ view, layer, tabbable, register, onFocus, onKeyDown, onKeyUp, menuOpen, onOpenMenu, onPointerDown, dragging, onOpenCounters }: TableCardProps) {
   const { entry, face, ownerSeatId, missing, label } = view;
   const identity = seatIdentity(ownerSeatId);
   // The outer box is the area the card covers on screen, turned or not, so the
@@ -38,6 +43,14 @@ export function TableCard({ view, layer, tabbable, register, onFocus, onKeyDown,
   const box = cardBox(entry);
   const style = { left: box.left, top: box.top, width: box.right - box.left, height: box.bottom - box.top, zIndex: layer } as CSSProperties;
   const bodyStyle = entry.rotation === 0 ? undefined : { transform: `rotate(${entry.rotation}deg)` };
+  const counters = entry.counters ?? [];
+  const pills = counters.length > MAX_PILLS ? counters.slice(0, MAX_PILLS - 1) : counters;
+  const more = counters.length - pills.length;
+  // Like the Actions button: keep focus on the card, and don't start a drag or pan.
+  const pressPill = (event: PointerEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
 
   return (
     <div className={menuOpen ? 'table-card card-drag-source table-card--menu-open' : 'table-card card-drag-source'} style={style} data-card-id={entry.cardId}>
@@ -79,6 +92,28 @@ export function TableCard({ view, layer, tabbable, register, onFocus, onKeyDown,
             onOpenMenu(entry.cardId);
           }}
         />
+        {counters.length > 0 && (
+          // Clicking a pill edits it. Keyboard users press C on the card, so the pills stay out of the Tab order.
+          <div className="table-card__counters">
+            {pills.map((counter) => (
+              <button
+                key={counter.id}
+                type="button"
+                className="table-card__counter"
+                tabIndex={-1}
+                onPointerDown={pressPill}
+                onClick={() => onOpenCounters(entry.cardId, counter.id)}
+              >
+                {counter.name} <span className="table-card__counter-value">{counter.value}</span>
+              </button>
+            ))}
+            {more > 0 && (
+              <button type="button" className="table-card__counter" tabIndex={-1} onPointerDown={pressPill} onClick={() => onOpenCounters(entry.cardId)}>
+                +{more} more
+              </button>
+            )}
+          </div>
+        )}
       </div>
       {/*
         The board's round Actions button, shown on the current card so touch and mouse
