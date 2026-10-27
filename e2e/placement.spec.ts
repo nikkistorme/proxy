@@ -24,7 +24,7 @@ const spot = (page: Page, name: string) =>
 
 /** double-faced.csv in CSV order: Daylight Hunter (×2) and Ember Shard on the table, and Locked Vault in the hand. */
 async function setUp(page: Page) {
-  await mainPile(page).click();
+  await mainPile(page).click({ button: 'right' });
   await page.getByRole('menuitemcheckbox', { name: 'Keep CSV order' }).click();
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('menuitem', { name: 'Load CSV…' }).click();

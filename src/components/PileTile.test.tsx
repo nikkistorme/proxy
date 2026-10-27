@@ -19,6 +19,7 @@ function renderTile(p: Pile, props: Partial<Parameters<typeof PileTile>[0]> = {}
   const onOpenMenu = vi.fn();
   const registerTile = vi.fn();
   const onDropFile = vi.fn();
+  const onDraw = vi.fn();
   const { container } = render(
     <PileTile
       pile={p}
@@ -26,12 +27,13 @@ function renderTile(p: Pile, props: Partial<Parameters<typeof PileTile>[0]> = {}
       revealedTop={undefined}
       menuOpen={false}
       onOpenMenu={onOpenMenu}
+      onDraw={onDraw}
       registerTile={registerTile}
       onDropFile={onDropFile}
       {...props}
     />,
   );
-  return { onOpenMenu, registerTile, onDropFile, tile: container.querySelector('.pile-tile') as HTMLElement };
+  return { onOpenMenu, onDraw, registerTile, onDropFile, tile: container.querySelector('.pile-tile') as HTMLElement };
 }
 
 describe('SP-5 pile tile', () => {
@@ -61,13 +63,30 @@ describe('SP-5 pile tile', () => {
     expect(document.querySelector('.pile-tile__top .card-face')).toHaveTextContent('Imp');
   });
 
-  it('opens its menu on click and registers its button for focus return', async () => {
-    const { onOpenMenu, registerTile } = renderTile(pile(2), { menuOpen: true });
+  it('closes its open menu on click and registers its button for focus return', async () => {
+    const { onOpenMenu, onDraw, registerTile } = renderTile(pile(2), { menuOpen: true });
     const button = screen.getByRole('button');
     expect(button).toHaveAttribute('aria-expanded', 'true');
     await userEvent.click(button);
     expect(onOpenMenu).toHaveBeenCalledTimes(1);
+    expect(onDraw).not.toHaveBeenCalled();
     expect(registerTile).toHaveBeenCalledWith('pile-1', button);
+  });
+
+  it('draws on click, and opens its menu on right-click, Enter, the menu key or Shift+F10', async () => {
+    const user = userEvent.setup();
+    const { onOpenMenu, onDraw } = renderTile(pile(2));
+    const button = screen.getByRole('button');
+    await user.click(button);
+    expect(onDraw).toHaveBeenCalledTimes(1);
+    expect(onOpenMenu).not.toHaveBeenCalled();
+    await user.pointer({ keys: '[MouseRight]', target: button });
+    expect(onOpenMenu).toHaveBeenCalledTimes(1);
+    button.focus();
+    await user.keyboard('{Enter}{ContextMenu}{Shift>}{F10}{/Shift}');
+    expect(onOpenMenu).toHaveBeenCalledTimes(4);
+    // Enter doesn't click the button, so nothing more is drawn.
+    expect(onDraw).toHaveBeenCalledTimes(1);
   });
 });
 

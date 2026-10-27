@@ -2,9 +2,25 @@
 
 ## Current state
 
-Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37, #39, #41, #49 and #51, all under #20. 3a to 3f-1 and 3m-1 are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; and piles on the table. 3m-2 (moving piles, #51) is next, then 3f-2 (dragging cards off piles, #49).
+Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37, #39, #41, #49, #51 and #56, all under #20. 3a to 3f-1, 3m-1 and 3m-2 are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; piles on the table; and moving piles, with a click on a pile drawing its top card. 3f-2 (dragging cards from the pile viewer, #49) and 3m-3 (merging piles, #56) are next.
 
 ## Done
+
+### Phase 3m-2: Moving piles, and what pressing a pile does (2026-10-27)
+
+- **Moving a pile (TT-4, A11Y-1):** piles move on the table like cards. `movePile` keeps the pile inside the top and left edges, says "Moved P1 main deck on the table.", and is one undo step. A pile already there adds no step.
+  - **Keyboard and single pointer:** Space on a pile (on keyup), or **Move on table** in its menu, starts the 3e placement outline: arrows, Shift+arrows, Enter, Escape, and tap then Place. The outline names what's under it, leaving out the pile itself.
+  - **Mouse and touch:** dragging a pile anywhere on its tile moves the whole pile, with the 3f-1 controller: a 5px mouse slop, a 250ms touch hold, snap and edge clamping, and Escape to cancel. A pile always lands on the table, even over a card or another pile. Over the hand it goes back.
+  - **Look:** the dragged copy keeps the pile's name plate, and where it came from shows faded and dashed.
+- **Pressing a pile (owner decision):**
+  - **Click or tap** draws the top card into the active seat's hand, as Draw 1 does. With the pile's menu open, a click closes the menu instead.
+  - **Right-click, Enter, the menu key or Shift+F10** open the pile's menu. On touch, **a finger held and let go without moving** opens it.
+  - **Double-click** does nothing yet.
+  - Every pile is described by "Click draws the top card. Enter, right-click, or a touch held and let go, opens actions. Space moves the pile." (`PILE_HINT`, through `aria-describedby`).
+- **Bug fix:** a touch's click arrives a little after the finger lifts, so the click that follows a drag was getting through. It could open a hand card's menu, or close a pile's menu that had just opened. The drag now swallows its next pointer click, until the next press or for a second at most. Keyboard clicks are never swallowed.
+- **Code:** `DragSource` is a card or a pile (`pileId`, `onHoldRelease`). The store's `placing` and `drag` can name a pile, and `TableSurface` takes `openPileMenu`.
+- **Tests:** 347 unit tests, including `PileMove.test.tsx` and `movePile` in `piles.test.ts`. The new `e2e/pile-move.spec.ts` covers a mouse drag with axe mid-drag, then a CSV drop, the menu and a click draw on the moved pile; keyboard only; and touch at 375 × 667 with axe. E2E specs open pile menus with a right-click now.
+- **Issues:** #49 is rewritten as "3f-2: Drag cards from the Pile Viewer". Dragging the top card straight off a pile is dropped. Merging piles is #56 (3m-3).
 
 ### Workflow: requirements upkeep and phase-free issues (2026-10-27)
 
@@ -470,15 +486,21 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 
 ## Next
 
-- **3m-2: Moving piles on the table (#51)**, after the owner's go-ahead. Then 3f-2 (#49, dragging cards off piles), 3g to 3l (#29 to #34), and 3n (#39, dark theme) at any point. Open problems that belong to later issues:
-  - 3m-2: decide what dragging a pile means (move the pile) so 3f-2 can pull the top card off without clashing; a pile's press already opens its menu and takes CSV file drops
-  - 3f-2: builds on 3m-2's pile drag
+- **3f-2: Dragging cards from the pile viewer onto the table, a hand or a pile (#49)**, after the owner's go-ahead.
+- **3m-3: Merging piles by dropping one on another (#56)**, after the owner's go-ahead. Piles must never overlap. Dropping a pile on another asks which is deleted and where its cards go, perhaps reusing the Delete pile dialog.
+- Then 3g to 3l (#29 to #34), and 3n (#39, dark theme) at any point. Open problems that belong to later issues:
+  - 3f-2: the viewer is a modal dialog over the drop zones, so it has to get out of the way while a card is dragged
   - 3g: move the Actions button to the selected card
   - 3i: a double-faced badge on table cards (from CardStates)
   - 3j: dragging to reorder the hand, where a click without a drag still opens the menu
 
 ## Open problems
 
+- A pile dropped or placed on another pile still lands on top of it. #56 (3m-3) stops piles overlapping and merges them instead.
+- A pile's menu opened by a touch hold doesn't take focus, because the browser's own mousedown after a touch moves focus back to the pile. A tap outside closes it. Enter on the pile, or a right-click, opens it with focus in the menu.
+- A screen reader's "activate" sends a click, so it draws rather than opening a pile's menu. The pile's description says Enter opens actions, and every draw is announced and can be undone. Check this with VoiceOver on a phone.
+- Touch holds on piles, and Space with iOS Full Keyboard Access, need a check on an iPhone. The touch E2E runs in Chromium only.
+- In E2E, axe skips the faded, dashed placeholder a dragged pile leaves behind (`.card-drag-origin`), because its name text is faded on purpose until the drop.
 - The toolbar's "Fit all cards (0)" also fits piles now. Its label could say so if that confuses.
 - Unit tests that draw only the table move the Solo piles out of the way (`pilesOutOfTheWay` in `actions/testing.ts`), so cards still auto-place from the top-left there.
 - Dragging doesn't scroll the table when the pointer nears its edge. To drop beyond the visible table, pan or zoom out first.
@@ -603,4 +625,9 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 | 2026-10-27 | Piles and cards share one table surface, with no separate pile row | Keeping the pile row above the table | Owner decision: pile dragging (3f-2, 3m-2) works on the same surface as cards |
 | 2026-10-27 | 3m is split: 3m-1 puts piles on the table, 3m-2 (#51) moves them; both come before 3f-2 | One PR | At the owner's go-ahead, to keep the PR small |
 | 2026-10-27 | Add pile lives in the table toolbar, with a visible label | A button on the table | The table is only for cards and piles, and the toolbar is always in view |
+| 2026-10-27 | Dragging a pile anywhere on its tile moves the whole pile, as dragging a card does | Dragging the pile body takes its top card | Owner decision. One meaning for a drag on the table. |
+| 2026-10-27 | A click or tap on a pile draws its top card; right-click, Enter, the menu key or Shift+F10 open its menu; on touch, a held finger let go in place opens it | Click opens the menu; double-click draws; a Take top card handle | Owner decision: drawing is the most common pile action, and no extra controls clutter the table. Enter opening the menu matches table cards, where a click only focuses. |
+| 2026-10-27 | No dragging the top card straight off a pile; #49 becomes dragging cards from the pile viewer | Dragging the top card off the tile | Owner decision. Click draws the card into the hand, and it can be dragged from there. |
+| 2026-10-27 | Piles must never overlap; dropping one on another merges them after a confirmation, in its own issue (#56) | Letting piles stack like cards; doing it in 3m-2 | Owner decision on #54 |
+| 2026-10-27 | A drag swallows the next pointer click until the next press, or a second at most | Swallowing only clicks in the same task | A touch's click arrives after the finger lifts and got through. Keyboard clicks (detail 0) are never swallowed. |
 | 2026-10-27 | Feature issues no longer name a phase; PRs keep `docs/requirements.md` in step with what was built | Keeping the phase dropdown after V1 | Work after V1 isn't organised in phases, and the spec should stay accurate as decisions change during development. |

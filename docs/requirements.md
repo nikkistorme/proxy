@@ -127,7 +127,7 @@ Setup only fills piles; nothing is placed on the table automatically. The user p
 
 - SP-4: Users can add, rename and delete piles during a game, owned by a seat or shared.
 - SP-5: A pile shows its name, card count and top card (face-down by default).
-- SP-6: One-click actions: shuffle, draw 1, draw N to the active seat's hand, reveal top card, and mill N to another pile.
+- SP-6: One-click actions: shuffle, draw 1, draw N to the active seat's hand, reveal top card, and mill N to another pile. A click or tap on a pile draws 1. Right-click, Enter, or a touch held and let go opens the pile's menu with the rest.
 - SP-7: Open any pile at any time in a viewer that shows every card face-up, with search by name and filter by any column.
 - SP-8: From the viewer, move a card to the table, a hand, the top or bottom of any pile. Order inside the pile is kept unless shuffled.
 - SP-9: Peek at the top N cards and reorder or move them before closing.
@@ -149,7 +149,7 @@ The table is a free-form surface with no fixed rows, zones or snapping. Location
 
 **Cards**
 
-- TT-4: Drag cards between the table, hands and piles.
+- TT-4: Drag cards between the table, hands and piles, and drag piles to move them on the table. Cards come off a pile by drawing, Move to…, or dragging them out of the pile viewer, not by dragging the pile itself.
 - TT-5: Rotate in 90° steps, clockwise or counter-clockwise.
 - TT-6: Flip: a double-faced card shows its other face; a single-faced card turns face-down.
 - TT-7: Stack cards by dropping one on another; a stack moves as one and can be fanned out.

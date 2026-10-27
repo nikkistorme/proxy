@@ -27,7 +27,7 @@ test.describe('3m piles on the table', () => {
     // Zoomed out, the menu is still full size and fully on screen.
     await page.getByRole('button', { name: 'Zoom out (−)' }).click();
     await page.getByRole('button', { name: 'Zoom out (−)' }).click();
-    await pile(page, 'Board cards').click();
+    await pile(page, 'Board cards').click({ button: 'right' });
     const menu = page.getByRole('menu', { name: 'Actions for Board cards' });
     await expect(menu).toBeInViewport({ ratio: 1 });
     expect((await menu.getByRole('menuitem').first().boundingBox())?.height).toBeGreaterThanOrEqual(24);

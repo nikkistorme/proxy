@@ -12,9 +12,8 @@ export const DRAG_SLOP = 5;
 /** How long a finger rests on a card before it lifts for dragging. Moving sooner scrolls instead. */
 export const TOUCH_HOLD_MS = 250;
 
-/** A card that can be dragged, and what happens when it's dropped. */
-export interface DragSource {
-  cardId: string;
+/** A card or pile that can be dragged, and what happens when it's dropped. */
+interface DragSourceBase {
   /** The name it's announced by. */
   name: string;
   /** The card as drawn, copied for the card under the pointer. */
@@ -30,6 +29,12 @@ export interface DragSource {
   cancel: () => void;
 }
 
+/**
+ * A card goes to the table, a pile or a hand. A pile only moves on the table, and
+ * a finger that lifts it and lets go without moving opens its menu instead.
+ */
+export type DragSource = DragSourceBase & ({ cardId: string; pileId?: undefined } | { pileId: string; cardId?: undefined; onHoldRelease: () => void });
+
 interface Session {
   store: StoreApi<GameStore>;
   source: DragSource;
@@ -39,6 +44,8 @@ interface Session {
   grab: { x: number; y: number };
   size: { width: number; height: number };
   started: boolean;
+  /** A finger lifted the item and hasn't moved it since. */
+  stillHeld: boolean;
   timer?: number;
   ghost?: HTMLElement;
   over?: Destination;
@@ -47,11 +54,15 @@ interface Session {
 /** One drag at a time, across the table and the hand. */
 let session: Session | undefined;
 
+/** What the store marks as being dragged. */
+const dragged = ({ cardId, pileId }: DragSource) => (pileId === undefined ? { cardId } : { pileId });
+
 const sameDestination = (a: Destination | undefined, b: Destination | undefined) => JSON.stringify(a) === JSON.stringify(b);
 
 /** Where a drop at the pointer lands: a spot on the table, the top of a pile, or a hand. */
 function destinationAt(current: Session, x: number, y: number): Destination | undefined {
-  const zone = document.elementFromPoint?.(x, y)?.closest<HTMLElement>('[data-drop-zone]');
+  // A pile lands on the table wherever it's dropped, even over a card or another pile.
+  const zone = document.elementFromPoint?.(x, y)?.closest<HTMLElement>(current.source.pileId === undefined ? '[data-drop-zone]' : '[data-drop-zone="table"]');
   if (!zone) return undefined;
   const { dropZone: kind, pileId, seatId } = zone.dataset;
   if (kind === 'pile' && pileId) return { zone: 'pile', pileId, position: 'top' };
@@ -89,8 +100,17 @@ function begin(current: Session, x: number, y: number) {
   lift.className = 'drag-ghost__lift';
   const copy = source.visual.cloneNode(true) as HTMLElement;
   // A copy only: nothing in it can be focused or found.
-  copy.querySelectorAll('button').forEach((button) => button.remove());
-  copy.removeAttribute('data-card-id');
+  // A pile's name plate is inside its button, so the copy keeps the button's content.
+  copy.querySelectorAll('button').forEach((button) => {
+    if (source.pileId === undefined) return button.remove();
+    const content = document.createElement('div');
+    content.className = button.className;
+    content.append(...button.childNodes);
+    button.replaceWith(content);
+  });
+  for (const element of [copy, ...copy.querySelectorAll('*')]) {
+    for (const name of ['data-card-id', 'data-drop-zone', 'data-pile-id']) element.removeAttribute(name);
+  }
   copy.classList.add('drag-ghost__card');
   copy.style.transform = source.scale === 1 ? '' : `scale(${source.scale})`;
   lift.append(copy);
@@ -99,7 +119,7 @@ function begin(current: Session, x: number, y: number) {
   document.body.classList.add('is-dragging-card');
   current.ghost = ghost;
   moveGhost(current, x, y);
-  store.getState().setDrag({ cardId: source.cardId });
+  store.getState().setDrag(dragged(source));
   store.getState().announce(`Dragging ${source.name}. Escape cancels.`);
   update(current, x, y);
 }
@@ -111,13 +131,14 @@ function update(current: Session, x: number, y: number) {
   const over = target && !(target.zone !== 'table' && sameDestination(target, current.source.from)) ? target : undefined;
   if (sameDestination(over, current.over)) return;
   current.over = over;
-  current.store.getState().setDrag({ cardId: current.source.cardId, over });
+  current.store.getState().setDrag({ ...dragged(current.source), over });
 }
 
 function onPointerMove(event: globalThis.PointerEvent) {
   const current = session;
   if (!current || event.pointerId !== current.pointerId) return;
   if (current.started) {
+    if (Math.hypot(event.clientX - current.start.x, event.clientY - current.start.y) > DRAG_SLOP) current.stillHeld = false;
     update(current, event.clientX, event.clientY);
     return;
   }
@@ -138,6 +159,7 @@ function onPointerCancel(event: globalThis.PointerEvent) {
   const current = session;
   if (!current || event.pointerId !== current.pointerId) return;
   current.over = undefined;
+  current.stillHeld = false;
   finish(current);
 }
 
@@ -147,6 +169,7 @@ function onKeyDown(event: KeyboardEvent) {
   event.preventDefault();
   event.stopPropagation();
   current.over = undefined;
+  current.stillHeld = false;
   finish(current);
 }
 
@@ -157,20 +180,36 @@ function onContextMenu(event: Event) {
   event.stopPropagation();
 }
 
-/** A drag's own pointerup would otherwise click the card, which opens a hand card's menu. */
-function swallowClick(event: Event) {
-  event.preventDefault();
-  event.stopPropagation();
+/**
+ * A drag's own pointerup would otherwise click the card, which opens a hand card's
+ * menu. A touch's click comes a little after the finger lifts, so this waits for it,
+ * until the next press starts or a second has passed.
+ */
+function swallowNextClick() {
+  const stop = () => {
+    window.removeEventListener('click', swallow, true);
+    window.removeEventListener('pointerdown', stop, true);
+  };
+  const swallow = (event: MouseEvent) => {
+    // A click from the keyboard isn't the drag's.
+    if (event.detail === 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    stop();
+  };
+  window.addEventListener('click', swallow, true);
+  window.addEventListener('pointerdown', stop, true);
+  window.setTimeout(stop, 1000);
 }
 
 /** Ends the drag: drops the card on the target under it, or leaves it where it was. */
 function finish(current: Session) {
-  const { started, over, source } = current;
+  const { started, over, source, stillHeld } = current;
   end();
   if (!started) return;
-  window.addEventListener('click', swallowClick, true);
-  window.setTimeout(() => window.removeEventListener('click', swallowClick, true));
-  if (over && !sameDestination(over, source.from)) source.drop(over);
+  swallowNextClick();
+  if (stillHeld && source.pileId !== undefined) source.onHoldRelease();
+  else if (over && !sameDestination(over, source.from)) source.drop(over);
   else source.cancel();
 }
 
@@ -195,10 +234,11 @@ function onTouchMove(event: TouchEvent) {
 }
 
 /**
- * TT-4: pointer dragging for cards. Call the returned function from a card's
+ * TT-4: pointer dragging for cards and piles. Call the returned function from a card's
  * pointerdown. A mouse drags once it moves past `DRAG_SLOP`; a finger has to rest
  * on the card for `TOUCH_HOLD_MS` first, so a swipe still scrolls. Escape, or a
- * drop outside any target, leaves the card where it was.
+ * drop outside any target, leaves the card where it was. Letting go of a held
+ * pile without moving it opens its menu.
  */
 export function useCardDrag() {
   const store = useGameStoreApi();
@@ -226,6 +266,7 @@ export function useCardDrag() {
         grab: { x: (event.clientX - rect.left) / width, y: (event.clientY - rect.top) / height },
         size: { width: rect.width, height: rect.height },
         started: false,
+        stillHeld: false,
       };
       session = current;
       window.addEventListener('pointermove', onPointerMove);
@@ -236,7 +277,9 @@ export function useCardDrag() {
       if (event.pointerType === 'touch') {
         const { clientX, clientY } = event;
         current.timer = window.setTimeout(() => {
-          if (session === current) begin(current, clientX, clientY);
+          if (session !== current) return;
+          current.stillHeld = true;
+          begin(current, clientX, clientY);
         }, TOUCH_HOLD_MS);
       }
     },

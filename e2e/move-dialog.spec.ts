@@ -18,7 +18,7 @@ const card = (name: string, position: number | string = '\\d+') => new RegExp(`^
 
 /** Loads the 60-row deck (58 cards) into P1 main deck in CSV order, then opens the viewer. */
 async function openViewer(page: Page) {
-  await mainPile(page).click();
+  await mainPile(page).click({ button: 'right' });
   await page.getByRole('menuitemcheckbox', { name: 'Keep CSV order' }).click();
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('menuitem', { name: 'Load CSV…' }).click();

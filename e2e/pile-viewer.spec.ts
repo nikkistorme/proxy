@@ -18,7 +18,7 @@ const tableCards = (page: Page) => page.getByRole('group', { name: /^Table, / })
 
 /** Loads the 60-row deck (58 cards) into P1 main deck in CSV order: Card 01 is on top. */
 async function loadSixty(page: Page) {
-  await mainPile(page).click();
+  await mainPile(page).click({ button: 'right' });
   await page.getByRole('menuitemcheckbox', { name: 'Keep CSV order' }).click();
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('menuitem', { name: 'Load CSV…' }).click();
@@ -31,7 +31,7 @@ test.describe('SP-7, SP-8 pile viewer', () => {
     await loadSixty(page);
 
     // 1. Open the viewer (the pile menu, then View cards…).
-    await mainPile(page).click();
+    await mainPile(page).click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'View cards…' }).click();
     const sheet = viewer(page);
     await expect(sheet).toContainText('58 cards · shown face up to you only');
@@ -81,7 +81,7 @@ test.describe('SP-7, SP-8 pile viewer', () => {
 
   test('filters by column, and has no axe violations while filtered', async ({ page }) => {
     await loadSixty(page);
-    await mainPile(page).click();
+    await mainPile(page).click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'View cards…' }).click();
     const sheet = viewer(page);
     await sheet.getByRole('combobox', { name: 'Type' }).selectOption('Spell');
@@ -103,7 +103,7 @@ test.describe('SP-7 pile viewer on a phone', () => {
 
   test('fills the screen, scrolls its cards, and keeps the footer in view', async ({ page }) => {
     await loadSixty(page);
-    await mainPile(page).click();
+    await mainPile(page).click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'View cards…' }).click();
     const sheet = viewer(page);
     const box = await sheet.boundingBox();

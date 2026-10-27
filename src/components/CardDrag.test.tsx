@@ -175,13 +175,13 @@ describe('TT-4 drag and drop', () => {
     fireEvent.pointerUp(document, { clientX: 80, clientY: HAND_TOP + 30, pointerId: 1, pointerType: 'mouse' });
     expect(status(store)).toBe('Put Imp back.');
     // The drag's own click doesn't open the menu.
-    fireEvent.click(handCard('Imp'));
+    fireEvent.click(handCard('Imp'), { detail: 1 });
     expect(screen.queryByRole('menu')).toBeNull();
 
     await act(() => new Promise((resolve) => window.setTimeout(resolve)));
     fireEvent.pointerDown(handCard('Imp'), { clientX: 52, clientY: HAND_TOP + 10, pointerId: 2, pointerType: 'mouse', button: 0 });
     fireEvent.pointerUp(document, { clientX: 52, clientY: HAND_TOP + 10, pointerId: 2, pointerType: 'mouse' });
-    fireEvent.click(handCard('Imp'));
+    fireEvent.click(handCard('Imp'), { detail: 1 });
     expect(screen.getByRole('menu')).toBeInTheDocument();
   });
 

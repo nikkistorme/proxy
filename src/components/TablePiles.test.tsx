@@ -79,7 +79,7 @@ describe('A11Y-3 piles on the table', () => {
 
   it('after deleting a pile, focus goes to the next pile or card in reading order', async () => {
     const { user } = setup();
-    await user.click(pile('Board cards'));
+    await user.pointer({ keys: '[MouseRight]', target: pile('Board cards') });
     await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
     await waitFor(() => expect(card('Ogre')).toHaveFocus());
     expect(table()).toHaveAccessibleName(/^Table, 2 cards, 2 piles\./);

@@ -16,7 +16,7 @@ const tableCard = (page: Page, name: string) => table(page).getByRole('button', 
 
 /** Loads the 60-row deck in CSV order and puts Card 01 to Card 04 on the table from the viewer. */
 async function fourOnTable(page: Page) {
-  await mainPile(page).click();
+  await mainPile(page).click({ button: 'right' });
   await page.getByRole('menuitemcheckbox', { name: 'Keep CSV order' }).click();
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('menuitem', { name: 'Load CSV…' }).click();

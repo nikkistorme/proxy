@@ -30,7 +30,7 @@ test.describe('SP-4 manage piles', () => {
     await expect(pile(page, 'Env discard')).toHaveAccessibleName('Env discard, empty, 0 cards, Environment');
     await expect(pile(page, 'Env discard')).toBeFocused();
 
-    await pile(page, 'Env discard').click();
+    await pile(page, 'Env discard').click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Rename…' }).click();
     const rename = page.getByRole('dialog', { name: 'Rename Env discard' });
     await rename.getByRole('textbox', { name: 'Name' }).fill('board cards');
@@ -41,13 +41,13 @@ test.describe('SP-4 manage piles', () => {
     await rename.getByRole('button', { name: 'Rename' }).click();
     await expect(pile(page, 'Graveyard')).toBeFocused();
 
-    await pile(page, 'P1 main deck').click();
+    await pile(page, 'P1 main deck').click({ button: 'right' });
     const chooser = page.waitForEvent('filechooser');
     await page.getByRole('menuitem', { name: 'Load CSV…' }).click();
     await (await chooser).setFiles(fixture('double-faced.csv'));
     await page.getByRole('button', { name: 'Done' }).click();
 
-    await pile(page, 'P1 main deck').click();
+    await pile(page, 'P1 main deck').click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Delete…' }).click();
     const del = page.getByRole('dialog', { name: 'Delete P1 main deck?' });
     await del.getByRole('radio', { name: /^Graveyard/ }).check();

@@ -15,7 +15,7 @@ const peekDialog = (page: Page, count: number) => page.getByRole('dialog', { nam
 
 /** Loads the 60-row deck (58 cards) into P1 main deck in CSV order: Card 01 is on top. */
 async function loadSixty(page: Page) {
-  await mainPile(page).click();
+  await mainPile(page).click({ button: 'right' });
   await page.getByRole('menuitemcheckbox', { name: 'Keep CSV order' }).click();
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('menuitem', { name: 'Load CSV…' }).click();
@@ -32,7 +32,7 @@ async function shownNames(page: Page, count: number) {
 test.describe('SP-9 peek', () => {
   test('mouse: peek at 3, put the top card at the bottom of the three, and Done keeps that order', async ({ page }) => {
     await loadSixty(page);
-    await mainPile(page).click();
+    await mainPile(page).click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Peek at top cards…' }).click();
     const countDialog = page.getByRole('dialog', { name: 'Peek at P1 main deck' });
     await expect(countDialog.getByRole('spinbutton', { name: 'Cards to look at' })).toHaveValue('3');
@@ -94,7 +94,7 @@ test.describe('SP-9 peek on a phone', () => {
 
   test('fits the screen, scrolls its cards, and keeps Done in view', async ({ page }) => {
     await loadSixty(page);
-    await mainPile(page).click();
+    await mainPile(page).click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Peek at top cards…' }).click();
     const countDialog = page.getByRole('dialog', { name: 'Peek at P1 main deck' });
     await countDialog.getByRole('spinbutton').fill('5');

@@ -18,7 +18,7 @@ const cardMenu = (page: Page) => page.getByRole('menu', { name: /^Actions for / 
 
 /** double-faced.csv in CSV order: Daylight Hunter (×2), Ember Shard and Locked Vault. Puts the first three on the table. */
 async function threeOnTable(page: Page) {
-  await mainPile(page).click();
+  await mainPile(page).click({ button: 'right' });
   await page.getByRole('menuitemcheckbox', { name: 'Keep CSV order' }).click();
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('menuitem', { name: 'Load CSV…' }).click();

@@ -12,6 +12,7 @@ const ICONS = {
   reveal: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6z',
   mill: 'M4 12h12M12 7l5 5-5 5M20 5v14',
   rename: 'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4',
+  place: 'M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3',
   delete: 'M5 7h14M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
 };
 
@@ -20,6 +21,8 @@ interface PileMenuProps {
   ownerName: string | undefined;
   keepOrder: boolean;
   onView: (pileId: string) => void;
+  /** A11Y-1: starts placing the pile somewhere else on the table. */
+  onMoveOnTable: (pileId: string) => void;
   onLoad: (pileId: string) => void;
   onToggleKeepOrder: (pileId: string) => void;
   onDraw: (pileId: string) => void;
@@ -40,7 +43,7 @@ interface PileMenuProps {
 /** Actions for one pile (SP-1, SP-2, SP-3, SP-4, SP-6, SP-7, SP-9). */
 export function PileMenu(props: PileMenuProps) {
   const { pile, ownerName, keepOrder, onView, onLoad, onToggleKeepOrder, onDraw, onDrawMany, onShuffle, onReveal, onMill, canMill } = props;
-  const { onPeek } = props;
+  const { onPeek, onMoveOnTable } = props;
   const { onRename, onDelete, canDelete, onClose } = props;
   const empty = pile.cardIds.length === 0;
   const entries: MenuEntry[] = [{ kind: 'item', id: 'load', label: 'Load CSV…', icon: ICONS.load, onSelect: () => onLoad(pile.id) }];
@@ -57,6 +60,7 @@ export function PileMenu(props: PileMenuProps) {
     { kind: 'item', id: 'peek', label: 'Peek at top cards…', icon: ICONS.peek, disabled: empty, onSelect: () => onPeek(pile.id) },
     { kind: 'item', id: 'mill', label: 'Mill cards…', icon: ICONS.mill, disabled: empty || !canMill, onSelect: () => onMill(pile.id) },
     { kind: 'item', id: 'view', label: 'View cards…', icon: ICONS.view, shortcut: 'V', onSelect: () => onView(pile.id) },
+    { kind: 'item', id: 'place', label: 'Move on table', icon: ICONS.place, shortcut: 'Space', onSelect: () => onMoveOnTable(pile.id) },
     { kind: 'separator', id: 'sep-2' },
     { kind: 'item', id: 'rename', label: 'Rename…', icon: ICONS.rename, onSelect: () => onRename(pile.id) },
     // An empty pile goes at once, with Undo; one with cards asks where they go, hence the ellipsis.
