@@ -84,16 +84,27 @@ describe('TT-9 enlarge', () => {
     expect(screen.getByRole('dialog', { name: 'Enlarged: Troll' })).toHaveFocus();
   });
 
-  it("doesn't enlarge a face-down card", async () => {
+  it('shows the front of a face-down card by key, but not on hover', async () => {
     const store = setup();
     const troll = store.getState().game.table[0]?.cardId ?? '';
     act(() => {
       store.getState().dispatch((g) => flip(g, { cardId: troll }));
     });
+    fireEvent.pointerEnter(card('Face-down card, Player 1'), mouse);
+    await wait(ENLARGE_HOVER_MS + 50);
+    expect(screen.queryByRole('dialog')).toBeNull();
     card('Face-down card, Player 1').focus();
     await userEvent.keyboard('i');
-    expect(screen.queryByRole('dialog')).toBeNull();
-    expect(store.getState().announcement.text).toBe('A face-down card has nothing to enlarge. Flip it face up first.');
+    expect(screen.getByRole('dialog', { name: 'Enlarged: Troll' })).toHaveFocus();
+    // The card stays face down.
+    expect(store.getState().game.cards[troll]?.side).toBe('down');
+  });
+
+  it('Escape on a card or pile steps back to the table', async () => {
+    setup();
+    card('Troll').focus();
+    await userEvent.keyboard('{Escape}');
+    expect(table()).toHaveFocus();
   });
 
   it('a mouse resting on a card enlarges it after 400ms, without taking focus, and leaving closes it', async () => {

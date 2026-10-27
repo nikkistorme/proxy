@@ -411,10 +411,9 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
   function openEnlarge(cardId: string, takeFocus: boolean) {
     window.clearTimeout(hoverTimer.current);
     window.clearTimeout(leaveTimer.current);
-    if (game.cards[cardId]?.side === 'down') {
-      if (takeFocus) announce('A face-down card has nothing to enlarge. Flip it face up first.');
-      return;
-    }
+    // A face-down card shows its front when asked by key or menu, a quick look at
+    // what it is (owner decision), but never on a passing hover.
+    if (game.cards[cardId]?.side === 'down' && !takeFocus) return;
     const rect = buttons.current[cardId]?.closest('.table-card')?.getBoundingClientRect();
     if (!rect) return;
     setMenu(undefined);
@@ -729,9 +728,11 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
       openMenu(cardId);
       return;
     }
-    if (key === 'Escape' && enlarge) {
+    if (key === 'Escape') {
       event.preventDefault();
-      closeEnlarge(true);
+      // Escape closes the preview first; otherwise it steps back from the card to the table.
+      if (enlarge) closeEnlarge(true);
+      else surfaceRef.current?.focus();
       return;
     }
     if (key === ' ') {
@@ -754,6 +755,12 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
 
   // On a pile, plain arrows move between cards and piles, and Space picks it up; its other keys are the pile's own.
   function onPileKeyDown(pileId: string, event: KeyboardEvent<HTMLButtonElement>) {
+    if (event.key === 'Escape' && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+      // Steps back from the pile to the table, as on a card.
+      event.preventDefault();
+      surfaceRef.current?.focus();
+      return;
+    }
     if (event.key === ' ' && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
       // Picked up on keyup; without this, Space would click the pile and draw.
       event.preventDefault();

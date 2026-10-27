@@ -36,6 +36,7 @@ export function CardEnlarge({ game, cardId, anchor, takeFocus, onClose, onPointe
   const card = game.cards[cardId];
   const definition = card && game.definitions[card.definitionId];
   const back = definition?.back;
+  // A face-down card opens on its front.
   const [side, setSide] = useState<'front' | 'back'>(card?.side === 'back' && back ? 'back' : 'front');
   const ref = useRef<HTMLDivElement>(null);
   const faceRef = useRef<HTMLDivElement>(null);

@@ -81,6 +81,13 @@ test.describe('TT-9 enlarge', () => {
     await page.keyboard.press('i');
     await expect(preview(page)).toHaveCount(0);
     await expect(turned).toBeFocused();
+
+    // Escape steps back from a card or a pile to the table.
+    await page.keyboard.press('Escape');
+    await expect(table(page)).toBeFocused();
+    await mainPile(page).focus();
+    await page.keyboard.press('Escape');
+    await expect(table(page)).toBeFocused();
   });
 
   test('mouse: resting on a card enlarges it beside the card, with no axe violations', async ({ page }) => {
