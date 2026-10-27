@@ -19,7 +19,7 @@ const table = (page: Page) => page.getByRole('group', { name: /^Table, / });
 
 /** double-faced.csv in CSV order, then three cards drawn: Daylight Hunter, Daylight Hunter, Ember Shard. */
 async function threeInHand(page: Page) {
-  await mainPile(page).click();
+  await mainPile(page).click({ button: 'right' });
   await page.getByRole('menuitemcheckbox', { name: 'Keep CSV order' }).click();
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('menuitem', { name: 'Load CSV…' }).click();

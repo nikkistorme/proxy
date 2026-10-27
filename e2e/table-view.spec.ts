@@ -18,7 +18,7 @@ const zoomButton = (page: Page) => page.getByRole('button', { name: /^Zoom \d+%,
 
 /** Loads the 60-row deck in CSV order and puts Card 01 to Card 09 on the table: two rows. */
 async function nineOnTable(page: Page) {
-  await mainPile(page).click();
+  await mainPile(page).click({ button: 'right' });
   await page.getByRole('menuitemcheckbox', { name: 'Keep CSV order' }).click();
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('menuitem', { name: 'Load CSV…' }).click();

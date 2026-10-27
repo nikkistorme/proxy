@@ -16,7 +16,7 @@ import { PeekDialog, type PeekRequest } from './PeekDialog';
 import { PileCountDialog, type CountRequest } from './PileCountDialog';
 import { PileMenu } from './PileMenu';
 import { PileNameDialog, type PileNameRequest } from './PileNameDialog';
-import { PileTile } from './PileTile';
+import { PILE_HINT, PILE_HINT_ID, PileTile } from './PileTile';
 import { PileViewer } from './PileViewer';
 import { seatIdentity } from './seatIdentity';
 import { TableSurface, type PileSlot } from './TableSurface';
@@ -40,6 +40,7 @@ export function GameScreen() {
   const game = useGameStore((s) => s.game);
   const dispatch = useGameStore((s) => s.dispatch);
   const announce = useGameStore((s) => s.announce);
+  const setPlacing = useGameStore((s) => s.setPlacing);
   const showToast = useGameStore((s) => s.showToast);
   const drag = useGameStore((s) => s.drag);
 
@@ -129,6 +130,11 @@ export function GameScreen() {
   function togglePileMenu(pileId: string) {
     const rect = tileRefs.current[pileId]?.getBoundingClientRect();
     setPileMenu((open) => (open?.pileId === pileId || !rect ? undefined : { pileId, rect }));
+  }
+
+  function openPileMenu(pileId: string) {
+    const rect = tileRefs.current[pileId]?.getBoundingClientRect();
+    if (rect) setPileMenu({ pileId, rect });
   }
 
   const chooseFile = useCallback((pileId: string) => {
@@ -354,6 +360,8 @@ export function GameScreen() {
         tabbable={slot.tabbable}
         onFocus={slot.onFocus}
         onKeyDown={slot.onKeyDown}
+        onKeyUp={slot.onKeyUp}
+        onDraw={() => drawFrom(pile.id)}
         onDropFile={(id, file) => void loadFile(id, file)}
         cardOver={drag?.over?.zone === 'pile' && drag.over.pileId === pile.id}
         pile={pile}
@@ -407,7 +415,10 @@ export function GameScreen() {
           <h2 id="table-heading" className="visually-hidden">
             Table
           </h2>
-          <TableSurface renderPile={renderPile} />
+          <TableSurface renderPile={renderPile} openPileMenu={openPileMenu} />
+          <span id={PILE_HINT_ID} hidden>
+            {PILE_HINT}
+          </span>
         </section>
 
         {activeSeat?.hasHand && (
@@ -422,6 +433,7 @@ export function GameScreen() {
             ownerName={seatName(menuPile.ownerSeatId)}
             keepOrder={keepOrder[menuPile.id] ?? false}
             onView={setViewerPileId}
+            onMoveOnTable={(pileId) => setPlacing({ pileId })}
             onLoad={chooseFile}
             onToggleKeepOrder={toggleKeepOrder}
             onDraw={drawFrom}

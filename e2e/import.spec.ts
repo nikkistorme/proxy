@@ -21,7 +21,7 @@ async function chooseFile(page: Page, trigger: () => Promise<void>, name: string
 }
 
 async function loadMain(page: Page, name: string, keepOrder = false) {
-  await mainPile(page).click();
+  await mainPile(page).click({ button: 'right' });
   if (keepOrder) await page.getByRole('menuitemcheckbox', { name: 'Keep CSV order' }).click();
   await chooseFile(page, () => page.getByRole('menuitem', { name: 'Load CSV…' }).click(), name);
 }

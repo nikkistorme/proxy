@@ -37,16 +37,19 @@ export interface TableViewport {
   fitAll: () => void;
 }
 
-/** A11Y-1: a card being placed on the table by keyboard or single pointer. */
-export interface Placing {
-  cardId: string;
-  /** Where focus goes if placing is cancelled, when the card isn't on the table. */
-  returnFocus?: () => void;
-}
+/** A11Y-1: a card or pile being placed on the table by keyboard or single pointer. */
+export type Placing =
+  | {
+      cardId: string;
+      /** Where focus goes if placing is cancelled, when the card isn't on the table. */
+      returnFocus?: () => void;
+    }
+  | { pileId: string };
 
-/** TT-4: a card being dragged, and the drop target under the pointer, if any. */
+/** TT-4: a card or pile being dragged, and the drop target under the pointer, if any. */
 export interface CardDrag {
-  cardId: string;
+  cardId?: string;
+  pileId?: string;
   over?: Destination;
 }
 

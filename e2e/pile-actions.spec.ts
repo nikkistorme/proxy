@@ -16,7 +16,7 @@ const status = (page: Page) => page.getByRole('status');
 
 /** Loads the 60-row deck into P1 main deck in CSV order: Card 01 is on top. */
 async function loadSixty(page: Page) {
-  await mainPile(page).click();
+  await mainPile(page).click({ button: 'right' });
   await page.getByRole('menuitemcheckbox', { name: 'Keep CSV order' }).click();
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('menuitem', { name: 'Load CSV…' }).click();
@@ -42,16 +42,16 @@ test.describe('SP-6 pile actions', () => {
   test('mouse: reveal, shuffle, draw N and mill N', async ({ page }) => {
     await loadSixty(page);
 
-    await mainPile(page).click();
+    await mainPile(page).click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Reveal top card' }).click();
     await expect(mainPile(page)).toHaveAccessibleName('P1 main deck, 58 cards, Player 1, top card face up: Card 01');
 
-    await mainPile(page).click();
+    await mainPile(page).click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Shuffle' }).click();
     await expect(status(page)).toHaveText('Shuffled P1 main deck. 58 cards.');
     await expect(mainPile(page)).toHaveAccessibleName('P1 main deck, 58 cards, Player 1');
 
-    await mainPile(page).click();
+    await mainPile(page).click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Draw cards…' }).click();
     const drawDialog = page.getByRole('dialog', { name: 'Draw from P1 main deck' });
     await drawDialog.getByRole('spinbutton').fill('3');
@@ -62,7 +62,7 @@ test.describe('SP-6 pile actions', () => {
     const names = await hand.getByRole('button').evaluateAll((cards) => cards.map((c) => c.getAttribute('aria-label')?.split('.')[0]));
     expect(names).not.toEqual(['Card 01', 'Card 02', 'Card 03']);
 
-    await mainPile(page).click();
+    await mainPile(page).click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Mill cards…' }).click();
     const millDialog = page.getByRole('dialog', { name: 'Mill from P1 main deck' });
     await millDialog.getByRole('spinbutton').fill('2');
@@ -97,8 +97,9 @@ test.describe('SP-6 pile actions', () => {
     await expect(mainPile(page)).toBeFocused();
 
     await page.keyboard.press('Enter');
-    // End reaches Delete…; up past Rename… and View cards… to Mill cards….
+    // End reaches Delete…; up past Rename…, Move on table and View cards… to Mill cards….
     await page.keyboard.press('End');
+    await page.keyboard.press('ArrowUp');
     await page.keyboard.press('ArrowUp');
     await page.keyboard.press('ArrowUp');
     await page.keyboard.press('ArrowUp');
@@ -113,7 +114,7 @@ test.describe('SP-6 pile actions', () => {
 
   test('an out-of-range number is refused with a message', async ({ page }) => {
     await loadSixty(page);
-    await mainPile(page).click();
+    await mainPile(page).click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Draw cards…' }).click();
     const field = page.getByRole('spinbutton');
     await field.fill('99');
@@ -145,7 +146,7 @@ test.describe('Pile menu on a short screen', () => {
 
   test('stays inside the viewport, scrolls, and shows an inner shadow while more options are hidden', async ({ page }) => {
     await loadSixty(page);
-    await mainPile(page).click();
+    await mainPile(page).click({ button: 'right' });
     const menu = page.getByRole('menu', { name: 'Actions for P1 main deck' });
     const box = await menu.boundingBox();
     // Regression: the menu ran past the bottom of the viewport.

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createSoloGame } from '../model/game';
 import { draw } from './pileActions';
-import { addPile, deletePile, renamePile, validatePileName } from './piles';
+import { addPile, deletePile, movePile, renamePile, validatePileName } from './piles';
 import { gameWithDeck, namesOf, testContext } from './testing';
 
 const MAIN = 'pile-p1-main';
@@ -89,5 +89,28 @@ describe('SP-4 pile names', () => {
     expect(validatePileName(game, 'board cards')).toBe('There is already a pile called Board cards');
     expect(validatePileName(game, 'Discard')).toBeUndefined();
     expect(validatePileName(game, 'BOARD CARDS', BOARD)).toBeUndefined();
+  });
+});
+
+describe('TT-4 move a pile on the table', () => {
+  it('moves a pile to a spot, keeping its cards', () => {
+    const game = gameWithDeck();
+    const { state, announcement } = movePile(game, { pileId: MAIN, position: { x: 300, y: 250 } });
+    const pile = state.piles.find((p) => p.id === MAIN);
+    expect(pile).toMatchObject({ x: 300, y: 250, cardIds: game.piles.find((p) => p.id === MAIN)?.cardIds });
+    expect(announcement).toBe('Moved P1 main deck on the table.');
+  });
+
+  it('keeps the pile inside the table’s top and left edges', () => {
+    const { state } = movePile(gameWithDeck(), { pileId: MAIN, position: { x: -40, y: -10 } });
+    expect(state.piles.find((p) => p.id === MAIN)).toMatchObject({ x: 0, y: 0 });
+  });
+
+  it('changes nothing when the pile is already there', () => {
+    const game = gameWithDeck();
+    const { x, y } = game.piles.find((p) => p.id === MAIN) ?? { x: 0, y: 0 };
+    const result = movePile(game, { pileId: MAIN, position: { x, y } });
+    expect(result.state).toBe(game);
+    expect(result.announcement).toBe('P1 main deck is already there.');
   });
 });

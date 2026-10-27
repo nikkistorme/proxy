@@ -13,7 +13,10 @@ interface PileTileProps {
   /** The top card's front, when it has been revealed. */
   revealedTop: CardFaceData | undefined;
   menuOpen: boolean;
+  /** Opens the menu, or closes it if it's open. */
   onOpenMenu: () => void;
+  /** SP-6: a click or tap draws the top card into the active seat's hand. */
+  onDraw: () => void;
   /** Gives the parent this tile's button, for returning focus to it. */
   registerTile: (pileId: string, element: HTMLButtonElement | null) => void;
   /** SP-1: a file dropped on the pile. Load CSV… in the menu is the non-drag way. */
@@ -24,7 +27,12 @@ interface PileTileProps {
   tabbable?: boolean;
   onFocus?: () => void;
   onKeyDown?: (event: KeyboardEvent<HTMLButtonElement>) => void;
+  onKeyUp?: (event: KeyboardEvent<HTMLButtonElement>) => void;
 }
+
+/** Says what a pile does when pressed, for every pile on the table. */
+export const PILE_HINT_ID = 'pile-hint';
+export const PILE_HINT = 'Click draws the top card. Enter, right-click, or a touch held and let go, opens actions. Space moves the pile.';
 
 /**
  * SP-5: a pile shows its name, card count and top card, face down unless revealed.
@@ -32,6 +40,9 @@ interface PileTileProps {
  * The card back or revealed face is a decorative layer under the button, and
  * the button holds only the plate text. Its label then always starts with the
  * text you can see (WCAG 2.5.3), whatever the top card says.
+ *
+ * A click draws, and right-click, Enter, the menu key or Shift+F10 open the menu,
+ * like a table card's. The table adds dragging and Space to move the pile.
  */
 export function PileTile({
   pile,
@@ -39,12 +50,14 @@ export function PileTile({
   revealedTop,
   menuOpen,
   onOpenMenu,
+  onDraw,
   registerTile,
   onDropFile,
   cardOver = false,
   tabbable = true,
   onFocus,
   onKeyDown,
+  onKeyUp,
 }: PileTileProps) {
   const ref = useCallback((element: HTMLButtonElement | null) => registerTile(pile.id, element), [registerTile, pile.id]);
   const [dropTarget, setDropTarget] = useState(false);
@@ -119,16 +132,34 @@ export function PileTile({
         type="button"
         className={count === 0 ? 'pile-tile__button pile-tile__button--empty' : 'pile-tile__button'}
         aria-label={label}
+        aria-describedby={PILE_HINT_ID}
         aria-haspopup="menu"
         aria-expanded={menuOpen}
         tabIndex={tabbable ? 0 : -1}
         // Safari doesn't focus a button on click, and a clicked pile must become the table's current one.
+        // With the menu open, a press closes it rather than drawing.
         onClick={(event) => {
+          event.currentTarget.focus();
+          if (menuOpen) onOpenMenu();
+          else onDraw();
+        }}
+        onContextMenu={(event) => {
+          event.preventDefault();
           event.currentTarget.focus();
           onOpenMenu();
         }}
         onFocus={onFocus}
-        onKeyDown={onKeyDown}
+        onKeyDown={(event) => {
+          const { key } = event;
+          if (!event.altKey && !event.ctrlKey && !event.metaKey && (key === 'Enter' || key === 'ContextMenu' || (key === 'F10' && event.shiftKey))) {
+            // Not a click, which would draw.
+            event.preventDefault();
+            onOpenMenu();
+            return;
+          }
+          onKeyDown?.(event);
+        }}
+        onKeyUp={onKeyUp}
         // The menu opens outside the tile, so its outside-press check would close it
         // and this click reopen it. Pressing the pile with its menu open closes it instead.
         onPointerDown={(event) => {

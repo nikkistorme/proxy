@@ -5,8 +5,9 @@ import { clampZoom, fitAll, GRID_X, GRID_Y, MAX_ZOOM, scrollAfterZoom, snapToGri
 import { bringToFront, deleteCard, duplicate, flip, rotate, sendToBack, shownName } from '../actions/cardActions';
 import { cardName } from '../actions/helpers';
 import { moveCard, type Destination } from '../actions/moveCard';
+import { movePile } from '../actions/piles';
 import type { GameState, Pile, Rotation } from '../model/game';
-import { useGameStore } from '../store/gameStore';
+import { useGameStore, type Placing } from '../store/gameStore';
 import { useCardDrag } from './cardDrag';
 import { CardDetailsDialog } from './CardDetailsDialog';
 import { CardMenu, type CardCommand } from './CardMenu';
@@ -30,9 +31,11 @@ const PAN_STEP = 64;
 /** How far a click can wander and still count as a click, not a pan, in screen px. */
 const CLICK_SLOP = 5;
 
-/** The card being placed and where its outline is (A11Y-1). */
+/** The card or pile being placed and where its outline is (A11Y-1). */
 interface Placement {
-  cardId: string;
+  /** The card's or pile's id. */
+  id: string;
+  pile: boolean;
   x: number;
   y: number;
   rotation: Rotation;
@@ -44,6 +47,7 @@ export interface PileSlot {
   register: (element: HTMLButtonElement | null) => void;
   onFocus: () => void;
   onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => void;
+  onKeyUp: (event: KeyboardEvent<HTMLButtonElement>) => void;
 }
 
 const plural = (count: number, word: string) => `${count} ${count === 1 ? word : `${word}s`}`;
@@ -60,9 +64,22 @@ function placeable(game: GameState, cardId: string): boolean {
   return game.table.some((e) => e.cardId === cardId) || Object.values(game.hands).some((hand) => hand.includes(cardId));
 }
 
+/** The card or pile being placed, while it can still be: an undo can take it away. */
+function placingId(game: GameState, placing: Placing | undefined): string | undefined {
+  if (!placing) return undefined;
+  if ('pileId' in placing) return game.piles.some((p) => p.id === placing.pileId) ? placing.pileId : undefined;
+  return placeable(game, placing.cardId) ? placing.cardId : undefined;
+}
+
+function placementName(game: GameState, placement: Placement): string {
+  return placement.pile ? (game.piles.find((p) => p.id === placement.id)?.name ?? '') : placingName(game, placement.id);
+}
+
 interface TableSurfaceProps {
   /** Draws a pile on the table. The game screen owns piles' menus and dialogs, so it draws them. */
   renderPile?: (pile: Pile, slot: PileSlot) => ReactNode;
+  /** A finger held a pile and let go without moving it. */
+  openPileMenu?: (pileId: string) => void;
 }
 
 /**
@@ -70,7 +87,7 @@ interface TableSurfaceProps {
  * and zooms (TT-1) inside its own viewport. The table is one Tab stop, and arrow
  * keys move focus to the nearest card or pile in that direction (A11Y-3).
  */
-export function TableSurface({ renderPile }: TableSurfaceProps = {}) {
+export function TableSurface({ renderPile, openPileMenu }: TableSurfaceProps = {}) {
   const game = useGameStore((s) => s.game);
   const { zoom, snap } = useGameStore((s) => s.view);
   const setView = useGameStore((s) => s.setView);
@@ -410,28 +427,30 @@ export function TableSurface({ renderPile }: TableSurfaceProps = {}) {
     setDetailsCardId(undefined);
   }
 
-  // A11Y-1: placing starts when the store names a card, from here, the hand or the Move to… dialog.
-  // The outline starts where the card is, or at the next free spot for a card coming from the hand.
-  const placingId = placing && placeable(game, placing.cardId) ? placing.cardId : undefined;
-  if (placingId !== placement?.cardId) {
-    const entry = game.table.find((e) => e.cardId === placingId);
-    const start = entry ?? { ...freeSpot(game, columnsInView), rotation: 0 as Rotation };
-    setPlacement(placingId ? { cardId: placingId, x: start.x, y: start.y, rotation: start.rotation } : undefined);
-    if (placingId) setMenu(undefined);
+  // A11Y-1: placing starts when the store names a card or pile, from here, the hand, a pile's
+  // menu or the Move to… dialog. The outline starts where the card or pile is, or at the next
+  // free spot for a card coming from the hand.
+  const placedId = placingId(game, placing);
+  if (placedId !== placement?.id) {
+    const pile = game.piles.find((p) => p.id === placedId);
+    const entry = game.table.find((e) => e.cardId === placedId);
+    const start = pile ? { x: pile.x, y: pile.y, rotation: 0 as Rotation } : (entry ?? { ...freeSpot(game, columnsInView), rotation: 0 as Rotation });
+    setPlacement(placedId ? { id: placedId, pile: pile !== undefined, x: start.x, y: start.y, rotation: start.rotation } : undefined);
+    if (placedId) setMenu(undefined);
   }
 
-  // An undo can take away the card being placed.
+  // An undo can take away the card or pile being placed.
   useEffect(() => {
-    if (placing && !placeable(game, placing.cardId)) setPlacing(undefined);
+    if (placing && !placingId(game, placing)) setPlacing(undefined);
   }, [placing, game, setPlacing]);
 
-  const startedId = placement?.cardId;
+  const startedId = placement?.id;
   useEffect(() => {
     if (!startedId) return;
     const { game: current } = latest.current;
     const spot = latest.current.placement;
     dismissToast();
-    if (spot) announce(`Picked up ${placingName(current, startedId)}. ${describeSpot(spot)}. Arrow keys move it, Enter places it, Escape cancels.`);
+    if (spot) announce(`Picked up ${placementName(current, spot)}. ${describeSpot(spot)}. Arrow keys move it, Enter places it, Escape cancels.`);
     // After any dialog that started it has closed and put focus back.
     window.setTimeout(() => placementRef.current?.focus());
   }, [startedId, dismissToast, announce]);
@@ -449,8 +468,8 @@ export function TableSurface({ renderPile }: TableSurfaceProps = {}) {
     const box = cardBox({ ...spot, rotation: placement.rotation });
     // The topmost card under the outline, then any pile.
     const under = [
-      ...[...game.table].reverse().filter((e) => e.cardId !== placement.cardId && overlaps(cardBox(e), box)).map((e) => shownName(game, e.cardId)),
-      ...piles.filter((p) => overlaps(pileBox(p), box)).map((p) => p.name),
+      ...[...game.table].reverse().filter((e) => e.cardId !== placement.id && overlaps(cardBox(e), box)).map((e) => shownName(game, e.cardId)),
+      ...piles.filter((p) => p.id !== placement.id && overlaps(pileBox(p), box)).map((p) => p.name),
     ];
     const over = under[0] ? `, over ${under[0]}${under.length > 1 ? ` and ${under.length - 1} more` : ''}` : '';
     announce(`${describeSpot(spot)}${over}.`);
@@ -458,17 +477,18 @@ export function TableSurface({ renderPile }: TableSurfaceProps = {}) {
 
   function placeCard() {
     if (!placement) return;
-    const { cardId, x, y } = placement;
-    dispatch((g, context) => moveCard(g, { cardId, to: { zone: 'table', position: { x, y } } }, context));
-    pendingFocus.current = { card: cardId };
+    const { id, x, y } = placement;
+    if (placement.pile) dispatch((g) => movePile(g, { pileId: id, position: { x, y } }));
+    else dispatch((g, context) => moveCard(g, { cardId: id, to: { zone: 'table', position: { x, y } } }, context));
+    pendingFocus.current = { card: id };
     setPlacing(undefined);
   }
 
   function cancelPlacing() {
     if (!placement || !placing) return;
-    announce(`Put ${placingName(game, placement.cardId)} back.`);
-    if (game.table.some((e) => e.cardId === placement.cardId)) pendingFocus.current = { card: placement.cardId };
-    else placing.returnFocus?.();
+    announce(`Put ${placementName(game, placement)} back.`);
+    if (placement.pile || game.table.some((e) => e.cardId === placement.id)) pendingFocus.current = { card: placement.id };
+    else if ('returnFocus' in placing) placing.returnFocus?.();
     setPlacing(undefined);
   }
 
@@ -543,6 +563,33 @@ export function TableSurface({ renderPile }: TableSurfaceProps = {}) {
     });
   }
 
+  // TT-4: dragging a pile moves it on the table. A held finger let go without moving opens its menu.
+  function onPilePointerDown(pileId: string, event: PointerEvent<HTMLDivElement>) {
+    const pile = piles.find((p) => p.id === pileId);
+    if (!pile) return;
+    startDrag(event, {
+      pileId,
+      name: pile.name,
+      visual: event.currentTarget,
+      scale: zoom,
+      rotation: 0,
+      from: { zone: 'table', position: { x: pile.x, y: pile.y } },
+      drop: (to) => {
+        if (to.zone !== 'table' || !to.position) return;
+        pendingFocus.current = { card: pileId };
+        dispatch((g) => movePile(g, { pileId, position: to.position ?? pile }));
+      },
+      cancel: () => {
+        announce(`Put ${pile.name} back.`);
+        pendingFocus.current = { card: pileId };
+      },
+      onHoldRelease: () => {
+        buttons.current[pileId]?.focus();
+        openPileMenu?.(pileId);
+      },
+    });
+  }
+
   // Card keys only work while a card has focus, so single keys are safe (WCAG 2.1.4).
   const CARD_KEYS: Record<string, CardCommand> = { r: 'rotate', R: 'rotate-back', f: 'flip', m: 'move', Delete: 'delete', Backspace: 'delete' };
 
@@ -579,13 +626,25 @@ export function TableSurface({ renderPile }: TableSurfaceProps = {}) {
     if (next) buttons.current[next]?.focus();
   }
 
-  // On a pile, plain arrows move between cards and piles; its other keys are the pile's own.
+  // On a pile, plain arrows move between cards and piles, and Space picks it up; its other keys are the pile's own.
   function onPileKeyDown(pileId: string, event: KeyboardEvent<HTMLButtonElement>) {
+    if (event.key === ' ' && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+      // Picked up on keyup; without this, Space would click the pile and draw.
+      event.preventDefault();
+      return;
+    }
     const direction = ARROWS[event.key];
     if (!direction || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) return;
     event.preventDefault();
     const next = nearestInDirection(items, pileId, direction);
     if (next) buttons.current[next]?.focus();
+  }
+
+  function onPileKeyUp(pileId: string, event: KeyboardEvent<HTMLButtonElement>) {
+    if (event.key !== ' ' || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    event.preventDefault();
+    setPlacing({ pileId });
+    pendingFocus.current = 'none';
   }
 
   function onCardKeyUp(cardId: string, event: KeyboardEvent<HTMLButtonElement>) {
@@ -650,6 +709,9 @@ export function TableSurface({ renderPile }: TableSurfaceProps = {}) {
                   register={(element) => register(pile.id, element)}
                   onFocus={() => setActiveId(pile.id)}
                   onKeyDown={(event) => onPileKeyDown(pile.id, event)}
+                  onKeyUp={(event) => onPileKeyUp(pile.id, event)}
+                  onPointerDown={(event) => onPilePointerDown(pile.id, event)}
+                  dragging={drag?.pileId === pile.id}
                 />
               ))}
             {game.table.map((entry, index) => (
@@ -682,7 +744,7 @@ export function TableSurface({ renderPile }: TableSurfaceProps = {}) {
                 type="button"
                 className="table-placement"
                 style={{ left: outline.left, top: outline.top, width: outline.right - outline.left, height: outline.bottom - outline.top }}
-                aria-label={`Placing ${placingName(game, placement.cardId)}, ${describeSpot(placement)}. Arrow keys move, Enter places, Escape cancels.`}
+                aria-label={`Placing ${placementName(game, placement)}, ${describeSpot(placement)}. Arrow keys move, Enter places, Escape cancels.`}
                 onKeyDown={onPlacementKeyDown}
                 onKeyUp={(event) => {
                   if (event.key !== ' ' || event.altKey || event.ctrlKey || event.metaKey) return;
@@ -690,7 +752,7 @@ export function TableSurface({ renderPile }: TableSurfaceProps = {}) {
                   placeCard();
                 }}
               >
-                <span aria-hidden="true">{placingName(game, placement.cardId)}</span>
+                <span aria-hidden="true">{placementName(game, placement)}</span>
               </button>
             )}
           </div>
@@ -704,15 +766,24 @@ export function TableSurface({ renderPile }: TableSurfaceProps = {}) {
       )}
       <MoveDialog key={moveRequest?.cardId ?? 'closed'} request={moveRequest} onConfirm={confirmMove} onChooseSpot={chooseSpot} onClose={closeMove} />
       <CardDetailsDialog game={game} cardId={detailsCardId} onClose={closeDetails} />
-      {placement && <PlacementBar name={placingName(game, placement.cardId)} onPlace={placeCard} onCancel={cancelPlacing} />}
+      {placement && <PlacementBar name={placementName(game, placement)} onPlace={placeCard} onCancel={cancelPlacing} />}
     </>
   );
 }
 
+interface TablePileProps extends PileSlot {
+  pile: Pile;
+  render: (pile: Pile, slot: PileSlot) => ReactNode;
+  /** TT-4: a press that may become a drag. */
+  onPointerDown: (event: PointerEvent<HTMLDivElement>) => void;
+  /** This pile is being dragged, so it shows where it came from. */
+  dragging: boolean;
+}
+
 /** A pile's spot on the table, drawn by whoever owns the pile's menus and dialogs. */
-function TablePile({ pile, render, ...slot }: PileSlot & { pile: Pile; render: (pile: Pile, slot: PileSlot) => ReactNode }) {
+function TablePile({ pile, render, onPointerDown, dragging, ...slot }: TablePileProps) {
   return (
-    <div className="table-pile" style={{ left: pile.x, top: pile.y }}>
+    <div className={dragging ? 'table-pile card-drag-source card-drag-origin' : 'table-pile card-drag-source'} style={{ left: pile.x, top: pile.y }} onPointerDown={onPointerDown}>
       {render(pile, slot)}
     </div>
   );

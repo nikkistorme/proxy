@@ -22,7 +22,7 @@ function renderGame() {
 const mainTile = () => screen.getByRole('button', { name: /^P1 main deck,/ });
 
 async function loadIntoMain(user: ReturnType<typeof userEvent.setup>, text: string, options: { keepOrder?: boolean } = {}) {
-  await user.click(mainTile());
+  await user.pointer({ keys: '[MouseRight]', target: mainTile() });
   if (options.keepOrder) await user.click(screen.getByRole('menuitemcheckbox', { name: 'Keep CSV order' }));
   await user.click(screen.getByRole('menuitem', { name: /^(Load CSV|Reload)/ }));
   await user.upload(screen.getByTestId('csv-file'), csvFile(text));
@@ -83,7 +83,7 @@ describe('SP-1 load a deck into a pile', () => {
     await user.click(screen.getByRole('button', { name: 'Draw' }));
     await user.click(screen.getByRole('button', { name: 'Draw' }));
 
-    await user.click(mainTile());
+    await user.pointer({ keys: '[MouseRight]', target: mainTile() });
     expect(screen.getByRole('menuitem', { name: 'Reload deck.csv…' })).toBeInTheDocument();
     await user.click(screen.getByRole('menuitem', { name: 'Reload deck.csv…' }));
     await user.upload(screen.getByTestId('csv-file'), csvFile('name,qty\nImp,1\n'));
@@ -99,7 +99,7 @@ describe('SP-6 draw', () => {
 
     await user.click(screen.getByRole('button', { name: 'Draw' }));
     await user.keyboard('d');
-    await user.click(mainTile());
+    await user.pointer({ keys: '[MouseRight]', target: mainTile() });
     await user.click(screen.getByRole('menuitem', { name: 'Draw 1' }));
 
     const hand = screen.getByRole('list', { name: /^Player 1's hand, 3 cards\./ });
@@ -113,7 +113,7 @@ describe('SP-6 draw', () => {
     await loadIntoMain(user, 'name\nImp\n');
     await user.click(screen.getByRole('button', { name: 'Done' }));
     await user.keyboard('{Control>}d{/Control}');
-    await user.click(mainTile());
+    await user.pointer({ keys: '[MouseRight]', target: mainTile() });
     await user.keyboard('d');
     expect(screen.getByText('No cards in hand. Draw from Player 1\'s deck to start.')).toBeInTheDocument();
   });
@@ -140,7 +140,7 @@ describe('Pile menu focus', () => {
 
   it('returns focus to the pile when the menu closes with Escape', async () => {
     const user = renderGame();
-    await user.click(mainTile());
+    await user.pointer({ keys: '[MouseRight]', target: mainTile() });
     expect(screen.getByRole('menu', { name: 'Actions for P1 main deck' })).toBeInTheDocument();
     expect(mainTile()).toHaveAttribute('aria-expanded', 'true');
     await user.keyboard('{Escape}');
@@ -148,11 +148,12 @@ describe('Pile menu focus', () => {
     expect(mainTile()).toHaveFocus();
   });
 
-  it('closes the menu when its pile is clicked again', async () => {
+  it('closes the menu when its pile is clicked again, without drawing', async () => {
     const user = renderGame();
-    await user.click(mainTile());
+    await user.pointer({ keys: '[MouseRight]', target: mainTile() });
     await user.click(mainTile());
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).not.toHaveTextContent(/drew|No cards drawn/);
   });
 });
 
@@ -165,7 +166,7 @@ describe('SP-6 pile menu actions', () => {
   }
 
   async function choose(user: ReturnType<typeof userEvent.setup>, item: string) {
-    await user.click(mainTile());
+    await user.pointer({ keys: '[MouseRight]', target: mainTile() });
     await user.click(screen.getByRole('menuitem', { name: item }));
   }
 
@@ -207,7 +208,7 @@ describe('SP-6 pile menu actions', () => {
 
   it('leaves Draw, Shuffle, Reveal and Mill unavailable on an empty pile', async () => {
     const user = renderGame();
-    await user.click(mainTile());
+    await user.pointer({ keys: '[MouseRight]', target: mainTile() });
     for (const name of ['Draw 1', 'Draw cards…', 'Shuffle', 'Reveal top card', 'Mill cards…']) {
       expect(screen.getByRole('menuitem', { name })).toHaveAttribute('aria-disabled', 'true');
     }
@@ -270,7 +271,7 @@ describe('SP-4 manage piles', () => {
 
   it('renames a pile from its menu and keeps focus on it', async () => {
     const user = renderGame();
-    await user.click(screen.getByRole('button', { name: /^Board cards,/ }));
+    await user.pointer({ keys: '[MouseRight]', target: screen.getByRole('button', { name: /^Board cards,/ }) });
     await user.click(screen.getByRole('menuitem', { name: 'Rename…' }));
     await user.keyboard('Tokens{Enter}');
     expect(screen.getByRole('button', { name: /^Tokens,/ })).toHaveFocus();
@@ -279,7 +280,7 @@ describe('SP-4 manage piles', () => {
 
   it('deletes an empty pile and moves focus to the next one', async () => {
     const user = renderGame();
-    await user.click(screen.getByRole('button', { name: /^Environment deck,/ }));
+    await user.pointer({ keys: '[MouseRight]', target: screen.getByRole('button', { name: /^Environment deck,/ }) });
     // Empty, so it goes without asking, and the toast offers Undo.
     await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
     expect(screen.queryByRole('dialog')).toBeNull();
@@ -295,7 +296,7 @@ describe('SP-4 manage piles', () => {
     const user = renderGame();
     await loadIntoMain(user, 'name\nImp\nOgre\n');
     await user.click(screen.getByRole('button', { name: 'Done' }));
-    await user.click(mainTile());
+    await user.pointer({ keys: '[MouseRight]', target: mainTile() });
     await user.click(screen.getByRole('menuitem', { name: 'Delete…' }));
     await user.click(screen.getByRole('radio', { name: /^Board cards/ }));
     await user.click(screen.getByRole('button', { name: 'Delete pile' }));
@@ -307,7 +308,7 @@ describe('SP-4 manage piles', () => {
     const user = renderGame();
     await loadIntoMain(user, 'name\nImp\n');
     await user.click(screen.getByRole('button', { name: 'Done' }));
-    await user.click(mainTile());
+    await user.pointer({ keys: '[MouseRight]', target: mainTile() });
     await user.click(screen.getByRole('menuitem', { name: 'Delete…' }));
     // jsdom doesn't close a dialog on Esc from a radio button; E2E covers Esc in real browsers.
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
@@ -317,7 +318,7 @@ describe('SP-4 manage piles', () => {
   it('moves focus to Add pile after deleting the last pile, and says when there is nothing to draw from', async () => {
     const user = renderGame();
     for (const name of [/^P1 main deck,/, /^Environment deck,/, /^Board cards,/]) {
-      await user.click(screen.getByRole('button', { name }));
+      await user.pointer({ keys: '[MouseRight]', target: screen.getByRole('button', { name }) });
       await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
     }
     expect(pileLabels()).toEqual([]);
@@ -332,10 +333,10 @@ describe('SP-4 manage piles', () => {
     await loadIntoMain(user, 'name\nImp\n');
     await user.click(screen.getByRole('button', { name: 'Done' }));
     for (const name of [/^Environment deck,/, /^Board cards,/]) {
-      await user.click(screen.getByRole('button', { name }));
+      await user.pointer({ keys: '[MouseRight]', target: screen.getByRole('button', { name }) });
       await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
     }
-    await user.click(mainTile());
+    await user.pointer({ keys: '[MouseRight]', target: mainTile() });
     expect(screen.getByRole('menuitem', { name: 'Delete…' })).toHaveAttribute('aria-disabled', 'true');
   });
 });

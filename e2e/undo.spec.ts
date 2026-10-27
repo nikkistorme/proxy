@@ -19,7 +19,7 @@ const redoButton = (page: Page) => page.getByRole('button', { name: /^Redo \(Ctr
 
 /** Loads the 60-row deck into P1 main deck in CSV order: Card 01 is on top. */
 async function loadSixty(page: Page) {
-  await mainPile(page).click();
+  await mainPile(page).click({ button: 'right' });
   await page.getByRole('menuitemcheckbox', { name: 'Keep CSV order' }).click();
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('menuitem', { name: 'Load CSV…' }).click();
@@ -38,12 +38,12 @@ test.describe('TT-15 undo and redo', () => {
     await page.mouse.move(400, 400);
     await expect(tooltip).toBeHidden();
     await loadSixty(page);
-    await mainPile(page).click();
+    await mainPile(page).click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Reveal top card' }).click();
     const revealed = 'P1 main deck, 58 cards, Player 1, top card face up: Card 01';
     await expect(mainPile(page)).toHaveAccessibleName(revealed);
 
-    await mainPile(page).click();
+    await mainPile(page).click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Shuffle' }).click();
     await expect(mainPile(page)).not.toHaveAccessibleName(revealed);
 
