@@ -1,0 +1,64 @@
+/* TT-14: Dice & coins, from the Main board's dice panel. */
+.dice__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.dice__button {
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--control);
+  border-radius: var(--radius-control);
+  background: var(--panel);
+  color: var(--ink);
+  font-family: var(--font-num);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dice__result {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 64px;
+  margin-top: var(--space-3);
+  padding: 10px 14px;
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-menu);
+  background: var(--bg);
+}
+
+.dice__value {
+  font-family: var(--font-num);
+  font-size: 40px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  animation: dice-result-in 220ms ease-out;
+}
+
+.dice__die {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.dice__empty {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* A short pop on each new result; under reduced motion it just appears. */
+@keyframes dice-result-in {
+  from {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dice__value {
+    animation: none;
+  }
+}

@@ -7,6 +7,7 @@ import { importCards } from '../csv/importCards';
 import type { SessionState, Pile } from '../model/session';
 import { readingOrder, tableItems } from '../model/tableNavigation';
 import { useSessionStore } from '../store/sessionStore';
+import { DiceDialog } from './DiceDialog';
 import { DeletePileDialog, type DeletePileRequest, type MergeChoice, type MergePilesRequest } from './DeletePileDialog';
 import './SessionScreen.css';
 import { HandTray } from './HandTray';
@@ -19,6 +20,7 @@ import { PileNameDialog, type PileNameRequest } from './PileNameDialog';
 import { PILE_HINT, PILE_HINT_ID, PileTile } from './PileTile';
 import { PileViewer } from './PileViewer';
 import { SeatCounter } from './SeatCounter';
+import { SessionMenu } from './SessionMenu';
 import { seatIdentity } from './seatIdentity';
 import { TableSurface, type PileSlot } from './TableSurface';
 import { TableTools } from './TableTools';
@@ -55,6 +57,8 @@ export function SessionScreen() {
   const [deleteRequest, setDeleteRequest] = useState<DeletePileRequest | MergePilesRequest>();
   const [viewerPileId, setViewerPileId] = useState<string>();
   const [peekRequest, setPeekRequest] = useState<PeekRequest>();
+  const [diceOpen, setDiceOpen] = useState(false);
+  const diceButtonRef = useRef<HTMLButtonElement>(null);
   /** A pile id, or ADD_PILE, to focus once it has rendered (after adding or deleting a pile). */
   const pendingFocusRef = useRef<string>(undefined);
   const addPileRef = useRef<HTMLButtonElement>(null);
@@ -405,6 +409,7 @@ export function SessionScreen() {
         </svg>
         <h1 className="session__title">Proxy</h1>
         <span className="session__format">Solo PvE</span>
+        <SessionMenu />
         <TableTools addPileRef={addPileRef} onAddPile={() => setNameRequest({ mode: 'add', defaultOwnerId: session.activeSeatId })} />
       </header>
 
@@ -435,6 +440,18 @@ export function SessionScreen() {
             );
           })}
         </ul>
+        {session.usesDice && (
+          <button ref={diceButtonRef} type="button" className="seat-bar__dice" onClick={() => setDiceOpen(true)}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true">
+              <rect x="4" y="4" width="16" height="16" rx="3" />
+              <circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none" />
+              <circle cx="15" cy="15" r="1.3" fill="currentColor" stroke="none" />
+              <circle cx="15" cy="9" r="1.3" fill="currentColor" stroke="none" />
+              <circle cx="9" cy="15" r="1.3" fill="currentColor" stroke="none" />
+            </svg>
+            Dice &amp; coins
+          </button>
+        )}
       </section>
 
       <main className="session__main">
@@ -499,6 +516,13 @@ export function SessionScreen() {
         request={countRequest}
         onConfirm={confirmCount}
         onClose={closeCount}
+      />
+      <DiceDialog
+        open={diceOpen}
+        onClose={() => {
+          setDiceOpen(false);
+          diceButtonRef.current?.focus();
+        }}
       />
       <PeekDialog key={peekRequest ? `peek-${peekRequest.pileId}` : 'closed'} request={peekRequest} onClose={closePeek} />
       <PileViewer key={viewerPileId ?? 'closed'} pileId={viewerPileId} onClose={closeViewer} />

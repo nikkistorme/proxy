@@ -32,7 +32,9 @@
 
 .seat-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  gap: var(--space-2) 10px;
   min-height: 52px;
   padding: var(--space-1) var(--space-4);
   border-bottom: 1px solid var(--divider);
@@ -58,6 +60,24 @@
   border: 1px solid var(--divider);
   border-radius: var(--radius-menu);
   font-size: 14px;
+}
+
+/* TT-14: at the seat bar's right end, where the Main board shows the round. */
+.seat-bar__dice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  margin-left: auto;
+  padding: 0 10px;
+  border: 1px solid var(--control);
+  border-radius: var(--radius-control);
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .seat-bar__counters {

@@ -172,7 +172,7 @@ The table is a free-form surface with no fixed rows, zones or snapping. Location
 
 - TT-12: A hand tray along the bottom shows the active seat's hand; cards can be reordered by dragging within the hand, by Shift with ←, →, Home or End on a focused card, or by Move left and Move right in the hand card menu. A card dragged in from elsewhere joins the end of the hand.
 - TT-13: Seat counters (life, resources) always visible in the seat bar, editable with − and + buttons, or ↑, ↓, + and − on those buttons. Each step is announced ("Player 1 Life 20 → 19.") and can be undone, and values can go below zero. The Solo preset starts Player 1 on Life 20 and Energy 0.
-- TT-14: Dice (d4, d6, d8, d10, d12, d20) and a coin, with results announced and shown in a short roll log.
+- TT-14: Dice (d4, d6, d8, d10, d12, d20) and a coin in a Dice & coins dialog, shown when the format uses dice. Results are announced, shown large in the dialog, and listed in the session log, opened from the header's This session menu. Rolls aren't undo steps. The log lists only rolls for now and will list every action later.
 - TT-15: Undo and redo every action that changes the session, at least 200 steps.
 
 **Acceptance criteria**

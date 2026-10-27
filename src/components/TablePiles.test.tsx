@@ -42,8 +42,8 @@ describe('A11Y-3 piles on the table', () => {
 
   it('shares the table’s one Tab stop, and arrow keys move between piles and cards', async () => {
     const { user } = setup();
-    // The last control before the table is the last seat counter's + button.
-    screen.getByRole('button', { name: 'Increase Player 1 Energy' }).focus();
+    // The last control before the table is Dice & coins, at the seat bar's end.
+    screen.getByRole('button', { name: 'Dice & coins' }).focus();
     await user.tab();
     expect(pile('P1 main deck')).toHaveFocus();
     expect(pile('Environment deck')).toHaveAttribute('tabindex', '-1');
