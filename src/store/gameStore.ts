@@ -3,6 +3,7 @@ import { useStore } from 'zustand';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import { createSoloGame, type ActionContext, type ActionResult, type GameState } from '../model/game';
 import { cryptoRandomInt } from '../model/random';
+import { PLACEMENT_COLUMNS } from '../model/tablePlacement';
 
 export interface Announcement {
   text: string;
@@ -21,6 +22,8 @@ export interface TableView {
   zoom: number;
   /** TT-2: grid snapping, off by default. */
   snap: boolean;
+  /** Cards that fit across the visible table, set by the table as it resizes and zooms. */
+  columns: number;
 }
 
 /**
@@ -71,13 +74,13 @@ export function createGameStore(game: GameState = createSoloGame(), context: Act
       announcement: { text: '', id: 0 },
       past: [],
       future: [],
-      view: { zoom: 1, snap: false },
+      view: { zoom: 1, snap: false, columns: PLACEMENT_COLUMNS },
       setView: (view) => set({ view: { ...get().view, ...view } }),
       tableViewport: undefined,
       setTableViewport: (tableViewport) => set({ tableViewport }),
       dispatch: (action) => {
         const { game: before, past } = get();
-        const result = action(before, context);
+        const result = action(before, { ...context, placementColumns: get().view.columns });
         if (result.state === before) {
           set({ announcement: next(result.announcement) });
           return result;

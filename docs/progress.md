@@ -27,6 +27,11 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 - **Grid snap** is off by default. When it's on, a faint grid shows on the mat in `--mat-edge`, every 71 × 96px from 16,16 (half an auto-placement cell). `snapToGrid` is ready for 3e and 3f, which place cards at arbitrary spots.
 - **Toolbar** (Main board): Zoom out (−), a "100%" zoom reset in the number font, Zoom in (+), Fit all cards (0), and Snap to grid (G) with `aria-pressed`, all with tooltips.
   - The keys are + or =, −, 0 and G. They're ignored with Ctrl/⌘ (browser zoom), in fields, and while a dialog or menu is open.
+- **Owner review: cards didn't use the table's full width.** Auto-placement always wrapped after 6 cards (from 3b), which left a wide table half empty. Rows now wrap at the visible width.
+  - The table sets `view.columns` with `columnsFor`, as it resizes and zooms. The store passes it to every action as `ActionContext.placementColumns`.
+  - `moveCard` takes the context, and `freeSpot` takes the column count, which still defaults to 6.
+  - Cards already on the table don't move.
+  - Regression tests cover `columnsFor`, the store and E2E (8 cards in a row at 1280 wide). The E2E check fails without the fix.
 - **The viewport has `tabIndex={-1}`.** Firefox makes any scrolling box a Tab stop, so CI's Firefox E2E found the table had two Tab stops (the viewport, then the cards). A unit test checks the attribute.
 - **`e2e/keyboard.ts` `tabTo`** presses Tab until the target has focus. The keyboard tests that counted Tab presses use it now, so new toolbar buttons don't break them.
 - Tests: 278 unit (`TT-1 zoom steps`, `TT-1 fit all`, `TT-2 snap to grid`, `TT-1 and TT-2 zoom, fit and snap controls` and `TT-1 panning and zooming the table`) and 36 E2E, including `e2e/table-view.spec.ts` (mouse with axe, keyboard only, and phone size).
@@ -40,7 +45,7 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 - **Card owners.** Each copy records `ownerSeatId`, the seat of the pile it was loaded into (none for a shared pile), so a face-down card shows its owner's back.
 - **Table entries.** `table` is a list of `TableEntry` objects (`{ cardId, x, y, rotation }`), bottom of the stacking order first.
   - `Rotation` is 0, 90, 180 or 270.
-  - `moveCard` to the table takes an optional `position`. Without one, `freeSpot` (`src/model/tablePlacement.ts`) picks the first grid cell no card covers, six cards to a row. A quarter-turned card counts by its turned size.
+  - `moveCard` to the table takes an optional `position`. Without one, `freeSpot` (`src/model/tablePlacement.ts`) picks the first grid cell no card covers, six cards to a row (as wide as the visible table since 3c). A quarter-turned card counts by its turned size.
 - **`TableSurface` and `TableCard`** replace the "On the table" list.
   - Cards sit at their positions on the mat, with the Main board's size, shadow and inset mat edge. The mat grows to fit its cards and scrolls inside its own area, so the page never scrolls sideways.
   - **Face down:** the owner's card back, with its frame and seat mark.
@@ -468,3 +473,4 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 | 2026-10-26 | The snap grid is half an auto-placement cell (71 × 96px) | A fine grid such as 16px | Snapped cards line up with auto-placed rows and columns, or sit halfway between them |
 | 2026-10-26 | The app fills the window at 768 × 600 and up; smaller screens scroll the page with a 60dvh table | Always filling the window | On phones, the wrapped piles and the hand would leave almost no table |
 | 2026-10-26 | Keyboard E2E tests reach controls with `tabTo`, not a fixed number of Tab presses | Counting Tab presses | Every new toolbar button broke the counts |
+| 2026-10-27 | Auto-placed rows are as wide as the visible table, passed to actions as `ActionContext.placementColumns` | A fixed 6 columns; a width in the game state | The owner's wide screen showed half an empty table. The width is outside the game, and the context already carries outside inputs to actions. |

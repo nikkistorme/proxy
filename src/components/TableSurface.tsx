@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
-import { cardBox, CARD_H, CARD_W } from '../model/tablePlacement';
+import { cardBox, CARD_H, CARD_W, columnsFor } from '../model/tablePlacement';
 import { nearestInDirection, readingOrder, type Direction } from '../model/tableNavigation';
 import { clampZoom, fitAll, MAX_ZOOM, scrollAfterZoom, stepZoom, zoomPercent, type Scroll } from '../model/tableView';
 import { useGameStore } from '../store/gameStore';
@@ -49,6 +49,12 @@ export function TableSurface() {
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
+
+  // Auto-placed cards fill the width you can see (TT-4).
+  const columns = size.width > 0 ? columnsFor(size.width / zoom) : undefined;
+  useEffect(() => {
+    if (columns !== undefined) setView({ columns });
+  }, [columns, setView]);
 
   /** Zooms to `next`, keeping the table point under `anchor` (viewport px, default the centre) in place. */
   const zoomTo = useCallback(

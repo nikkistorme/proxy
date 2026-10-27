@@ -63,6 +63,8 @@ export interface GameState {
 export interface ActionContext {
   randomInt: RandomInt;
   newId: () => string;
+  /** How many cards fit across the visible table, so auto-placed cards fill its width (TT-4). */
+  placementColumns?: number;
 }
 
 /** Every action returns the next state and what the live region should say (AR-1, AR-2). */

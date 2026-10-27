@@ -39,6 +39,10 @@ async function allCardsInView(page: Page) {
 test.describe('TT-1 and TT-2 pan, zoom, fit all and grid snap', () => {
   test('mouse: zoom buttons, Ctrl+wheel, drag to pan, fit all and snap, with no axe violations', async ({ page }) => {
     await nineOnTable(page);
+    // Regression: auto-placed rows fill the table's width (8 cards at 1280 wide), not a fixed 6.
+    const [first, eighth, ninth] = await Promise.all(['Card 01', 'Card 08', 'Card 09'].map((n) => tableCard(page, n).boundingBox()));
+    expect(eighth?.y).toBe(first?.y);
+    expect(ninth?.x).toBe(first?.x);
     // The app fills the window: the page itself doesn't scroll, and the hand stays in view.
     expect(await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight)).toBe(true);
     await expect(page.getByRole('region', { name: "Player 1's hand" })).toBeInViewport();

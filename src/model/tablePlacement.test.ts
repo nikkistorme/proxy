@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { TableEntry } from './game';
-import { CARD_H, CARD_W, cardBox, freeSpot, PLACEMENT_COLUMNS, TABLE_GAP } from './tablePlacement';
+import { CARD_H, CARD_W, cardBox, columnsFor, freeSpot, PLACEMENT_COLUMNS, TABLE_GAP } from './tablePlacement';
 
 const at = (cardId: string, x: number, y: number, rotation: TableEntry['rotation'] = 0): TableEntry => ({ cardId, x, y, rotation });
 const column = (n: number) => TABLE_GAP + n * (CARD_W + TABLE_GAP);
@@ -21,6 +21,16 @@ describe('TT-4 placing a card on the table', () => {
   it(`starts a new row after ${PLACEMENT_COLUMNS} cards`, () => {
     const full = Array.from({ length: PLACEMENT_COLUMNS }, (_, i) => at(`c${i}`, column(i), row(0)));
     expect(freeSpot(full)).toEqual({ x: column(0), y: row(1) });
+  });
+
+  it('fills rows as wide as the visible table', () => {
+    // Regression: rows always wrapped after 6 cards, leaving a wide table half empty.
+    expect(columnsFor(1248)).toBe(8);
+    expect(columnsFor(343)).toBe(2);
+    expect(columnsFor(50)).toBe(1);
+    const row = Array.from({ length: 7 }, (_, i) => at(`c${i}`, column(i), TABLE_GAP));
+    expect(freeSpot(row, 8)).toEqual({ x: column(7), y: TABLE_GAP });
+    expect(freeSpot(row.slice(0, 2), 2)).toEqual({ x: column(0), y: TABLE_GAP + CARD_H + TABLE_GAP });
   });
 
   it('counts a quarter-turned card by its turned size', () => {

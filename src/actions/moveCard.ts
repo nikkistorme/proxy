@@ -1,4 +1,4 @@
-import type { ActionResult, CardSide, GameState } from '../model/game';
+import type { ActionContext, ActionResult, CardSide, GameState } from '../model/game';
 import { freeSpot } from '../model/tablePlacement';
 import { cardName, getPile, withPile } from './helpers';
 
@@ -55,10 +55,10 @@ function without(ids: readonly string[], cardId: string): string[] {
 /**
  * SP-8: move one card to the table, a hand, or the top or bottom of a pile.
  * Cards left behind keep their order. A card lands front up on the table, at
- * `position` or the first free spot, and face down on a pile unless `faceUp`
+ * `position` or the first free spot across the visible table, and face down on a pile unless `faceUp`
  * is set; in a hand its side is unchanged.
  */
-export function moveCard(state: GameState, args: { cardId: string; to: Destination }): ActionResult {
+export function moveCard(state: GameState, args: { cardId: string; to: Destination }, context?: Pick<ActionContext, 'placementColumns'>): ActionResult {
   const { cardId, to } = args;
   const from = locateCard(state, cardId);
   const name = cardName(state, cardId);
@@ -92,7 +92,7 @@ export function moveCard(state: GameState, args: { cardId: string; to: Destinati
   let side: CardSide = card.side;
   if (to.zone === 'table') {
     side = 'front';
-    const { x, y } = to.position ?? freeSpot(next.table);
+    const { x, y } = to.position ?? freeSpot(next.table, context?.placementColumns);
     next = { ...next, table: [...next.table, { cardId, x, y, rotation: 0 }] };
   }
   if (to.zone === 'hand') next = { ...next, hands: { ...next.hands, [to.seatId]: [...(next.hands[to.seatId] ?? []), cardId] } };

@@ -89,9 +89,12 @@ test.describe('A11Y-3 table on a phone', () => {
     const scroller = page.locator('.table-viewport');
     expect(await scroller.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
 
-    // Arrowing to an off-screen card scrolls it into view.
+    // Rows are as wide as the table: two cards on this phone. Arrowing to a card brings it into view.
+    const [first, third] = await Promise.all([tableCard(page, 'Card 01').boundingBox(), tableCard(page, 'Card 03').boundingBox()]);
+    expect(third?.x).toBe(first?.x);
     await tableCard(page, 'Card 01').focus();
-    for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowDown');
     await expect(tableCard(page, 'Card 04')).toBeFocused();
     await expect(tableCard(page, 'Card 04')).toBeInViewport();
   });

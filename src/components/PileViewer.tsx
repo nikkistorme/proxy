@@ -101,7 +101,7 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
   function move(entry: PileEntry, to: Destination) {
     const index = matches.indexOf(entry);
     const next = matches[index + 1] ?? matches[index - 1];
-    dispatch((g) => moveCard(g, { cardId: entry.cardId, to }));
+    dispatch((g, context) => moveCard(g, { cardId: entry.cardId, to }, context));
     setCurrentId(next?.cardId);
     pendingFocusRef.current = next?.cardId ?? 'search';
   }
