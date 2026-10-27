@@ -1,57 +1,77 @@
 import type { CSSProperties } from 'react';
 import type { CardFace as CardFaceData } from '../model/card';
+import { boxValue, CARD_WIDTH_PT, DEFAULT_LAYOUT, layoutLabel, type LayoutBox, type LayoutDesign } from '../model/layout';
 import { CardArt } from './CardArt';
 import './CardFace.css';
-
-/** Columns the default face reads, in order of preference, until layouts arrive (Phase 5). */
-const TEXT_COLUMNS = ['text', 'rules', 'rules text'];
 
 interface CardFaceProps {
   face: CardFaceData;
   /** Rendered width in CSS px. Height follows the 63 × 88 mm card ratio. */
   width?: number;
+  /** The layout to draw with. Defaults to the built-in layout. */
+  layout?: LayoutDesign;
 }
 
-function cardText(face: CardFaceData): string | undefined {
-  for (const column of TEXT_COLUMNS) {
-    const value = face.fields[column]?.trim();
-    if (value) return value;
+/** What the card says, in the order its layout shows it. */
+export function cardFaceLabel(face: CardFaceData, layout: LayoutDesign = DEFAULT_LAYOUT): string {
+  return layoutLabel(face, layout);
+}
+
+// `safe` keeps the first line in view when text overflows; until 5d shrinks it, the end clips.
+const JUSTIFY = { top: 'flex-start', middle: 'safe center', bottom: 'safe flex-end' } as const;
+
+function Box({ box, face }: { box: LayoutBox; face: CardFaceData }) {
+  const { content, style } = box;
+  const value = boxValue(face, content);
+  // A column box with nothing to show is left out, background and all. Art keeps its placeholder (CD-6).
+  if (content.kind !== 'color' && !value && !(content.kind === 'column' && content.as === 'image')) return null;
+
+  const position: CSSProperties = {
+    left: `${box.x}%`,
+    top: `${box.y}%`,
+    width: `${box.width}%`,
+    height: `${box.height}%`,
+    background: style.background,
+  };
+
+  if (content.kind === 'color') return <div className="card-face__box" style={position} />;
+  if (content.kind === 'column' && content.as === 'image') {
+    return (
+      <div className="card-face__box" style={position}>
+        <CardArt name={face.name} image={value || undefined} decorative />
+      </div>
+    );
   }
-  return undefined;
-}
-
-/** What the card says, in the order it shows it: name, cost, type, text and stats. */
-export function cardFaceLabel(face: CardFaceData): string {
-  const cost = face.fields.cost?.trim();
-  return [face.name, cost && `Cost ${cost}`, face.type, cardText(face), face.fields.stats?.trim()].filter(Boolean).join('. ');
+  return (
+    <div
+      className={`card-face__box card-face__box--text${style.font === 'mono' ? ' card-face__box--mono' : ''}`}
+      style={{
+        ...position,
+        justifyContent: JUSTIFY[style.valign],
+        textAlign: style.align,
+        color: style.color,
+        fontSize: `calc(${style.size} * var(--card-pt))`,
+        fontWeight: style.weight,
+      }}
+    >
+      <span>{value}</span>
+    </div>
+  );
 }
 
 /**
- * The default card rendering, laid out like the design's sample card
- * (`Card.dc.html`) at its 240 × 336 base size and scaled to `width`.
+ * A card face drawn from a layout's boxes (LY-3, LY-5, LY-6). Positions are
+ * percentages of the card and text sizes points on it, so the face looks the
+ * same at any `width`.
  */
-export function CardFace({ face, width = 126 }: CardFaceProps) {
-  const cost = face.fields.cost?.trim();
-  const stats = face.fields.stats?.trim();
-  const text = cardText(face);
-  const style = { '--card-scale': width / 240, width, height: Math.round((width * 336) / 240) } as CSSProperties;
+export function CardFace({ face, width = 126, layout = DEFAULT_LAYOUT }: CardFaceProps) {
+  const style = { '--card-pt': `${width / CARD_WIDTH_PT}px`, width, height: Math.round((width * 336) / 240) } as CSSProperties;
 
   return (
-    <div className="card-face" role="img" aria-label={cardFaceLabel(face)} style={style}>
-      <div className="card-face__base">
-        <div className="card-face__bar">
-          <span className="card-face__name">{face.name}</span>
-          {cost && <span className="card-face__cost">{cost}</span>}
-        </div>
-        <div className="card-face__art">
-          <CardArt name={face.name} image={face.image} decorative />
-        </div>
-        {face.type && <div className="card-face__type">{face.type}</div>}
-        <div className="card-face__text">
-          {text && <span>{text}</span>}
-          {stats && <span className="card-face__stats">{stats}</span>}
-        </div>
-      </div>
+    <div className="card-face" role="img" aria-label={cardFaceLabel(face, layout)} style={style}>
+      {layout.boxes.map((box) => (
+        <Box key={box.id} box={box} face={face} />
+      ))}
     </div>
   );
 }
