@@ -38,6 +38,8 @@ describe('A11Y-3 table focus', () => {
     expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
     await userEvent.tab({ shift: true });
     expect(card('Imp')).toHaveFocus();
+    // Firefox would otherwise make the scrolling viewport a second Tab stop.
+    expect(document.querySelector('.table-viewport')).toHaveAttribute('tabindex', '-1');
   });
 
   it('moves focus between cards with the arrow keys, staying put at the edge', async () => {

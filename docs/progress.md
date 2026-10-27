@@ -27,6 +27,7 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 - **Grid snap** is off by default. When it's on, a faint grid shows on the mat in `--mat-edge`, every 71 × 96px from 16,16 (half an auto-placement cell). `snapToGrid` is ready for 3e and 3f, which place cards at arbitrary spots.
 - **Toolbar** (Main board): Zoom out (−), a "100%" zoom reset in the number font, Zoom in (+), Fit all cards (0), and Snap to grid (G) with `aria-pressed`, all with tooltips.
   - The keys are + or =, −, 0 and G. They're ignored with Ctrl/⌘ (browser zoom), in fields, and while a dialog or menu is open.
+- **The viewport has `tabIndex={-1}`.** Firefox makes any scrolling box a Tab stop, so CI's Firefox E2E found the table had two Tab stops (the viewport, then the cards). A unit test checks the attribute.
 - **`e2e/keyboard.ts` `tabTo`** presses Tab until the target has focus. The keyboard tests that counted Tab presses use it now, so new toolbar buttons don't break them.
 - Tests: 278 unit (`TT-1 zoom steps`, `TT-1 fit all`, `TT-2 snap to grid`, `TT-1 and TT-2 zoom, fit and snap controls` and `TT-1 panning and zooming the table`) and 36 E2E, including `e2e/table-view.spec.ts` (mouse with axe, keyboard only, and phone size).
 - Checked by hand from screenshots at 1280 × 800 and 375 × 667.

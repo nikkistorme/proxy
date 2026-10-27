@@ -215,10 +215,12 @@ export function TableSurface() {
 
   return (
     // The viewport only hears pointer and key events from inside it; the cards are the controls.
+    // Firefox makes any scrolling box a Tab stop, which would give the table two (A11Y-3).
     <div
       ref={viewportRef}
       className="table-viewport"
       role="presentation"
+      tabIndex={-1}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={endDrag}
