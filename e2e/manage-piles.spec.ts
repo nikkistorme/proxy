@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
+import { tabTo } from './keyboard';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../tests/fixtures/csv/${name}`, import.meta.url));
 const axeTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -60,9 +61,7 @@ test.describe('SP-4 manage piles', () => {
   });
 
   test('keyboard only: add a shared pile, then delete it', async ({ page }) => {
-    // Undo, Redo, three piles, then Add pile.
-    for (let i = 0; i < 6; i++) await page.keyboard.press('Tab');
-    await expect(page.getByRole('button', { name: 'Add pile' })).toBeFocused();
+    await tabTo(page, page.getByRole('button', { name: 'Add pile' }));
     await page.keyboard.press('Enter');
 
     await expect(page.getByRole('textbox', { name: 'Name' })).toBeFocused();

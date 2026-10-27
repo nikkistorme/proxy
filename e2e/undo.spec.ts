@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
+import { tabTo } from './keyboard';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../tests/fixtures/csv/${name}`, import.meta.url));
 const axeTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -72,11 +73,9 @@ test.describe('TT-15 undo and redo', () => {
     await page.keyboard.press('ControlOrMeta+Shift+z');
     await expect(hand(page)).toContainText('2 cards');
 
-    // The toolbar comes just before the piles in Tab order. Press Undo until nothing is left.
+    // The toolbar comes before the piles in Tab order. Press Undo until nothing is left.
     await expect(mainPile(page)).toBeFocused();
-    await page.keyboard.press('Shift+Tab');
-    await expect(redoButton(page)).toBeFocused();
-    await page.keyboard.press('Shift+Tab');
+    await tabTo(page, undoButton(page), { backwards: true });
     await expect(page.locator('.tooltip__text', { hasText: /^Undo \(Ctrl\+Z\)$/ })).toBeVisible();
     await expect(undoButton(page)).toBeFocused();
     await page.keyboard.press('Enter');

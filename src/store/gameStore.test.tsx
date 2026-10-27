@@ -44,6 +44,17 @@ describe('AR-2 store and live region', () => {
     expect(store.getState().game).toBe(before);
   });
 
+  it('passes the visible table width to actions, so auto-placed cards fill it', () => {
+    const store = createGameStore(gameWithDeck(), testContext());
+    store.getState().setView({ columns: 2 });
+    let seen: number | undefined;
+    store.getState().dispatch((g, context) => {
+      seen = context.placementColumns;
+      return { state: g, announcement: '' };
+    });
+    expect(seen).toBe(2);
+  });
+
   it('needs a provider', () => {
     function Reader() {
       useGameStore((s) => s.game);

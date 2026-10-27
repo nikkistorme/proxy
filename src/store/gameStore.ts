@@ -3,6 +3,7 @@ import { useStore } from 'zustand';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import { createSoloGame, type ActionContext, type ActionResult, type GameState } from '../model/game';
 import { cryptoRandomInt } from '../model/random';
+import { PLACEMENT_COLUMNS } from '../model/tablePlacement';
 
 export interface Announcement {
   text: string;
@@ -14,6 +15,25 @@ export interface Announcement {
 export interface HistoryEntry {
   game: GameState;
   announcement: string;
+}
+
+/** How the table is shown. Not part of the game: changing it is never an undo step. */
+export interface TableView {
+  zoom: number;
+  /** TT-2: grid snapping, off by default. */
+  snap: boolean;
+  /** Cards that fit across the visible table, set by the table as it resizes and zooms. */
+  columns: number;
+}
+
+/**
+ * The table's viewport, registered by the table while it's on screen, so the
+ * toolbar and keys can zoom and fit (TT-1) around what's actually in view.
+ */
+export interface TableViewport {
+  stepZoom: (direction: 'in' | 'out') => void;
+  resetZoom: () => void;
+  fitAll: () => void;
 }
 
 /** TT-15 asks for at least 200 undo steps. */
@@ -38,6 +58,10 @@ export interface GameStore {
   undo: () => void;
   /** TT-15: replays the last undone action, or announces that there is nothing to redo. */
   redo: () => void;
+  view: TableView;
+  setView: (view: Partial<TableView>) => void;
+  tableViewport: TableViewport | undefined;
+  setTableViewport: (viewport: TableViewport | undefined) => void;
 }
 
 export const liveContext: ActionContext = { randomInt: cryptoRandomInt, newId: () => crypto.randomUUID() };
@@ -50,9 +74,13 @@ export function createGameStore(game: GameState = createSoloGame(), context: Act
       announcement: { text: '', id: 0 },
       past: [],
       future: [],
+      view: { zoom: 1, snap: false, columns: PLACEMENT_COLUMNS },
+      setView: (view) => set({ view: { ...get().view, ...view } }),
+      tableViewport: undefined,
+      setTableViewport: (tableViewport) => set({ tableViewport }),
       dispatch: (action) => {
         const { game: before, past } = get();
-        const result = action(before, context);
+        const result = action(before, { ...context, placementColumns: get().view.columns });
         if (result.state === before) {
           set({ announcement: next(result.announcement) });
           return result;

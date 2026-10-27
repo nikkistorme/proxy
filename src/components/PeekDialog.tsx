@@ -87,7 +87,7 @@ export function PeekDialog({ request, onClose }: PeekDialogProps) {
     if (!cardId) return;
     const index = order.indexOf(cardId);
     const rest = order.filter((id) => id !== cardId);
-    dispatch((g) => moveCard(g, { cardId, to }));
+    dispatch((g, context) => moveCard(g, { cardId, to }, context));
     setOrder(rest);
     const next = rest[index] ?? rest[index - 1];
     pendingFocusRef.current = next ? `${next}:move` : 'done';

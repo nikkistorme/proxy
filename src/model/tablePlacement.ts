@@ -5,8 +5,13 @@ export const CARD_W = 126;
 export const CARD_H = 176;
 /** Space around the table's edge and between auto-placed cards. */
 export const TABLE_GAP = 16;
-/** Auto-placed cards fill rows this many cards wide before starting the next row. */
+/** Auto-placed cards fill rows this many cards wide when the table's width isn't known. */
 export const PLACEMENT_COLUMNS = 6;
+
+/** How many auto-placed cards fit across a table this wide (in table px), at least one. */
+export function columnsFor(tableWidth: number): number {
+  return Math.max(1, Math.floor((tableWidth - TABLE_GAP) / (CARD_W + TABLE_GAP)));
+}
 
 export interface Box {
   left: number;
@@ -31,12 +36,13 @@ function overlaps(a: Box, b: Box): boolean {
 
 /**
  * Where a card goes when it's put on the table without a position: the first
- * grid cell, left to right and then top to bottom, that no card covers.
+ * grid cell, left to right in rows `columns` cards wide and then top to
+ * bottom, that no card covers.
  */
-export function freeSpot(table: readonly TableEntry[]): { x: number; y: number } {
+export function freeSpot(table: readonly TableEntry[], columns = PLACEMENT_COLUMNS): { x: number; y: number } {
   const boxes = table.map(cardBox);
   for (let row = 0; ; row++) {
-    for (let column = 0; column < PLACEMENT_COLUMNS; column++) {
+    for (let column = 0; column < columns; column++) {
       const spot = { x: TABLE_GAP + column * (CARD_W + TABLE_GAP), y: TABLE_GAP + row * (CARD_H + TABLE_GAP) };
       const box = cardBox({ ...spot, rotation: 0 as Rotation });
       if (!boxes.some((b) => overlaps(b, box))) return spot;

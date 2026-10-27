@@ -87,3 +87,57 @@ describe('TT-15 undo and redo controls', () => {
     expect(handSize()).toBe(0);
   });
 });
+
+describe('TT-1 and TT-2 zoom, fit and snap controls', () => {
+  function setupView() {
+    const store = createGameStore(gameWithDeck(), testContext());
+    const calls: string[] = [];
+    store.getState().setTableViewport({
+      stepZoom: (direction) => calls.push(`zoom ${direction}`),
+      resetZoom: () => calls.push('reset'),
+      fitAll: () => calls.push('fit'),
+    });
+    render(
+      <GameStoreProvider store={store}>
+        <TableTools />
+        <input aria-label="Field" />
+      </GameStoreProvider>,
+    );
+    return { store, calls };
+  }
+
+  it('zooms, resets and fits from the buttons, and shows the zoom level', async () => {
+    const { store, calls } = setupView();
+    await userEvent.click(screen.getByRole('button', { name: 'Zoom in (+)' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Zoom out (−)' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Zoom 100%, reset' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Fit all cards (0)' }));
+    expect(calls).toEqual(['zoom in', 'zoom out', 'reset', 'fit']);
+    act(() => store.getState().setView({ zoom: 1.25 }));
+    expect(screen.getByRole('button', { name: 'Zoom 125%, reset' })).toHaveTextContent('125%');
+  });
+
+  it('toggles grid snapping, off by default, and announces it', async () => {
+    const { store } = setupView();
+    const snap = screen.getByRole('button', { name: 'Snap to grid (G)' });
+    expect(snap).toHaveAttribute('aria-pressed', 'false');
+    await userEvent.click(snap);
+    expect(snap).toHaveAttribute('aria-pressed', 'true');
+    expect(store.getState().view.snap).toBe(true);
+    expect(store.getState().announcement.text).toBe('Snap to grid on.');
+    expect(store.getState().past).toEqual([]);
+  });
+
+  it('zooms with + = and −, fits with 0, and snaps with G, but not in a field or with Ctrl', async () => {
+    const { store, calls } = setupView();
+    await userEvent.keyboard('+=-0g');
+    expect(calls).toEqual(['zoom in', 'zoom in', 'zoom out', 'fit']);
+    expect(store.getState().view.snap).toBe(true);
+
+    await userEvent.keyboard('{Control>}={/Control}{Meta>}-{/Meta}');
+    await userEvent.click(screen.getByRole('textbox', { name: 'Field' }));
+    await userEvent.keyboard('+0g');
+    expect(calls).toHaveLength(4);
+    expect(store.getState().view.snap).toBe(true);
+  });
+});
