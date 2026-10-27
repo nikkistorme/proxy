@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { moveCard, type Destination } from '../actions/moveCard';
 import { draw, revealTop, shuffle } from '../actions/pileActions';
-import { useGameStore } from '../store/gameStore';
+import { useSessionStore } from '../store/sessionStore';
 import { useCardDrag } from './cardDrag';
 import { CardFace, cardFaceLabel } from './CardFace';
 import { LiveRegion } from './LiveRegion';
@@ -46,9 +46,9 @@ function columnCount(list: HTMLElement | null): number {
  * PileViewer board, with search, column filters, and moves to hand or table.
  */
 export function PileViewer({ pileId, onClose }: PileViewerProps) {
-  const game = useGameStore((s) => s.game);
-  const dispatch = useGameStore((s) => s.dispatch);
-  const announce = useGameStore((s) => s.announce);
+  const session = useSessionStore((s) => s.session);
+  const dispatch = useSessionStore((s) => s.dispatch);
+  const announce = useSessionStore((s) => s.announce);
   const startDrag = useCardDrag();
 
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -65,9 +65,9 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
   const [currentId, setCurrentId] = useState<string>();
   const [moveRequest, setMoveRequest] = useState<MoveRequest>();
 
-  const pile = game.piles.find((p) => p.id === pileId);
+  const pile = session.piles.find((p) => p.id === pileId);
   const open = pile !== undefined;
-  const entries = useMemo(() => (pileId ? pileEntries(game, pileId) : []), [game, pileId]);
+  const entries = useMemo(() => (pileId ? pileEntries(session, pileId) : []), [session, pileId]);
   const columns = useMemo(() => filterColumns(entries), [entries]);
   const matches = useMemo(() => filterEntries(entries, { search, filters }), [entries, search, filters]);
   // The card that holds the tab stop and shows its actions; the first match until one is chosen.
@@ -147,7 +147,7 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
     pendingFocusRef.current = next?.cardId ?? 'search';
   }
 
-  const activeSeat = game.seats.find((s) => s.id === game.activeSeatId);
+  const activeSeat = session.seats.find((s) => s.id === session.activeSeatId);
   const hasHand = activeSeat?.hasHand ?? false;
 
   function toHand(entry: PileEntry) {
@@ -164,7 +164,7 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
     if (!pile) return;
     // Cancelling comes back to this card; a move replaces it with the next match.
     pendingFocusRef.current = entry.cardId;
-    setMoveRequest({ cardId: entry.cardId, face: entry.face, fromName: pile.name, options: moveDestinations(game, entry.cardId) });
+    setMoveRequest({ cardId: entry.cardId, face: entry.face, fromName: pile.name, options: moveDestinations(session, entry.cardId) });
   }
 
   function confirmMove(to: Destination) {

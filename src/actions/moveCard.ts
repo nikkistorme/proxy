@@ -1,4 +1,4 @@
-import type { ActionContext, ActionResult, CardSide, GameState } from '../model/game';
+import type { ActionContext, ActionResult, CardSide, SessionState } from '../model/session';
 import { freeSpot } from '../model/tablePlacement';
 import { shownName } from './cardActions';
 import { cardName, getPile, withPile } from './helpers';
@@ -22,7 +22,7 @@ export type Destination =
       faceUp?: boolean;
     };
 
-export function locateCard(state: GameState, cardId: string): CardLocation {
+export function locateCard(state: SessionState, cardId: string): CardLocation {
   if (state.table.some((entry) => entry.cardId === cardId)) return { zone: 'table' };
   for (const [seatId, hand] of Object.entries(state.hands)) {
     if (hand.includes(cardId)) return { zone: 'hand', seatId };
@@ -32,19 +32,19 @@ export function locateCard(state: GameState, cardId: string): CardLocation {
   throw new Error(`Card ${cardId} is not in play`);
 }
 
-function seatName(state: GameState, seatId: string): string {
+function seatName(state: SessionState, seatId: string): string {
   const seat = state.seats.find((s) => s.id === seatId);
   if (!seat) throw new Error(`Unknown seat: ${seatId}`);
   return seat.name;
 }
 
-function describeLocation(state: GameState, location: CardLocation): string {
+function describeLocation(state: SessionState, location: CardLocation): string {
   if (location.zone === 'table') return 'the table';
   if (location.zone === 'hand') return `${seatName(state, location.seatId)}'s hand`;
   return getPile(state, location.pileId).name;
 }
 
-function describeDestination(state: GameState, to: Destination): string {
+function describeDestination(state: SessionState, to: Destination): string {
   if (to.zone !== 'pile') return describeLocation(state, to);
   return `the ${to.position} of ${getPile(state, to.pileId).name}`;
 }
@@ -59,7 +59,7 @@ function without(ids: readonly string[], cardId: string): string[] {
  * `position` or the first free spot across the visible table, and face down on a pile unless `faceUp`
  * is set; in a hand its side is unchanged. A table card given a `position` just moves there.
  */
-export function moveCard(state: GameState, args: { cardId: string; to: Destination }, context?: Pick<ActionContext, 'placementColumns'>): ActionResult {
+export function moveCard(state: SessionState, args: { cardId: string; to: Destination }, context?: Pick<ActionContext, 'placementColumns'>): ActionResult {
   const { cardId, to } = args;
   const from = locateCard(state, cardId);
   const name = cardName(state, cardId);
@@ -90,7 +90,7 @@ export function moveCard(state: GameState, args: { cardId: string; to: Destinati
   if (to.zone === 'pile') getPile(state, to.pileId);
 
   // Take the card out of where it is.
-  let next: GameState = state;
+  let next: SessionState = state;
   if (from.zone === 'table') next = { ...next, table: next.table.filter((entry) => entry.cardId !== cardId) };
   if (from.zone === 'hand') next = { ...next, hands: { ...next.hands, [from.seatId]: without(next.hands[from.seatId] ?? [], cardId) } };
   if (from.zone === 'pile') {

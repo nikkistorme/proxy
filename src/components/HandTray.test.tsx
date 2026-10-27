@@ -4,23 +4,23 @@ import { describe, expect, it, vi } from 'vitest';
 import { loadPile } from '../actions/loadPile';
 import { draw } from '../actions/pileActions';
 import { cardsFrom, tableIds, testContext } from '../actions/testing';
-import { createSoloGame } from '../model/game';
-import { createGameStore, GameStoreProvider } from '../store/gameStore';
+import { createSoloSession } from '../model/session';
+import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
 import { HandTray } from './HandTray';
 
 const csv = 'name,id,back_of,text\nImp,,,Small.\nMoonrise Hunter,,hunter,Night side.\nDaylight Hunter,hunter,,Day side.\nOgre,,,Big.\n';
 
 /** Imp, Daylight Hunter and Ogre drawn into Player 1's hand, in that order. */
 function setup(drawn = 3) {
-  let game = loadPile(createSoloGame(), { pileId: 'pile-p1-main', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
-  if (drawn > 0) game = draw(game, { pileId: 'pile-p1-main', count: drawn }).state;
-  const store = createGameStore(game, testContext());
+  let session = loadPile(createSoloSession(), { pileId: 'pile-p1-main', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
+  if (drawn > 0) session = draw(session, { pileId: 'pile-p1-main', count: drawn }).state;
+  const store = createSessionStore(session, testContext());
   const onDraw = vi.fn();
   render(
-    <GameStoreProvider store={store}>
+    <SessionStoreProvider store={store}>
       <button type="button">Before</button>
       <HandTray seatId="seat-p1" seatName="Player 1" onDraw={onDraw} />
-    </GameStoreProvider>,
+    </SessionStoreProvider>,
   );
   return { store, onDraw };
 }
@@ -84,7 +84,7 @@ describe('TT-4 and SP-8 hand card menu', () => {
     const { store } = setup();
     await userEvent.click(card('Imp'));
     await userEvent.click(screen.getByRole('menuitem', { name: 'Play to table' }));
-    expect(tableIds(store.getState().game)).toHaveLength(1);
+    expect(tableIds(store.getState().session)).toHaveLength(1);
     expect(store.getState().announcement.text).toBe("Moved Imp from Player 1's hand to the table.");
     expect(card('Daylight Hunter, double-faced')).toHaveFocus();
   });
@@ -106,7 +106,7 @@ describe('TT-4 and SP-8 hand card menu', () => {
     expect(dialog).toHaveTextContent("from Player 1's hand");
     await userEvent.click(within(dialog).getByRole('option', { name: /^Board cards — top/ }));
     await userEvent.click(within(dialog).getByRole('button', { name: 'Move to Board cards — top' }));
-    expect(store.getState().game.piles.find((p) => p.id === 'pile-board')?.cardIds).toHaveLength(1);
+    expect(store.getState().session.piles.find((p) => p.id === 'pile-board')?.cardIds).toHaveLength(1);
     await waitFor(() => expect(card('Ogre')).toHaveFocus());
   });
 

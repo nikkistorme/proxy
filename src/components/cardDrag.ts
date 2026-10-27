@@ -1,10 +1,10 @@
 import { useCallback, useEffect, type PointerEvent } from 'react';
 import type { StoreApi } from 'zustand/vanilla';
 import type { Destination } from '../actions/moveCard';
-import type { Rotation } from '../model/game';
+import type { Rotation } from '../model/session';
 import { cardBox, clampToTable, pileBox, pileUnder } from '../model/tablePlacement';
 import { snapToGrid } from '../model/tableView';
-import { useGameStoreApi, type GameStore } from '../store/gameStore';
+import { useSessionStoreApi, type SessionStore } from '../store/sessionStore';
 import './CardDrag.css';
 
 /** How far a mouse can move and still be a click, not a drag, in screen px. */
@@ -40,8 +40,8 @@ interface DragSourceBase {
  */
 export type DragSource = DragSourceBase & ({ cardId: string; pileId?: undefined } | { pileId: string; cardId?: undefined; onHoldRelease: () => void });
 
-interface Session {
-  store: StoreApi<GameStore>;
+interface ActiveDrag {
+  store: StoreApi<SessionStore>;
   source: DragSource;
   pointerId: number;
   start: { x: number; y: number };
@@ -57,7 +57,7 @@ interface Session {
 }
 
 /** One drag at a time, across the table and the hand. */
-let session: Session | undefined;
+let activeDrag: ActiveDrag | undefined;
 
 /** What the store marks as being dragged. */
 const dragged = ({ cardId, pileId }: DragSource) => (pileId === undefined ? { cardId } : { pileId });
@@ -65,7 +65,7 @@ const dragged = ({ cardId, pileId }: DragSource) => (pileId === undefined ? { ca
 const sameDestination = (a: Destination | undefined, b: Destination | undefined) => JSON.stringify(a) === JSON.stringify(b);
 
 /** Where a drop at the pointer lands: a spot on the table, the top of a pile, or a hand. */
-function destinationAt(current: Session, x: number, y: number): Destination | undefined {
+function destinationAt(current: ActiveDrag, x: number, y: number): Destination | undefined {
   // A pile lands on the table wherever it's dropped, even over a card. Over another pile, it merges with it.
   const zone = document.elementFromPoint?.(x, y)?.closest<HTMLElement>(current.source.pileId === undefined ? '[data-drop-zone]' : '[data-drop-zone="table"]');
   if (!zone) return undefined;
@@ -84,13 +84,13 @@ function destinationAt(current: Session, x: number, y: number): Destination | un
   const position = clampToTable(snap ? snapToGrid(spot) : spot, rotation);
   const { pileId: draggedPileId } = current.source;
   if (draggedPileId !== undefined) {
-    const under = pileUnder(current.store.getState().game.piles, pileBox(position), draggedPileId);
+    const under = pileUnder(current.store.getState().session.piles, pileBox(position), draggedPileId);
     if (under) return { zone: 'pile', pileId: under.id, position: 'top' };
   }
   return { zone: 'table', position };
 }
 
-function moveGhost(current: Session, x: number, y: number) {
+function moveGhost(current: ActiveDrag, x: number, y: number) {
   if (!current.ghost) return;
   const left = x - current.grab.x * current.size.width;
   const top = y - current.grab.y * current.size.height;
@@ -98,7 +98,7 @@ function moveGhost(current: Session, x: number, y: number) {
 }
 
 /** Lifts the card: a copy follows the pointer, and the store marks where it came from. */
-function begin(current: Session, x: number, y: number) {
+function begin(current: ActiveDrag, x: number, y: number) {
   const { source, store } = current;
   current.started = true;
   window.clearTimeout(current.timer);
@@ -136,7 +136,7 @@ function begin(current: Session, x: number, y: number) {
   update(current, x, y);
 }
 
-function update(current: Session, x: number, y: number) {
+function update(current: ActiveDrag, x: number, y: number) {
   moveGhost(current, x, y);
   const target = destinationAt(current, x, y);
   // Dropping a hand card back in its own hand isn't a move.
@@ -147,7 +147,7 @@ function update(current: Session, x: number, y: number) {
 }
 
 function onPointerMove(event: globalThis.PointerEvent) {
-  const current = session;
+  const current = activeDrag;
   if (!current || event.pointerId !== current.pointerId) return;
   if (current.started) {
     if (Math.hypot(event.clientX - current.start.x, event.clientY - current.start.y) > DRAG_SLOP) current.stillHeld = false;
@@ -161,14 +161,14 @@ function onPointerMove(event: globalThis.PointerEvent) {
 }
 
 function onPointerUp(event: globalThis.PointerEvent) {
-  const current = session;
+  const current = activeDrag;
   if (!current || event.pointerId !== current.pointerId) return;
   if (current.started) update(current, event.clientX, event.clientY);
   finish(current);
 }
 
 function onPointerCancel(event: globalThis.PointerEvent) {
-  const current = session;
+  const current = activeDrag;
   if (!current || event.pointerId !== current.pointerId) return;
   current.over = undefined;
   current.stillHeld = false;
@@ -176,7 +176,7 @@ function onPointerCancel(event: globalThis.PointerEvent) {
 }
 
 function onKeyDown(event: KeyboardEvent) {
-  const current = session;
+  const current = activeDrag;
   if (!current?.started || event.key !== 'Escape') return;
   event.preventDefault();
   event.stopPropagation();
@@ -187,7 +187,7 @@ function onKeyDown(event: KeyboardEvent) {
 
 /** The browser's own long-press menu would open over the card being dragged. */
 function onContextMenu(event: Event) {
-  if (!session) return;
+  if (!activeDrag) return;
   event.preventDefault();
   event.stopPropagation();
 }
@@ -215,7 +215,7 @@ function swallowNextClick() {
 }
 
 /** Ends the drag: drops the card on the target under it, or leaves it where it was. */
-function finish(current: Session) {
+function finish(current: ActiveDrag) {
   const { started, over, source, stillHeld } = current;
   end();
   if (!started) return;
@@ -226,9 +226,9 @@ function finish(current: Session) {
 }
 
 function end() {
-  const current = session;
+  const current = activeDrag;
   if (!current) return;
-  session = undefined;
+  activeDrag = undefined;
   window.clearTimeout(current.timer);
   window.removeEventListener('pointermove', onPointerMove);
   window.removeEventListener('pointerup', onPointerUp);
@@ -242,7 +242,7 @@ function end() {
 
 /** Once a card has lifted, a finger moving it mustn't scroll the page too. */
 function onTouchMove(event: TouchEvent) {
-  if (session?.started) event.preventDefault();
+  if (activeDrag?.started) event.preventDefault();
 }
 
 /**
@@ -253,7 +253,7 @@ function onTouchMove(event: TouchEvent) {
  * pile or table card without moving it opens its menu.
  */
 export function useCardDrag() {
-  const store = useGameStoreApi();
+  const store = useSessionStoreApi();
 
   // Registered up front: browsers only let a touch listener stop scrolling if it was there when the touch began.
   useEffect(() => {
@@ -270,7 +270,7 @@ export function useCardDrag() {
       const rect = source.visual.getBoundingClientRect();
       const width = rect.width || 1;
       const height = rect.height || 1;
-      const current: Session = {
+      const current: ActiveDrag = {
         store,
         source,
         pointerId: event.pointerId,
@@ -280,7 +280,7 @@ export function useCardDrag() {
         started: false,
         stillHeld: false,
       };
-      session = current;
+      activeDrag = current;
       window.addEventListener('pointermove', onPointerMove);
       window.addEventListener('pointerup', onPointerUp);
       window.addEventListener('pointercancel', onPointerCancel);
@@ -289,7 +289,7 @@ export function useCardDrag() {
       if (event.pointerType === 'touch') {
         const { clientX, clientY } = event;
         current.timer = window.setTimeout(() => {
-          if (session !== current) return;
+          if (activeDrag !== current) return;
           current.stillHeld = true;
           begin(current, clientX, clientY);
         }, TOUCH_HOLD_MS);

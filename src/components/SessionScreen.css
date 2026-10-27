@@ -1,11 +1,11 @@
 /* Layout from the Main board. On roomy screens the app fills the window and the table viewport takes the rest. */
-.game {
+.session {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
 
-.game__header {
+.session__header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -16,14 +16,14 @@
   background: var(--bg);
 }
 
-.game__title {
+.session__title {
   margin: 0;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 
-.game__format {
+.session__format {
   padding-left: var(--space-3);
   border-left: 1px solid var(--divider);
   color: var(--muted);
@@ -73,7 +73,7 @@
   text-transform: uppercase;
 }
 
-.game__main {
+.session__main {
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -111,7 +111,7 @@
  * fixed-height table, so the table never gets squeezed to nothing.
  */
 @media (min-width: 768px) and (min-height: 600px) {
-  .game {
+  .session {
     height: 100dvh;
     min-height: 0;
   }

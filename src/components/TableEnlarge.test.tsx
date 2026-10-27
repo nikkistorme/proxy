@@ -5,8 +5,8 @@ import { flip } from '../actions/cardActions';
 import { loadPile } from '../actions/loadPile';
 import { moveCard } from '../actions/moveCard';
 import { cardsFrom, pilesOutOfTheWay, testContext } from '../actions/testing';
-import { createSoloGame, type GameState } from '../model/game';
-import { createGameStore, GameStoreProvider } from '../store/gameStore';
+import { createSoloSession, type SessionState } from '../model/session';
+import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
 import { TOUCH_HOLD_MS } from './cardDrag';
 import { ENLARGE_HOVER_MS, TableSurface } from './TableSurface';
 
@@ -14,16 +14,16 @@ const csv = 'name,id,back_of,type,text\nTroll,,,Creature,Smash.\nMoonrise Hunter
 
 /** Troll and Daylight Hunter on the table. */
 function setup() {
-  let game: GameState = loadPile(createSoloGame(), { pileId: 'pile-p1-main', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
+  let session: SessionState = loadPile(createSoloSession(), { pileId: 'pile-p1-main', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
   for (const name of ['Troll', 'Daylight Hunter']) {
-    const card = Object.values(game.cards).find((c) => game.definitions[c.definitionId]?.front.name === name);
-    if (card) game = moveCard(game, { cardId: card.id, to: { zone: 'table' } }).state;
+    const card = Object.values(session.cards).find((c) => session.definitions[c.definitionId]?.front.name === name);
+    if (card) session = moveCard(session, { cardId: card.id, to: { zone: 'table' } }).state;
   }
-  const store = createGameStore(pilesOutOfTheWay(game), testContext());
+  const store = createSessionStore(pilesOutOfTheWay(session), testContext());
   render(
-    <GameStoreProvider store={store}>
+    <SessionStoreProvider store={store}>
       <TableSurface />
-    </GameStoreProvider>,
+    </SessionStoreProvider>,
   );
   return store;
 }
@@ -62,12 +62,12 @@ describe('TT-9 enlarge', () => {
     expect(screen.getByRole('dialog', { name: 'Enlarged: Moonrise Hunter' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Show front' })).toHaveFocus();
     // The card on the table hasn't turned over.
-    expect(Object.values(store.getState().game.cards).find((c) => c.side === 'back')).toBeUndefined();
+    expect(Object.values(store.getState().session.cards).find((c) => c.side === 'back')).toBeUndefined();
   });
 
   it('starts on the face the card shows', async () => {
     const store = setup();
-    const hunter = store.getState().game.table[1]?.cardId ?? '';
+    const hunter = store.getState().session.table[1]?.cardId ?? '';
     act(() => {
       store.getState().dispatch((g) => flip(g, { cardId: hunter }));
     });
@@ -86,7 +86,7 @@ describe('TT-9 enlarge', () => {
 
   it('shows the front of a face-down card by key, but not on hover', async () => {
     const store = setup();
-    const troll = store.getState().game.table[0]?.cardId ?? '';
+    const troll = store.getState().session.table[0]?.cardId ?? '';
     act(() => {
       store.getState().dispatch((g) => flip(g, { cardId: troll }));
     });
@@ -97,7 +97,7 @@ describe('TT-9 enlarge', () => {
     await userEvent.keyboard('i');
     expect(screen.getByRole('dialog', { name: 'Enlarged: Troll' })).toHaveFocus();
     // The card stays face down.
-    expect(store.getState().game.cards[troll]?.side).toBe('down');
+    expect(store.getState().session.cards[troll]?.side).toBe('down');
   });
 
   it('Escape on a card or pile steps back to the table', async () => {

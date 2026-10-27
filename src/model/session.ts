@@ -61,7 +61,7 @@ export interface Pile {
   y: number;
 }
 
-export interface GameState {
+export interface SessionState {
   seats: Seat[];
   activeSeatId: string;
   definitions: Record<string, CardDefinition>;
@@ -83,14 +83,14 @@ export interface ActionContext {
 
 /** Every action returns the next state and what the live region should say (AR-1, AR-2). */
 export interface ActionResult {
-  state: GameState;
+  state: SessionState;
   announcement: string;
 }
 
 /**
  * The Solo PvE preset (FS-1), fixed in code until formats arrive in Phase 5.
  */
-export function createSoloGame(): GameState {
+export function createSoloSession(): SessionState {
   return {
     seats: [
       { id: 'seat-p1', name: 'Player 1', hasHand: true },

@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode, type Ref } from 'react';
 import { zoomPercent } from '../model/tableView';
-import { useGameStore } from '../store/gameStore';
+import { useSessionStore } from '../store/sessionStore';
 import './TableTools.css';
 import { Tooltip } from './Tooltip';
 
@@ -53,14 +53,14 @@ interface TableToolsProps {
  * fit all (TT-1), grid snap (TT-2), and Add pile (SP-4), which puts a pile on the table.
  */
 export function TableTools({ onAddPile, addPileRef }: TableToolsProps = {}) {
-  const canUndo = useGameStore((s) => s.past.length > 0);
-  const canRedo = useGameStore((s) => s.future.length > 0);
-  const undo = useGameStore((s) => s.undo);
-  const redo = useGameStore((s) => s.redo);
-  const { zoom, snap } = useGameStore((s) => s.view);
-  const setView = useGameStore((s) => s.setView);
-  const announce = useGameStore((s) => s.announce);
-  const viewport = useGameStore((s) => s.tableViewport);
+  const canUndo = useSessionStore((s) => s.past.length > 0);
+  const canRedo = useSessionStore((s) => s.future.length > 0);
+  const undo = useSessionStore((s) => s.undo);
+  const redo = useSessionStore((s) => s.redo);
+  const { zoom, snap } = useSessionStore((s) => s.view);
+  const setView = useSessionStore((s) => s.setView);
+  const announce = useSessionStore((s) => s.announce);
+  const viewport = useSessionStore((s) => s.tableViewport);
 
   const toggleSnap = () => {
     setView({ snap: !snap });

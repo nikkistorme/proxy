@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { moveCard, type Destination } from '../actions/moveCard';
 import { reorderTop } from '../actions/peek';
-import { useGameStore } from '../store/gameStore';
+import { useSessionStore } from '../store/sessionStore';
 import { CardFace } from './CardFace';
 import { Dialog } from './Dialog';
 import { LiveRegion } from './LiveRegion';
@@ -33,9 +33,9 @@ const ICONS = {
  * shown, with one `reorderTop`. Moves happen at once, through `moveCard`.
  */
 export function PeekDialog({ request, onClose }: PeekDialogProps) {
-  const game = useGameStore((s) => s.game);
-  const dispatch = useGameStore((s) => s.dispatch);
-  const announce = useGameStore((s) => s.announce);
+  const session = useSessionStore((s) => s.session);
+  const dispatch = useSessionStore((s) => s.dispatch);
+  const announce = useSessionStore((s) => s.announce);
 
   const bodyRef = useRef<HTMLDivElement>(null);
   /** The button to focus once the page has updated: `${cardId}:${action}`, or 'done'. */
@@ -43,10 +43,10 @@ export function PeekDialog({ request, onClose }: PeekDialogProps) {
   const [order, setOrder] = useState<string[]>(request?.cardIds ?? []);
   const [moveRequest, setMoveRequest] = useState<MoveRequest>();
 
-  const pile = game.piles.find((p) => p.id === request?.pileId);
+  const pile = session.piles.find((p) => p.id === request?.pileId);
   const faceOf = (cardId: string) => {
-    const card = game.cards[cardId];
-    return card && game.definitions[card.definitionId]?.front;
+    const card = session.cards[cardId];
+    return card && session.definitions[card.definitionId]?.front;
   };
   const nameOf = (cardId: string) => faceOf(cardId)?.name ?? 'Card';
 
@@ -79,7 +79,7 @@ export function PeekDialog({ request, onClose }: PeekDialogProps) {
     if (!pile || !face) return;
     // Cancelling comes back to this button; a move replaces it.
     pendingFocusRef.current = `${cardId}:move`;
-    setMoveRequest({ cardId, face, fromName: pile.name, options: moveDestinations(game, cardId, { exceptTopOf: pile.id }) });
+    setMoveRequest({ cardId, face, fromName: pile.name, options: moveDestinations(session, cardId, { exceptTopOf: pile.id }) });
   }
 
   function confirmMove(to: Destination) {

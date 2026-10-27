@@ -1,4 +1,4 @@
-import type { Pile } from '../model/game';
+import type { Pile } from '../model/session';
 import { Menu, type MenuEntry } from './Menu';
 
 const ICONS = {

@@ -1,10 +1,10 @@
-import { GameScreen } from './components/GameScreen';
-import { GameStoreProvider } from './store/gameStore';
+import { SessionScreen } from './components/SessionScreen';
+import { SessionStoreProvider } from './store/sessionStore';
 
 export function App() {
   return (
-    <GameStoreProvider>
-      <GameScreen />
-    </GameStoreProvider>
+    <SessionStoreProvider>
+      <SessionScreen />
+    </SessionStoreProvider>
   );
 }

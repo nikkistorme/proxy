@@ -2,12 +2,12 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { validatePileName } from '../actions/piles';
-import { createSoloGame } from '../model/game';
+import { createSoloSession } from '../model/session';
 import { PileNameDialog, type PileNameRequest } from './PileNameDialog';
 
-const game = createSoloGame();
-const board = game.piles.find((p) => p.id === 'pile-board');
-if (!board) throw new Error('Solo game has a Board cards pile');
+const session = createSoloSession();
+const board = session.piles.find((p) => p.id === 'pile-board');
+if (!board) throw new Error('Solo session has a Board cards pile');
 
 function renderDialog(request: PileNameRequest) {
   const user = userEvent.setup();
@@ -16,8 +16,8 @@ function renderDialog(request: PileNameRequest) {
   render(
     <PileNameDialog
       request={request}
-      seats={game.seats}
-      validateName={(name, except) => validatePileName(game, name, except)}
+      seats={session.seats}
+      validateName={(name, except) => validatePileName(session, name, except)}
       onConfirm={onConfirm}
       onClose={onClose}
     />,

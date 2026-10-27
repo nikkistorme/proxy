@@ -1,10 +1,10 @@
-import type { ActionContext, ActionResult, Counter, GameState, TableEntry } from '../model/game';
+import type { ActionContext, ActionResult, Counter, SessionState, TableEntry } from '../model/session';
 import { shownName } from './cardActions';
 
 /** A new counter starts at 1, the usual reason to add one. */
 export const COUNTER_START = 1;
 
-function tableEntry(state: GameState, cardId: string): { index: number; entry: TableEntry } {
+function tableEntry(state: SessionState, cardId: string): { index: number; entry: TableEntry } {
   const index = state.table.findIndex((e) => e.cardId === cardId);
   const entry = state.table[index];
   if (!entry) throw new Error(`Card ${cardId} is not on the table`);
@@ -17,7 +17,7 @@ function getCounter(entry: TableEntry, counterId: string): Counter {
   return counter;
 }
 
-function withCounters(state: GameState, index: number, entry: TableEntry, counters: Counter[]): GameState {
+function withCounters(state: SessionState, index: number, entry: TableEntry, counters: Counter[]): SessionState {
   const next: TableEntry = { ...entry, counters };
   if (counters.length === 0) delete next.counters;
   return {
@@ -33,14 +33,14 @@ function nameTaken(entry: TableEntry, name: string, exceptId?: string): boolean 
 }
 
 /** Why a counter name can't be used on this card, or undefined if it can. */
-export function counterNameProblem(state: GameState, cardId: string, name: string, exceptId?: string): string | undefined {
+export function counterNameProblem(state: SessionState, cardId: string, name: string, exceptId?: string): string | undefined {
   if (name.trim() === '') return 'Enter a counter name.';
   if (nameTaken(tableEntry(state, cardId).entry, name, exceptId)) return `This card already has a ${name.trim()} counter.`;
   return undefined;
 }
 
 /** TT-8: add a named counter to a table card, starting at 1. */
-export function addCounter(state: GameState, args: { cardId: string; name: string }, context: ActionContext): ActionResult & { counterId?: string } {
+export function addCounter(state: SessionState, args: { cardId: string; name: string }, context: ActionContext): ActionResult & { counterId?: string } {
   const problem = counterNameProblem(state, args.cardId, args.name);
   if (problem) return { state, announcement: problem };
   const { index, entry } = tableEntry(state, args.cardId);
@@ -57,7 +57,7 @@ export function addCounter(state: GameState, args: { cardId: string; name: strin
 }
 
 /** TT-8: set a counter to a whole number. The − and + buttons step it by one. */
-export function setCounter(state: GameState, args: { cardId: string; counterId: string; value: number }): ActionResult {
+export function setCounter(state: SessionState, args: { cardId: string; counterId: string; value: number }): ActionResult {
   if (!Number.isInteger(args.value)) throw new RangeError(`Counter values are whole numbers, got ${args.value}`);
   const { index, entry } = tableEntry(state, args.cardId);
   const counter = getCounter(entry, args.counterId);
@@ -68,7 +68,7 @@ export function setCounter(state: GameState, args: { cardId: string; counterId: 
 }
 
 /** TT-8: rename a counter, keeping its value. */
-export function renameCounter(state: GameState, args: { cardId: string; counterId: string; name: string }): ActionResult {
+export function renameCounter(state: SessionState, args: { cardId: string; counterId: string; name: string }): ActionResult {
   const { index, entry } = tableEntry(state, args.cardId);
   const counter = getCounter(entry, args.counterId);
   const name = args.name.trim();
@@ -83,7 +83,7 @@ export function renameCounter(state: GameState, args: { cardId: string; counterI
 }
 
 /** TT-8: take a counter off a card. Undo puts it back. */
-export function removeCounter(state: GameState, args: { cardId: string; counterId: string }): ActionResult {
+export function removeCounter(state: SessionState, args: { cardId: string; counterId: string }): ActionResult {
   const { index, entry } = tableEntry(state, args.cardId);
   const counter = getCounter(entry, args.counterId);
   const counters = (entry.counters ?? []).filter((c) => c.id !== counter.id);

@@ -1,21 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import type { GameState } from '../model/game';
+import type { SessionState } from '../model/session';
 import { locateCard, moveCard } from './moveCard';
 import { draw, revealTop } from './pileActions';
-import { gameWithDeck, namesOf, tableIds } from './testing';
+import { sessionWithDeck, namesOf, tableIds } from './testing';
 
 const MAIN = 'pile-p1-main';
 const BOARD = 'pile-board';
 
-const pileOf = (state: GameState, pileId: string) => namesOf(state, state.piles.find((p) => p.id === pileId)?.cardIds);
-const idOf = (state: GameState, name: string) =>
+const pileOf = (state: SessionState, pileId: string) => namesOf(state, state.piles.find((p) => p.id === pileId)?.cardIds);
+const idOf = (state: SessionState, name: string) =>
   Object.values(state.cards).find((card) => state.definitions[card.definitionId]?.front.name === name)?.id ?? '';
 
 describe('SP-8 move a card', () => {
   it('moves a card from the middle of a pile to the table, face up', () => {
-    const game = gameWithDeck();
-    const ogre = idOf(game, 'Ogre');
-    const { state, announcement } = moveCard(game, { cardId: ogre, to: { zone: 'table' } });
+    const session = sessionWithDeck();
+    const ogre = idOf(session, 'Ogre');
+    const { state, announcement } = moveCard(session, { cardId: ogre, to: { zone: 'table' } });
     expect(pileOf(state, MAIN)).toEqual(['Imp', 'Troll']);
     expect(namesOf(state, tableIds(state))).toEqual(['Ogre']);
     expect(state.cards[ogre]?.side).toBe('front');
@@ -23,16 +23,16 @@ describe('SP-8 move a card', () => {
   });
 
   it('moves a card to a hand without changing its face', () => {
-    const game = gameWithDeck();
-    const troll = idOf(game, 'Troll');
-    const { state, announcement } = moveCard(game, { cardId: troll, to: { zone: 'hand', seatId: 'seat-p1' } });
+    const session = sessionWithDeck();
+    const troll = idOf(session, 'Troll');
+    const { state, announcement } = moveCard(session, { cardId: troll, to: { zone: 'hand', seatId: 'seat-p1' } });
     expect(namesOf(state, state.hands['seat-p1'])).toEqual(['Troll']);
     expect(state.cards[troll]?.side).toBe('down');
     expect(announcement).toBe("Moved Troll from P1 main deck to Player 1's hand.");
   });
 
   it('puts a card on the top or bottom of a pile, face down unless kept face up', () => {
-    const onTable = moveCard(gameWithDeck(), { cardId: idOf(gameWithDeck(), 'Imp'), to: { zone: 'table' } }).state;
+    const onTable = moveCard(sessionWithDeck(), { cardId: idOf(sessionWithDeck(), 'Imp'), to: { zone: 'table' } }).state;
     const imp = idOf(onTable, 'Imp');
 
     const top = moveCard(onTable, { cardId: imp, to: { zone: 'pile', pileId: BOARD, position: 'top' } });
@@ -47,14 +47,14 @@ describe('SP-8 move a card', () => {
   });
 
   it('moves a card within the same pile', () => {
-    const game = gameWithDeck();
-    const { state, announcement } = moveCard(game, { cardId: idOf(game, 'Imp'), to: { zone: 'pile', pileId: MAIN, position: 'bottom' } });
+    const session = sessionWithDeck();
+    const { state, announcement } = moveCard(session, { cardId: idOf(session, 'Imp'), to: { zone: 'pile', pileId: MAIN, position: 'bottom' } });
     expect(pileOf(state, MAIN)).toEqual(['Ogre', 'Troll', 'Imp']);
     expect(announcement).toBe('Moved Imp from P1 main deck to the bottom of P1 main deck.');
   });
 
   it('moves a card from a hand, keeping the rest of the hand in order', () => {
-    const drawn = draw(gameWithDeck(), { pileId: MAIN, count: 3 }).state;
+    const drawn = draw(sessionWithDeck(), { pileId: MAIN, count: 3 }).state;
     const { state, announcement } = moveCard(drawn, { cardId: idOf(drawn, 'Ogre'), to: { zone: 'pile', pileId: MAIN, position: 'top' } });
     expect(namesOf(state, state.hands['seat-p1'])).toEqual(['Imp', 'Troll']);
     expect(pileOf(state, MAIN)).toEqual(['Ogre']);
@@ -62,78 +62,78 @@ describe('SP-8 move a card', () => {
   });
 
   it('leaves the state alone when the card is already on the table or in that hand', () => {
-    const game = gameWithDeck();
-    const onTable = moveCard(game, { cardId: idOf(game, 'Imp'), to: { zone: 'table' } }).state;
-    const again = moveCard(onTable, { cardId: idOf(game, 'Imp'), to: { zone: 'table' } });
+    const session = sessionWithDeck();
+    const onTable = moveCard(session, { cardId: idOf(session, 'Imp'), to: { zone: 'table' } }).state;
+    const again = moveCard(onTable, { cardId: idOf(session, 'Imp'), to: { zone: 'table' } });
     expect(again.state).toBe(onTable);
     expect(again.announcement).toBe('Imp is already on the table.');
 
-    const inHand = draw(game, { pileId: MAIN }).state;
-    const same = moveCard(inHand, { cardId: idOf(game, 'Imp'), to: { zone: 'hand', seatId: 'seat-p1' } });
+    const inHand = draw(session, { pileId: MAIN }).state;
+    const same = moveCard(inHand, { cardId: idOf(session, 'Imp'), to: { zone: 'hand', seatId: 'seat-p1' } });
     expect(same.state).toBe(inHand);
     expect(same.announcement).toBe("Imp is already in Player 1's hand.");
   });
 
   it('turns a revealed card face down when it moves to a pile', () => {
-    const revealed = revealTop(gameWithDeck(), { pileId: MAIN }).state;
+    const revealed = revealTop(sessionWithDeck(), { pileId: MAIN }).state;
     const imp = idOf(revealed, 'Imp');
     const toPile = moveCard(revealed, { cardId: imp, to: { zone: 'pile', pileId: BOARD, position: 'top' } }).state;
     expect(toPile.cards[imp]?.side).toBe('down');
   });
 
   it('refuses unknown cards, seats without a hand, and unknown piles or seats', () => {
-    const game = gameWithDeck();
-    const imp = idOf(game, 'Imp');
-    expect(() => moveCard(game, { cardId: 'nope', to: { zone: 'table' } })).toThrow('Card nope is not in play');
-    expect(() => moveCard(game, { cardId: imp, to: { zone: 'hand', seatId: 'seat-env' } })).toThrow('Environment has no hand');
-    expect(() => moveCard(game, { cardId: imp, to: { zone: 'hand', seatId: 'ghost' } })).toThrow('ghost has no hand');
-    expect(() => moveCard(game, { cardId: imp, to: { zone: 'pile', pileId: 'nope', position: 'top' } })).toThrow('Unknown pile: nope');
+    const session = sessionWithDeck();
+    const imp = idOf(session, 'Imp');
+    expect(() => moveCard(session, { cardId: 'nope', to: { zone: 'table' } })).toThrow('Card nope is not in play');
+    expect(() => moveCard(session, { cardId: imp, to: { zone: 'hand', seatId: 'seat-env' } })).toThrow('Environment has no hand');
+    expect(() => moveCard(session, { cardId: imp, to: { zone: 'hand', seatId: 'ghost' } })).toThrow('ghost has no hand');
+    expect(() => moveCard(session, { cardId: imp, to: { zone: 'pile', pileId: 'nope', position: 'top' } })).toThrow('Unknown pile: nope');
   });
 
   it('finds where a card is', () => {
-    const game = gameWithDeck();
-    const imp = idOf(game, 'Imp');
-    expect(locateCard(game, imp)).toEqual({ zone: 'pile', pileId: MAIN });
-    const inHand = draw(game, { pileId: MAIN }).state;
+    const session = sessionWithDeck();
+    const imp = idOf(session, 'Imp');
+    expect(locateCard(session, imp)).toEqual({ zone: 'pile', pileId: MAIN });
+    const inHand = draw(session, { pileId: MAIN }).state;
     expect(locateCard(inHand, imp)).toEqual({ zone: 'hand', seatId: 'seat-p1' });
-    expect(locateCard(moveCard(game, { cardId: imp, to: { zone: 'table' } }).state, imp)).toEqual({ zone: 'table' });
+    expect(locateCard(moveCard(session, { cardId: imp, to: { zone: 'table' } }).state, imp)).toEqual({ zone: 'table' });
   });
 
   it('never changes the state it was given', () => {
-    const game = gameWithDeck();
-    const copy = structuredClone(game);
-    moveCard(game, { cardId: idOf(game, 'Ogre'), to: { zone: 'table' } });
-    expect(game).toEqual(copy);
+    const session = sessionWithDeck();
+    const copy = structuredClone(session);
+    moveCard(session, { cardId: idOf(session, 'Ogre'), to: { zone: 'table' } });
+    expect(session).toEqual(copy);
   });
 });
 
 describe('TT-4 cards on the table', () => {
-  // The Solo game's three piles take the first three spots of the top row.
+  // The Solo session's three piles take the first three spots of the top row.
   it('places cards in the first free spot, or at a given position', () => {
-    let game = gameWithDeck();
-    game = moveCard(game, { cardId: idOf(game, 'Imp'), to: { zone: 'table' } }).state;
-    game = moveCard(game, { cardId: idOf(game, 'Ogre'), to: { zone: 'table', position: { x: 400, y: 300 } } }).state;
-    game = moveCard(game, { cardId: idOf(game, 'Troll'), to: { zone: 'table' } }).state;
-    expect(game.table).toEqual([
-      { cardId: idOf(game, 'Imp'), x: 442, y: 16, rotation: 0 },
-      { cardId: idOf(game, 'Ogre'), x: 400, y: 300, rotation: 0 },
-      { cardId: idOf(game, 'Troll'), x: 584, y: 16, rotation: 0 },
+    let session = sessionWithDeck();
+    session = moveCard(session, { cardId: idOf(session, 'Imp'), to: { zone: 'table' } }).state;
+    session = moveCard(session, { cardId: idOf(session, 'Ogre'), to: { zone: 'table', position: { x: 400, y: 300 } } }).state;
+    session = moveCard(session, { cardId: idOf(session, 'Troll'), to: { zone: 'table' } }).state;
+    expect(session.table).toEqual([
+      { cardId: idOf(session, 'Imp'), x: 442, y: 16, rotation: 0 },
+      { cardId: idOf(session, 'Ogre'), x: 400, y: 300, rotation: 0 },
+      { cardId: idOf(session, 'Troll'), x: 584, y: 16, rotation: 0 },
     ]);
-    expect(locateCard(game, idOf(game, 'Ogre'))).toEqual({ zone: 'table' });
+    expect(locateCard(session, idOf(session, 'Ogre'))).toEqual({ zone: 'table' });
   });
 
   it('A11Y-1 moves a table card to a new spot, keeping its turn, side and layer', () => {
-    let game = gameWithDeck();
-    game = moveCard(game, { cardId: idOf(game, 'Imp'), to: { zone: 'table' } }).state;
-    game = moveCard(game, { cardId: idOf(game, 'Ogre'), to: { zone: 'table' } }).state;
-    const imp = idOf(game, 'Imp');
-    game = { ...game, table: game.table.map((e) => (e.cardId === imp ? { ...e, rotation: 90 } : e)) };
-    const { state, announcement } = moveCard(game, { cardId: imp, to: { zone: 'table', position: { x: 300, y: 200 } } });
+    let session = sessionWithDeck();
+    session = moveCard(session, { cardId: idOf(session, 'Imp'), to: { zone: 'table' } }).state;
+    session = moveCard(session, { cardId: idOf(session, 'Ogre'), to: { zone: 'table' } }).state;
+    const imp = idOf(session, 'Imp');
+    session = { ...session, table: session.table.map((e) => (e.cardId === imp ? { ...e, rotation: 90 } : e)) };
+    const { state, announcement } = moveCard(session, { cardId: imp, to: { zone: 'table', position: { x: 300, y: 200 } } });
     expect(state.table).toEqual([
       { cardId: imp, x: 300, y: 200, rotation: 90 },
-      { cardId: idOf(game, 'Ogre'), x: 584, y: 16, rotation: 0 },
+      { cardId: idOf(session, 'Ogre'), x: 584, y: 16, rotation: 0 },
     ]);
-    expect(state.cards[imp]).toBe(game.cards[imp]);
+    expect(state.cards[imp]).toBe(session.cards[imp]);
     expect(announcement).toBe('Moved Imp on the table.');
 
     const same = moveCard(state, { cardId: imp, to: { zone: 'table', position: { x: 300, y: 200 } } });
@@ -142,30 +142,30 @@ describe('TT-4 cards on the table', () => {
   });
 
   it('A11Y-1 keeps a face-down table card unnamed when it moves', () => {
-    let game = gameWithDeck();
-    const imp = idOf(game, 'Imp');
-    game = moveCard(game, { cardId: imp, to: { zone: 'table' } }).state;
-    const card = game.cards[imp];
-    if (card) game = { ...game, cards: { ...game.cards, [imp]: { ...card, side: 'down' } } };
-    expect(moveCard(game, { cardId: imp, to: { zone: 'table', position: { x: 300, y: 200 } } }).announcement).toBe('Moved a face-down card on the table.');
+    let session = sessionWithDeck();
+    const imp = idOf(session, 'Imp');
+    session = moveCard(session, { cardId: imp, to: { zone: 'table' } }).state;
+    const card = session.cards[imp];
+    if (card) session = { ...session, cards: { ...session.cards, [imp]: { ...card, side: 'down' } } };
+    expect(moveCard(session, { cardId: imp, to: { zone: 'table', position: { x: 300, y: 200 } } }).announcement).toBe('Moved a face-down card on the table.');
   });
 
   it('takes a card off the table, keeping the others where they are', () => {
-    let game = gameWithDeck();
-    game = moveCard(game, { cardId: idOf(game, 'Imp'), to: { zone: 'table' } }).state;
-    game = moveCard(game, { cardId: idOf(game, 'Ogre'), to: { zone: 'table' } }).state;
-    game = moveCard(game, { cardId: idOf(game, 'Imp'), to: { zone: 'hand', seatId: 'seat-p1' } }).state;
-    expect(game.table).toEqual([{ cardId: idOf(game, 'Ogre'), x: 584, y: 16, rotation: 0 }]);
+    let session = sessionWithDeck();
+    session = moveCard(session, { cardId: idOf(session, 'Imp'), to: { zone: 'table' } }).state;
+    session = moveCard(session, { cardId: idOf(session, 'Ogre'), to: { zone: 'table' } }).state;
+    session = moveCard(session, { cardId: idOf(session, 'Imp'), to: { zone: 'hand', seatId: 'seat-p1' } }).state;
+    expect(session.table).toEqual([{ cardId: idOf(session, 'Ogre'), x: 584, y: 16, rotation: 0 }]);
   });
 });
 
 describe('TT-6 card sides', () => {
   it('a card on the table shows its front, even if it was showing its back', () => {
-    const game = gameWithDeck();
-    const imp = idOf(game, 'Imp');
-    const card = game.cards[imp];
+    const session = sessionWithDeck();
+    const imp = idOf(session, 'Imp');
+    const card = session.cards[imp];
     if (!card) throw new Error('No Imp');
-    const backUp: GameState = { ...game, cards: { ...game.cards, [imp]: { ...card, side: 'back' } } };
+    const backUp: SessionState = { ...session, cards: { ...session.cards, [imp]: { ...card, side: 'back' } } };
     expect(moveCard(backUp, { cardId: imp, to: { zone: 'table' } }).state.cards[imp]?.side).toBe('front');
   });
 });

@@ -1,8 +1,8 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { shownName } from '../actions/cardActions';
 import { addCounter, counterNameProblem, removeCounter, renameCounter, setCounter } from '../actions/counters';
-import type { Counter } from '../model/game';
-import { useGameStore } from '../store/gameStore';
+import type { Counter } from '../model/session';
+import { useSessionStore } from '../store/sessionStore';
 import { Dialog } from './Dialog';
 import { LiveRegion } from './LiveRegion';
 import './CountersDialog.css';
@@ -35,8 +35,8 @@ function stepFor(event: KeyboardEvent): number {
  * it's announced and undone one at a time, and Escape keeps what was set.
  */
 export function CountersDialog({ request, onClose }: CountersDialogProps) {
-  const game = useGameStore((s) => s.game);
-  const dispatch = useGameStore((s) => s.dispatch);
+  const session = useSessionStore((s) => s.session);
+  const dispatch = useSessionStore((s) => s.dispatch);
   const newNameId = useId();
   const errorId = useId();
   const [newName, setNewName] = useState('');
@@ -48,7 +48,7 @@ export function CountersDialog({ request, onClose }: CountersDialogProps) {
   const [touch] = useState(touchScreen);
   const addRef = useRef<HTMLButtonElement>(null);
 
-  const entry = request && game.table.find((e) => e.cardId === request.cardId);
+  const entry = request && session.table.find((e) => e.cardId === request.cardId);
   const counters = entry?.counters ?? [];
   const cardId = request?.cardId ?? '';
   // The pill that was clicked, else the first counter, else the new counter's name
@@ -56,7 +56,7 @@ export function CountersDialog({ request, onClose }: CountersDialogProps) {
   const startOn = request && (counters.find((c) => c.id === request.counterId) ?? counters[0])?.id;
 
   function add() {
-    const problem = counterNameProblem(game, cardId, newName);
+    const problem = counterNameProblem(session, cardId, newName);
     if (problem) {
       setError(problem);
       newNameRef.current?.focus();
@@ -73,7 +73,7 @@ export function CountersDialog({ request, onClose }: CountersDialogProps) {
     (touch ? addRef : newNameRef).current?.focus();
   }
 
-  const name = entry ? shownName(game, cardId) : '';
+  const name = entry ? shownName(session, cardId) : '';
   return (
     <Dialog open={entry !== undefined} title={`Counters on ${name === 'a face-down card' ? 'face-down card' : name}`} hint="+/− step · Esc close" primaryLabel="Done" width="narrow" onClose={onClose}>
       {entry && (
@@ -98,7 +98,7 @@ export function CountersDialog({ request, onClose }: CountersDialogProps) {
                       }),
                     )
                   }
-                  nameProblem={(next) => counterNameProblem(game, cardId, next, counter.id)}
+                  nameProblem={(next) => counterNameProblem(session, cardId, next, counter.id)}
                   onRemove={() => remove(counter.id)}
                 />
               ))}

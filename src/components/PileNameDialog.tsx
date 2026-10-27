@@ -1,5 +1,5 @@
 import { useId, useState } from 'react';
-import type { Pile, Seat } from '../model/game';
+import type { Pile, Seat } from '../model/session';
 import { Dialog } from './Dialog';
 import './Form.css';
 

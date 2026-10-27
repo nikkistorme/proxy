@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState, type DragEvent, type KeyboardEvent } from 'react';
 import type { CardFace as CardFaceData } from '../model/card';
-import type { Pile } from '../model/game';
+import type { Pile } from '../model/session';
 import { CardFace } from './CardFace';
 import './PileTile.css';
 import { seatIdentity } from './seatIdentity';

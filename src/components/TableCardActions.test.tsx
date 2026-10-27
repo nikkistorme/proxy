@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { loadPile } from '../actions/loadPile';
 import { moveCard } from '../actions/moveCard';
 import { cardsFrom, tableIds, testContext } from '../actions/testing';
-import { createSoloGame, type GameState } from '../model/game';
-import { createGameStore, GameStoreProvider } from '../store/gameStore';
+import { createSoloSession, type SessionState } from '../model/session';
+import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
 import { TableSurface } from './TableSurface';
 import { Toast } from './Toast';
 
@@ -13,17 +13,17 @@ const csv = 'name,id,back_of,type,text\nTroll,,,Creature,Smash.\nMoonrise Hunter
 
 /** Troll and Daylight Hunter on the table, with the toast. */
 function setup() {
-  let game: GameState = loadPile(createSoloGame(), { pileId: 'pile-p1-main', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
+  let session: SessionState = loadPile(createSoloSession(), { pileId: 'pile-p1-main', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
   for (const name of ['Troll', 'Daylight Hunter']) {
-    const card = Object.values(game.cards).find((c) => game.definitions[c.definitionId]?.front.name === name);
-    if (card) game = moveCard(game, { cardId: card.id, to: { zone: 'table' } }).state;
+    const card = Object.values(session.cards).find((c) => session.definitions[c.definitionId]?.front.name === name);
+    if (card) session = moveCard(session, { cardId: card.id, to: { zone: 'table' } }).state;
   }
-  const store = createGameStore(game, testContext());
+  const store = createSessionStore(session, testContext());
   render(
-    <GameStoreProvider store={store}>
+    <SessionStoreProvider store={store}>
       <TableSurface />
       <Toast />
-    </GameStoreProvider>,
+    </SessionStoreProvider>,
   );
   return store;
 }
@@ -91,8 +91,8 @@ describe('TT-5, TT-6, TT-10 and TT-11 card menu', () => {
     const store = setup();
     fireEvent.contextMenu(card('Troll'));
     await userEvent.click(screen.getByRole('menuitem', { name: 'Bring to front' }));
-    const trollId = store.getState().past[0]?.game.table[0]?.cardId;
-    expect(tableIds(store.getState().game).at(-1)).toBe(trollId);
+    const trollId = store.getState().past[0]?.session.table[0]?.cardId;
+    expect(tableIds(store.getState().session).at(-1)).toBe(trollId);
     expect(status(store)).toBe('Brought Troll to the front.');
     expect(card('Troll')).toHaveFocus();
   });
@@ -102,7 +102,7 @@ describe('TT-5, TT-6, TT-10 and TT-11 card menu', () => {
     card('Troll').focus();
     await userEvent.keyboard('{Control>}d{/Control}');
     expect(within(table()).getAllByRole('button', { name: 'Troll' })).toHaveLength(2);
-    const copyId = tableIds(store.getState().game).at(-1);
+    const copyId = tableIds(store.getState().session).at(-1);
     expect(document.activeElement?.closest('[data-card-id]')?.getAttribute('data-card-id')).toBe(copyId);
   });
 
@@ -132,7 +132,7 @@ describe('TT-5, TT-6, TT-10 and TT-11 card menu', () => {
     expect(within(dialog).getByRole('option', { name: /^Table — choose a spot/ })).toBeInTheDocument();
     await userEvent.click(within(dialog).getByRole('option', { name: /^Board cards — top/ }));
     await userEvent.click(within(dialog).getByRole('button', { name: 'Move to Board cards — top' }));
-    expect(store.getState().game.piles.find((p) => p.id === 'pile-board')?.cardIds).toHaveLength(1);
+    expect(store.getState().session.piles.find((p) => p.id === 'pile-board')?.cardIds).toHaveLength(1);
     await waitFor(() => expect(card('Daylight Hunter, front face')).toHaveFocus());
   });
 

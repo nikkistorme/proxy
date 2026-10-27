@@ -1,6 +1,6 @@
 import { importCards } from '../csv/importCards';
 import type { ImportedCard } from '../model/card';
-import { createSoloGame, type ActionContext, type GameState } from '../model/game';
+import { createSoloSession, type ActionContext, type SessionState } from '../model/session';
 import { seededRandomInt } from '../model/random';
 import { loadPile } from './loadPile';
 
@@ -15,24 +15,24 @@ export function cardsFrom(csv: string): ImportedCard[] {
 }
 
 /** Card names for a list of card ids, for readable assertions. */
-export function namesOf(state: GameState, ids: readonly string[] | undefined): string[] {
+export function namesOf(state: SessionState, ids: readonly string[] | undefined): string[] {
   return (ids ?? []).map((id) => state.definitions[state.cards[id]?.definitionId ?? '']?.front.name ?? '?');
 }
 
 /** Card ids on the table, bottom of the stacking order first. */
-export function tableIds(state: GameState): string[] {
+export function tableIds(state: SessionState): string[] {
   return state.table.map((entry) => entry.cardId);
 }
 
-/** A Solo game with the given cards in P1 main deck, top to bottom in CSV order. */
-export function gameWithDeck(csv = 'name\nImp\nOgre\nTroll\n'): GameState {
-  return loadPile(createSoloGame(), { pileId: 'pile-p1-main', sourceName: 'deck.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
+/** A Solo session with the given cards in P1 main deck, top to bottom in CSV order. */
+export function sessionWithDeck(csv = 'name\nImp\nOgre\nTroll\n'): SessionState {
+  return loadPile(createSoloSession(), { pileId: 'pile-p1-main', sourceName: 'deck.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
 }
 
 /**
- * The game with its piles moved well below the top rows of the table, so tests
+ * The session with its piles moved well below the top rows of the table, so tests
  * that only draw the table see cards auto-placed from the top-left corner.
  */
-export function pilesOutOfTheWay(state: GameState): GameState {
+export function pilesOutOfTheWay(state: SessionState): SessionState {
   return { ...state, piles: state.piles.map((pile, i) => ({ ...pile, x: 16 + i * 142, y: 2000 })) };
 }

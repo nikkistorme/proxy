@@ -1,9 +1,9 @@
-import type { ActionContext, ActionResult, GameState } from '../model/game';
+import type { ActionContext, ActionResult, SessionState } from '../model/session';
 import { shuffled } from '../model/shuffle';
 import { activeSeat, cardName, checkCount, getPile, nameList, plural, withPile } from './helpers';
 
 /** SP-6: shuffle a pile. Every card in it ends face down. */
-export function shuffle(state: GameState, args: { pileId: string }, context: ActionContext): ActionResult {
+export function shuffle(state: SessionState, args: { pileId: string }, context: ActionContext): ActionResult {
   const pile = getPile(state, args.pileId);
   const cards = { ...state.cards };
   for (const id of pile.cardIds) {
@@ -15,7 +15,7 @@ export function shuffle(state: GameState, args: { pileId: string }, context: Act
 }
 
 /** SP-6: draw the top cards of a pile into the active seat's hand. */
-export function draw(state: GameState, args: { pileId: string; count?: number }): ActionResult {
+export function draw(state: SessionState, args: { pileId: string; count?: number }): ActionResult {
   const count = args.count ?? 1;
   checkCount(count);
   const pile = getPile(state, args.pileId);
@@ -39,7 +39,7 @@ export function draw(state: GameState, args: { pileId: string; count?: number })
 }
 
 /** SP-6: turn a pile's top card face up. */
-export function revealTop(state: GameState, args: { pileId: string }): ActionResult {
+export function revealTop(state: SessionState, args: { pileId: string }): ActionResult {
   const pile = getPile(state, args.pileId);
   const topId = pile.cardIds[0];
   const top = topId === undefined ? undefined : state.cards[topId];
@@ -53,7 +53,7 @@ export function revealTop(state: GameState, args: { pileId: string }): ActionRes
  * SP-6: move the top cards of one pile onto another, one at a time, as if dealt
  * by hand. The first card moved ends up deepest.
  */
-export function mill(state: GameState, args: { pileId: string; count: number; toPileId: string }): ActionResult {
+export function mill(state: SessionState, args: { pileId: string; count: number; toPileId: string }): ActionResult {
   checkCount(args.count);
   if (args.pileId === args.toPileId) throw new Error('Cannot mill a pile onto itself');
   const from = getPile(state, args.pileId);

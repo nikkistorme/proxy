@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { gameWithDeck, namesOf, testContext } from '../actions/testing';
-import { createGameStore, GameStoreProvider } from '../store/gameStore';
+import { sessionWithDeck, namesOf, testContext } from '../actions/testing';
+import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
 import { TOUCH_HOLD_MS } from './cardDrag';
 import { PileViewer } from './PileViewer';
 
@@ -9,21 +9,21 @@ const csv = 'name,type\nTroll,Creature\nOgre,Creature\nImp,Creature\n';
 
 /** The viewer over P1 main deck (Troll, Ogre, Imp, top first), with stand-in drop zones behind it. */
 function setup() {
-  const store = createGameStore(gameWithDeck(csv), testContext());
+  const store = createSessionStore(sessionWithDeck(csv), testContext());
   const onClose = vi.fn();
   render(
-    <GameStoreProvider store={store}>
+    <SessionStoreProvider store={store}>
       <div data-drop-zone="table" data-testid="table" />
       <div data-drop-zone="hand" data-seat-id="seat-p1" data-testid="hand" />
       <div data-drop-zone="pile" data-pile-id="pile-board" data-testid="board-pile" />
       <div data-drop-zone="pile" data-pile-id="pile-p1-main" data-testid="own-pile" />
       <PileViewer pileId="pile-p1-main" onClose={onClose} />
-    </GameStoreProvider>,
+    </SessionStoreProvider>,
   );
   const dialog = screen.getByRole('dialog', { name: 'P1 main deck' }) as HTMLDialogElement;
-  const game = () => store.getState().game;
-  const names = (pileId: string) => namesOf(game(), game().piles.find((p) => p.id === pileId)?.cardIds ?? []);
-  return { store, dialog, onClose, game, names };
+  const session = () => store.getState().session;
+  const names = (pileId: string) => namesOf(session(), session().piles.find((p) => p.id === pileId)?.cardIds ?? []);
+  return { store, dialog, onClose, session, names };
 }
 
 const card = (dialog: HTMLElement, name: string) => within(dialog).getByRole('button', { name: new RegExp(`^${name}\\. `) });
@@ -58,7 +58,7 @@ function mouseDrag(element: HTMLElement, { release = true } = {}) {
 
 describe('TT-4 dragging from the pile viewer', () => {
   it('steps aside while a card is dragged, then drops it on the table in one undo step and comes back', async () => {
-    const { store, dialog, onClose, game, names } = setup();
+    const { store, dialog, onClose, session, names } = setup();
     const steps = store.getState().past.length;
     mouseDrag(card(dialog, 'Ogre'), { release: false });
     expect(dialog.open).toBe(false);
@@ -66,7 +66,7 @@ describe('TT-4 dragging from the pile viewer', () => {
     expect(ghost()?.querySelector('button')).toBeNull();
 
     fireEvent.pointerUp(document, at(400, 300));
-    expect(game().table).toHaveLength(1);
+    expect(session().table).toHaveLength(1);
     expect(names('pile-p1-main')).toEqual(['Troll', 'Imp']);
     expect(store.getState().past).toHaveLength(steps + 1);
     expect(store.getState().announcement.text).toMatch(/^Moved Ogre from P1 main deck to the table/);
@@ -78,10 +78,10 @@ describe('TT-4 dragging from the pile viewer', () => {
   });
 
   it('drops a card in a hand or on another pile', () => {
-    const { dialog, game, names } = setup();
+    const { dialog, session, names } = setup();
     hit = 'hand';
     mouseDrag(card(dialog, 'Imp'));
-    expect(namesOf(game(), game().hands['seat-p1'] ?? [])).toEqual(['Imp']);
+    expect(namesOf(session(), session().hands['seat-p1'] ?? [])).toEqual(['Imp']);
     hit = 'board-pile';
     mouseDrag(card(dialog, 'Troll'));
     expect(names('pile-board')).toEqual(['Troll']);
@@ -128,15 +128,15 @@ describe('TT-4 dragging from the pile viewer', () => {
   });
 
   it('touch: resting on a card lifts it, and it can be dropped in the hand', async () => {
-    const { store, dialog, game } = setup();
+    const { store, dialog, session } = setup();
     hit = 'hand';
     fireEvent.pointerDown(card(dialog, 'Troll'), at(75, 105, 'touch'));
     await act(() => new Promise((resolve) => window.setTimeout(resolve, TOUCH_HOLD_MS + 50)));
     expect(dialog.open).toBe(false);
-    expect(store.getState().drag?.cardId).toBe(game().piles[0]?.cardIds[0]);
+    expect(store.getState().drag?.cardId).toBe(session().piles[0]?.cardIds[0]);
     fireEvent.pointerMove(document, at(200, 500, 'touch'));
     fireEvent.pointerUp(document, at(200, 500, 'touch'));
-    expect(namesOf(game(), game().hands['seat-p1'] ?? [])).toEqual(['Troll']);
+    expect(namesOf(session(), session().hands['seat-p1'] ?? [])).toEqual(['Troll']);
     expect(dialog.open).toBe(true);
   });
 });

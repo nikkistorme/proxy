@@ -5,9 +5,9 @@ import { loadPile } from '../actions/loadPile';
 import { moveCard } from '../actions/moveCard';
 import { draw } from '../actions/pileActions';
 import { cardsFrom, testContext, pilesOutOfTheWay } from '../actions/testing';
-import { createSoloGame, type GameState } from '../model/game';
+import { createSoloSession, type SessionState } from '../model/session';
 import { CARD_H, CARD_W } from '../model/tablePlacement';
-import { createGameStore, GameStoreProvider } from '../store/gameStore';
+import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
 import { HandTray } from './HandTray';
 import { TableSurface } from './TableSurface';
 
@@ -15,21 +15,21 @@ const csv = 'name,type\nTroll,Creature\nOgre,Creature\nImp,Creature\n';
 
 /** Troll and Ogre on the table at (16, 16) and (158, 16), and Imp in Player 1's hand. */
 function setup() {
-  let game: GameState = pilesOutOfTheWay(loadPile(createSoloGame(), { pileId: 'pile-p1-main', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state);
-  for (const name of ['Troll', 'Ogre']) game = moveCard(game, { cardId: idOf(game, name), to: { zone: 'table' } }).state;
-  game = draw(game, { pileId: 'pile-p1-main' }).state;
-  const store = createGameStore(game, testContext());
+  let session: SessionState = pilesOutOfTheWay(loadPile(createSoloSession(), { pileId: 'pile-p1-main', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state);
+  for (const name of ['Troll', 'Ogre']) session = moveCard(session, { cardId: idOf(session, name), to: { zone: 'table' } }).state;
+  session = draw(session, { pileId: 'pile-p1-main' }).state;
+  const store = createSessionStore(session, testContext());
   render(
-    <GameStoreProvider store={store}>
+    <SessionStoreProvider store={store}>
       <TableSurface />
       <HandTray seatId="seat-p1" seatName="Player 1" onDraw={() => undefined} />
-    </GameStoreProvider>,
+    </SessionStoreProvider>,
   );
   return store;
 }
 
-function idOf(game: GameState, name: string) {
-  return Object.values(game.cards).find((c) => game.definitions[c.definitionId]?.front.name === name)?.id ?? '';
+function idOf(session: SessionState, name: string) {
+  return Object.values(session.cards).find((c) => session.definitions[c.definitionId]?.front.name === name)?.id ?? '';
 }
 
 type Store = ReturnType<typeof setup>;
@@ -38,8 +38,8 @@ const card = (name: string) => within(table()).getByRole('button', { name });
 const outline = () => screen.getByRole('button', { name: /^Placing / });
 const status = (store: Store) => store.getState().announcement.text;
 const spotOf = (store: Store, name: string) => {
-  const { game } = store.getState();
-  const entry = game.table.find((e) => e.cardId === idOf(game, name));
+  const { session } = store.getState();
+  const entry = session.table.find((e) => e.cardId === idOf(session, name));
   return entry && { x: entry.x, y: entry.y };
 };
 
@@ -152,7 +152,7 @@ describe('A11Y-1 keyboard and single-pointer placement', () => {
     await waitFor(() => expect(outline()).toHaveFocus());
     await userEvent.keyboard('{ArrowDown}{Enter}');
     expect(spotOf(store, 'Imp')).toEqual({ x: 16 + 2 * (CARD_W + 16), y: 32 });
-    expect(store.getState().game.hands['seat-p1']).toEqual([]);
+    expect(store.getState().session.hands['seat-p1']).toEqual([]);
     await waitFor(() => expect(card('Imp')).toHaveFocus());
   });
 
@@ -161,7 +161,7 @@ describe('A11Y-1 keyboard and single-pointer placement', () => {
     card('Troll').focus();
     await userEvent.keyboard(' ');
     await waitFor(() => expect(outline()).toHaveFocus());
-    const troll = idOf(store.getState().game, 'Troll');
+    const troll = idOf(store.getState().session, 'Troll');
     act(() => {
       store.getState().dispatch((g) => moveCard(g, { cardId: troll, to: { zone: 'pile', pileId: 'pile-board', position: 'top' } }));
     });

@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { cardName } from '../actions/helpers';
 import { moveCard, type Destination } from '../actions/moveCard';
-import { useGameStore } from '../store/gameStore';
+import { useSessionStore } from '../store/sessionStore';
 import { useCardDrag } from './cardDrag';
 import { CardDetailsDialog } from './CardDetailsDialog';
 import { CardFace } from './CardFace';
@@ -27,11 +27,11 @@ const HAND_KEYS: Record<string, HandCommand> = { p: 'play', m: 'move' };
 export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
   const headingId = useId();
   const identity = seatIdentity(seatId);
-  const game = useGameStore((s) => s.game);
-  const dispatch = useGameStore((s) => s.dispatch);
-  const setPlacing = useGameStore((s) => s.setPlacing);
-  const announce = useGameStore((s) => s.announce);
-  const drag = useGameStore((s) => s.drag);
+  const session = useSessionStore((s) => s.session);
+  const dispatch = useSessionStore((s) => s.dispatch);
+  const setPlacing = useSessionStore((s) => s.setPlacing);
+  const announce = useSessionStore((s) => s.announce);
+  const drag = useSessionStore((s) => s.drag);
   const startDrag = useCardDrag();
 
   const [activeId, setActiveId] = useState<string>();
@@ -47,9 +47,9 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
   /** Set when the Move to… dialog closes by choosing a spot: the table takes focus. */
   const choseSpot = useRef(false);
 
-  const hand = game.hands[seatId] ?? [];
+  const hand = session.hands[seatId] ?? [];
   const cards = hand.flatMap((id) => {
-    const definition = game.definitions[game.cards[id]?.definitionId ?? ''];
+    const definition = session.definitions[session.cards[id]?.definitionId ?? ''];
     return definition ? [{ id, face: definition.front, name: definition.back ? `${definition.front.name}, double-faced` : definition.front.name }] : [];
   });
   const count = `${cards.length} ${cards.length === 1 ? 'card' : 'cards'}`;
@@ -78,7 +78,7 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
     if (command === 'play') move(cardId, { zone: 'table' });
     else if (command === 'move') {
       const face = cards.find((c) => c.id === cardId)?.face;
-      if (face) setMoveRequest({ cardId, face, fromName: `${seatName}'s hand`, options: moveDestinations(game, cardId) });
+      if (face) setMoveRequest({ cardId, face, fromName: `${seatName}'s hand`, options: moveDestinations(session, cardId) });
     } else setDetailsCardId(cardId);
   }
 
@@ -114,7 +114,7 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
   function onCardPointerDown(cardId: string, event: PointerEvent<HTMLButtonElement>) {
     const visual = event.currentTarget.previousElementSibling;
     if (!(visual instanceof HTMLElement)) return;
-    const name = cardName(game, cardId);
+    const name = cardName(session, cardId);
     startDrag(event, {
       cardId,
       name,
@@ -251,7 +251,7 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
         }}
       />
       <CardDetailsDialog
-        game={game}
+        session={session}
         cardId={detailsCardId}
         faceUp
         onClose={() => {

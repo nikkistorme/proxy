@@ -1,4 +1,4 @@
-import type { GameState } from './game';
+import type { SessionState } from './session';
 import { CARD_H, CARD_W } from './tablePlacement';
 
 export type Direction = 'left' | 'right' | 'up' | 'down';
@@ -11,7 +11,7 @@ export interface TableItem {
 }
 
 /** A11Y-3: everything on the table that arrow keys move between, piles and cards alike. */
-export function tableItems(state: Pick<GameState, 'table' | 'piles'>): TableItem[] {
+export function tableItems(state: Pick<SessionState, 'table' | 'piles'>): TableItem[] {
   return [...state.piles.map(({ id, x, y }) => ({ id, x, y })), ...state.table.map(({ cardId, x, y }) => ({ id: cardId, x, y }))];
 }
 

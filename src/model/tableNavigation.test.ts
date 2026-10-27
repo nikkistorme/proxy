@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createSoloGame } from './game';
+import { createSoloSession } from './session';
 import { nearestInDirection, readingOrder, tableItems, type TableItem } from './tableNavigation';
 
 const at = (id: string, x: number, y: number): TableItem => ({ id, x, y });
@@ -32,8 +32,8 @@ describe('A11Y-3 table navigation', () => {
   });
 
   it('moves between piles and cards alike', () => {
-    const game = { ...createSoloGame(), table: [{ cardId: 'imp', x: 16, y: 208, rotation: 0 as const }] };
-    const items = tableItems(game);
+    const session = { ...createSoloSession(), table: [{ cardId: 'imp', x: 16, y: 208, rotation: 0 as const }] };
+    const items = tableItems(session);
     expect(readingOrder(items)).toEqual(['pile-p1-main', 'pile-env', 'pile-board', 'imp']);
     expect(nearestInDirection(items, 'pile-p1-main', 'down')).toBe('imp');
     expect(nearestInDirection(items, 'imp', 'up')).toBe('pile-p1-main');

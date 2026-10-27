@@ -2,20 +2,20 @@ import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { draw } from '../actions/pileActions';
-import { gameWithDeck, testContext } from '../actions/testing';
-import { createGameStore, GameStoreProvider } from '../store/gameStore';
+import { sessionWithDeck, testContext } from '../actions/testing';
+import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
 import { TableTools } from './TableTools';
 
 function setup() {
-  const store = createGameStore(gameWithDeck(), testContext());
+  const store = createSessionStore(sessionWithDeck(), testContext());
   render(
-    <GameStoreProvider store={store}>
+    <SessionStoreProvider store={store}>
       <TableTools />
       <input aria-label="Field" />
-    </GameStoreProvider>,
+    </SessionStoreProvider>,
   );
   const drawOne = () => act(() => void store.getState().dispatch((g) => draw(g, { pileId: 'pile-p1-main' })));
-  const handSize = () => store.getState().game.hands['seat-p1']?.length;
+  const handSize = () => store.getState().session.hands['seat-p1']?.length;
   return { store, drawOne, handSize };
 }
 
@@ -90,7 +90,7 @@ describe('TT-15 undo and redo controls', () => {
 
 describe('TT-1 and TT-2 zoom, fit and snap controls', () => {
   function setupView() {
-    const store = createGameStore(gameWithDeck(), testContext());
+    const store = createSessionStore(sessionWithDeck(), testContext());
     const calls: string[] = [];
     store.getState().setTableViewport({
       stepZoom: (direction) => calls.push(`zoom ${direction}`),
@@ -98,10 +98,10 @@ describe('TT-1 and TT-2 zoom, fit and snap controls', () => {
       fitAll: () => calls.push('fit'),
     });
     render(
-      <GameStoreProvider store={store}>
+      <SessionStoreProvider store={store}>
         <TableTools />
         <input aria-label="Field" />
-      </GameStoreProvider>,
+      </SessionStoreProvider>,
     );
     return { store, calls };
   }

@@ -4,9 +4,9 @@ import { loadPile } from '../actions/loadPile';
 import { moveCard } from '../actions/moveCard';
 import { draw } from '../actions/pileActions';
 import { cardsFrom, testContext, pilesOutOfTheWay } from '../actions/testing';
-import { createSoloGame, type GameState } from '../model/game';
+import { createSoloSession, type SessionState } from '../model/session';
 import { snapToGrid } from '../model/tableView';
-import { createGameStore, GameStoreProvider } from '../store/gameStore';
+import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
 import { TOUCH_HOLD_MS } from './cardDrag';
 import { HandTray } from './HandTray';
 import { TableSurface } from './TableSurface';
@@ -17,22 +17,22 @@ const HAND_TOP = 600;
 
 /** Troll and Ogre on the table at (16, 16) and (158, 16), Imp in Player 1's hand, and a stand-in pile to drop on. */
 function setup() {
-  let game: GameState = pilesOutOfTheWay(loadPile(createSoloGame(), { pileId: 'pile-p1-main', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state);
-  for (const name of ['Troll', 'Ogre']) game = moveCard(game, { cardId: idOf(game, name), to: { zone: 'table' } }).state;
-  game = draw(game, { pileId: 'pile-p1-main' }).state;
-  const store = createGameStore(game, testContext());
+  let session: SessionState = pilesOutOfTheWay(loadPile(createSoloSession(), { pileId: 'pile-p1-main', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state);
+  for (const name of ['Troll', 'Ogre']) session = moveCard(session, { cardId: idOf(session, name), to: { zone: 'table' } }).state;
+  session = draw(session, { pileId: 'pile-p1-main' }).state;
+  const store = createSessionStore(session, testContext());
   render(
-    <GameStoreProvider store={store}>
+    <SessionStoreProvider store={store}>
       <div data-drop-zone="pile" data-pile-id="pile-board" data-testid="board-pile" />
       <TableSurface />
       <HandTray seatId="seat-p1" seatName="Player 1" onDraw={() => undefined} />
-    </GameStoreProvider>,
+    </SessionStoreProvider>,
   );
   return store;
 }
 
-function idOf(game: GameState, name: string) {
-  return Object.values(game.cards).find((c) => game.definitions[c.definitionId]?.front.name === name)?.id ?? '';
+function idOf(session: SessionState, name: string) {
+  return Object.values(session.cards).find((c) => session.definitions[c.definitionId]?.front.name === name)?.id ?? '';
 }
 
 type Store = ReturnType<typeof setup>;
@@ -41,8 +41,8 @@ const card = (name: string) => within(table()).getByRole('button', { name });
 const handCard = (name: string) => within(screen.getByRole('list', { name: /hand/i })).getByRole('button', { name });
 const status = (store: Store) => store.getState().announcement.text;
 const spotOf = (store: Store, name: string) => {
-  const { game } = store.getState();
-  const entry = game.table.find((e) => e.cardId === idOf(game, name));
+  const { session } = store.getState();
+  const entry = session.table.find((e) => e.cardId === idOf(session, name));
   return entry && { x: entry.x, y: entry.y };
 };
 const ghost = () => document.querySelector('.drag-ghost');
@@ -116,7 +116,7 @@ describe('TT-4 drag and drop', () => {
     const store = setup();
     hit = 'pile';
     mouseDrag(card('Troll'), [30, 30], [400, 400]);
-    expect(store.getState().game.piles.find((p) => p.id === 'pile-board')?.cardIds).toEqual([idOf(store.getState().game, 'Troll')]);
+    expect(store.getState().session.piles.find((p) => p.id === 'pile-board')?.cardIds).toEqual([idOf(store.getState().session, 'Troll')]);
     expect(status(store)).toMatch(/^Moved Troll from the table to the top of Board cards/);
     await waitFor(() => expect(card('Ogre')).toHaveFocus());
   });
@@ -128,13 +128,13 @@ describe('TT-4 drag and drop', () => {
     expect(document.querySelector('.hand-tray')).toHaveClass('hand-tray--drop-target');
     expect(screen.getByText("Drop: Player 1's hand")).toBeInTheDocument();
     fireEvent.pointerUp(document, { clientX: 50, clientY: HAND_TOP + 20, pointerId: 1, pointerType: 'mouse' });
-    expect(store.getState().game.hands['seat-p1']).toHaveLength(2);
+    expect(store.getState().session.hands['seat-p1']).toHaveLength(2);
   });
 
   it('drags a hand card to the table, and focus follows it there', async () => {
     const store = setup();
     mouseDrag(handCard('Imp'), [52, HAND_TOP + 10], [400, 300]);
-    expect(store.getState().game.hands['seat-p1']).toEqual([]);
+    expect(store.getState().session.hands['seat-p1']).toEqual([]);
     expect(status(store)).toBe("Moved Imp from Player 1's hand to the table.");
     // The hand card is 104px wide, so the pointer 52px in is the middle of the table card too.
     expect(spotOf(store, 'Imp')).toEqual({ x: 400 - 63, y: Math.round(300 - (10 / 145) * 176) });
@@ -145,7 +145,7 @@ describe('TT-4 drag and drop', () => {
     const store = setup();
     hit = 'pile';
     mouseDrag(handCard('Imp'), [52, HAND_TOP + 10], [400, 300]);
-    expect(store.getState().game.piles.find((p) => p.id === 'pile-board')?.cardIds).toHaveLength(1);
+    expect(store.getState().session.piles.find((p) => p.id === 'pile-board')?.cardIds).toHaveLength(1);
   });
 
   it('puts the card back on Escape, or when dropped outside any target', async () => {
@@ -162,7 +162,7 @@ describe('TT-4 drag and drop', () => {
     hit = 'nothing';
     mouseDrag(handCard('Imp'), [52, HAND_TOP + 10], [400, 300]);
     expect(status(store)).toBe('Put Imp back.');
-    expect(store.getState().game.hands['seat-p1']).toHaveLength(1);
+    expect(store.getState().session.hands['seat-p1']).toHaveLength(1);
     expect(store.getState().past).toHaveLength(steps);
     expect(handCard('Imp')).toHaveFocus();
   });
@@ -196,7 +196,7 @@ describe('TT-4 drag and drop', () => {
 
     fireEvent.pointerDown(card('Troll'), touch(30, 30));
     await act(() => new Promise((resolve) => window.setTimeout(resolve, TOUCH_HOLD_MS + 50)));
-    expect(store.getState().drag?.cardId).toBe(idOf(store.getState().game, 'Troll'));
+    expect(store.getState().drag?.cardId).toBe(idOf(store.getState().session, 'Troll'));
     const scroll = new Event('touchmove', { cancelable: true });
     document.dispatchEvent(scroll);
     expect(scroll.defaultPrevented).toBe(true);
@@ -207,7 +207,7 @@ describe('TT-4 drag and drop', () => {
 
   it("doesn't start while a card is being placed", () => {
     const store = setup();
-    store.getState().setPlacing({ cardId: idOf(store.getState().game, 'Ogre') });
+    store.getState().setPlacing({ cardId: idOf(store.getState().session, 'Ogre') });
     mouseDrag(card('Troll'), [30, 30], [330, 330]);
     expect(store.getState().drag).toBeUndefined();
     expect(spotOf(store, 'Troll')).toEqual({ x: 16, y: 16 });

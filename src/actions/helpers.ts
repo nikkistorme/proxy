@@ -1,16 +1,16 @@
-import type { GameState, Pile, Seat } from '../model/game';
+import type { SessionState, Pile, Seat } from '../model/session';
 
-export function getPile(state: GameState, pileId: string): Pile {
+export function getPile(state: SessionState, pileId: string): Pile {
   const pile = state.piles.find((p) => p.id === pileId);
   if (!pile) throw new Error(`Unknown pile: ${pileId}`);
   return pile;
 }
 
-export function withPile(state: GameState, pile: Pile): GameState {
+export function withPile(state: SessionState, pile: Pile): SessionState {
   return { ...state, piles: state.piles.map((p) => (p.id === pile.id ? pile : p)) };
 }
 
-export function activeSeat(state: GameState): Seat {
+export function activeSeat(state: SessionState): Seat {
   const seat = state.seats.find((s) => s.id === state.activeSeatId);
   if (!seat) throw new Error(`Unknown active seat: ${state.activeSeatId}`);
   return seat;
@@ -20,7 +20,7 @@ export function checkCount(count: number): void {
   if (!Number.isInteger(count) || count < 1) throw new RangeError(`count must be a whole number of at least 1, got ${count}`);
 }
 
-export function cardName(state: GameState, cardId: string): string {
+export function cardName(state: SessionState, cardId: string): string {
   const card = state.cards[cardId];
   const definition = card && state.definitions[card.definitionId];
   if (!definition) throw new Error(`Unknown card: ${cardId}`);

@@ -6,8 +6,8 @@ import { bringToFront, deleteCard, duplicate, flip, rotate, sendToBack, shownNam
 import { cardName } from '../actions/helpers';
 import { moveCard, type Destination } from '../actions/moveCard';
 import { movePile } from '../actions/piles';
-import type { GameState, Pile, Rotation } from '../model/game';
-import { useGameStore, type Placing } from '../store/gameStore';
+import type { SessionState, Pile, Rotation } from '../model/session';
+import { useSessionStore, type Placing } from '../store/sessionStore';
 import { useCardDrag } from './cardDrag';
 import { CardDetailsDialog } from './CardDetailsDialog';
 import { CardEnlarge } from './CardEnlarge';
@@ -62,34 +62,34 @@ export interface PileSlot {
 const plural = (count: number, word: string) => `${count} ${count === 1 ? word : `${word}s`}`;
 
 /** The name a card being placed goes by: as it shows on the table, or as its owner sees it in the hand. */
-function placingName(game: GameState, cardId: string): string {
-  if (game.table.some((e) => e.cardId === cardId)) return shownName(game, cardId);
-  const name = shownName(game, cardId);
-  return name === 'a face-down card' ? cardName(game, cardId) : name;
+function placingName(session: SessionState, cardId: string): string {
+  if (session.table.some((e) => e.cardId === cardId)) return shownName(session, cardId);
+  const name = shownName(session, cardId);
+  return name === 'a face-down card' ? cardName(session, cardId) : name;
 }
 
 /** Whether a card can still be placed: it's on the table or in a hand. */
-function placeable(game: GameState, cardId: string): boolean {
-  return game.table.some((e) => e.cardId === cardId) || Object.values(game.hands).some((hand) => hand.includes(cardId));
+function placeable(session: SessionState, cardId: string): boolean {
+  return session.table.some((e) => e.cardId === cardId) || Object.values(session.hands).some((hand) => hand.includes(cardId));
 }
 
 /** The card or pile being placed, while it can still be: an undo can take it away. */
-function placingId(game: GameState, placing: Placing | undefined): string | undefined {
+function placingId(session: SessionState, placing: Placing | undefined): string | undefined {
   if (!placing) return undefined;
-  if ('pileId' in placing) return game.piles.some((p) => p.id === placing.pileId) ? placing.pileId : undefined;
-  return placeable(game, placing.cardId) ? placing.cardId : undefined;
+  if ('pileId' in placing) return session.piles.some((p) => p.id === placing.pileId) ? placing.pileId : undefined;
+  return placeable(session, placing.cardId) ? placing.cardId : undefined;
 }
 
-function placementName(game: GameState, placement: Placement): string {
-  return placement.pile ? (game.piles.find((p) => p.id === placement.id)?.name ?? '') : placingName(game, placement.id);
+function placementName(session: SessionState, placement: Placement): string {
+  return placement.pile ? (session.piles.find((p) => p.id === placement.id)?.name ?? '') : placingName(session, placement.id);
 }
 
 interface TableSurfaceProps {
-  /** Draws a pile on the table. The game screen owns piles' menus and dialogs, so it draws them. */
+  /** Draws a pile on the table. The session screen owns piles' menus and dialogs, so it draws them. */
   renderPile?: (pile: Pile, slot: PileSlot) => ReactNode;
   /** A finger held a pile and let go without moving it. */
   openPileMenu?: (pileId: string) => void;
-  /** TT-4: a pile was dropped or placed on another pile. The game screen asks how to merge them. */
+  /** TT-4: a pile was dropped or placed on another pile. The session screen asks how to merge them. */
   requestMerge?: (pileId: string, otherPileId: string) => void;
 }
 
@@ -99,19 +99,19 @@ interface TableSurfaceProps {
  * keys move focus to the nearest card or pile in that direction (A11Y-3).
  */
 export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSurfaceProps = {}) {
-  const game = useGameStore((s) => s.game);
-  const { zoom, snap } = useGameStore((s) => s.view);
-  const setView = useGameStore((s) => s.setView);
-  const announce = useGameStore((s) => s.announce);
-  const setTableViewport = useGameStore((s) => s.setTableViewport);
+  const session = useSessionStore((s) => s.session);
+  const { zoom, snap } = useSessionStore((s) => s.view);
+  const setView = useSessionStore((s) => s.setView);
+  const announce = useSessionStore((s) => s.announce);
+  const setTableViewport = useSessionStore((s) => s.setTableViewport);
 
-  const dispatch = useGameStore((s) => s.dispatch);
-  const showToast = useGameStore((s) => s.showToast);
-  const dismissToast = useGameStore((s) => s.dismissToast);
-  const placing = useGameStore((s) => s.placing);
-  const setPlacing = useGameStore((s) => s.setPlacing);
-  const columnsInView = useGameStore((s) => s.view.columns);
-  const drag = useGameStore((s) => s.drag);
+  const dispatch = useSessionStore((s) => s.dispatch);
+  const showToast = useSessionStore((s) => s.showToast);
+  const dismissToast = useSessionStore((s) => s.dismissToast);
+  const placing = useSessionStore((s) => s.placing);
+  const setPlacing = useSessionStore((s) => s.setPlacing);
+  const columnsInView = useSessionStore((s) => s.view.columns);
+  const drag = useSessionStore((s) => s.drag);
   const startDrag = useCardDrag();
 
   const [activeId, setActiveId] = useState<string>();
@@ -128,10 +128,10 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
   const placementRef = useRef<HTMLButtonElement>(null);
   /** Where the last pointer went down, so a pan isn't taken for a click. */
   const pointerDownAt = useRef<{ x: number; y: number }>(undefined);
-  /** The latest game and outline, for effects that only run when placing starts. */
-  const latest = useRef({ game, placement });
+  /** The latest session and outline, for effects that only run when placing starts. */
+  const latest = useRef({ session, placement });
   useLayoutEffect(() => {
-    latest.current = { game, placement };
+    latest.current = { session, placement };
   });
   const pendingFocus = useRef<FocusTarget>(undefined);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -142,12 +142,12 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
   // The latest zoom and cards, for handlers registered once.
   const zoomRef = useRef(zoom);
   // Piles are on the table only when something draws them.
-  const piles = renderPile ? game.piles : [];
-  const tableRef = useRef(game.table);
+  const piles = renderPile ? session.piles : [];
+  const tableRef = useRef(session.table);
   const pilesRef = useRef(piles);
   useLayoutEffect(() => {
     zoomRef.current = zoom;
-    tableRef.current = game.table;
+    tableRef.current = session.table;
     pilesRef.current = piles;
   });
 
@@ -328,7 +328,7 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
   });
 
   // A11Y-3: arrow keys move between cards and piles alike.
-  const items = tableItems({ table: game.table, piles });
+  const items = tableItems({ table: session.table, piles });
 
   /** The card or pile that takes a leaving card's place: the next in reading order, else the one before. */
   const neighbourOf = (cardId: string) => {
@@ -372,18 +372,18 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
       }
       case 'delete': {
         const next = neighbourOf(cardId);
-        const name = shownName(game, cardId);
+        const name = shownName(session, cardId);
         dispatch((g) => deleteCard(g, { cardId }));
         showToast(`Deleted ${name}.`);
         pendingFocus.current = next ? { card: next } : 'toast';
         return;
       }
       case 'move': {
-        const entry = game.table.find((e) => e.cardId === cardId);
+        const entry = session.table.find((e) => e.cardId === cardId);
         if (!entry) return;
         // A face-down card stays hidden in the dialog too.
-        const face = tableCardView(game, entry).face ?? { name: 'Face-down card', fields: {} };
-        setMoveRequest({ cardId, face, fromName: 'the table', options: moveDestinations(game, cardId) });
+        const face = tableCardView(session, entry).face ?? { name: 'Face-down card', fields: {} };
+        setMoveRequest({ cardId, face, fromName: 'the table', options: moveDestinations(session, cardId) });
         pendingFocus.current = 'none';
         return;
       }
@@ -413,7 +413,7 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
     window.clearTimeout(leaveTimer.current);
     // A face-down card shows its front when asked by key or menu, a quick look at
     // what it is (owner decision), but never on a passing hover.
-    if (game.cards[cardId]?.side === 'down' && !takeFocus) return;
+    if (session.cards[cardId]?.side === 'down' && !takeFocus) return;
     const rect = buttons.current[cardId]?.closest('.table-card')?.getBoundingClientRect();
     if (!rect) return;
     setMenu(undefined);
@@ -524,24 +524,24 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
   // A11Y-1: placing starts when the store names a card or pile, from here, the hand, a pile's
   // menu or the Move to… dialog. The outline starts where the card or pile is, or at the next
   // free spot for a card coming from the hand.
-  const placedId = placingId(game, placing);
+  const placedId = placingId(session, placing);
   if (placedId !== placement?.id) {
-    const pile = game.piles.find((p) => p.id === placedId);
-    const entry = game.table.find((e) => e.cardId === placedId);
-    const start = pile ? { x: pile.x, y: pile.y, rotation: 0 as Rotation } : (entry ?? { ...freeSpot(game, columnsInView), rotation: 0 as Rotation });
+    const pile = session.piles.find((p) => p.id === placedId);
+    const entry = session.table.find((e) => e.cardId === placedId);
+    const start = pile ? { x: pile.x, y: pile.y, rotation: 0 as Rotation } : (entry ?? { ...freeSpot(session, columnsInView), rotation: 0 as Rotation });
     setPlacement(placedId ? { id: placedId, pile: pile !== undefined, x: start.x, y: start.y, rotation: start.rotation } : undefined);
     if (placedId) setMenu(undefined);
   }
 
   // An undo can take away the card or pile being placed.
   useEffect(() => {
-    if (placing && !placingId(game, placing)) setPlacing(undefined);
-  }, [placing, game, setPlacing]);
+    if (placing && !placingId(session, placing)) setPlacing(undefined);
+  }, [placing, session, setPlacing]);
 
   const startedId = placement?.id;
   useEffect(() => {
     if (!startedId) return;
-    const { game: current } = latest.current;
+    const { session: current } = latest.current;
     const spot = latest.current.placement;
     dismissToast();
     if (spot) announce(`Picked up ${placementName(current, spot)}. ${describeSpot(spot)}. Arrow keys move it, Enter places it, Escape cancels.`);
@@ -568,7 +568,7 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
     }
     // The topmost card under the outline, then any pile.
     const under = [
-      ...[...game.table].reverse().filter((e) => e.cardId !== placement.id && overlaps(cardBox(e), box)).map((e) => shownName(game, e.cardId)),
+      ...[...session.table].reverse().filter((e) => e.cardId !== placement.id && overlaps(cardBox(e), box)).map((e) => shownName(session, e.cardId)),
       ...piles.filter((p) => p.id !== placement.id && overlaps(pileBox(p), box)).map((p) => p.name),
     ];
     const over = under[0] ? `, over ${under[0]}${under.length > 1 ? ` and ${under.length - 1} more` : ''}` : '';
@@ -594,8 +594,8 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
 
   function cancelPlacing() {
     if (!placement || !placing) return;
-    announce(`Put ${placementName(game, placement)} back.`);
-    if (placement.pile || game.table.some((e) => e.cardId === placement.id)) pendingFocus.current = { card: placement.id };
+    announce(`Put ${placementName(session, placement)} back.`);
+    if (placement.pile || session.table.some((e) => e.cardId === placement.id)) pendingFocus.current = { card: placement.id };
     else if ('returnFocus' in placing) placing.returnFocus?.();
     setPlacing(undefined);
   }
@@ -647,10 +647,10 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
   function onCardPointerDown(cardId: string, event: PointerEvent<HTMLButtonElement>) {
     // A press means the pointer is busy with the card, so a waiting hover preview doesn't open.
     window.clearTimeout(hoverTimer.current);
-    const entry = game.table.find((e) => e.cardId === cardId);
+    const entry = session.table.find((e) => e.cardId === cardId);
     const visual = event.currentTarget.closest<HTMLElement>('.table-card');
     if (!entry || !visual) return;
-    const name = shownName(game, cardId);
+    const name = shownName(session, cardId);
     startDrag(event, {
       cardId,
       name,
@@ -786,7 +786,7 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
     runCommand(cardId, 'place');
   }
 
-  const count = game.table.length;
+  const count = session.table.length;
   const label = `Table, ${plural(count, 'card')}${renderPile ? `, ${plural(piles.length, 'pile')}` : ''}`;
   // The Tab stop is the last card focused, or the first in reading order once that card has gone.
   const tabbableId = activeId && items.some((item) => item.id === activeId) ? activeId : readingOrder(items)[0];
@@ -801,8 +801,8 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
       : placement?.pile
         ? pileUnder(piles, pileBox(placement), placement.id)?.id
         : undefined;
-  const dropBox = dropAt && cardBox({ ...dropAt, rotation: game.table.find((e) => e.cardId === drag?.cardId)?.rotation ?? 0 });
-  const boxes = [...game.table.map(cardBox), ...piles.map(pileBox), ...(outline ? [outline] : []), ...(dropBox ? [dropBox] : [])];
+  const dropBox = dropAt && cardBox({ ...dropAt, rotation: session.table.find((e) => e.cardId === drag?.cardId)?.rotation ?? 0 });
+  const boxes = [...session.table.map(cardBox), ...piles.map(pileBox), ...(outline ? [outline] : []), ...(dropBox ? [dropBox] : [])];
   const width = Math.max(size.width / zoom, ...boxes.map((b) => b.right + 2 * CARD_W));
   const height = Math.max(size.height / zoom, ...boxes.map((b) => b.bottom + CARD_H));
 
@@ -855,10 +855,10 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
                   mergeTarget={pile.id === mergeTargetId}
                 />
               ))}
-            {game.table.map((entry, index) => (
+            {session.table.map((entry, index) => (
               <TableCard
                 key={entry.cardId}
-                view={tableCardView(game, entry)}
+                view={tableCardView(session, entry)}
                 layer={index + 1}
                 tabbable={entry.cardId === tabbableId}
                 register={register}
@@ -887,7 +887,7 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
                 type="button"
                 className="table-placement"
                 style={{ left: outline.left, top: outline.top, width: outline.right - outline.left, height: outline.bottom - outline.top }}
-                aria-label={`Placing ${placementName(game, placement)}, ${describeSpot(placement)}. Arrow keys move, Enter places, Escape cancels.`}
+                aria-label={`Placing ${placementName(session, placement)}, ${describeSpot(placement)}. Arrow keys move, Enter places, Escape cancels.`}
                 onKeyDown={onPlacementKeyDown}
                 onKeyUp={(event) => {
                   if (event.key !== ' ' || event.altKey || event.ctrlKey || event.metaKey) return;
@@ -895,25 +895,25 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
                   placeCard();
                 }}
               >
-                <span aria-hidden="true">{placementName(game, placement)}</span>
+                <span aria-hidden="true">{placementName(session, placement)}</span>
               </button>
             )}
           </div>
         </div>
       </div>
       {/* The menu sits outside the zoomed mat, so it's the same size at any zoom. */}
-      {menu && game.table.some((e) => e.cardId === menu.cardId) && (
+      {menu && session.table.some((e) => e.cardId === menu.cardId) && (
         <div className="card-menu-anchor" style={{ left: menu.rect.left, top: menu.rect.top, width: menu.rect.width, height: menu.rect.height }}>
-          <CardMenu game={game} cardId={menu.cardId} onCommand={(command) => runCommand(menu.cardId, command)} onClose={closeMenu} />
+          <CardMenu session={session} cardId={menu.cardId} onCommand={(command) => runCommand(menu.cardId, command)} onClose={closeMenu} />
         </div>
       )}
       <MoveDialog key={moveRequest?.cardId ?? 'closed'} request={moveRequest} onConfirm={confirmMove} onChooseSpot={chooseSpot} onClose={closeMove} />
-      <CardDetailsDialog game={game} cardId={detailsCardId} onClose={closeDetails} />
+      <CardDetailsDialog session={session} cardId={detailsCardId} onClose={closeDetails} />
       {/* Zooming moves the card, so a preview from before the zoom is dropped. */}
-      {enlarge && enlarge.zoom === zoom && game.table.some((e) => e.cardId === enlarge.cardId) && (
+      {enlarge && enlarge.zoom === zoom && session.table.some((e) => e.cardId === enlarge.cardId) && (
         <CardEnlarge
           key={enlarge.cardId}
-          game={game}
+          session={session}
           cardId={enlarge.cardId}
           anchor={enlarge.anchor}
           takeFocus={enlarge.takeFocus}
@@ -923,7 +923,7 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
         />
       )}
       <CountersDialog key={countersRequest ? `${countersRequest.cardId}-${countersRequest.counterId ?? ''}` : 'counters-closed'} request={countersRequest} onClose={closeCounters} />
-      {placement && <PlacementBar name={placementName(game, placement)} onPlace={placeCard} onCancel={cancelPlacing} />}
+      {placement && <PlacementBar name={placementName(session, placement)} onPlace={placeCard} onCancel={cancelPlacing} />}
     </>
   );
 }

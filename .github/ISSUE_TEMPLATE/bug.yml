@@ -51,8 +51,8 @@ body:
   - type: textarea
     id: evidence
     attributes:
-      label: Screenshots, console output or saved game
-      description: Attach an exported JSON bundle if the bug depends on game state.
+      label: Screenshots, console output or saved session
+      description: Attach an exported JSON bundle if the bug depends on session state.
 
   - type: checkboxes
     id: regression

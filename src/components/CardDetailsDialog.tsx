@@ -1,10 +1,10 @@
 import type { CardFace } from '../model/card';
-import type { GameState } from '../model/game';
+import type { SessionState } from '../model/session';
 import { Dialog } from './Dialog';
 import './CardDetailsDialog.css';
 
 interface CardDetailsDialogProps {
-  game: GameState;
+  session: SessionState;
   /** The card to show, or undefined when closed. */
   cardId: string | undefined;
   /** Show the face whichever side is up, for cards only you can see, like your hand. */
@@ -36,9 +36,9 @@ function FaceDetails({ face, heading }: { face: CardFace; heading?: string }) {
  * A11Y-6 details: every column bound to a card, both faces of a double-faced
  * card. A face-down card stays hidden.
  */
-export function CardDetailsDialog({ game, cardId, faceUp = false, onClose }: CardDetailsDialogProps) {
-  const card = cardId ? game.cards[cardId] : undefined;
-  const definition = card && game.definitions[card.definitionId];
+export function CardDetailsDialog({ session, cardId, faceUp = false, onClose }: CardDetailsDialogProps) {
+  const card = cardId ? session.cards[cardId] : undefined;
+  const definition = card && session.definitions[card.definitionId];
   const down = card?.side === 'down' && !faceUp;
   const title = !definition ? '' : down ? 'Face-down card' : card?.side === 'back' && definition.back ? definition.back.name : definition.front.name;
   const notes = [definition?.missing && 'Not in the CSV any more.', card?.duplicate && 'A duplicate, made on the table.'].filter(Boolean);
