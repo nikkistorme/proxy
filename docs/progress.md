@@ -2,13 +2,13 @@
 
 ## Current state
 
-Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37, #39, #41, #49, #51 and #56, all under #20. 3a to 3f-2, 3m-1 to 3m-3 and 3i-1 are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; merging piles by dropping one on another; and card counters. #31 (3i) is split into 3i-1, counters, and 3i-2, enlarge and the double-faced badge, which is next. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases.
+Phase 3 (Table) is under way. It's split into 3a to 3o, all under #20. Selection (#29), stacks (#30) and shortcut remapping (#34, folded into #53) moved after V1. 3a to 3f-2, 3m-1 to 3m-3 and 3i-1 are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; merging piles by dropping one on another; and card counters. #31 (3i) is split into 3i-1, counters, and 3i-2, enlarge and the double-faced badge. 3i-2 (#31), 3j (#32), 3k (#33), 3o (#61, close-out) and 3n (#39, dark theme) are left. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases.
 
 ## Done
 
 ### Phase 3i-1: Card counters (2026-10-27)
 
-- **Issue split:** #31 (3i) became 3i-1, counters (this PR), and 3i-2, enlarge and the double-faced badge (owner approved).
+- **Issue split:** #31 (3i) became 3i-1, counters, and 3i-2, enlarge and the double-faced badge (owner approved).
 - **Model (TT-8):** a `TableEntry` has an optional list of counters, each with an id, a name and a whole-number value. They belong to the card's place on the table, so they stay as it moves on the table, Duplicate copies them, and they're cleared when the card leaves the table.
 - **Actions:** `addCounter`, `setCounter`, `renameCounter` and `removeCounter` in `src/actions/counters.ts`. A new counter starts at 1. Names are unique on a card, ignoring case. Values can go below zero. Every change is its own undo step, announced as "Added Damage 1 to Troll.", "Damage on Troll: 3.", "Renamed Damage on Troll to Wounds." or "Removed Damage from Troll.". A face-down card is "a face-down card".
 - **Pills:** dark pills with a white edge, centred above the card's text box and stacking upward, from CardStates. Four or more show the first two and "+2 more". They turn with the card. The card's name ends ", counters: Damage 3, Shield 1", face down too.
@@ -18,6 +18,13 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
   - **Keys:** + and − (and the arrow keys in the value field) step the value on the value controls. Typed names and values are kept on Enter, Escape or leaving the field. Escape closes and keeps everything.
   - **Announcements:** the dialog has its own live region, like the pile viewer, because the page's region sits outside the modal.
 - **Tests:** 380 unit tests, including `counters.test.ts` and `TableCounters.test.tsx`. The new `e2e/counters.spec.ts` covers keyboard only (add, step, rename, remove, undo), mouse with axe on the dialog and a pill click, and the dialog at 375 × 667.
+
+### Planning: post-V1 issues (2026-10-27)
+
+- **Moved after V1 (owner decision):** #29 (selection and group actions, TT-3) and #30 (stacks, TT-7) are feature issues now, with no phase and no longer under #20. #29 has a suggested split and its open questions.
+- **#34 (3l) closed:** shortcut remapping is folded into #53 (control settings, after V1).
+- **New issue #61 (3o):** keeps #34's V1 work and closes Phase 3. It covers the ? shortcut reference, a WCAG 2.1.4 fix (D draws from anywhere on the page today), an announcement audit, and the solo-turn E2E.
+- `docs/requirements.md`: TT-3 and TT-7 are marked after V1, A11Y-4 drops remapping from V1, the Phase 3 row leaves out TT-3 and TT-7, and Out of scope lists the post-V1 work.
 
 ### Phase 3m-3: Merging piles (2026-10-27)
 
@@ -521,9 +528,10 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 ## Next
 
 - **3i-2: enlarge and the double-faced badge (#31)**, after the owner's go-ahead. The owner's notes from planning: the preview shows one face at a time, with a button that flips a double-faced card (with a flip animation that respects reduced motion); hover opens it after 400ms; I opens it from the keyboard (Space already moves a card); and a touch hold on a table card that lets go without moving opens the card's menu, as on a pile, with enlarge in the menu. Until Phase 4 layouts, "landscape" means a card turned on the table, shown upright.
-- **3g to 3l (#29 to #34)** after that, and 3n (#39, dark theme) at any point.
+- Then 3j (#32, hand reordering) and 3k (#33, seat counters, dice and roll log), 3n (#39, dark theme) at any point, and 3o (#61) last: the ? shortcut reference, a WCAG 2.1.4 fix for the page-wide D shortcut, the announcement audit, and the solo-turn E2E that closes Phase 3.
+- **After V1, as feature issues:** selection and group actions (#29), stacks (#30), and control settings with shortcut remapping (#53).
 - **Multi-select in the pile viewer (#57)**, a feature issue outside the phases, when the owner chooses. Open problems that belong to later issues:
-  - 3g: move the Actions button to the selected card
+  - #29 (after V1): move the Actions button to the selected card
   - 3i-2: a double-faced badge on table cards (from CardStates)
   - 3j: dragging to reorder the hand, where a click without a drag still opens the menu
 
@@ -674,6 +682,7 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 | 2026-10-27 | A pile that covers another pile merges with the one it covers most, whatever is under the pointer | Merging only when the pointer is over a pile | Piles must never overlap, and the landing spot is what decides that. The keyboard outline works the same way. |
 | 2026-10-27 | Merged cards go on top by default, the kept pile stays where it is, and a merge always asks first | Bottom by default, as Delete pile does; moving the kept pile to the drop spot | Dropping one pile on another is like stacking it on top. Owner approved the defaults. |
 | 2026-10-27 | The merge dialog is a mode of `DeletePileDialog` | A separate dialog | The issue asked to reuse it. They share the dialog, form and radio pattern. |
+| 2026-10-27 | Selection (#29), stacks (#30) and shortcut remapping (#34 into #53) move after V1, and #61 closes Phase 3 | Building them in Phase 3 | Owner decision. #61 keeps the V1 parts of #34, including WCAG 2.1.4, which V1's AA target needs. |
 | 2026-10-27 | #31 (3i) split into 3i-1 counters and 3i-2 enlarge and the double-faced badge | One PR | Too much for one session and one small PR. Owner approved. |
 | 2026-10-27 | Counters belong to a card's place on the table and are cleared when it leaves | Keeping them on the card instance | Like a real game: counters come off a card that leaves play. |
 | 2026-10-27 | One counters dialog lists all of a card's counters, opened by C, the menu or a pill | The board's small popover for one counter | The shared `Dialog` brings focus, Escape and phone-size behaviour, and one place handles adding, changing and removing. |
