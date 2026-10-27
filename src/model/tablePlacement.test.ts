@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { TableEntry } from './game';
-import { CARD_H, CARD_W, cardBox, columnsFor, freeSpot, PLACEMENT_COLUMNS, TABLE_GAP } from './tablePlacement';
+import { CARD_H, CARD_W, cardBox, clampToTable, columnsFor, describeSpot, freeSpot, PLACEMENT_COLUMNS, TABLE_GAP } from './tablePlacement';
 
 const at = (cardId: string, x: number, y: number, rotation: TableEntry['rotation'] = 0): TableEntry => ({ cardId, x, y, rotation });
 const column = (n: number) => TABLE_GAP + n * (CARD_W + TABLE_GAP);
@@ -37,5 +37,23 @@ describe('TT-4 placing a card on the table', () => {
     expect(cardBox(at('a', 0, 0, 90))).toEqual({ left: -25, top: 25, right: 151, bottom: 151 });
     // Turned sideways in the first cell, it reaches into the second.
     expect(freeSpot([at('a', column(0), row(0), 90)])).toEqual({ x: column(2), y: row(0) });
+  });
+});
+
+describe('A11Y-1 placing a card by keyboard', () => {
+  it('keeps the card inside the top and left edges, turned or not', () => {
+    expect(clampToTable({ x: -40, y: -10 }, 0)).toEqual({ x: 0, y: 0 });
+    expect(clampToTable({ x: 50, y: 60 }, 0)).toEqual({ x: 50, y: 60 });
+    // A quarter turn reaches 25px further left and 25px less far up.
+    const turned = clampToTable({ x: 0, y: -40 }, 90);
+    const box = cardBox({ ...turned, rotation: 90 });
+    expect([box.left, box.top]).toEqual([0, 0]);
+  });
+
+  it('describes the spot in auto-placement rows and columns', () => {
+    expect(describeSpot({ x: column(0), y: row(0) })).toBe('Row 1, column 1');
+    expect(describeSpot({ x: column(2), y: row(1) })).toBe('Row 2, column 3');
+    expect(describeSpot({ x: (column(1) + column(2)) / 2, y: row(0) })).toBe('Row 1, between columns 2 and 3');
+    expect(describeSpot({ x: column(1) + 16, y: 0 })).toBe('Near row 1, near column 2');
   });
 });

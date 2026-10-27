@@ -2,9 +2,25 @@
 
 ## Current state
 
-Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37, #39 and #41, all under #20. 3a to 3d-2 are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; and the hand card menu. 3e (keyboard and single-pointer placement, #27) is next.
+Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus #37, #39 and #41, all under #20. 3a to 3e are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; and keyboard and single-pointer placement. 3f (pointer dragging, #28) is next.
 
 ## Done
+
+### Phase 3e: Keyboard and single-pointer placement (2026-10-27)
+
+- **Placing a card (A11Y-1):** a dashed outline shows where the card will land (the CardStates drop-target look). A bar shows "Placing Imp" with **Place** and **Cancel**.
+  - **Starting it:** Space on a table card, **Move on table** in the table card menu, or **Table — choose a spot** in Move to… from the table or the hand.
+  - **Where the outline starts:** at the card's own spot, or at the next free spot for a hand card.
+  - **Keys:** arrows move 16px, Shift+arrows a whole card. With snap on, arrows move one grid step and Shift+arrows two. Enter or Space places the card and Esc cancels. Space acts on keyup, so one press never places and picks up again.
+  - **Pointer:** a click or tap anywhere on the table, cards included, moves the outline there, centred on the pointer. Then Place confirms.
+  - **Edges:** the outline never goes past the table's top or left edge, turned cards included.
+  - **Announcements:** "Picked up Imp. Row 1, column 3. …", then the spot after each move ("Row 2, between columns 2 and 3, over Troll"), then the move or "Put Imp back."
+  - **Focus:** while placing, focus is on the outline, and Tab reaches Place and Cancel. Afterwards it's on the placed card. Cancelling returns it to the table card, or to the hand card it started from.
+  - **Undo:** the whole placement is one step.
+- **`moveCard`** moves a table card to a new `position`, keeping its turn, side and layer: "Moved Imp on the table." A face-down card stays unnamed.
+- **Move to…** now lists "Table — next free spot" and "Table — choose a spot". The second only appears where the dialog can pass the card to the table (the table and the hand), not in the pile viewer or peek.
+- **Store:** `placing` and `setPlacing` say which card is being placed.
+- Tests: 316 unit (`A11Y-1 keyboard and single-pointer placement`, `A11Y-1 placing a card by keyboard`, and the moveCard reposition) and 46 E2E, including `e2e/placement.spec.ts` (mouse with axe, keyboard only, and phone size).
 
 ### Phase 3d-2: Hand card menu (2026-10-27)
 
@@ -419,8 +435,8 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 
 ## Next
 
-- **3e: Keyboard and single-pointer placement (#27)**, after the owner's go-ahead. Then 3f to 3l (#28 to #34), 3m (#37, movable piles) after 3e and 3f, and 3n (#39, dark theme) at any point. Open problems that belong to later issues:
-  - 3e and 3f: use `snapToGrid` when snap is on
+- **3f: Pointer dragging (#28)**, after the owner's go-ahead. Then 3g to 3l (#29 to #34), 3m (#37, movable piles) after 3f, and 3n (#39, dark theme) at any point. Open problems that belong to later issues:
+  - 3f: use `snapToGrid` when snap is on, and `clampToTable` to keep dropped cards inside the edge
   - 3g: move the Actions button to the selected card
   - 3i: a double-faced badge on table cards (from CardStates)
   - 3j: dragging to reorder the hand, where a click without a drag still opens the menu
@@ -428,7 +444,9 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 ## Open problems
 
 - The Actions button and card overlays scale with the table's zoom, so below 100% the button is smaller than 24 × 24px (A11Y-8 counts default zoom only). Enter and right-click always work. Revisit if it's a problem in play.
-- A card turned a quarter at the table's left or top edge reaches up to 25px past the mat edge, because it turns around its centre. 3e and 3f placement could keep turned cards inside the edge.
+- A card turned a quarter at the table's left or top edge reaches up to 25px past the mat edge, because it turns around its centre. Placing keeps cards inside the edge (`clampToTable`), but turning a card in place doesn't move it.
+- Pile viewer and peek cards can't choose a spot straight away, because those dialogs would have to close first. Send the card to the table, then press Space on it.
+- In jsdom, the search in a Move to… dialog opened from the hand card menu doesn't always get focus before typing, so unit tests type into it directly. Browsers focus it, and the E2E covers that.
 - `axe` scrolls the table while it checks contrast, so E2E tests that click cards after an axe check scroll the table back first.
 - **Saving undo history (PS-2, Phase 6):** each step is a whole game, so plain JSON would repeat the card definitions in every step. Phase 6 needs a compact form, such as saving definitions once or saving the differences between steps.
 - Local WebKit on macOS skips buttons when tabbing, unlike CI's Linux WebKit, so the keyboard-only E2E tests that press Tab fail locally in WebKit only. Use Chromium locally, as BP-4 says, and trust CI for WebKit.
@@ -533,3 +551,7 @@ Phase 3 (Table) is under way. It's split into 3a to 3n: issues #23 to #34, plus 
 | 2026-10-27 | A click or tap on a hand card opens its menu | Only focusing it, as on the table | Hand cards have no other click action, and the issue asked for it. The owner agreed. |
 | 2026-10-27 | Hand card names are short: the name, plus ", double-faced" | The full card text | Full text is in Details…, as on the table. The owner agreed. |
 | 2026-10-27 | `Menu` shifts left to stay on screen | Fitting only vertically | Menus opened from cards near the right edge ran off a phone screen |
+| 2026-10-27 | Placing shows an outline you move, then Place or Enter; a tap moves the outline instead of placing at once | A tap placing straight away | One mistap doesn't move a card, and the keyboard and pointer paths are the same steps |
+| 2026-10-27 | Space picks up a table card, on keyup | A letter key | Space is the usual key for picking something up to move it. On keyup, the same press doesn't also click the outline. |
+| 2026-10-27 | "Choose a spot" is offered only from the table and the hand | Also from the pile viewer and peek | Those are modal, and closing peek puts its cards back, so placing from them is its own change |
+| 2026-10-27 | Arrows move the outline 16px, Shift+arrows a whole card; with snap on, one or two grid steps | Pixel steps only | Fine control and quick travel, and snapped steps line up with the grid |

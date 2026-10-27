@@ -14,6 +14,8 @@ export interface MoveOption {
   /** Seat that owns the hand or pile, for its shape and colour; undefined for shared piles and the table. */
   seatId?: string;
   destination: Destination;
+  /** A11Y-1: choose the spot on the table yourself, by keyboard or a tap, instead of moving at once. */
+  chooseSpot?: true;
 }
 
 /** An option that matches the search, with where the match is in its label. */
@@ -29,17 +31,19 @@ function cardsWord(count: number): string {
 
 /**
  * SP-8: every place a card can move to, grouped Table, Hands, then Piles.
- * The card's current table or hand is left out, since moving there does
- * nothing. Its own pile stays in, since its top and bottom are real moves.
+ * The card's current hand, and the table's next free spot for a table card, are
+ * left out, since moving there does nothing. Choosing a spot is always offered. Its own pile stays in, since its top and bottom are real moves.
  * `exceptTopOf` leaves out one pile's top, where reordering does the same job (SP-9).
  */
 export function moveDestinations(state: GameState, cardId: string, { exceptTopOf }: { exceptTopOf?: string } = {}): MoveOption[] {
   const from = locateCard(state, cardId);
   const options: MoveOption[] = [];
 
+  const onTable = cardsWord(state.table.length);
   if (from.zone !== 'table') {
-    options.push({ key: 'table', group: 'Table', label: 'Table', meta: cardsWord(state.table.length), destination: { zone: 'table' } });
+    options.push({ key: 'table', group: 'Table', label: 'Table — next free spot', meta: onTable, destination: { zone: 'table' } });
   }
+  options.push({ key: 'table-spot', group: 'Table', label: 'Table — choose a spot', meta: onTable, destination: { zone: 'table' }, chooseSpot: true });
   for (const seat of state.seats) {
     if (!seat.hasHand || (from.zone === 'hand' && from.seatId === seat.id)) continue;
     options.push({

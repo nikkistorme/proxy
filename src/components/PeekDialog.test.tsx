@@ -80,8 +80,8 @@ describe('SP-9 peek', () => {
     const move = screen.getByRole('dialog', { name: 'Ogre' });
     // The pile's own top is left out: reordering does that.
     expect(within(move).queryByRole('option', { name: /^P1 main deck — top/ })).not.toBeInTheDocument();
-    await user.click(within(move).getByRole('option', { name: /^Table/ }));
-    await user.click(within(move).getByRole('button', { name: 'Move to Table' }));
+    await user.click(within(move).getByRole('option', { name: /^Table — next free spot/ }));
+    await user.click(within(move).getByRole('button', { name: 'Move to Table — next free spot' }));
 
     expect(namesOf(state(), tableIds(state()))).toEqual(['Ogre']);
     expect(shown()).toEqual(['Imp', 'Troll']);

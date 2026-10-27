@@ -20,6 +20,11 @@ interface MoveDialogProps {
   /** Give each request its own `key`, so every opening starts fresh. */
   request: MoveRequest | undefined;
   onConfirm: (destination: Destination) => void;
+  /**
+   * A11Y-1: starts placing the card on the table. Without it, "Table — choose a
+   * spot" isn't offered, for places that can't hand the card to the table.
+   */
+  onChooseSpot?: () => void;
   onClose: () => void;
 }
 
@@ -44,14 +49,14 @@ function Highlighted({ label, hit }: { label: string; hit: [number, number] }) {
  * following the MoveDialog board. The search is a combobox over a grouped
  * listbox: ↑↓ choose, Enter moves, Esc cancels.
  */
-export function MoveDialog({ request, onConfirm, onClose }: MoveDialogProps) {
+export function MoveDialog({ request, onConfirm, onChooseSpot, onClose }: MoveDialogProps) {
   const searchId = useId();
   const listId = useId();
   const [search, setSearch] = useState('');
   const [activeKey, setActiveKey] = useState<string>();
   const [faceUp, setFaceUp] = useState(false);
 
-  const options = useMemo(() => request?.options ?? [], [request]);
+  const options = useMemo(() => (request?.options ?? []).filter((o) => onChooseSpot || !o.chooseSpot), [request, onChooseSpot]);
   const matches = useMemo(() => matchDestinations(options, search), [options, search]);
   // The chosen row: the one picked, or the first match.
   const active = matches.find((m) => m.option.key === activeKey) ?? matches[0];
@@ -76,6 +81,10 @@ export function MoveDialog({ request, onConfirm, onClose }: MoveDialogProps) {
 
   function submit(): boolean {
     if (!active) return false;
+    if (active.option.chooseSpot) {
+      onChooseSpot?.();
+      return true;
+    }
     const to = active.option.destination;
     onConfirm(to.zone === 'pile' ? { ...to, faceUp } : to);
     return true;
@@ -94,7 +103,7 @@ export function MoveDialog({ request, onConfirm, onClose }: MoveDialogProps) {
       media={request && <CardFace face={request.face} width={56} />}
       hint="↑↓ choose · Enter move · Esc cancel"
       onClose={onClose}
-      primaryLabel={active ? `Move to ${active.option.label}` : 'Move'}
+      primaryLabel={active ? (active.option.chooseSpot ? 'Choose a spot' : `Move to ${active.option.label}`) : 'Move'}
       cancelLabel="Cancel"
       onSubmit={submit}
       width="medium"

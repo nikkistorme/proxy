@@ -36,6 +36,13 @@ export interface TableViewport {
   fitAll: () => void;
 }
 
+/** A11Y-1: a card being placed on the table by keyboard or single pointer. */
+export interface Placing {
+  cardId: string;
+  /** Where focus goes if placing is cancelled, when the card isn't on the table. */
+  returnFocus?: () => void;
+}
+
 /** TT-15 asks for at least 200 undo steps. */
 export const HISTORY_LIMIT = 200;
 
@@ -62,6 +69,9 @@ export interface GameStore {
   setView: (view: Partial<TableView>) => void;
   tableViewport: TableViewport | undefined;
   setTableViewport: (viewport: TableViewport | undefined) => void;
+  /** A11Y-1: the card being placed, shown by the table as an outline you move and then place. */
+  placing: Placing | undefined;
+  setPlacing: (placing: Placing | undefined) => void;
   /**
    * A short note with an Undo button, shown after a destructive action instead
    * of asking first. It stays until the next action, undo or redo.
@@ -85,6 +95,8 @@ export function createGameStore(game: GameState = createSoloGame(), context: Act
       setView: (view) => set({ view: { ...get().view, ...view } }),
       tableViewport: undefined,
       setTableViewport: (tableViewport) => set({ tableViewport }),
+      placing: undefined,
+      setPlacing: (placing) => set({ placing }),
       toast: undefined,
       showToast: (text) => set({ toast: { text, id: (get().toast?.id ?? 0) + 1 } }),
       dismissToast: () => set({ toast: undefined }),

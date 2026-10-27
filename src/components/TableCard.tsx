@@ -15,6 +15,7 @@ interface TableCardProps {
   register: (cardId: string, element: HTMLButtonElement | null) => void;
   onFocus: (cardId: string) => void;
   onKeyDown: (cardId: string, event: KeyboardEvent<HTMLButtonElement>) => void;
+  onKeyUp: (cardId: string, event: KeyboardEvent<HTMLButtonElement>) => void;
   menuOpen: boolean;
   /** Opens this card's action menu (right-click, or the Actions button). */
   onOpenMenu: (cardId: string) => void;
@@ -25,7 +26,7 @@ interface TableCardProps {
  * face is a decorative layer under a transparent button that carries the name,
  * so a face full of text never becomes the button's name (A11Y-6).
  */
-export function TableCard({ view, layer, tabbable, register, onFocus, onKeyDown, menuOpen, onOpenMenu }: TableCardProps) {
+export function TableCard({ view, layer, tabbable, register, onFocus, onKeyDown, onKeyUp, menuOpen, onOpenMenu }: TableCardProps) {
   const { entry, face, ownerSeatId, missing, label } = view;
   const identity = seatIdentity(ownerSeatId);
   // The outer box is the area the card covers on screen, turned or not, so the
@@ -66,6 +67,7 @@ export function TableCard({ view, layer, tabbable, register, onFocus, onKeyDown,
           onClick={(event) => event.currentTarget.focus()}
           onFocus={() => onFocus(entry.cardId)}
           onKeyDown={(event) => onKeyDown(entry.cardId, event)}
+          onKeyUp={(event) => onKeyUp(entry.cardId, event)}
           onContextMenu={(event) => {
             event.preventDefault();
             event.currentTarget.focus();

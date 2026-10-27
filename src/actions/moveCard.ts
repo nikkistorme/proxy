@@ -1,5 +1,6 @@
 import type { ActionContext, ActionResult, CardSide, GameState } from '../model/game';
 import { freeSpot } from '../model/tablePlacement';
+import { shownName } from './cardActions';
 import { cardName, getPile, withPile } from './helpers';
 
 /** Where a card is now. */
@@ -56,12 +57,23 @@ function without(ids: readonly string[], cardId: string): string[] {
  * SP-8: move one card to the table, a hand, or the top or bottom of a pile.
  * Cards left behind keep their order. A card lands front up on the table, at
  * `position` or the first free spot across the visible table, and face down on a pile unless `faceUp`
- * is set; in a hand its side is unchanged.
+ * is set; in a hand its side is unchanged. A table card given a `position` just moves there.
  */
 export function moveCard(state: GameState, args: { cardId: string; to: Destination }, context?: Pick<ActionContext, 'placementColumns'>): ActionResult {
   const { cardId, to } = args;
   const from = locateCard(state, cardId);
   const name = cardName(state, cardId);
+
+  // A card on the table moves to a new spot (A11Y-1), keeping its turn, side and layer.
+  if (from.zone === 'table' && to.zone === 'table' && to.position) {
+    const { x, y } = to.position;
+    // A face-down card stays unnamed.
+    const shown = shownName(state, cardId);
+    const entry = state.table.find((e) => e.cardId === cardId);
+    if (!entry || (entry.x === x && entry.y === y)) return { state, announcement: `${shown.charAt(0).toUpperCase()}${shown.slice(1)} is already there.` };
+    const table = state.table.map((e) => (e.cardId === cardId ? { ...e, x, y } : e));
+    return { state: { ...state, table }, announcement: `Moved ${shown} on the table.` };
+  }
 
   const alreadyThere =
     (from.zone === 'table' && to.zone === 'table') ||

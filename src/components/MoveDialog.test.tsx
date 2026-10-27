@@ -28,9 +28,11 @@ describe('SP-8 Move to… dialog', () => {
     expect(screen.getAllByRole('group').map((g) => within(g).getAllByRole('option').length)).toEqual([1, 1, 6]);
     expect(screen.getByRole('group', { name: 'Hands' })).toHaveTextContent("Player 1's hand");
     expect(screen.getByRole('group', { name: 'Piles' })).toHaveTextContent('Board cards — bottom');
-    expect(selected()).toHaveAccessibleName('Table 0 cards');
+    // Without onChooseSpot, choosing a spot isn't offered.
+    expect(screen.queryByRole('option', { name: /choose a spot/ })).toBeNull();
+    expect(selected()).toHaveAccessibleName('Table — next free spot 0 cards');
     expect(search).toHaveAttribute('aria-activedescendant', selected().id);
-    expect(screen.getByRole('button', { name: 'Move to Table' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Move to Table — next free spot' })).toBeInTheDocument();
     expect(dialog).toHaveTextContent('8 destinations');
   });
 
