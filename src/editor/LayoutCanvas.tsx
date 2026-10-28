@@ -20,6 +20,7 @@ import {
   type Corner,
   type Point,
 } from '../model/layoutBoxes';
+import { previewAt, type PreviewPosition, type PreviewSet } from '../model/preview';
 import { BoxProperties } from './BoxProperties';
 
 const CORNERS: Corner[] = ['nw', 'ne', 'sw', 'se'];
@@ -77,18 +78,35 @@ interface LayoutCanvasProps {
   announce: (text: string) => void;
   /** Column names from the loaded cards, suggested for column boxes. */
   columns?: readonly string[];
+  /** The loaded card sets, to preview the layout with real cards (LY-7). */
+  previewSets?: readonly PreviewSet[];
+  /** The previewed card, kept by the editor so it stays while moving between layouts. */
+  preview?: PreviewPosition;
+  onPreview?: (position: PreviewPosition) => void;
 }
 
 const NO_COLUMNS: readonly string[] = [];
+const NO_SETS: readonly PreviewSet[] = [];
+const FIRST: PreviewPosition = { index: 0 };
 
 /**
  * The layout editor's canvas (LY-2): the card drawn from the layout, with each
  * box as a button over it. Boxes are added by button or drawn by pointer, and
  * moved and resized by pointer or with the arrow keys (Shift resizes).
  */
-export function LayoutCanvas({ layout, onChange, onBack, announce, columns = NO_COLUMNS }: LayoutCanvasProps) {
+export function LayoutCanvas({
+  layout,
+  onChange,
+  onBack,
+  announce,
+  columns = NO_COLUMNS,
+  previewSets = NO_SETS,
+  preview = FIRST,
+  onPreview,
+}: LayoutCanvasProps) {
   const headingId = useId();
   const hintId = useId();
+  const setFieldId = useId();
   const stageRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const addRef = useRef<HTMLButtonElement>(null);
@@ -113,7 +131,11 @@ export function LayoutCanvas({ layout, onChange, onBack, announce, columns = NO_
 
   const selectedIndex = layout.boxes.findIndex((box) => box.id === selectedId);
   const selected = layout.boxes[selectedIndex];
-  const face = useMemo(() => sampleFace(layout.boxes), [layout.boxes]);
+  const previewed = previewAt(previewSets, preview);
+  const previewFace = previewed?.set.faces[previewed.index];
+  const sample = useMemo(() => sampleFace(layout.boxes), [layout.boxes]);
+  // A real card when one is loaded (LY-7), so the warnings check real text; else each column's name.
+  const face = previewFace?.face ?? sample;
   /** Boxes whose text still overflows at the smallest size, as the card reports them. */
   const [clipped, setClipped] = useState<Record<string, boolean>>({});
   const onFit = useCallback((id: string, fit: TextFit) => {
@@ -181,6 +203,13 @@ export function LayoutCanvas({ layout, onChange, onBack, announce, columns = NO_
   function setOrientation(orientation: LayoutOrientation) {
     onChange({ ...latest.current, orientation });
     announce(orientation === 'landscape' ? 'Landscape.' : 'Portrait.');
+  }
+
+  function showPreview(set: PreviewSet, index: number) {
+    const count = set.faces.length;
+    const wrapped = ((index % count) + count) % count;
+    onPreview?.({ setId: set.id, index: wrapped });
+    announce(`Previewing ${set.faces[wrapped]?.label}, ${wrapped + 1} of ${count}.`);
   }
 
   function onBoxKeyDown(event: KeyboardEvent, box: LayoutBox, index: number) {
@@ -340,84 +369,165 @@ export function LayoutCanvas({ layout, onChange, onBack, announce, columns = NO_
       </p>
 
       <div className="layout-canvas__work">
-        <div ref={stageRef} className="layout-canvas__stage">
-          <div className="layout-canvas__card" style={{ width: shown }}>
-            {/* The boxes over the card name themselves; a sample card's text says nothing more. */}
-            <div aria-hidden="true">
-              <CardFace face={face} layout={layout} width={cardWidth} upright onFit={onFit} />
-            </div>
-            <div
-              ref={overlayRef}
-              className="layout-canvas__boxes"
-              role="group"
-              aria-label={`Boxes on ${layout.name}`}
-              onPointerDown={onOverlayPointerDown}
-              onPointerMove={onPointerMove}
-              onPointerUp={onPointerUp}
-              onPointerCancel={onPointerCancel}
-            >
-              {layout.boxes.map((box, index) => {
-                const warnings = warningsFor(box, index);
-                return (
-                  <div
-                    key={box.id}
-                    data-box-id={box.id}
-                    className={`layout-canvas__box${box.id === selectedId ? ' layout-canvas__box--selected' : ''}`}
-                    style={{
-                      left: `${box.x}%`,
-                      top: `${box.y}%`,
-                      width: `${box.width}%`,
-                      height: `${box.height}%`,
-                    }}
-                  >
-                    <button
-                      type="button"
-                      className="layout-canvas__box-button"
-                      aria-label={[boxName(index), describeBoxContent(box.content), describeBoxPlace(box), describeBoxSize(box), ...warnings.short].join(', ')}
-                      aria-describedby={hintId}
-                      onFocus={() => setSelectedId(box.id)}
-                      onKeyDown={(event) => onBoxKeyDown(event, box, index)}
-                      onPointerDown={(event) => onBoxPointerDown(event, box)}
+        {/* The card with the preview row below it, so the row never pushes the card down. */}
+        <div className="layout-canvas__view">
+          <div ref={stageRef} className="layout-canvas__stage">
+            <div className="layout-canvas__card" style={{ width: shown }}>
+              {/* The boxes over the card name themselves, and the preview row names the card. */}
+              <div aria-hidden="true">
+                <CardFace face={face} layout={layout} width={cardWidth} upright onFit={onFit} />
+              </div>
+              <div
+                ref={overlayRef}
+                className="layout-canvas__boxes"
+                role="group"
+                aria-label={`Boxes on ${layout.name}`}
+                onPointerDown={onOverlayPointerDown}
+                onPointerMove={onPointerMove}
+                onPointerUp={onPointerUp}
+                onPointerCancel={onPointerCancel}
+              >
+                {layout.boxes.map((box, index) => {
+                  const warnings = warningsFor(box, index);
+                  return (
+                    <div
+                      key={box.id}
+                      data-box-id={box.id}
+                      className={`layout-canvas__box${box.id === selectedId ? ' layout-canvas__box--selected' : ''}`}
+                      style={{
+                        left: `${box.x}%`,
+                        top: `${box.y}%`,
+                        width: `${box.width}%`,
+                        height: `${box.height}%`,
+                      }}
                     >
-                      <span className="layout-canvas__box-number" aria-hidden="true">
-                        {index + 1}
-                      </span>
-                      {warnings.short.length > 0 && (
-                        <span className="layout-canvas__box-warning" aria-hidden="true">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round">
-                            <path d="M12 3l10 18H2z" />
-                            <path d="M12 10v4M12 17.5v.5" strokeLinecap="round" />
-                          </svg>
+                      <button
+                        type="button"
+                        className="layout-canvas__box-button"
+                        aria-label={[boxName(index), describeBoxContent(box.content), describeBoxPlace(box), describeBoxSize(box), ...warnings.short].join(
+                          ', ',
+                        )}
+                        aria-describedby={hintId}
+                        onFocus={() => setSelectedId(box.id)}
+                        onKeyDown={(event) => onBoxKeyDown(event, box, index)}
+                        onPointerDown={(event) => onBoxPointerDown(event, box)}
+                      >
+                        <span className="layout-canvas__box-number" aria-hidden="true">
+                          {index + 1}
                         </span>
-                      )}
-                    </button>
-                    {box.id === selectedId &&
-                      CORNERS.map((corner) => (
-                        <span
-                          key={corner}
-                          className={`layout-canvas__handle layout-canvas__handle--${corner}`}
-                          data-corner={corner}
-                          aria-hidden="true"
-                          onPointerDown={(event) => onBoxPointerDown(event, box, corner)}
-                        />
-                      ))}
-                  </div>
-                );
-              })}
-              {draft && (
-                <div
-                  className="layout-canvas__draft"
-                  aria-hidden="true"
-                  style={{
-                    left: `${draft.x}%`,
-                    top: `${draft.y}%`,
-                    width: `${draft.width}%`,
-                    height: `${draft.height}%`,
-                  }}
-                />
-              )}
+                        {warnings.short.length > 0 && (
+                          <span className="layout-canvas__box-warning" aria-hidden="true">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round">
+                              <path d="M12 3l10 18H2z" />
+                              <path d="M12 10v4M12 17.5v.5" strokeLinecap="round" />
+                            </svg>
+                          </span>
+                        )}
+                      </button>
+                      {box.id === selectedId &&
+                        CORNERS.map((corner) => (
+                          <span
+                            key={corner}
+                            className={`layout-canvas__handle layout-canvas__handle--${corner}`}
+                            data-corner={corner}
+                            aria-hidden="true"
+                            onPointerDown={(event) => onBoxPointerDown(event, box, corner)}
+                          />
+                        ))}
+                    </div>
+                  );
+                })}
+                {draft && (
+                  <div
+                    className="layout-canvas__draft"
+                    aria-hidden="true"
+                    style={{
+                      left: `${draft.x}%`,
+                      top: `${draft.y}%`,
+                      width: `${draft.width}%`,
+                      height: `${draft.height}%`,
+                    }}
+                  />
+                )}
+              </div>
             </div>
           </div>
+          {previewed ? (
+            <div className="layout-canvas__preview" role="group" aria-label="Preview">
+              {previewSets.length > 1 && (
+                <span className="layout-canvas__preview-set">
+                  <label htmlFor={setFieldId}>Card set</label>
+                  <select
+                    id={setFieldId}
+                    className="form-input layout-canvas__set-select"
+                    value={previewed.set.id}
+                    onChange={(event) => {
+                      const set = previewSets.find((s) => s.id === event.target.value);
+                      if (set) showPreview(set, 0);
+                    }}
+                  >
+                    {previewSets.map((set) => (
+                      <option key={set.id} value={set.id}>
+                        {set.name}
+                      </option>
+                    ))}
+                  </select>
+                </span>
+              )}
+              <button
+                type="button"
+                className="button layout-canvas__step"
+                aria-label="Previous card"
+                onClick={() => showPreview(previewed.set, previewed.index - 1)}
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M15 6l-6 6 6 6" />
+                </svg>
+              </button>
+              <p className="layout-canvas__preview-card">
+                <span className="layout-canvas__preview-name" title={previewFace?.label}>
+                  {previewFace?.label}
+                </span>{' '}
+                <span className="layout-canvas__preview-count">
+                  {previewed.index + 1} of {previewed.set.faces.length}
+                </span>
+              </p>
+              <button
+                type="button"
+                className="button layout-canvas__step"
+                aria-label="Next card"
+                onClick={() => showPreview(previewed.set, previewed.index + 1)}
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
+              </button>
+            </div>
+          ) : (
+            <p className="layout-canvas__preview layout-canvas__hint">
+              Load a CSV into a pile to preview the layout with real cards. Until then, boxes show their column names.
+            </p>
+          )}
         </div>
         <BoxProperties
           box={selected}
