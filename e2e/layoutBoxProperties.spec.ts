@@ -86,7 +86,7 @@ test.describe('LY-5 fixed text and colour boxes', () => {
   test('sets fixed text and a colour by mouse, with no axe violations', async ({ page }) => {
     await openNewLayout(page);
     await page.getByRole('button', { name: 'Add box' }).click();
-    await panel(page).getByRole('textbox', { name: 'Text' }).fill('Hero');
+    await panel(page).getByRole('textbox', { name: 'Text', exact: true }).fill('Hero');
     await expect(editor(page).locator('.layout-canvas__card').getByText('Hero')).toBeVisible();
 
     // A second box drawn apart from the first, from 10%, 75% to 60%, 90%.

@@ -273,6 +273,22 @@
   cursor: move;
 }
 
+/* A warning badge, a dark pill with a white edge like the number chip, so it reads on any card colour. */
+.layout-canvas__box-warning {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #fff;
+  border-radius: 9px;
+  background: #1c1e1b;
+  color: #fff;
+}
+
 .layout-canvas__box-number {
   position: absolute;
   top: 2px;
@@ -395,6 +411,90 @@
   border-radius: 8px;
   background: var(--panel);
   cursor: pointer;
+}
+
+/* Text style choices drawn as joined buttons, like Portrait / Landscape. */
+.box-properties__segments {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.box-properties__segments legend {
+  margin-bottom: 6px;
+  padding: 0;
+}
+
+.box-properties__segment-row {
+  display: flex;
+}
+
+.box-properties__option {
+  flex: 1 1 0;
+  justify-content: center;
+  padding: 0 var(--space-2);
+}
+
+.box-properties__size {
+  width: 8rem;
+  font-family: var(--font-num);
+}
+
+.box-properties__background {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.box-properties__check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.box-properties__check input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.box-properties__warnings {
+  position: sticky;
+  top: calc(-1 * var(--space-4));
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: calc(-1 * var(--space-2)) 0;
+  padding: var(--space-2) 0;
+  background: var(--panel);
+}
+
+/* Warnings carry an icon and words, never colour alone. The tokens have no warning colour, so the edge uses the error colour. */
+.box-properties__warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid var(--seat-a);
+  border-radius: 4px;
+  background: var(--bg);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.box-properties__warning svg {
+  flex: none;
+  color: var(--seat-a);
 }
 
 /* On a phone the card takes a steady part of the screen and the properties follow; the screen scrolls. */
