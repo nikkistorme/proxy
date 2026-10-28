@@ -75,8 +75,7 @@ describe('LY-2 layout canvas', () => {
     const { user } = await openHero();
     await user.click(screen.getByRole('button', { name: 'Add box' }));
     await user.click(screen.getByRole('button', { name: 'Add box' }));
-    // A grid step down and right, with snapping on.
-    expect(screen.getByRole('button', { name: /^Box 2, empty, at 35% across, 45% down/ })).toHaveFocus();
+    expect(screen.getByRole('button', { name: /^Box 2, empty, at 32% across, 42% down/ })).toHaveFocus();
 
     await user.keyboard('{Delete}');
     expect(status()).toHaveTextContent('Deleted Box 2.');
@@ -149,15 +148,16 @@ const savedBox = (backend: ReturnType<typeof memoryBackend>) => saved(backend)?.
 
 describe('LY-2 grid', () => {
   const overlay = () => screen.getByRole('group', { name: 'Boxes on Hero' });
+  const grid = () => document.querySelector('.layout-canvas__grid');
 
   it('snaps on to start, shows the grid, and the toggle is announced and kept between layouts', async () => {
     const { user } = await openHero();
     const toggle = screen.getByRole('checkbox', { name: 'Snap to grid' });
     expect(toggle).toBeChecked();
-    expect(overlay()).toHaveClass('layout-canvas__boxes--grid');
+    expect(grid()).toBeInTheDocument();
     await user.click(toggle);
     expect(status()).toHaveTextContent('Snapping off.');
-    expect(overlay()).not.toHaveClass('layout-canvas__boxes--grid');
+    expect(grid()).not.toBeInTheDocument();
     expect(screen.getByText(/Arrow keys move the chosen box 1%/)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Back to layouts' }));
@@ -171,22 +171,22 @@ describe('LY-2 grid', () => {
     const { user, backend } = await openHero();
     await user.click(screen.getByRole('checkbox', { name: 'Snap to grid' }));
     await user.click(screen.getByRole('button', { name: 'Add box' }));
-    await user.keyboard('{ArrowRight}{ArrowRight}{Shift>}{ArrowRight}{/Shift}');
-    const box = screen.getByRole('button', { name: /^Box 1, empty, at 32% across, 40% down, 41% wide/ });
+    await user.keyboard('{ArrowRight}{Shift>}{ArrowRight}{/Shift}');
+    const box = screen.getByRole('button', { name: /^Box 1, empty, at 31% across, 40% down, 41% wide/ });
     await user.click(screen.getByRole('checkbox', { name: 'Snap to grid' }));
     box.focus();
 
     // Off the grid, the first step lands on the next line that way.
     await user.keyboard('{ArrowRight}');
-    expect(status()).toHaveTextContent('Box 1 at 35% across, 40% down.');
+    expect(status()).toHaveTextContent('Box 1 at 32% across, 40% down.');
     await user.keyboard('{ArrowLeft}{ArrowLeft}{ArrowDown}');
-    expect(status()).toHaveTextContent('Box 1 at 25% across, 45% down.');
-    // Resizing moves the right or bottom edge to a grid line: 25 + 41 = 66, so 70, then 65.
+    expect(status()).toHaveTextContent('Box 1 at 28% across, 42% down.');
+    // Resizing moves the right or bottom edge to a grid line: 28 + 41 = 69, so 70, then 68.
     await user.keyboard('{Shift>}{ArrowRight}{/Shift}');
-    expect(status()).toHaveTextContent('Box 1 45% wide, 20% tall.');
+    expect(status()).toHaveTextContent('Box 1 42% wide, 20% tall.');
     await user.keyboard('{Shift>}{ArrowLeft}{ArrowUp}{/Shift}');
-    expect(status()).toHaveTextContent('Box 1 40% wide, 15% tall.');
-    await waitFor(() => expect(saved(backend)?.boxes).toMatchObject([{ x: 25, y: 45, width: 40, height: 15 }]), { timeout: 2000 });
+    expect(status()).toHaveTextContent('Box 1 40% wide, 18% tall.');
+    await waitFor(() => expect(saved(backend)?.boxes).toMatchObject([{ x: 28, y: 42, width: 40, height: 18 }]), { timeout: 2000 });
   });
 
   it('snaps a box drawn by pointer to the grid', async () => {

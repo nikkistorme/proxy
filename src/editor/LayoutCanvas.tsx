@@ -85,7 +85,7 @@ interface LayoutCanvasProps {
   /** The previewed card, kept by the editor so it stays while moving between layouts. */
   preview?: PreviewPosition;
   onPreview?: (position: PreviewPosition) => void;
-  /** Whether boxes snap to the 5% grid, kept by the editor so it stays while moving between layouts. */
+  /** Whether boxes snap to the 2% grid, kept by the editor so it stays while moving between layouts. */
   snap?: boolean;
   onSnap?: (snap: boolean) => void;
 }
@@ -98,7 +98,7 @@ const FIRST: PreviewPosition = { index: 0 };
  * The layout editor's canvas (LY-2): the card drawn from the layout, with each
  * box as a button over it. Boxes are added by button or drawn by pointer, and
  * moved and resized by pointer or with the arrow keys (Shift resizes),
- * snapping to a 5% grid unless snapping is turned off.
+ * snapping to a 2% grid unless snapping is turned off.
  */
 export function LayoutCanvas({
   layout,
@@ -360,12 +360,7 @@ export function LayoutCanvas({
             </label>
           ))}
         </fieldset>
-        <button
-          ref={addRef}
-          type="button"
-          className="button button--primary layout-canvas__add"
-          onClick={() => insert(addedBoxRect(latest.current.boxes, snap))}
-        >
+        <button ref={addRef} type="button" className="button button--primary layout-canvas__add" onClick={() => insert(addedBoxRect(latest.current.boxes))}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
             <path d="M12 5v14M5 12h14" />
           </svg>
@@ -400,12 +395,14 @@ export function LayoutCanvas({
           <div ref={stageRef} className="layout-canvas__stage">
             <div className="layout-canvas__card" style={{ width: shown }}>
               {/* The boxes over the card name themselves, and the preview row names the card. */}
-              <div aria-hidden="true">
+              {/* Under the face, so boxes draw over the grid. */}
+              {snap && <div className="layout-canvas__grid" aria-hidden="true" />}
+              <div className="layout-canvas__face" aria-hidden="true">
                 <CardFace face={face} layout={layout} width={cardWidth} upright onFit={onFit} />
               </div>
               <div
                 ref={overlayRef}
-                className={`layout-canvas__boxes${snap ? ' layout-canvas__boxes--grid' : ''}`}
+                className="layout-canvas__boxes"
                 role="group"
                 aria-label={`Boxes on ${layout.name}`}
                 onPointerDown={onOverlayPointerDown}

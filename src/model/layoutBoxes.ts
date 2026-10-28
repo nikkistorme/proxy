@@ -8,7 +8,7 @@ export const MIN_BOX = 2;
 /** How far one arrow key moves or resizes a box with snapping off, in percent of the card (LY-2). */
 export const BOX_STEP = 1;
 /** The canvas grid's spacing, in percent of the card each way. Boxes snap to it while snapping is on (LY-2). */
-export const GRID = 5;
+export const GRID = 2;
 
 /** A box's place on the card, in percent (LY-6). */
 export type BoxRect = Pick<LayoutBox, 'x' | 'y' | 'width' | 'height'>;
@@ -116,13 +116,12 @@ export function resizeFromCorner<T extends BoxRect>(box: T, corner: Corner, dx: 
   return { ...box, ...rectFromPoints(fixed, snapPoint(moving, snap)) };
 }
 
-/** A new box's place when added by button: the middle of the card, stepped down and right past boxes already there, a grid step at a time while snapping is on. */
-export function addedBoxRect(boxes: readonly BoxRect[], snap = false): BoxRect {
-  const step = snap ? GRID : BOX_STEP * 2;
+/** A new box's place when added by button: the middle of the card, stepped down and right past boxes already there. Both are on grid lines (LY-2). */
+export function addedBoxRect(boxes: readonly BoxRect[]): BoxRect {
   const rect = { x: 30, y: 40, width: 40, height: 20 };
   while (boxes.some((box) => box.x === rect.x && box.y === rect.y) && rect.x + rect.width < 100 && rect.y + rect.height < 100) {
-    rect.x += step;
-    rect.y += step;
+    rect.x += GRID;
+    rect.y += GRID;
   }
   return rect;
 }

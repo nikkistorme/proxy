@@ -57,9 +57,9 @@ test.describe('LY-2 layout canvas', () => {
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Shift+ArrowRight');
     await page.keyboard.press('Shift+ArrowUp');
-    // Snapping is on to start, so each step goes to the next 5% grid line.
-    await expect(boxes(page).getByRole('button', { name: 'Box 1, empty, at 20% across, 45% down, 45% wide, 15% tall' })).toBeFocused();
-    await expect(editor(page).getByRole('status')).toHaveText('Box 1 45% wide, 15% tall.');
+    // Snapping is on to start, so each step goes to the next 2% grid line.
+    await expect(boxes(page).getByRole('button', { name: 'Box 1, empty, at 26% across, 42% down, 42% wide, 18% tall' })).toBeFocused();
+    await expect(editor(page).getByRole('status')).toHaveText('Box 1 42% wide, 18% tall.');
 
     // Back past Snap to grid, Delete Box 1 and Add box to the orientation radios.
     await page.keyboard.press('Shift+Tab');
@@ -84,11 +84,11 @@ test.describe('LY-2 layout canvas', () => {
 
     await expect
       .poll(() => savedLayouts(page))
-      .toEqual([expect.objectContaining({ name: 'Layout 1', orientation: 'landscape', boxes: [expect.objectContaining({ x: 20, y: 45, width: 45, height: 15 })] })]);
+      .toEqual([expect.objectContaining({ name: 'Layout 1', orientation: 'landscape', boxes: [expect.objectContaining({ x: 26, y: 42, width: 42, height: 18 })] })]);
     await page.reload();
     await layoutsButton(page).click();
     await page.getByRole('button', { name: 'Edit Layout 1' }).click();
-    await expect(boxes(page).getByRole('button', { name: 'Box 1, empty, at 20% across, 45% down, 45% wide, 15% tall' })).toBeVisible();
+    await expect(boxes(page).getByRole('button', { name: 'Box 1, empty, at 26% across, 42% down, 42% wide, 18% tall' })).toBeVisible();
   });
 
   test('draws, moves and resizes boxes by mouse, with no axe violations', async ({ page }) => {

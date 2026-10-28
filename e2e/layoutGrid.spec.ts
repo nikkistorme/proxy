@@ -28,12 +28,12 @@ test.describe('LY-2 grid', () => {
     await page.keyboard.press('Enter');
     // A grid step past the first.
     const second = boxes(page).getByRole('button', { name: /^Box 2,/ });
-    await expect(second).toHaveAccessibleName('Box 2, empty, at 35% across, 45% down, 40% wide, 20% tall');
+    await expect(second).toHaveAccessibleName('Box 2, empty, at 32% across, 42% down, 40% wide, 20% tall');
     await expect(second).toBeFocused();
 
     // Under Box 1, whose bottom edge is at 60%.
     await page.keyboard.press('ArrowLeft');
-    for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowDown');
+    for (let i = 0; i < 9; i++) await page.keyboard.press('ArrowDown');
     await expect(second).toHaveAccessibleName('Box 2, empty, at 30% across, 60% down, 40% wide, 20% tall');
     await expect(editor(page).getByRole('status')).toHaveText('Box 2 at 30% across, 60% down.');
 
@@ -58,20 +58,20 @@ test.describe('LY-2 grid', () => {
     if (!overlay) throw new Error('No canvas');
     const at = (x: number, y: number) => [overlay.x + (overlay.width * x) / 100, overlay.y + (overlay.height * y) / 100] as const;
 
-    // Drawn from 11%, 9% to 58%, 32%: its corners land on 10%, 10% and 60%, 30%.
-    await page.mouse.move(...at(11, 9));
+    // Drawn from 10.6%, 9.4% to 59.4%, 30.6%: its corners land on 10%, 10% and 60%, 30%.
+    await page.mouse.move(...at(10.6, 9.4));
     await page.mouse.down();
     await page.mouse.move(...at(35, 20), { steps: 4 });
-    await page.mouse.move(...at(58, 32), { steps: 4 });
+    await page.mouse.move(...at(59.4, 30.6), { steps: 4 });
     await page.mouse.up();
     const box = boxes(page).getByRole('button', { name: /^Box 1,/ });
     await expect(box).toHaveAccessibleName('Box 1, empty, at 10% across, 10% down, 50% wide, 20% tall');
 
-    // Dragged about 18% down by its middle: it lands on the 30% line.
+    // Dragged about 19.4% down by its middle: it lands on the 30% line.
     await page.mouse.move(...at(35, 20));
     await page.mouse.down();
     await page.mouse.move(...at(35, 30), { steps: 4 });
-    await page.mouse.move(...at(35, 38), { steps: 4 });
+    await page.mouse.move(...at(35, 39.4), { steps: 4 });
     await page.mouse.up();
     await expect(box).toHaveAccessibleName('Box 1, empty, at 10% across, 30% down, 50% wide, 20% tall');
 
@@ -101,7 +101,7 @@ test.describe('LY-2 grid on a phone', () => {
     if (!card) throw new Error('No card');
     expect(card.x + card.width).toBeLessThanOrEqual(375);
     expect(card.y + card.height).toBeLessThanOrEqual(667);
-    await expect(boxes(page)).toHaveClass(/layout-canvas__boxes--grid/);
+    await expect(editor(page).locator('.layout-canvas__grid')).toBeVisible();
     const canvas = editor(page).locator('.layout-canvas');
     expect(await canvas.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
   });
