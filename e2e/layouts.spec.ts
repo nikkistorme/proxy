@@ -127,6 +127,8 @@ test.describe('TT-9 landscape layouts on a phone', () => {
     await page.reload();
     await bothOnTable(page, 'name,layout\nHarbour,Location\nGoblin,\n');
     await table(page).getByRole('button', { name: 'Harbour', exact: true }).focus();
+    // On a narrow screen focus scrolls the table, and a table scroll closes the preview, so let it land first.
+    await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
     await page.keyboard.press('i');
     const preview = await box(page.getByRole('dialog', { name: 'Enlarged: Harbour' }));
     expect(preview.x).toBeGreaterThanOrEqual(0);
@@ -180,6 +182,7 @@ test.describe('LY-4 shrink-to-fit', () => {
     expect(await cutOff(onTable)).toBe(false);
 
     await table(page).getByRole('button', { name: 'Harbour', exact: true }).focus();
+    await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
     await page.keyboard.press('i');
     const enlarged = page.getByRole('dialog', { name: 'Enlarged: Harbour' }).locator('.card-face__box--text', { hasText: someRules });
     await expect(enlarged).toHaveAttribute('data-fit', 'shrunk');

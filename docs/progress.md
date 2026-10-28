@@ -20,7 +20,7 @@ Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) i
 - **Every width:** the fitted size is in points, so it's worked out again when the face width, the text, the style or the box size changes, and once more when the bundled fonts finish loading. It works the same on table, hand, viewer and enlarge faces, and on a landscape layout's turned canvas.
 - **Padding:** a text box's padding follows its set size (`--box-size`), so shrinking only frees room for text.
 - **For the editor (5g):** each text box has `data-fit="shrunk"` or `data-fit="clipped"`, and `CardFace` takes `onFit(boxId, { size, clipped })`, called after each fit.
-- **Tests:** LY-4 cases in `layout.test.ts` (the search) and `CardFace.test.tsx` (mocked measurements: unchanged, shrunk with its padding, clipped at 6 pt, `onFit`), and in `e2e/layouts.spec.ts` (shrinks and clips on table cards, a landscape card on the table and enlarged, 375 × 667 without sideways scroll).
+- **Tests:** LY-4 cases in `layout.test.ts` (the search) and `CardFace.test.tsx` (mocked measurements: unchanged, shrunk with its padding, clipped at 6 pt, `onFit`), and in `e2e/layouts.spec.ts` (shrinks and clips on table cards, a landscape card on the table and enlarged, 375 × 667 without sideways scroll). The TT-9 phone E2E from 5c now waits two frames after focusing the card before pressing I: on a narrow screen, focus scrolls the table, and that scroll closed the preview as it opened.
 - **Changed requirements:** LY-4 (the 6 pt minimum, padding, every width).
 
 ### Phase 5c: Landscape layouts (#90, 2026-10-27)
