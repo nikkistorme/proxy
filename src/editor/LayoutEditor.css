@@ -216,10 +216,19 @@
   font-size: 13px;
 }
 
+.layout-canvas__work {
+  /* The card beside its properties, which are always there so choosing a box never resizes the card. */
+  display: flex;
+  flex: 1 1 auto;
+  gap: var(--space-4);
+  min-height: 0;
+}
+
 .layout-canvas__stage {
   position: relative;
   /* Start from the content height, not 0%: some mobile Safari versions collapse a 0% basis. */
   flex: 1 1 auto;
+  min-width: 0;
   min-height: 240px;
 }
 
@@ -324,4 +333,86 @@
   border: 2px dashed var(--accent);
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   pointer-events: none;
+}
+
+/* Box properties (LY-3, LY-5): a column beside the card, below it on a phone. */
+.box-properties {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 320px;
+  overflow-y: auto;
+  padding: var(--space-4);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-menu);
+  background: var(--panel);
+}
+
+.box-properties .form-field + .form-field,
+.box-properties .form-choices {
+  margin: 0;
+}
+
+.box-properties__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.box-properties__empty,
+.box-properties__hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.box-properties__text {
+  height: auto;
+  min-height: 80px;
+  padding: var(--space-2) var(--space-3);
+  resize: vertical;
+}
+
+.box-properties__color {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.box-properties__hex {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-num);
+}
+
+.box-properties__swatch {
+  flex: none;
+  width: 48px;
+  height: 40px;
+  padding: 3px;
+  border: 1px solid var(--control);
+  border-radius: 8px;
+  background: var(--panel);
+  cursor: pointer;
+}
+
+/* On a phone the card takes a steady part of the screen and the properties follow; the screen scrolls. */
+@media (max-width: 720px) {
+  .layout-canvas__work {
+    flex: none;
+    flex-direction: column;
+  }
+
+  .layout-canvas__stage {
+    flex: none;
+    /* svh, not dvh, so the card keeps its size while Safari's toolbars come and go. */
+    height: max(240px, 55vh);
+    height: max(240px, 55svh);
+  }
+
+  .box-properties {
+    width: auto;
+    overflow-y: visible;
+  }
 }

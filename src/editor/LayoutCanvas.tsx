@@ -1,10 +1,11 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type RefObject } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent, type RefObject } from 'react';
 import { CardFace } from '../components/CardFace';
 import type { LayoutItem } from '../layouts/LayoutsProvider';
 import type { LayoutBox, LayoutOrientation } from '../model/layout';
 import {
   addedBoxRect,
   BOX_STEP,
+  describeBoxContent,
   describeBoxPlace,
   describeBoxSize,
   isDrawn,
@@ -13,12 +14,13 @@ import {
   rectFromPoints,
   resizeBox,
   resizeFromCorner,
+  sampleFace,
   type BoxRect,
   type Corner,
   type Point,
 } from '../model/layoutBoxes';
+import { BoxProperties } from './BoxProperties';
 
-const SAMPLE_FACE = { name: 'Card name', fields: {} };
 const CORNERS: Corner[] = ['nw', 'ne', 'sw', 'se'];
 /** Pointer travel, in CSS px, before pressing on a box counts as dragging it. */
 const DRAG_THRESHOLD = 3;
@@ -66,14 +68,18 @@ interface LayoutCanvasProps {
   /** Back to the list. */
   onBack: () => void;
   announce: (text: string) => void;
+  /** Column names from the loaded cards, suggested for column boxes. */
+  columns?: readonly string[];
 }
+
+const NO_COLUMNS: readonly string[] = [];
 
 /**
  * The layout editor's canvas (LY-2): the card drawn from the layout, with each
  * box as a button over it. Boxes are added by button or drawn by pointer, and
  * moved and resized by pointer or with the arrow keys (Shift resizes).
  */
-export function LayoutCanvas({ layout, onChange, onBack, announce }: LayoutCanvasProps) {
+export function LayoutCanvas({ layout, onChange, onBack, announce, columns = NO_COLUMNS }: LayoutCanvasProps) {
   const headingId = useId();
   const hintId = useId();
   const stageRef = useRef<HTMLDivElement>(null);
@@ -100,6 +106,7 @@ export function LayoutCanvas({ layout, onChange, onBack, announce }: LayoutCanva
 
   const selectedIndex = layout.boxes.findIndex((box) => box.id === selectedId);
   const selected = layout.boxes[selectedIndex];
+  const face = useMemo(() => sampleFace(layout.boxes), [layout.boxes]);
 
   useEffect(() => {
     addRef.current?.focus();
@@ -304,73 +311,76 @@ export function LayoutCanvas({ layout, onChange, onBack, announce }: LayoutCanva
         Drag on the card to draw a box. Arrow keys move the chosen box, Shift + arrow keys resize it, and Delete removes it.
       </p>
 
-      <div ref={stageRef} className="layout-canvas__stage">
-        <div className="layout-canvas__card" style={{ width: shown }}>
-          {/* The boxes over the card name themselves; a sample card's text says nothing more. */}
-          <div aria-hidden="true">
-            <CardFace face={SAMPLE_FACE} layout={layout} width={cardWidth} upright />
-          </div>
-          <div
-            ref={overlayRef}
-            className="layout-canvas__boxes"
-            role="group"
-            aria-label={`Boxes on ${layout.name}`}
-            onPointerDown={onOverlayPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            onPointerCancel={onPointerCancel}
-          >
-            {layout.boxes.map((box, index) => (
-              <div
-                key={box.id}
-                data-box-id={box.id}
-                className={`layout-canvas__box${box.id === selectedId ? ' layout-canvas__box--selected' : ''}`}
-                style={{
-                  left: `${box.x}%`,
-                  top: `${box.y}%`,
-                  width: `${box.width}%`,
-                  height: `${box.height}%`,
-                }}
-              >
-                <button
-                  type="button"
-                  className="layout-canvas__box-button"
-                  aria-label={`${boxName(index)}, ${describeBoxPlace(box)}, ${describeBoxSize(box)}`}
-                  aria-describedby={hintId}
-                  onFocus={() => setSelectedId(box.id)}
-                  onKeyDown={(event) => onBoxKeyDown(event, box, index)}
-                  onPointerDown={(event) => onBoxPointerDown(event, box)}
+      <div className="layout-canvas__work">
+        <div ref={stageRef} className="layout-canvas__stage">
+          <div className="layout-canvas__card" style={{ width: shown }}>
+            {/* The boxes over the card name themselves; a sample card's text says nothing more. */}
+            <div aria-hidden="true">
+              <CardFace face={face} layout={layout} width={cardWidth} upright />
+            </div>
+            <div
+              ref={overlayRef}
+              className="layout-canvas__boxes"
+              role="group"
+              aria-label={`Boxes on ${layout.name}`}
+              onPointerDown={onOverlayPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerCancel={onPointerCancel}
+            >
+              {layout.boxes.map((box, index) => (
+                <div
+                  key={box.id}
+                  data-box-id={box.id}
+                  className={`layout-canvas__box${box.id === selectedId ? ' layout-canvas__box--selected' : ''}`}
+                  style={{
+                    left: `${box.x}%`,
+                    top: `${box.y}%`,
+                    width: `${box.width}%`,
+                    height: `${box.height}%`,
+                  }}
                 >
-                  <span className="layout-canvas__box-number" aria-hidden="true">
-                    {index + 1}
-                  </span>
-                </button>
-                {box.id === selectedId &&
-                  CORNERS.map((corner) => (
-                    <span
-                      key={corner}
-                      className={`layout-canvas__handle layout-canvas__handle--${corner}`}
-                      data-corner={corner}
-                      aria-hidden="true"
-                      onPointerDown={(event) => onBoxPointerDown(event, box, corner)}
-                    />
-                  ))}
-              </div>
-            ))}
-            {draft && (
-              <div
-                className="layout-canvas__draft"
-                aria-hidden="true"
-                style={{
-                  left: `${draft.x}%`,
-                  top: `${draft.y}%`,
-                  width: `${draft.width}%`,
-                  height: `${draft.height}%`,
-                }}
-              />
-            )}
+                  <button
+                    type="button"
+                    className="layout-canvas__box-button"
+                    aria-label={`${boxName(index)}, ${describeBoxContent(box.content)}, ${describeBoxPlace(box)}, ${describeBoxSize(box)}`}
+                    aria-describedby={hintId}
+                    onFocus={() => setSelectedId(box.id)}
+                    onKeyDown={(event) => onBoxKeyDown(event, box, index)}
+                    onPointerDown={(event) => onBoxPointerDown(event, box)}
+                  >
+                    <span className="layout-canvas__box-number" aria-hidden="true">
+                      {index + 1}
+                    </span>
+                  </button>
+                  {box.id === selectedId &&
+                    CORNERS.map((corner) => (
+                      <span
+                        key={corner}
+                        className={`layout-canvas__handle layout-canvas__handle--${corner}`}
+                        data-corner={corner}
+                        aria-hidden="true"
+                        onPointerDown={(event) => onBoxPointerDown(event, box, corner)}
+                      />
+                    ))}
+                </div>
+              ))}
+              {draft && (
+                <div
+                  className="layout-canvas__draft"
+                  aria-hidden="true"
+                  style={{
+                    left: `${draft.x}%`,
+                    top: `${draft.y}%`,
+                    width: `${draft.width}%`,
+                    height: `${draft.height}%`,
+                  }}
+                />
+              )}
+            </div>
           </div>
         </div>
+        <BoxProperties box={selected} name={selected && boxName(selectedIndex)} columns={columns} onChange={updateBox} />
       </div>
     </section>
   );

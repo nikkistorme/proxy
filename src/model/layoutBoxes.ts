@@ -1,5 +1,7 @@
+import { normaliseColumnName } from '../csv/parseCsv';
 import { newItemId } from '../storage/storage';
-import type { LayoutBox } from './layout';
+import type { CardFace } from './card';
+import type { BoxContent, LayoutBox } from './layout';
 
 /** The smallest a box gets, in percent of the card on each side (LY-2). */
 export const MIN_BOX = 2;
@@ -113,4 +115,50 @@ export function describeBoxPlace(box: BoxRect): string {
 /** How big a box is, for its description and announcements. */
 export function describeBoxSize(box: BoxRect): string {
   return `${percent(box.width)} wide, ${percent(box.height)} tall`;
+}
+
+/** What a box shows, for its name on the canvas (LY-3, LY-5). */
+export function describeBoxContent(content: BoxContent): string {
+  switch (content.kind) {
+    case 'column': {
+      const columns = content.columns.length ? content.columns.join(' or ') : 'no column';
+      return content.as === 'image' ? `image from ${columns}` : `shows ${columns}`;
+    }
+    case 'text':
+      return content.text.trim() ? `text “${content.text.trim()}”` : 'empty';
+    case 'color':
+      return 'colour';
+  }
+}
+
+/** The column names typed in a box's Column field: comma-separated alternatives, matched like CSV headers (CD-2). */
+export function parseColumns(text: string): string[] {
+  return [...new Set(text.split(',').map(normaliseColumnName).filter(Boolean))];
+}
+
+/** A typed hex colour as `#rrggbb`, or undefined if it isn't one. `#rgb` and a missing `#` are accepted. */
+export function parseHexColor(text: string): string | undefined {
+  const hex = text.trim().replace(/^#/, '').toLowerCase();
+  if (/^[0-9a-f]{6}$/.test(hex)) return `#${hex}`;
+  if (/^[0-9a-f]{3}$/.test(hex)) return `#${[...hex].map((digit) => digit + digit).join('')}`;
+  return undefined;
+}
+
+/**
+ * The editor's sample card: each column a text box shows reads as its own
+ * name in brackets, such as "[cost]", so boxes show their place and style
+ * before real cards can be previewed (LY-7).
+ */
+export function sampleFace(boxes: readonly LayoutBox[]): CardFace {
+  const face: CardFace = { name: '', fields: {} };
+  for (const { content } of boxes) {
+    if (content.kind !== 'column' || content.as !== 'text') continue;
+    const column = content.columns[0];
+    if (!column || column === 'image') continue;
+    const value = `[${column}]`;
+    if (column === 'name') face.name = value;
+    else if (column === 'layout' || column === 'type') face[column] = value;
+    else face.fields[column] = value;
+  }
+  return face;
 }

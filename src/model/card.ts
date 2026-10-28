@@ -54,3 +54,15 @@ export function faceValue(face: CardFace, column: string): string {
       return face.fields[column]?.trim() ?? '';
   }
 }
+
+/** Every column the cards have a value in, front or back, sorted: the editor's column suggestions (LY-3). */
+export function cardColumns(cards: Iterable<ImportedCard>): string[] {
+  const columns = new Set<string>();
+  for (const card of cards) {
+    for (const face of card.back ? [card.front, card.back] : [card.front]) {
+      for (const column of ['name', 'image', 'type', 'layout'] as const) if (face[column]?.trim()) columns.add(column);
+      for (const [column, value] of Object.entries(face.fields)) if (value.trim()) columns.add(column);
+    }
+  }
+  return [...columns].sort((a, b) => a.localeCompare(b));
+}

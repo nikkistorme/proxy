@@ -50,14 +50,14 @@ test.describe('LY-2 layout canvas', () => {
     const add = page.getByRole('button', { name: 'Add box' });
     await expect(add).toBeFocused();
     await page.keyboard.press('Enter');
-    await expect(boxes(page).getByRole('button', { name: 'Box 1, at 30% across, 40% down, 40% wide, 20% tall' })).toBeFocused();
+    await expect(boxes(page).getByRole('button', { name: 'Box 1, empty, at 30% across, 40% down, 40% wide, 20% tall' })).toBeFocused();
 
     await page.keyboard.press('ArrowLeft');
     await page.keyboard.press('ArrowLeft');
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Shift+ArrowRight');
     await page.keyboard.press('Shift+ArrowUp');
-    await expect(boxes(page).getByRole('button', { name: 'Box 1, at 28% across, 41% down, 41% wide, 19% tall' })).toBeFocused();
+    await expect(boxes(page).getByRole('button', { name: 'Box 1, empty, at 28% across, 41% down, 41% wide, 19% tall' })).toBeFocused();
     await expect(editor(page).getByRole('status')).toHaveText('Box 1 41% wide, 19% tall.');
 
     // Back past Delete Box 1 and Add box to the orientation radios.
@@ -85,7 +85,7 @@ test.describe('LY-2 layout canvas', () => {
     await page.reload();
     await layoutsButton(page).click();
     await page.getByRole('button', { name: 'Edit Layout 1' }).click();
-    await expect(boxes(page).getByRole('button', { name: 'Box 1, at 28% across, 41% down, 41% wide, 19% tall' })).toBeVisible();
+    await expect(boxes(page).getByRole('button', { name: 'Box 1, empty, at 28% across, 41% down, 41% wide, 19% tall' })).toBeVisible();
   });
 
   test('draws, moves and resizes boxes by mouse, with no axe violations', async ({ page }) => {
@@ -101,7 +101,7 @@ test.describe('LY-2 layout canvas', () => {
     await page.mouse.move(...at(60, 30), { steps: 4 });
     await page.mouse.up();
     const box = boxes(page).getByRole('button', { name: /^Box 1,/ });
-    await expect(box).toHaveAccessibleName('Box 1, at 10% across, 10% down, 50% wide, 20% tall');
+    await expect(box).toHaveAccessibleName('Box 1, empty, at 10% across, 10% down, 50% wide, 20% tall');
 
     // Move it 20% down by its middle.
     await page.mouse.move(...at(35, 20));
@@ -109,14 +109,14 @@ test.describe('LY-2 layout canvas', () => {
     await page.mouse.move(...at(35, 30), { steps: 4 });
     await page.mouse.move(...at(35, 40), { steps: 4 });
     await page.mouse.up();
-    await expect(box).toHaveAccessibleName('Box 1, at 10% across, 30% down, 50% wide, 20% tall');
+    await expect(box).toHaveAccessibleName('Box 1, empty, at 10% across, 30% down, 50% wide, 20% tall');
 
     // Drag the bottom-right corner 10% right and down.
     await page.mouse.move(...at(60, 50));
     await page.mouse.down();
     await page.mouse.move(...at(70, 60), { steps: 4 });
     await page.mouse.up();
-    await expect(box).toHaveAccessibleName('Box 1, at 10% across, 30% down, 60% wide, 30% tall');
+    await expect(box).toHaveAccessibleName('Box 1, empty, at 10% across, 30% down, 60% wide, 30% tall');
 
     await page.getByRole('button', { name: 'Add box' }).click();
     await expect(boxes(page).getByRole('button')).toHaveCount(2);

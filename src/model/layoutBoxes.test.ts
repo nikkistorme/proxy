@@ -1,5 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { addedBoxRect, describeBoxPlace, describeBoxSize, isDrawn, MIN_BOX, moveBox, newBox, rectFromPoints, resizeBox, resizeFromCorner } from './layoutBoxes';
+import type { LayoutBox } from './layout';
+import {
+  addedBoxRect,
+  describeBoxContent,
+  describeBoxPlace,
+  describeBoxSize,
+  isDrawn,
+  MIN_BOX,
+  moveBox,
+  newBox,
+  parseColumns,
+  parseHexColor,
+  rectFromPoints,
+  resizeBox,
+  resizeFromCorner,
+  sampleFace,
+} from './layoutBoxes';
 
 const box = { x: 10, y: 20, width: 30, height: 40 };
 
@@ -117,5 +133,43 @@ describe('LY-2 box geometry', () => {
   it('describes where a box is and how big, in whole percent', () => {
     expect(describeBoxPlace({ ...box, x: 3.75 })).toBe('at 4% across, 20% down');
     expect(describeBoxSize(box)).toBe('30% wide, 40% tall');
+  });
+});
+
+describe('LY-3 box content', () => {
+  it('reads the Column field as comma-separated column names, matched like CSV headers', () => {
+    expect(parseColumns(' Rules Text, card text ,,rules text ')).toEqual(['rules text', 'card text']);
+    expect(parseColumns('  ')).toEqual([]);
+  });
+
+  it('describes what a box shows, for its name on the canvas', () => {
+    expect(describeBoxContent({ kind: 'column', columns: ['cost'], as: 'text' })).toBe('shows cost');
+    expect(describeBoxContent({ kind: 'column', columns: ['image', 'art'], as: 'image' })).toBe('image from image or art');
+    expect(describeBoxContent({ kind: 'column', columns: [], as: 'text' })).toBe('shows no column');
+    expect(describeBoxContent({ kind: 'text', text: ' Hero ' })).toBe('text “Hero”');
+    expect(describeBoxContent({ kind: 'text', text: '' })).toBe('empty');
+    expect(describeBoxContent({ kind: 'color' })).toBe('colour');
+  });
+
+  it('fills the sample card with each text column’s name, leaving images to their placeholder', () => {
+    const at = (content: LayoutBox['content']): LayoutBox => ({ ...newBox({ x: 0, y: 0, width: 10, height: 10 }), content });
+    const face = sampleFace([
+      at({ kind: 'column', columns: ['name'], as: 'text' }),
+      at({ kind: 'column', columns: ['type'], as: 'text' }),
+      at({ kind: 'column', columns: ['rules', 'text'], as: 'text' }),
+      at({ kind: 'column', columns: ['art'], as: 'image' }),
+      at({ kind: 'column', columns: ['image'], as: 'text' }),
+      at({ kind: 'color' }),
+    ]);
+    expect(face).toEqual({ name: '[name]', type: '[type]', fields: { rules: '[rules]' } });
+  });
+});
+
+describe('LY-5 colours', () => {
+  it('reads a typed hex colour as #rrggbb', () => {
+    expect(parseHexColor('#29303B')).toBe('#29303b');
+    expect(parseHexColor(' fff ')).toBe('#ffffff');
+    expect(parseHexColor('#12')).toBeUndefined();
+    expect(parseHexColor('red')).toBeUndefined();
   });
 });
