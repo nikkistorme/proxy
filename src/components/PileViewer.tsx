@@ -1,6 +1,8 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { moveCard, type Destination } from '../actions/moveCard';
 import { draw, revealTop, shuffle } from '../actions/pileActions';
+import { useLayoutChooser } from '../layouts/LayoutsProvider';
+import type { LayoutDesign } from '../model/layout';
 import { useSessionStore } from '../store/sessionStore';
 import { useCardDrag } from './cardDrag';
 import { CardFace, cardFaceLabel } from './CardFace';
@@ -31,8 +33,8 @@ interface PileViewerProps {
  * A card's name: everything printed on it, so screen readers can read the
  * cards, then its place in the pile.
  */
-function cardLabel(entry: PileEntry): string {
-  return `${cardFaceLabel(entry.face).replace(/[.!?]+$/, '')}. #${entry.position} from top`;
+function cardLabel(entry: PileEntry, layout: LayoutDesign): string {
+  return `${cardFaceLabel(entry.face, layout).replace(/[.!?]+$/, '')}. #${entry.position} from top`;
 }
 
 /** How many grid columns the results have, for moving up and down a row. */
@@ -50,6 +52,7 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
   const dispatch = useSessionStore((s) => s.dispatch);
   const announce = useSessionStore((s) => s.announce);
   const startDrag = useCardDrag();
+  const chooseLayout = useLayoutChooser();
 
   const dialogRef = useRef<HTMLDialogElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -353,7 +356,7 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
                           className="pile-viewer__card"
                           data-card-id={entry.cardId}
                           tabIndex={isCurrent ? 0 : -1}
-                          aria-label={cardLabel(entry)}
+                          aria-label={cardLabel(entry, chooseLayout(entry.face))}
                           aria-keyshortcuts="Enter T M"
                           onClick={() => setCurrentId(entry.cardId)}
                           onFocus={() => setCurrentId(entry.cardId)}

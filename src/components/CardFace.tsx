@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import type { CardFace as CardFaceData } from '../model/card';
 import { boxValue, CARD_WIDTH_PT, DEFAULT_LAYOUT, layoutLabel, type LayoutBox, type LayoutDesign } from '../model/layout';
+import { useLayoutFor } from '../layouts/LayoutsProvider';
 import { CardArt } from './CardArt';
 import './CardFace.css';
 
@@ -8,7 +9,7 @@ interface CardFaceProps {
   face: CardFaceData;
   /** Rendered width in CSS px. Height follows the 63 × 88 mm card ratio. */
   width?: number;
-  /** The layout to draw with. Defaults to the built-in layout. */
+  /** The layout to draw with. Defaults to the one LY-8 chooses for the face. */
   layout?: LayoutDesign;
 }
 
@@ -64,7 +65,9 @@ function Box({ box, face }: { box: LayoutBox; face: CardFaceData }) {
  * percentages of the card and text sizes points on it, so the face looks the
  * same at any `width`.
  */
-export function CardFace({ face, width = 126, layout = DEFAULT_LAYOUT }: CardFaceProps) {
+export function CardFace({ face, width = 126, layout: given }: CardFaceProps) {
+  const chosen = useLayoutFor(face);
+  const layout = given ?? chosen;
   const style = { '--card-pt': `${width / CARD_WIDTH_PT}px`, width, height: Math.round((width * 336) / 240) } as CSSProperties;
 
   return (
