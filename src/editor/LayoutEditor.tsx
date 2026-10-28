@@ -24,6 +24,8 @@ function describe(layout: LayoutDesign): string {
 interface LayoutEditorProps {
   /** Called once the screen has closed: Esc or Back to table. */
   onClose: () => void;
+  /** Column names from the loaded cards, suggested for column boxes (LY-3). */
+  columns?: readonly string[];
 }
 
 /**
@@ -32,7 +34,7 @@ interface LayoutEditorProps {
  * delete, and Edit opens a layout on the canvas (LY-2) in the same screen.
  * It's a modal <dialog>, so the table stays as it was underneath.
  */
-export default function LayoutEditor({ onClose }: LayoutEditorProps) {
+export default function LayoutEditor({ onClose, columns }: LayoutEditorProps) {
   const { layouts, saveLayout, deleteLayout } = useLayouts();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const newRef = useRef<HTMLButtonElement>(null);
@@ -181,7 +183,7 @@ export default function LayoutEditor({ onClose }: LayoutEditorProps) {
       </header>
 
       {editing ? (
-        <LayoutCanvas key={editing.id} layout={editing} onChange={saveLayout} onBack={closeCanvas} announce={announce} />
+        <LayoutCanvas key={editing.id} layout={editing} onChange={saveLayout} onBack={closeCanvas} announce={announce} columns={columns} />
       ) : (
         <div className="layout-editor__body">
           <ul className="layout-list" aria-labelledby={titleId}>
