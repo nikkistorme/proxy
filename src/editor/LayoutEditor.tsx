@@ -51,6 +51,8 @@ export default function LayoutEditor({ onClose, columns, previewSets, types }: L
   const [editingId, setEditingId] = useState<string>();
   /** The card the canvas previews, kept while moving between layouts (LY-7). */
   const [preview, setPreview] = useState<PreviewPosition>({ index: 0 });
+  /** Whether canvas boxes snap to the grid (LY-2). On to start, and kept while moving between layouts, not saved. */
+  const [snap, setSnap] = useState(true);
   const [announcement, setAnnouncement] = useState({ id: 0, text: '' });
   /** The row and button to focus once the list has rendered, after an action or a dialog. */
   const pendingFocus = useRef<{ id: string; action: 'edit' | 'rename' | 'delete' }>(undefined);
@@ -201,6 +203,8 @@ export default function LayoutEditor({ onClose, columns, previewSets, types }: L
           previewSets={previewSets}
           preview={preview}
           onPreview={setPreview}
+          snap={snap}
+          onSnap={setSnap}
         />
       ) : (
         <div className="layout-editor__body">

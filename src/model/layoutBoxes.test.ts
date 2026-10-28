@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { LayoutBox } from './layout';
 import {
   addedBoxRect,
+  dragBox,
   describeBoxContent,
   describeBoxPlace,
   describeBoxSize,
@@ -15,6 +16,10 @@ import {
   resizeBox,
   resizeFromCorner,
   sampleFace,
+  snapPoint,
+  snapToGrid,
+  stepBox,
+  stepSize,
 } from './layoutBoxes';
 
 const box = { x: 10, y: 20, width: 30, height: 40 };
@@ -133,6 +138,46 @@ describe('LY-2 box geometry', () => {
   it('describes where a box is and how big, in whole percent', () => {
     expect(describeBoxPlace({ ...box, x: 3.75 })).toBe('at 4% across, 20% down');
     expect(describeBoxSize(box)).toBe('30% wide, 40% tall');
+  });
+});
+
+describe('LY-2 grid', () => {
+  it('snaps values and points to the nearest 5% line, only while snapping is on', () => {
+    expect(snapToGrid(32.4)).toBe(30);
+    expect(snapToGrid(32.5)).toBe(35);
+    expect(snapPoint({ x: 12.4, y: 97.6 }, true)).toEqual({ x: 10, y: 100 });
+    expect(snapPoint({ x: 12.4, y: 97.6 }, false)).toEqual({ x: 12.4, y: 97.6 });
+  });
+
+  it('steps a box to the next grid line, so a box off the grid lands on one', () => {
+    expect(stepBox(box, 1, 0, true)).toMatchObject({ x: 15, y: 20 });
+    expect(stepBox(box, -1, 0, true)).toMatchObject({ x: 5 });
+    expect(stepBox({ ...box, x: 12 }, 1, 0, true)).toMatchObject({ x: 15 });
+    expect(stepBox({ ...box, x: 12 }, -1, 0, true)).toMatchObject({ x: 10 });
+    expect(stepBox(box, 0, 1, false)).toMatchObject({ x: 10, y: 21 });
+    // Kept on the card.
+    expect(stepBox({ ...box, x: 68 }, 1, 0, true)).toMatchObject({ x: 70 });
+    expect(stepBox({ ...box, x: 70 }, 1, 0, true)).toMatchObject({ x: 70 });
+  });
+
+  it('resizes by moving the right or bottom edge to the next grid line', () => {
+    expect(stepSize(box, 1, 0, true)).toMatchObject({ width: 35, height: 40 });
+    expect(stepSize({ ...box, width: 33 }, -1, 0, true)).toMatchObject({ width: 30 });
+    expect(stepSize(box, 0, -1, true)).toMatchObject({ height: 35 });
+    expect(stepSize({ ...box, width: 3 }, -1, 0, true)).toMatchObject({ width: 2 });
+    expect(stepSize(box, 1, 0, false)).toMatchObject({ width: 31 });
+  });
+
+  it('drags a box with its top-left corner on the nearest line, and a corner onto one', () => {
+    expect(dragBox(box, 3.2, 1.9, true)).toMatchObject({ x: 15, y: 20 });
+    expect(dragBox(box, 3.2, 1.9, false)).toMatchObject({ x: 13.2, y: 21.9 });
+    expect(resizeFromCorner(box, 'se', 3.2, -1.1, true)).toEqual({ x: 10, y: 20, width: 35, height: 40 });
+    expect(resizeFromCorner(box, 'nw', -2.6, 2.6, true)).toEqual({ x: 5, y: 25, width: 35, height: 35 });
+  });
+
+  it('adds boxes a grid step apart while snapping is on', () => {
+    expect(addedBoxRect([{ x: 30, y: 40, width: 40, height: 20 }], true)).toEqual({ x: 35, y: 45, width: 40, height: 20 });
+    expect(addedBoxRect([{ x: 30, y: 40, width: 40, height: 20 }])).toEqual({ x: 32, y: 42, width: 40, height: 20 });
   });
 });
 

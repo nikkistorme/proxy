@@ -5,8 +5,10 @@ import type { BoxContent, LayoutBox } from './layout';
 
 /** The smallest a box gets, in percent of the card on each side (LY-2). */
 export const MIN_BOX = 2;
-/** How far one arrow key moves or resizes a box, in percent of the card (LY-2). */
+/** How far one arrow key moves or resizes a box with snapping off, in percent of the card (LY-2). */
 export const BOX_STEP = 1;
+/** The canvas grid's spacing, in percent of the card each way. Boxes snap to it while snapping is on (LY-2). */
+export const GRID = 5;
 
 /** A box's place on the card, in percent (LY-6). */
 export type BoxRect = Pick<LayoutBox, 'x' | 'y' | 'width' | 'height'>;
@@ -19,6 +21,42 @@ export type Corner = 'nw' | 'ne' | 'sw' | 'se';
 /** Keeps saved values short, and arrow-key steps free of float drift. */
 const tidy = (n: number) => Math.round(n * 100) / 100;
 const clamp = (n: number, min: number, max: number) => Math.min(Math.max(n, min), max);
+
+/** The nearest grid line to `n`. */
+export const snapToGrid = (n: number) => tidy(Math.round(n / GRID) * GRID);
+
+/** The next grid line past `n` in the direction of `sign`, so a value off the grid steps onto it first. */
+function nextLine(n: number, sign: number): number {
+  const lines = n / GRID;
+  // The small allowance treats values a rounding error off a line as on it.
+  return (sign > 0 ? Math.floor(lines + 1e-6) + 1 : Math.ceil(lines - 1e-6) - 1) * GRID;
+}
+
+/** The distance from `n` to the next grid line in the direction of `step`, or `step` itself with snapping off. */
+function gridStep(n: number, step: number, snap: boolean): number {
+  return snap && step !== 0 ? nextLine(n, step) - n : step;
+}
+
+/** One arrow-key move: `BOX_STEP` percent, or with snapping on, the top-left corner to the next grid line (LY-2). */
+export function stepBox<T extends BoxRect>(box: T, dx: number, dy: number, snap: boolean): T {
+  return moveBox(box, gridStep(box.x, dx, snap), gridStep(box.y, dy, snap));
+}
+
+/** One Shift + arrow-key resize: `BOX_STEP` percent, or with snapping on, the right or bottom edge to the next grid line (LY-2). */
+export function stepSize<T extends BoxRect>(box: T, dw: number, dh: number, snap: boolean): T {
+  return resizeBox(box, gridStep(box.x + box.width, dw, snap), gridStep(box.y + box.height, dh, snap));
+}
+
+/** A pointer's place, on the nearest grid line each way while snapping is on. */
+export function snapPoint(point: Point, snap: boolean): Point {
+  return snap ? { x: snapToGrid(point.x), y: snapToGrid(point.y) } : point;
+}
+
+/** The box dragged by `dx`, `dy` percent, its top-left corner on the nearest grid line while snapping is on. */
+export function dragBox<T extends BoxRect>(box: T, dx: number, dy: number, snap: boolean): T {
+  if (!snap) return moveBox(box, dx, dy);
+  return moveBox(box, snapToGrid(box.x + dx) - box.x, snapToGrid(box.y + dy) - box.y);
+}
 
 /** The box moved by `dx`, `dy` percent, kept on the card at its size. */
 export function moveBox<T extends BoxRect>(box: T, dx: number, dy: number): T {
@@ -64,8 +102,8 @@ export function isDrawn(a: Point, b: Point): boolean {
   return Math.abs(a.x - b.x) >= MIN_BOX && Math.abs(a.y - b.y) >= MIN_BOX;
 }
 
-/** The box with one corner dragged by `dx`, `dy` percent; the opposite corner stays put. */
-export function resizeFromCorner<T extends BoxRect>(box: T, corner: Corner, dx: number, dy: number): T {
+/** The box with one corner dragged by `dx`, `dy` percent; the opposite corner stays put. The dragged corner snaps while snapping is on. */
+export function resizeFromCorner<T extends BoxRect>(box: T, corner: Corner, dx: number, dy: number, snap = false): T {
   const west = corner === 'nw' || corner === 'sw';
   const north = corner === 'nw' || corner === 'ne';
   const right = box.x + box.width;
@@ -75,15 +113,16 @@ export function resizeFromCorner<T extends BoxRect>(box: T, corner: Corner, dx: 
     x: (west ? box.x : right) + dx,
     y: (north ? box.y : bottom) + dy,
   };
-  return { ...box, ...rectFromPoints(fixed, moving) };
+  return { ...box, ...rectFromPoints(fixed, snapPoint(moving, snap)) };
 }
 
-/** A new box's place when added by button: the middle of the card, stepped down and right past boxes already there. */
-export function addedBoxRect(boxes: readonly BoxRect[]): BoxRect {
+/** A new box's place when added by button: the middle of the card, stepped down and right past boxes already there, a grid step at a time while snapping is on. */
+export function addedBoxRect(boxes: readonly BoxRect[], snap = false): BoxRect {
+  const step = snap ? GRID : BOX_STEP * 2;
   const rect = { x: 30, y: 40, width: 40, height: 20 };
   while (boxes.some((box) => box.x === rect.x && box.y === rect.y) && rect.x + rect.width < 100 && rect.y + rect.height < 100) {
-    rect.x += BOX_STEP * 2;
-    rect.y += BOX_STEP * 2;
+    rect.x += step;
+    rect.y += step;
   }
   return rect;
 }

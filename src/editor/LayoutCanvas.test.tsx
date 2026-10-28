@@ -51,9 +51,11 @@ describe('LY-2 layout canvas', () => {
     expect(screen.getByRole('button', { name: 'Edit Hero' })).toHaveFocus();
   });
 
-  it('adds, moves and resizes boxes by keyboard, announcing each step, and saves them', async () => {
+  it('adds, moves and resizes boxes by keyboard with snapping off, announcing each step, and saves them', async () => {
     const { user, backend } = await openHero();
-    await user.keyboard('{Enter}');
+    // 1% steps with snapping off; the grid's steps are under 'LY-2 grid'.
+    await user.click(screen.getByRole('checkbox', { name: 'Snap to grid' }));
+    await user.click(screen.getByRole('button', { name: 'Add box' }));
     expect(boxes()).toHaveLength(1);
     const box = screen.getByRole('button', { name: 'Box 1, empty, at 30% across, 40% down, 40% wide, 20% tall' });
     expect(box).toHaveFocus();
@@ -73,7 +75,8 @@ describe('LY-2 layout canvas', () => {
     const { user } = await openHero();
     await user.click(screen.getByRole('button', { name: 'Add box' }));
     await user.click(screen.getByRole('button', { name: 'Add box' }));
-    expect(screen.getByRole('button', { name: /^Box 2, empty, at 32% across, 42% down/ })).toHaveFocus();
+    // A grid step down and right, with snapping on.
+    expect(screen.getByRole('button', { name: /^Box 2, empty, at 35% across, 45% down/ })).toHaveFocus();
 
     await user.keyboard('{Delete}');
     expect(status()).toHaveTextContent('Deleted Box 2.');
@@ -143,6 +146,59 @@ describe('LY-2 layout canvas', () => {
 
 const panel = () => screen.getByRole('region', { name: /properties$/ });
 const savedBox = (backend: ReturnType<typeof memoryBackend>) => saved(backend)?.boxes[0];
+
+describe('LY-2 grid', () => {
+  const overlay = () => screen.getByRole('group', { name: 'Boxes on Hero' });
+
+  it('snaps on to start, shows the grid, and the toggle is announced and kept between layouts', async () => {
+    const { user } = await openHero();
+    const toggle = screen.getByRole('checkbox', { name: 'Snap to grid' });
+    expect(toggle).toBeChecked();
+    expect(overlay()).toHaveClass('layout-canvas__boxes--grid');
+    await user.click(toggle);
+    expect(status()).toHaveTextContent('Snapping off.');
+    expect(overlay()).not.toHaveClass('layout-canvas__boxes--grid');
+    expect(screen.getByText(/Arrow keys move the chosen box 1%/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Back to layouts' }));
+    await user.click(screen.getByRole('button', { name: 'Edit Hero' }));
+    expect(screen.getByRole('checkbox', { name: 'Snap to grid' })).not.toBeChecked();
+    await user.click(screen.getByRole('checkbox', { name: 'Snap to grid' }));
+    expect(status()).toHaveTextContent('Snapping to the grid.');
+  });
+
+  it('steps boxes by keyboard to the next grid line, leaving boxes off the grid until moved', async () => {
+    const { user, backend } = await openHero();
+    await user.click(screen.getByRole('checkbox', { name: 'Snap to grid' }));
+    await user.click(screen.getByRole('button', { name: 'Add box' }));
+    await user.keyboard('{ArrowRight}{ArrowRight}{Shift>}{ArrowRight}{/Shift}');
+    const box = screen.getByRole('button', { name: /^Box 1, empty, at 32% across, 40% down, 41% wide/ });
+    await user.click(screen.getByRole('checkbox', { name: 'Snap to grid' }));
+    box.focus();
+
+    // Off the grid, the first step lands on the next line that way.
+    await user.keyboard('{ArrowRight}');
+    expect(status()).toHaveTextContent('Box 1 at 35% across, 40% down.');
+    await user.keyboard('{ArrowLeft}{ArrowLeft}{ArrowDown}');
+    expect(status()).toHaveTextContent('Box 1 at 25% across, 45% down.');
+    // Resizing moves the right or bottom edge to a grid line: 25 + 41 = 66, so 70, then 65.
+    await user.keyboard('{Shift>}{ArrowRight}{/Shift}');
+    expect(status()).toHaveTextContent('Box 1 45% wide, 20% tall.');
+    await user.keyboard('{Shift>}{ArrowLeft}{ArrowUp}{/Shift}');
+    expect(status()).toHaveTextContent('Box 1 40% wide, 15% tall.');
+    await waitFor(() => expect(saved(backend)?.boxes).toMatchObject([{ x: 25, y: 45, width: 40, height: 15 }]), { timeout: 2000 });
+  });
+
+  it('snaps a box drawn by pointer to the grid', async () => {
+    await openHero();
+    vi.spyOn(overlay(), 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 200, 400));
+    // From 10.5%, 10.25% to 49.5%, 30.25%: corners on 10%, 10% and 50%, 30%.
+    fireEvent.pointerDown(overlay(), { button: 0, clientX: 21, clientY: 41, pointerId: 1 });
+    fireEvent.pointerMove(overlay(), { clientX: 99, clientY: 121, pointerId: 1 });
+    fireEvent.pointerUp(overlay(), { clientX: 99, clientY: 121, pointerId: 1 });
+    expect(screen.getByRole('button', { name: 'Box 1, empty, at 10% across, 10% down, 40% wide, 20% tall' })).toBeInTheDocument();
+  });
+});
 
 describe('LY-3 box properties', () => {
   it('shows a prompt until a box is chosen, then the box’s properties', async () => {
