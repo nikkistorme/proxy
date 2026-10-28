@@ -147,3 +147,32 @@ export function layoutLabel(face: CardFace, layout: LayoutDesign): string {
     .filter(Boolean)
     .join('. ');
 }
+
+/** Text that overflows shrinks no smaller than this, in points on the printed card (LY-4). */
+export const MIN_TEXT_PT = 6;
+
+/** The size a text box's text is drawn at, and whether it still overflows there. */
+export interface TextFit {
+  size: number;
+  clipped: boolean;
+}
+
+/**
+ * Shrink-to-fit (LY-4): the largest size, to within a quarter point, from the
+ * box's set size down to `min`, at which `overflowsAt` says the text fits. Text
+ * that overflows even at `min` stays at `min` and clips. A box set below `min`
+ * never grows.
+ */
+export function fitTextSize(size: number, overflowsAt: (size: number) => boolean, min = MIN_TEXT_PT): TextFit {
+  if (!overflowsAt(size)) return { size, clipped: false };
+  const floor = Math.min(size, min);
+  if (overflowsAt(floor)) return { size: floor, clipped: true };
+  let fits = floor;
+  let overflows = size;
+  while (overflows - fits > 0.25) {
+    const mid = (fits + overflows) / 2;
+    if (overflowsAt(mid)) overflows = mid;
+    else fits = mid;
+  }
+  return { size: fits, clipped: false };
+}

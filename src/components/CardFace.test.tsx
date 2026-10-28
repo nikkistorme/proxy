@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { LayoutBox, LayoutDesign } from '../model/layout';
 import { CardFace } from './CardFace';
 
@@ -127,5 +127,52 @@ describe('Layouts orientation: landscape layouts', () => {
     const { container } = render(<CardFace face={{ name: 'A', fields: {} }} layout={layoutOf()} upright />);
     expect(container.querySelector('.card-face__canvas')).toBeNull();
     expect(container.querySelector<HTMLElement>('.card-face')?.style.width).toBe('126px');
+  });
+});
+
+describe('LY-4 shrink-to-fit', () => {
+  // jsdom has no layout, so text is 10 px tall per point of font size in a 100 px tall box.
+  function measure(boxHeight: number) {
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(boxHeight);
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockImplementation(function (this: HTMLElement) {
+      const pt = /calc\(([\d.]+) \*/.exec(this.style.fontSize);
+      return pt ? Number(pt[1]) * 10 : 0;
+    });
+  }
+  afterEach(() => vi.restoreAllMocks());
+
+  const rules = (size: number) => layoutOf({ id: 'rules', x: 0, y: 0, width: 100, height: 50, content: { kind: 'text', text: 'Long rules' }, style: { ...style, size } });
+  const fontPt = (el: HTMLElement | null) => Number(/calc\(([\d.]+) \*/.exec(el?.style.fontSize ?? '')?.[1]);
+
+  it('leaves text that fits at its set size, unmarked', () => {
+    measure(100);
+    const onFit = vi.fn();
+    const { container } = render(<CardFace face={{ name: 'A', fields: {} }} layout={rules(8)} onFit={onFit} />);
+    const box = container.querySelector<HTMLElement>('.card-face__box--text');
+    expect(fontPt(box)).toBe(8);
+    expect(box).not.toHaveAttribute('data-fit');
+    expect(onFit).toHaveBeenCalledWith('rules', { size: 8, clipped: false });
+  });
+
+  it('shrinks overflowing text until it fits, keeping the padding of its set size', () => {
+    measure(100);
+    const onFit = vi.fn();
+    const { container } = render(<CardFace face={{ name: 'A', fields: {} }} layout={rules(14)} onFit={onFit} />);
+    const box = container.querySelector<HTMLElement>('.card-face__box--text');
+    expect(fontPt(box)).toBeLessThanOrEqual(10);
+    expect(fontPt(box)).toBeGreaterThan(9.75);
+    expect(box).toHaveAttribute('data-fit', 'shrunk');
+    expect(box?.style.getPropertyValue('--box-size')).toBe('calc(14 * var(--card-pt))');
+    expect(onFit).toHaveBeenLastCalledWith('rules', { size: fontPt(box), clipped: false });
+  });
+
+  it('clips at the 6 pt minimum and tells the editor', () => {
+    measure(40);
+    const onFit = vi.fn();
+    const { container } = render(<CardFace face={{ name: 'A', fields: {} }} layout={rules(14)} onFit={onFit} />);
+    const box = container.querySelector<HTMLElement>('.card-face__box--text');
+    expect(fontPt(box)).toBe(6);
+    expect(box).toHaveAttribute('data-fit', 'clipped');
+    expect(onFit).toHaveBeenLastCalledWith('rules', { size: 6, clipped: true });
   });
 });

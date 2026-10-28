@@ -134,3 +134,72 @@ test.describe('TT-9 landscape layouts on a phone', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 });
+
+const rulesStyle = { ...style, size: 14, weight: 400 };
+const rulesBox = { id: 'rules', x: 0, y: 50, width: 100, height: 20, content: { kind: 'column', columns: ['rules'], as: 'text' }, style: rulesStyle };
+const rulesLayout = (id: string, orientation: 'portrait' | 'landscape') => ({ ...hero, id, name: id, orientation, boxes: [hero.boxes[1], rulesBox] });
+const someRules = 'Draw two cards, then discard a card. Each opponent loses 1 life.';
+const tooManyRules = Array(30).fill('Then do it again.').join(' ');
+
+/** A text box's font size in points: its CSS px over the card's px per point. */
+const fontPt = (box: Locator) =>
+  box.evaluate((el) => parseFloat(getComputedStyle(el).fontSize) / parseFloat(getComputedStyle(el).getPropertyValue('--card-pt')));
+/** Whether a text box's text is cut off at the bottom or side. */
+const cutOff = (box: Locator) => box.evaluate((el) => el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1);
+
+test.describe('LY-4 shrink-to-fit', () => {
+  test('long text shrinks to fit, and too much text clips at 6 pt', async ({ page }) => {
+    await page.goto('./');
+    await seedLayout(page, rulesLayout('Rules', 'portrait'));
+    await page.reload();
+    await bothOnTable(page, `name,layout,rules\nTroll,Rules,"${someRules}"\nGoblin,Rules,"${tooManyRules}"\n`);
+
+    const shrunk = table(page).locator('.card-face__box--text', { hasText: someRules });
+    await expect(shrunk).toHaveAttribute('data-fit', 'shrunk');
+    expect(await fontPt(shrunk)).toBeLessThan(14);
+    expect(await fontPt(shrunk)).toBeGreaterThan(6);
+    expect(await cutOff(shrunk)).toBe(false);
+
+    const clipped = table(page).locator('.card-face__box--text', { hasText: tooManyRules });
+    await expect(clipped).toHaveAttribute('data-fit', 'clipped');
+    expect(await fontPt(clipped)).toBeCloseTo(6, 1);
+    expect(await cutOff(clipped)).toBe(true);
+
+    // The name still fits at its set size.
+    await expect(table(page).locator('.card-face__box--text', { hasText: /^Troll$/ })).not.toHaveAttribute('data-fit');
+  });
+
+  test('a landscape card shrinks its text on the table and in the enlarged preview', async ({ page }) => {
+    await page.goto('./');
+    await seedLayout(page, rulesLayout('Wide', 'landscape'));
+    await page.reload();
+    await bothOnTable(page, `name,layout,rules\nHarbour,Wide,"${someRules} ${someRules}"\nGoblin,\n`);
+
+    const onTable = table(page).locator('.card-face__box--text', { hasText: someRules });
+    await expect(onTable).toHaveAttribute('data-fit', 'shrunk');
+    expect(await cutOff(onTable)).toBe(false);
+
+    await table(page).getByRole('button', { name: 'Harbour', exact: true }).focus();
+    await page.keyboard.press('i');
+    const enlarged = page.getByRole('dialog', { name: 'Enlarged: Harbour' }).locator('.card-face__box--text', { hasText: someRules });
+    await expect(enlarged).toHaveAttribute('data-fit', 'shrunk');
+    expect(await cutOff(enlarged)).toBe(false);
+    // Sizes are points on the card, so the fit is about the same at both widths.
+    expect(Math.abs((await fontPt(enlarged)) - (await fontPt(onTable)))).toBeLessThan(1);
+  });
+});
+
+test.describe('LY-4 shrink-to-fit on a phone', () => {
+  test.use({ viewport: { width: 375, height: 667 } });
+
+  test('shrunk text fits without sideways scrolling', async ({ page }) => {
+    await page.goto('./');
+    await seedLayout(page, rulesLayout('Rules', 'portrait'));
+    await page.reload();
+    await bothOnTable(page, `name,layout,rules\nTroll,Rules,"${someRules}"\nGoblin,\n`);
+    const shrunk = table(page).locator('.card-face__box--text', { hasText: someRules });
+    await expect(shrunk).toHaveAttribute('data-fit', 'shrunk');
+    expect(await cutOff(shrunk)).toBe(false);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+});
