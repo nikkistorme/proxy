@@ -1,0 +1,116 @@
+import { newItemId } from '../storage/storage';
+import type { LayoutBox } from './layout';
+
+/** The smallest a box gets, in percent of the card on each side (LY-2). */
+export const MIN_BOX = 2;
+/** How far one arrow key moves or resizes a box, in percent of the card (LY-2). */
+export const BOX_STEP = 1;
+
+/** A box's place on the card, in percent (LY-6). */
+export type BoxRect = Pick<LayoutBox, 'x' | 'y' | 'width' | 'height'>;
+export interface Point {
+  x: number;
+  y: number;
+}
+export type Corner = 'nw' | 'ne' | 'sw' | 'se';
+
+/** Keeps saved values short, and arrow-key steps free of float drift. */
+const tidy = (n: number) => Math.round(n * 100) / 100;
+const clamp = (n: number, min: number, max: number) => Math.min(Math.max(n, min), max);
+
+/** The box moved by `dx`, `dy` percent, kept on the card at its size. */
+export function moveBox<T extends BoxRect>(box: T, dx: number, dy: number): T {
+  return {
+    ...box,
+    x: tidy(clamp(box.x + dx, 0, 100 - box.width)),
+    y: tidy(clamp(box.y + dy, 0, 100 - box.height)),
+  };
+}
+
+/** The box grown by `dw`, `dh` percent from its top-left corner, kept on the card and at least `MIN_BOX`. */
+export function resizeBox<T extends BoxRect>(box: T, dw: number, dh: number): T {
+  return {
+    ...box,
+    width: tidy(clamp(box.width + dw, MIN_BOX, 100 - box.x)),
+    height: tidy(clamp(box.height + dh, MIN_BOX, 100 - box.y)),
+  };
+}
+
+/** One side of a rectangle from two points: on the card, at least `MIN_BOX`, grown away from `fixed`. */
+function span(fixed: number, moving: number): [number, number] {
+  const a = clamp(fixed, 0, 100);
+  const b = clamp(moving, 0, 100);
+  let start = Math.min(a, b);
+  let end = Math.max(a, b);
+  if (end - start < MIN_BOX) {
+    if (b >= a) end = Math.min(start + MIN_BOX, 100);
+    else start = Math.max(end - MIN_BOX, 0);
+    if (end - start < MIN_BOX) [start, end] = b >= a ? [100 - MIN_BOX, 100] : [0, MIN_BOX];
+  }
+  return [tidy(start), tidy(end - start)];
+}
+
+/** The box spanning two points, as when drawing one by pointer. */
+export function rectFromPoints(fixed: Point, moving: Point): BoxRect {
+  const [x, width] = span(fixed.x, moving.x);
+  const [y, height] = span(fixed.y, moving.y);
+  return { x, y, width, height };
+}
+
+/** Whether two points are far enough apart to draw a box, rather than being a click. */
+export function isDrawn(a: Point, b: Point): boolean {
+  return Math.abs(a.x - b.x) >= MIN_BOX && Math.abs(a.y - b.y) >= MIN_BOX;
+}
+
+/** The box with one corner dragged by `dx`, `dy` percent; the opposite corner stays put. */
+export function resizeFromCorner<T extends BoxRect>(box: T, corner: Corner, dx: number, dy: number): T {
+  const west = corner === 'nw' || corner === 'sw';
+  const north = corner === 'nw' || corner === 'ne';
+  const right = box.x + box.width;
+  const bottom = box.y + box.height;
+  const fixed = { x: west ? right : box.x, y: north ? bottom : box.y };
+  const moving = {
+    x: (west ? box.x : right) + dx,
+    y: (north ? box.y : bottom) + dy,
+  };
+  return { ...box, ...rectFromPoints(fixed, moving) };
+}
+
+/** A new box's place when added by button: the middle of the card, stepped down and right past boxes already there. */
+export function addedBoxRect(boxes: readonly BoxRect[]): BoxRect {
+  const rect = { x: 30, y: 40, width: 40, height: 20 };
+  while (boxes.some((box) => box.x === rect.x && box.y === rect.y) && rect.x + rect.width < 100 && rect.y + rect.height < 100) {
+    rect.x += BOX_STEP * 2;
+    rect.y += BOX_STEP * 2;
+  }
+  return rect;
+}
+
+/** A new, empty text box. What it shows is set in the box properties (5g). */
+export function newBox(rect: BoxRect): LayoutBox {
+  return {
+    id: newItemId(),
+    ...rect,
+    content: { kind: 'text', text: '' },
+    style: {
+      size: 10,
+      weight: 500,
+      align: 'left',
+      valign: 'top',
+      font: 'sans',
+      color: '#1e1c1a',
+    },
+  };
+}
+
+const percent = (n: number) => `${Math.round(n)}%`;
+
+/** Where a box is, for its description and announcements. */
+export function describeBoxPlace(box: BoxRect): string {
+  return `at ${percent(box.x)} across, ${percent(box.y)} down`;
+}
+
+/** How big a box is, for its description and announcements. */
+export function describeBoxSize(box: BoxRect): string {
+  return `${percent(box.width)} wide, ${percent(box.height)} tall`;
+}

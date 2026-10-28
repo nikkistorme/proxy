@@ -4,6 +4,7 @@ import { useLayouts, type LayoutItem } from '../layouts/LayoutsProvider';
 import { DEFAULT_LAYOUT, type LayoutDesign } from '../model/layout';
 import { duplicateLayout, newLayout, validateLayoutName } from '../model/layoutNames';
 import { DeleteLayoutDialog } from './DeleteLayoutDialog';
+import { LayoutCanvas } from './LayoutCanvas';
 import './LayoutEditor.css';
 import { LayoutNameDialog } from './LayoutNameDialog';
 
@@ -28,7 +29,8 @@ interface LayoutEditorProps {
 /**
  * The full-screen layout screen (LY-1), opened from the toolbar and loaded on
  * first use (PF-3). It lists the layouts, with create, rename, duplicate and
- * delete. It's a modal <dialog>, so the table stays as it was underneath.
+ * delete, and Edit opens a layout on the canvas (LY-2) in the same screen.
+ * It's a modal <dialog>, so the table stays as it was underneath.
  */
 export default function LayoutEditor({ onClose }: LayoutEditorProps) {
   const { layouts, saveLayout, deleteLayout } = useLayouts();
@@ -37,13 +39,16 @@ export default function LayoutEditor({ onClose }: LayoutEditorProps) {
   const titleId = useId();
   const [renaming, setRenaming] = useState<LayoutItem>();
   const [deleting, setDeleting] = useState<LayoutItem>();
+  /** The layout open on the canvas, if any. */
+  const [editingId, setEditingId] = useState<string>();
   const [announcement, setAnnouncement] = useState({ id: 0, text: '' });
   /** The row and button to focus once the list has rendered, after an action or a dialog. */
-  const pendingFocus = useRef<{ id: string; action: 'rename' | 'delete' }>(undefined);
+  const pendingFocus = useRef<{ id: string; action: 'edit' | 'rename' | 'delete' }>(undefined);
   /** Where focus goes once the delete dialog closes after a delete. */
   const afterDelete = useRef<{ id: string; action: 'rename' }>(undefined);
 
   const sorted = [...layouts].sort(byName);
+  const editing = layouts.find((layout) => layout.id === editingId);
   /** Set from a rename until the next key event: see `openRename`. */
   const renameKeyHeld = useRef(false);
 
@@ -123,6 +128,16 @@ export default function LayoutEditor({ onClose }: LayoutEditorProps) {
     afterDelete.current = { id: next?.id ?? NEW_LAYOUT, action: 'rename' };
   }
 
+  function openCanvas(layout: LayoutItem) {
+    setEditingId(layout.id);
+    announce(`Editing ${layout.name}.`);
+  }
+
+  function closeCanvas() {
+    if (editing) pendingFocus.current = { id: editing.id, action: 'edit' };
+    setEditingId(undefined);
+  }
+
   function closeDelete() {
     // Cancelled, focus goes back to the row's Delete button.
     if (afterDelete.current) pendingFocus.current = afterDelete.current;
@@ -138,6 +153,12 @@ export default function LayoutEditor({ onClose }: LayoutEditorProps) {
       aria-labelledby={titleId}
       // Nested dialogs' close events reach here too; only act on our own.
       onClose={(event) => event.target === event.currentTarget && onClose()}
+      onCancel={(event) => {
+        // Esc on the canvas goes back to the list, not the table.
+        if (event.target !== event.currentTarget || !editing) return;
+        event.preventDefault();
+        closeCanvas();
+      }}
     >
       <header className="layout-editor__header">
         <button type="button" className="button layout-editor__back" onClick={() => dialogRef.current?.close()}>
@@ -149,30 +170,37 @@ export default function LayoutEditor({ onClose }: LayoutEditorProps) {
         <h2 id={titleId} className="layout-editor__title">
           Card layouts
         </h2>
-        <button ref={newRef} type="button" className="button button--primary layout-editor__new" onClick={create}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-          New layout
-        </button>
+        {!editing && (
+          <button ref={newRef} type="button" className="button button--primary layout-editor__new" onClick={create}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            New layout
+          </button>
+        )}
       </header>
 
-      <div className="layout-editor__body">
-        <ul className="layout-list" aria-labelledby={titleId}>
-          <Row id={BUILT_IN} layout={DEFAULT_LAYOUT} meta={`Built in · ${describe(DEFAULT_LAYOUT)}`} onDuplicate={() => duplicate(DEFAULT_LAYOUT)} />
-          {sorted.map((layout) => (
-            <Row
-              key={layout.id}
-              id={layout.id}
-              layout={layout}
-              meta={describe(layout)}
-              onRename={(event) => openRename(event, layout)}
-              onDuplicate={() => duplicate(layout)}
-              onDelete={() => setDeleting(layout)}
-            />
-          ))}
-        </ul>
-      </div>
+      {editing ? (
+        <LayoutCanvas key={editing.id} layout={editing} onChange={saveLayout} onBack={closeCanvas} announce={announce} />
+      ) : (
+        <div className="layout-editor__body">
+          <ul className="layout-list" aria-labelledby={titleId}>
+            <Row id={BUILT_IN} layout={DEFAULT_LAYOUT} meta={`Built in · ${describe(DEFAULT_LAYOUT)}`} onDuplicate={() => duplicate(DEFAULT_LAYOUT)} />
+            {sorted.map((layout) => (
+              <Row
+                key={layout.id}
+                id={layout.id}
+                layout={layout}
+                meta={describe(layout)}
+                onEdit={() => openCanvas(layout)}
+                onRename={(event) => openRename(event, layout)}
+                onDuplicate={() => duplicate(layout)}
+                onDelete={() => setDeleting(layout)}
+              />
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div role="status" aria-live="polite" className="visually-hidden">
         <span key={announcement.id}>{announcement.text}</span>
@@ -194,12 +222,13 @@ interface RowProps {
   id: string;
   layout: LayoutDesign;
   meta: string;
+  onEdit?: () => void;
   onRename?: (event: MouseEvent) => void;
   onDuplicate: () => void;
   onDelete?: () => void;
 }
 
-function Row({ id, layout, meta, onRename, onDuplicate, onDelete }: RowProps) {
+function Row({ id, layout, meta, onEdit, onRename, onDuplicate, onDelete }: RowProps) {
   return (
     <li className="layout-list__row" data-layout-id={id}>
       <div className="layout-list__thumb" aria-hidden="true">
@@ -210,6 +239,11 @@ function Row({ id, layout, meta, onRename, onDuplicate, onDelete }: RowProps) {
         <span className="layout-list__meta">{meta}</span>
       </div>
       <div className="layout-list__actions">
+        {onEdit && (
+          <button type="button" className="button" data-action="edit" aria-label={`Edit ${layout.name}`} onClick={onEdit}>
+            Edit
+          </button>
+        )}
         {onRename && (
           <button type="button" className="button" data-action="rename" aria-label={`Rename ${layout.name}`} onClick={onRename}>
             Rename

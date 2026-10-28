@@ -10,9 +10,19 @@ The phases after 3 were reordered (2026-10-27): Phase 4 is now storage and card 
 
 Phase 4 (#74) is done, split into 4a (#84) and 4b (#85). 4a: every save goes through one storage interface (`src/storage/storage.ts`) with keys built from the base path and the "guest" profile, older saves are dropped with a notice, a browser that can't save shows a one-line notice, and options are read through one resolver (`src/options/resolver.ts`). The theme is the first option read that way, from the account settings item. 4b: loading a CSV into a pile saves a card set item, the pile records its id, and the session keeps its own copy of the definitions. Card sets are the only items the app writes so far.
 
-Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) is done: every card face is drawn from a layout's boxes, through the built-in default layout, which looks close to the old face. 5b (#89) is done: each card's layout is chosen by its `layout` column, then the type mapping, then the default option, and saved layouts load at start and autosave as their own items. 5c (#90) is done: a landscape layout draws sideways on the portrait card and upright, on a card turned on its side, in the enlarge preview. 5d (#91) is done: text that overflows its box shrinks to fit, down to 6 pt, then clips, and each box reports how it fit for the editor's warning (5g). 5e (#92) is done: a full-screen layout screen, opened from the toolbar or with L and loaded on first use, lists the layouts with create, rename, duplicate and delete. There's no canvas yet (5f), so a new layout is blank and only a copy of the built-in one shows anything.
+Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) is done: every card face is drawn from a layout's boxes, through the built-in default layout, which looks close to the old face. 5b (#89) is done: each card's layout is chosen by its `layout` column, then the type mapping, then the default option, and saved layouts load at start and autosave as their own items. 5c (#90) is done: a landscape layout draws sideways on the portrait card and upright, on a card turned on its side, in the enlarge preview. 5d (#91) is done: text that overflows its box shrinks to fit, down to 6 pt, then clips, and each box reports how it fit for the editor's warning (5g). 5e (#92) is done: a full-screen layout screen, opened from the toolbar or with L and loaded on first use, lists the layouts with create, rename, duplicate and delete. 5f (#93) is done: Edit on a saved layout opens it on a canvas in the same screen, where boxes are added by button or drawn by pointer, moved and resized by pointer or arrow keys, and deleted, and the layout can be turned landscape. A new box is an empty text box until box properties (5g) let it show something.
 
 ## Done
+
+### Phase 5f: Editor canvas (#93, 2026-10-28)
+
+- **List and canvas (owner decision):** each saved layout's row has an Edit button ("Edit Hero") that swaps the list for the canvas in the same full-screen dialog (`src/editor/LayoutCanvas.tsx`). The built-in Default has no Edit, so it's duplicated to change it. The canvas has Back to layouts, the layout's name, a Portrait / Landscape radio pair, Add box, and Delete <box>. Delete stays in place, dimmed and `aria-disabled`, while no box is chosen, so choosing one doesn't reflow the tools and resize the card (owner review: on iOS the card shrank). Back to layouts, or Esc on the canvas, returns to the list with focus on that row's Edit button. Esc on the list still closes the screen. New layout is hidden while the canvas shows.
+- **The canvas (LY-2):** the card is drawn from the layout, upright for landscape, as large as the space allows (a `ResizeObserver` on the stage), with a 1px `--control` edge so it shows against the screen in the dark theme too (owner review). The sample card face is hidden from screen readers. Over it each box is a button, "Box 1, at 30% across, 40% down, 40% wide, 20% tall", with a dashed edge (dark outside, light inside, so it shows on any card colour) and a number chip. The chosen box has an accent edge and four corner handles with 24px hit areas.
+- **Keyboard (owner decisions):** Add box puts a 40% × 20% box in the middle of the card (stepped 2% down and right past a box already there) and focuses it. Arrow keys move the focused box 1% of the card, Shift + arrow keys resize it from its top-left corner (Right and Down grow it), and Delete or Backspace removes it. Each step is announced. After a delete, focus goes to the box that took its place, else the one before, else Add box. A 5% step with Alt could follow if 1% feels slow.
+- **Pointer:** a drag on empty card draws a box (shorter than 2% each way counts as a click and draws nothing). A drag on a box moves it after 3px of travel, and a drag on a handle resizes from that corner with the opposite one fixed. The canvas has `touch-action: none`, so drawing by touch doesn't scroll. Pressing a box focuses it, for Safari.
+- **Geometry (`src/model/layoutBoxes.ts`):** boxes stay on the card, at least 2% each way, with values rounded to 0.01% so steps don't drift. New boxes are empty text boxes, so they draw nothing on cards until 5g gives them content.
+- **Saving:** every change goes through `saveLayout`, so it autosaves a second later and reaches cards on the table (LY-10). There's no undo in the editor: that's #102, after V1 (owner decision).
+- **Tests:** `src/model/layoutBoxes.test.ts`, `src/editor/LayoutCanvas.test.tsx` (keyboard add, move, resize and delete, orientation, pointer draw, move and resize), and `e2e/layoutCanvas.spec.ts`: the keyboard path through to a reload, the mouse path with an axe scan, and a 375 × 667 check that the tools and the whole card fit in both orientations.
 
 ### Phase 5e: Layout list (#92, 2026-10-28)
 
@@ -692,7 +702,7 @@ Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) i
 
 ## Next
 
-- **Phase 5f to 5i (#93 to #96)** in order. 5f adds the canvas to the full-screen layout screen: selecting a layout in the list opens it.
+- **Phase 5g to 5i (#94 to #96)** in order. 5g adds the box properties to the canvas: what a box shows and how it looks, with the clipped-text warning.
 - **After V1, in this order:** the demo on its own path (#63), the card set library (#67), games (#65), then accounts and sync (#45). #45's docs-only step 1 (confirming Supabase, writing the accounts requirements) can happen any time.
 - **#71: keys act on the hovered card or pile when nothing on the table has focus**, an owner request from the #70 review. Single-letter keys without focus need an off switch (WCAG 2.1.4), so it goes with #53.
 - **#68: no text-field focus on touch screens in the other dialogs** (Move to…, pile viewer, Draw/Mill/Peek count, pile name). It isn't tied to a phase, and the owner chooses when.
@@ -724,7 +734,9 @@ Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) i
 - A card's menu opened by a touch hold doesn't take focus, the same as a pile's: the browser's own mousedown after a touch moves focus back to the card.
 - The enlarge preview is sized in CSS px, so it shrinks with browser zoom like the rest of the page. The table's own zoom doesn't change it, as TT-9 asks (checked with the owner).
 - The enlarge preview's hover runs on a mouse only. The preview closes when the table scrolls or zooms, rather than following the card.
-- A landscape layout can only be seen with a layout seeded into storage until the editor's orientation toggle (5f).
+- The layout editor has no undo yet (#102, after V1). A box deleted by mistake has to be drawn again.
+- Box number chips sit over the top-left of each box, so on small boxes or a phone they can cover the first letters of the box's text.
+- Drawing, moving and resizing boxes by touch needs a check on an iPhone. The E2E uses a mouse.
 - In the counters dialog, typing a minus in the value field steps it down rather than typing a negative number. Values below zero are reached with − or the arrow keys.
 - Counter pills scale with the table's zoom like the Actions button, so below 100% they're under 24px tall. C and the card menu always work.
 - Merging piles by touch needs a check on an iPhone, like the other touch drags.
@@ -912,3 +924,7 @@ Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) i
 | 2026-10-27 | A landscape layout's canvas turns 90° anticlockwise on the portrait card (#90) | Clockwise | Turning on the table goes clockwise, so one turn makes it read upright |
 | 2026-10-28 | The layout editor is a full screen over the table (#92) | A panel beside the table | Owner decision. A panel has no room on a phone for the canvas, box settings and preview; edits show on the table when it closes (LY-10) |
 | 2026-10-28 | Layout names are unique, ignoring case and outer spaces, and "Default" is taken (LY-1) | Allowing duplicate names | The `layout` column picks a layout by name (LY-8), so two layouts with one name couldn't both be chosen |
+| 2026-10-28 | The built-in Default layout can't be edited, only duplicated (LY-2, #93) | Editing it in place | Owner decision. It's every card's last fallback, so it stays as built |
+| 2026-10-28 | Arrow keys move and resize boxes by 1% of the card (LY-2) | 0.5%, or a larger step | Owner decision. A 5% step with Alt can follow if 1% feels slow in testing |
+| 2026-10-28 | Boxes can be deleted with Delete or Backspace and a Delete <box> button (LY-2) | Leaving deletes for later | Owner decision. Otherwise a box added by mistake can't be removed |
+| 2026-10-28 | No undo in the layout editor for V1 (#102) | Building it into 5f | Owner decision. Undo comes after V1 |
