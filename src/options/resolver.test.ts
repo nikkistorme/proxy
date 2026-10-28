@@ -16,3 +16,15 @@ describe('AR-7 options resolver', () => {
     expect(resolveOption('theme', { session: {}, game: { theme: 'dark' }, account: { theme: 'light' } })).toBe('dark');
   });
 });
+
+describe('AR-7 layout options', () => {
+  it('defaults to no type mapping and the built-in layout', () => {
+    expect(resolveOption('layoutByType', {})).toEqual({});
+    expect(resolveOption('defaultLayout', {})).toBeNull();
+  });
+
+  it('reads the mapping and the default from the account', () => {
+    expect(resolveOption('layoutByType', { account: { layoutByType: { spell: 'l-1' } } })).toEqual({ spell: 'l-1' });
+    expect(resolveOption('defaultLayout', { account: { defaultLayout: 'l-2' } })).toBe('l-2');
+  });
+});

@@ -10,9 +10,19 @@ The phases after 3 were reordered (2026-10-27): Phase 4 is now storage and card 
 
 Phase 4 (#74) is done, split into 4a (#84) and 4b (#85). 4a: every save goes through one storage interface (`src/storage/storage.ts`) with keys built from the base path and the "guest" profile, older saves are dropped with a notice, a browser that can't save shows a one-line notice, and options are read through one resolver (`src/options/resolver.ts`). The theme is the first option read that way, from the account settings item. 4b: loading a CSV into a pile saves a card set item, the pile records its id, and the session keeps its own copy of the definitions. Card sets are the only items the app writes so far.
 
-Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) is done: every card face is drawn from a layout's boxes, through the built-in default layout, which looks close to the old face. Layouts can't be chosen, saved or edited yet.
+Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) is done: every card face is drawn from a layout's boxes, through the built-in default layout, which looks close to the old face. 5b (#89) is done: each card's layout is chosen by its `layout` column, then the type mapping, then the default option, and saved layouts load at start and autosave as their own items. There's no editor yet, so only hand-made data shows a custom layout.
 
 ## Done
+
+### Phase 5b: Layout choice, storage and autosave (#89, 2026-10-27)
+
+- **Choosing a layout (LY-8):** `chooseLayout` in `src/model/layoutChoice.ts` takes the saved layout named in the `layout` column (case and outer spaces ignored), then the layout the card's `type` maps to, then the default layout option, then `DEFAULT_LAYOUT`. A name or id that matches nothing falls through.
+- **Options (AR-7):** the resolver has `layoutByType` (lowercased type to layout id, empty by default) and `defaultLayout` (a layout id, or `null` for the built-in layout). They're read from the account settings item through `useOption`.
+- **Layouts in the app:** `LayoutsProvider` (`src/layouts/LayoutsProvider.tsx`, inside `StorageProvider` in `App`) lists the saved `layout` items once storage is ready. `useLayoutFor(face)` and `useLayoutChooser()` give the chosen layout. `CardFace` uses it when no `layout` prop is passed, so every face (table, hand, piles, viewer, dialogs, enlarge) follows it, and the pile viewer's card names read through it.
+- **Saving (PS-1, LY-10):** `saveLayout(layout)` from `useLayouts()` updates the app at once, so every card using that layout redraws, then saves only that item, one second after its first unsaved change (`LAYOUT_SAVE_DELAY`), so at most once a second. Waiting saves are written on `pagehide`. The editor (5e onward) will call it.
+- **Not stored on cards (AR-4):** a card's layout is worked out from its columns each time it's drawn, so edits and mapping changes reach cards in play.
+- **Tests:** `layoutChoice.test.ts`, new AR-7 cases in `resolver.test.ts`, `LayoutsProvider.test.tsx` (table cards over memory storage: the column, the mapping and default from settings, redraw on save, one save per second for the changed item only, save on `pagehide`), and `e2e/layouts.spec.ts` (a layout seeded in IndexedDB draws a table card and is still there after a reload; 375 × 667 without sideways scroll).
+- **Changed requirements:** LY-8 (name matching, the default option, fall-through), AR-4 (no layout id on table cards), AR-7 (the layout options).
 
 ### Phase 5a: Layout model and renderer (#88, 2026-10-27)
 
@@ -652,7 +662,7 @@ Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) i
 
 ## Next
 
-- **Phase 5b: layout choice, storage and autosave (#89)**, then 5c to 5i (#90 to #96) in order. 5b asks the owner first whether to work out a card's layout from its columns when drawing, instead of storing a layout id on table cards (AR-4). 5e asks whether the editor is full screen (recommended) or a panel beside the table.
+- **Phase 5c: landscape layouts (#90)**, then 5d to 5i (#91 to #96) in order. 5e asks whether the editor is full screen (recommended) or a panel beside the table.
 - **After V1, in this order:** the demo on its own path (#63), the card set library (#67), games (#65), then accounts and sync (#45). #45's docs-only step 1 (confirming Supabase, writing the accounts requirements) can happen any time.
 - **#71: keys act on the hovered card or pile when nothing on the table has focus**, an owner request from the #70 review. Single-letter keys without focus need an off switch (WCAG 2.1.4), so it goes with #53.
 - **#68: no text-field focus on touch screens in the other dialogs** (Move to…, pile viewer, Draw/Mill/Peek count, pile name). It isn't tied to a phase, and the owner chooses when.
@@ -662,7 +672,10 @@ Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) i
 
 ## Open problems
 
-- Only card sets are saved so far, and nothing reads them back yet: the card library (#67) will list them. A theme choice needs the Settings screen, so the theme option can only be seen with hand-made data.
+- Saved layouts load a moment after the page starts, so cards may first draw with the built-in layout and then switch.
+- Keyboard E2E tests that check focus (counters, Move to…, the solo turn) sometimes fail when the whole suite runs locally at full load. They fail on `main` too and pass on a rerun, so they're timing-related, not from a change.
+- A layout save that fails is silent: the layout stays in the app for the visit. The editor (5e) may want to say so.
+- Only card sets and layouts are saved so far. Nothing reads card sets back yet: the card library (#67) will list them. A theme choice needs the Settings screen, so the theme option can only be seen with hand-made data.
 - Undoing a CSV load reverts the session but leaves the saved card set as loaded. The set belongs to the library, not to the session.
 - A card set saved before the startup storage check finishes (the first moments after the page loads) isn't saved. The session still has its copy.
 - Loading a different file into a pile updates that pile's card set and renames it after the new file, rather than making a new set. The card library (#67) may want to split them.
@@ -863,3 +876,5 @@ Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) i
 | 2026-10-27 | If the browser can't save, the app keeps going on memory storage | Turning saves off | Callers use one interface either way, and the notice says progress won't be kept (PS-6) |
 | 2026-10-27 | A session keeps its own copy of the card definitions, and each pile records its card set's id (AR-4, #85) | Referencing the card set only | Works offline, survives a deleted set, and a Phase 7 session save is complete on its own |
 | 2026-10-27 | Reloading a pile updates the card set it records, even from a differently named file | A new set per file name | Keeps one set per pile until the card library (#67) can manage sets |
+| 2026-10-27 | A card's layout is worked out from its columns each time it's drawn, not stored on table cards (LY-8, AR-4, #89) | A layout id on each table card | Owner decision. Edits and mapping changes reach cards in play (LY-10) |
+| 2026-10-27 | Layout autosave is per item: one second after a layout's first unsaved change (PS-1) | One timer for all layouts | A change rewrites only that layout's item, and each item saves at most once a second |

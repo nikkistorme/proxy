@@ -6,12 +6,18 @@ import type { ThemePreference } from '../theme';
 
 export interface Options {
   theme: ThemePreference;
+  /** A card type, lowercased, to the id of the layout its cards use when their `layout` column is blank (LY-8). */
+  layoutByType: Record<string, string>;
+  /** The id of the layout used when nothing else picks one; `null` is the built-in layout (LY-8). */
+  defaultLayout: string | null;
 }
 
 export type OptionName = keyof Options;
 
 export const DEFAULT_OPTIONS: Options = {
   theme: 'system',
+  layoutByType: {},
+  defaultLayout: null,
 };
 
 export interface OptionLevels {
