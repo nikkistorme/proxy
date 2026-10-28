@@ -53,6 +53,8 @@ test.describe('LY-3 box properties', () => {
 
     // On into the panel: the checked kind first, and up to Column as text.
     await page.keyboard.press('Tab');
+    // Firefox stops on the panel itself first when it scrolls, so its content can be scrolled by keyboard.
+    if (await panel(page).evaluate((el) => el === document.activeElement)) await page.keyboard.press('Tab');
     await expect(panel(page).getByRole('radio', { name: 'Fixed text' })).toBeFocused();
     await page.keyboard.press('ArrowUp');
     await page.keyboard.press('ArrowUp');
