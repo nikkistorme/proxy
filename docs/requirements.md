@@ -103,7 +103,7 @@ A pile can read its CSV from a Google Sheet published to the web, so card edits 
 
 A layout is a reusable card template: a set of boxes on the card, each bound to a CSV column. Every card is the same physical size, MTG standard (63 × 88 mm, portrait).
 
-**Orientation.** A layout is either portrait or landscape. A landscape layout arranges its content on an 88 × 63 mm canvas turned 90° on the portrait card, so the card comes onto the table portrait and is read by rotating it.
+**Orientation.** A layout is either portrait or landscape. A landscape layout arranges its content on an 88 × 63 mm canvas turned 90° anticlockwise on the portrait card, so the card comes onto the table portrait and reads upright once it's turned (turning goes clockwise). Box positions are percentages of that canvas, and text sizes are points, the same as on a portrait card. Everywhere a card shows (table, hand, piles, viewer and dialogs), it keeps its portrait shape; only the enlarged view shows it upright.
 
 **Requirements**
 
@@ -164,7 +164,7 @@ The table is a free-form surface with no fixed rows, zones or snapping. Location
 - TT-6: Flip: a double-faced card shows its other face; a single-faced card turns face-down.
 - TT-7 (after V1, #30): Stack cards by dropping one on another; a stack moves as one and can be fanned out.
 - TT-8: Add named numeric counters to any card on the table (for example, +1/+1 or damage), adjustable with buttons or keys. A new counter starts at 1, names are unique on a card, and values are whole numbers that can go below zero. Counters stay with a card while it moves on the table and are copied by Duplicate, but are cleared when it leaves the table.
-- TT-9: Enlarge a card on hover (after 400ms), with the I key, or from the card's menu, which a long-press opens. It's readable at full size regardless of table zoom and sits beside the card, never over it. A double-faced card shows one face at a time, with a button that flips the preview (not the card). Cards turned on the table, and landscape layouts once they exist, are shown upright in the enlarged view. A face-down card shows its front when enlarged by key or menu, but not on hover.
+- TT-9: Enlarge a card on hover (after 400ms), with the I key, or from the card's menu, which a long-press opens. It's readable at full size regardless of table zoom and sits beside the card, never over it. A double-faced card shows one face at a time, with a button that flips the preview (not the card). Cards turned on the table are shown upright in the enlarged view. A landscape layout is shown upright too, so the preview turns on its side (302 × 216 px instead of 216 × 302), shrinking to fit a narrow phone screen. A face-down card shows its front when enlarged by key or menu, but not on hover.
 - TT-10: Change the z-order: bring to front, send to back.
 - TT-11: Duplicate a card on the table (for tokens and quick tests) and delete it.
 
@@ -388,7 +388,7 @@ Not in the first version; each may be revisited later.
 
 ## Open questions
 
-- [ ] Is the landscape reading right: the card's physical shape is always portrait and only the content is laid out sideways (like Magic's Battles)?
+- [x] Is the landscape reading right: the card's physical shape is always portrait and only the content is laid out sideways (like Magic's Battles)? Built that way in 5c (#90).
 - [ ] Is one CSV per deck comfortable in practice, or does a single master CSV with a `seat` or `deck` column work better? Revisit after the first playtests.
 - [ ] Do cards need hidden information beyond face-down, such as a card only one seat can see?
 - [ ] Should layouts support icons or symbols inside text (for example, `{fire}` rendered as an icon)?

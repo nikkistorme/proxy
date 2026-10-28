@@ -1,11 +1,14 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import type { SessionState } from '../model/session';
+import { useLayoutFor } from '../layouts/LayoutsProvider';
 import { CardFace } from './CardFace';
-import { enlargeSpot, type Box } from './enlargePlacement';
+import { ENLARGE_GAP, enlargeSpot, type Box } from './enlargePlacement';
 import './CardEnlarge.css';
 
 /** The enlarged card's width, from the Main and TableDark boards. */
 export const ENLARGE_WIDTH = 216;
+/** The preview's padding and border, each side together, from `CardEnlarge.css`. */
+const FRAME_PX = 11;
 /** How long the flip takes, each half. */
 const FLIP_HALF_MS = 140;
 
@@ -38,6 +41,8 @@ export function CardEnlarge({ session, cardId, anchor, takeFocus, onClose, onPoi
   const back = definition?.back;
   // A face-down card opens on its front.
   const [side, setSide] = useState<'front' | 'back'>(card?.side === 'back' && back ? 'back' : 'front');
+  const face = side === 'back' && back ? back : definition?.front;
+  const layout = useLayoutFor(face ?? { name: '', fields: {} });
   const ref = useRef<HTMLDivElement>(null);
   const faceRef = useRef<HTMLDivElement>(null);
   const flipRef = useRef<HTMLButtonElement>(null);
@@ -47,7 +52,7 @@ export function CardEnlarge({ session, cardId, anchor, takeFocus, onClose, onPoi
     const element = ref.current;
     if (!element) return;
     setSpot(enlargeSpot(anchor, { width: element.offsetWidth, height: element.offsetHeight }, { width: window.innerWidth, height: window.innerHeight }));
-  }, [anchor]);
+  }, [anchor, layout.orientation]);
 
   // Focus moves in once it's placed: a hidden element can't take focus.
   const focused = useRef(false);
@@ -91,8 +96,7 @@ export function CardEnlarge({ session, cardId, anchor, takeFocus, onClose, onPoi
     };
   }, []);
 
-  if (!definition) return null;
-  const face = side === 'back' && back ? back : definition.front;
+  if (!definition || !face) return null;
   const other = side === 'back' ? 'front' : 'back';
 
   function flip() {
@@ -111,13 +115,17 @@ export function CardEnlarge({ session, cardId, anchor, takeFocus, onClose, onPoi
       .catch(() => setSide(other));
   }
 
+  // A landscape layout shows upright, so the preview turns on its side; on a narrow phone it shrinks to fit.
+  const landscape = layout.orientation === 'landscape';
+  const width = landscape ? Math.min(ENLARGE_WIDTH, Math.floor(((window.innerWidth - 2 * ENLARGE_GAP - 2 * FRAME_PX) * 240) / 336)) : ENLARGE_WIDTH;
+  const shown = landscape ? Math.round((width * 336) / 240) : width;
   const style = { left: spot?.left ?? 0, top: spot?.top ?? 0, visibility: spot ? 'visible' : 'hidden' } as CSSProperties;
   return (
     <div ref={ref} role="dialog" aria-label={`Enlarged: ${face.name}`} className="card-enlarge" style={style} tabIndex={-1}>
       <div ref={faceRef} className="card-enlarge__face">
-        <CardFace face={face} width={ENLARGE_WIDTH} />
+        <CardFace face={face} width={width} layout={layout} upright />
       </div>
-      <div className="card-enlarge__footer">
+      <div className="card-enlarge__footer" style={{ maxWidth: shown }}>
         <span>{[face.name, face.type].filter(Boolean).join(' · ')}</span>
         <span aria-hidden="true">
           <kbd>I</kbd> close
