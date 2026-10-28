@@ -14,7 +14,16 @@ Phase 5 (Layouts, #35) is split into 5a to 5j, sub-issues #88 to #96 and #111, w
 
 Field errors no longer rely on colour (#42, A11Y-13, outside the phases): every field error has an icon and starts with "Error:", an invalid field shows an icon inside its right end, focused or not, and errors use the new `--error` token. Later forms reuse `FieldError` and `FieldControl` from `src/components/FieldError.tsx`.
 
+Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122, and hasn't started. Sessions still start from the Solo PvE preset fixed in code.
+
 ## Done
+
+### Planning: Phase 6 split (#115, 2026-10-28)
+
+- **Issues:** parent #115 with sub-issues 6a to 6g (#116 to #122), each with requirement IDs, scope, out of scope and acceptance criteria.
+- **Owner decisions:** the format editor renames seats but doesn't add or remove them in V1; the app keeps opening on the table with the last format set up until Phase 7 adds Resume; switching seats isn't an undo step.
+- **Left out of Phase 6:** default Sheet URLs on formats and Resume (Phase 7), the demo (#63), exporting and importing formats.
+- **Changed requirements:** FS-2, FS-3, and the decision log.
 
 ### Error identification beyond colour (#42, 2026-10-28)
 
@@ -781,7 +790,14 @@ Field errors no longer rely on colour (#42, A11Y-13, outside the phases): every 
 
 ## Next
 
-- **Phase 6 (formats):** needs the owner's go-ahead, and its issue split, before it starts.
+- **Phase 6 (Formats, #115):** split into 6a to 6g, sub-issues #116 to #122. Each starts only with the owner's go-ahead, 6a first.
+  - 6a (#116): format model and the three presets; sessions are built from a format, seat identity comes from the seat's place.
+  - 6b (#117): seat switcher in the seat bar, S and Shift+S.
+  - 6c (#118): setup dialog from **New session…**; the last format chosen is the `defaultFormat` option.
+  - 6d (#119): saved formats as their own items, and a Formats screen with duplicate, rename and delete.
+  - 6e (#120): format editor for seats, piles and Uses dice.
+  - 6f (#121): format editor for seat counters.
+  - 6g (#122): close-out, a 1v1 PvP session set up and played by mouse and keyboard.
 - **After V1, in this order:** the demo on its own path (#63), the card set library (#67), games (#65), then accounts and sync (#45). #45's docs-only step 1 (confirming Supabase, writing the accounts requirements) can happen any time.
 - **#71: keys act on the hovered card or pile when nothing on the table has focus**, an owner request from the #70 review. Single-letter keys without focus need an off switch (WCAG 2.1.4), so it goes with #53.
 - **#68: no text-field focus on touch screens in the other dialogs** (Move to…, pile viewer, Draw/Mill/Peek count, pile name). It isn't tied to a phase, and the owner chooses when.
@@ -1033,3 +1049,4 @@ Field errors no longer rely on colour (#42, A11Y-13, outside the phases): every 
 | 2026-10-28 | An import is refused whole if any layout or box in it is wrong | Importing the valid layouts and skipping the rest | Never brings in half a layout, and the message names what's wrong |
 | 2026-10-28 | An invalid field shows the error icon inside its right end, and "Error:" is visible (A11Y-13, #42) | A thicker border; "Error:" for screen readers only | The icon shows in greyscale, with focus and in forced colours, and the visible label helps without colour. Owner's choice |
 | 2026-10-28 | The new requirement is A11Y-13, not the A11Y-12 the issue proposed | — | #66 had already used A11Y-12 for the iOS field zoom rule |
+| 2026-10-28 | Phase 6 split into 6a to 6g (#115); seats renamed but not added or removed; the app opens on the table with the last format; switching seats isn't an undo step | Adding seats in V1; a start screen in Phase 6; switching as an undo step | Owner decisions while planning Phase 6 |
