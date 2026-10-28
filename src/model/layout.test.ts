@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { faceValue } from './card';
-import { boxValue, DEFAULT_LAYOUT, layoutLabel, type LayoutBox, type LayoutDesign } from './layout';
+import { boxValue, DEFAULT_LAYOUT, fitTextSize, layoutLabel, MIN_TEXT_PT, type LayoutBox, type LayoutDesign } from './layout';
 
 const style = { size: 10, weight: 400, align: 'left', valign: 'top', font: 'sans', color: '#000' } as const;
 
@@ -52,5 +52,31 @@ describe('LY-6 the default layout', () => {
       expect(box.x + box.width).toBeLessThanOrEqual(100);
       expect(box.y + box.height).toBeLessThanOrEqual(100);
     }
+  });
+});
+
+describe('LY-4 shrink-to-fit', () => {
+  /** Text that fits at `max` points or smaller. */
+  const fitsUpTo = (max: number) => (size: number) => size > max;
+
+  it('keeps text that fits at its set size', () => {
+    expect(fitTextSize(12, fitsUpTo(20))).toEqual({ size: 12, clipped: false });
+  });
+
+  it('shrinks overflowing text to the largest size that fits, to within a quarter point', () => {
+    const fit = fitTextSize(14, fitsUpTo(9.6));
+    expect(fit.clipped).toBe(false);
+    expect(fit.size).toBeLessThanOrEqual(9.6);
+    expect(fit.size).toBeGreaterThan(9.6 - 0.25);
+  });
+
+  it('stops at the 6 pt minimum and clips', () => {
+    expect(MIN_TEXT_PT).toBe(6);
+    expect(fitTextSize(14, fitsUpTo(4))).toEqual({ size: 6, clipped: true });
+  });
+
+  it('never grows a box set below the minimum', () => {
+    expect(fitTextSize(5, fitsUpTo(4))).toEqual({ size: 5, clipped: true });
+    expect(fitTextSize(5, fitsUpTo(20))).toEqual({ size: 5, clipped: false });
   });
 });

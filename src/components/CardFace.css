@@ -18,7 +18,8 @@
 .card-face__box--text {
   display: flex;
   flex-direction: column;
-  padding: 0.3em 0.4em;
+  /* Padding follows the box's set size, so shrinking text (LY-4) only frees room for it. */
+  padding: calc(0.3 * var(--box-size)) calc(0.4 * var(--box-size));
   line-height: 1.28;
   white-space: pre-line;
   overflow-wrap: break-word;

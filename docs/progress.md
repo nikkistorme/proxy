@@ -10,9 +10,18 @@ The phases after 3 were reordered (2026-10-27): Phase 4 is now storage and card 
 
 Phase 4 (#74) is done, split into 4a (#84) and 4b (#85). 4a: every save goes through one storage interface (`src/storage/storage.ts`) with keys built from the base path and the "guest" profile, older saves are dropped with a notice, a browser that can't save shows a one-line notice, and options are read through one resolver (`src/options/resolver.ts`). The theme is the first option read that way, from the account settings item. 4b: loading a CSV into a pile saves a card set item, the pile records its id, and the session keeps its own copy of the definitions. Card sets are the only items the app writes so far.
 
-Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) is done: every card face is drawn from a layout's boxes, through the built-in default layout, which looks close to the old face. 5b (#89) is done: each card's layout is chosen by its `layout` column, then the type mapping, then the default option, and saved layouts load at start and autosave as their own items. 5c (#90) is done: a landscape layout draws sideways on the portrait card and upright, on a card turned on its side, in the enlarge preview. There's no editor yet, so only hand-made data shows a custom layout.
+Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) is done: every card face is drawn from a layout's boxes, through the built-in default layout, which looks close to the old face. 5b (#89) is done: each card's layout is chosen by its `layout` column, then the type mapping, then the default option, and saved layouts load at start and autosave as their own items. 5c (#90) is done: a landscape layout draws sideways on the portrait card and upright, on a card turned on its side, in the enlarge preview. 5d (#91) is done: text that overflows its box shrinks to fit, down to 6 pt, then clips, and each box reports how it fit for the editor's warning (5g). There's no editor yet, so only hand-made data shows a custom layout.
 
 ## Done
+
+### Phase 5d: Shrink-to-fit text (#91, 2026-10-27)
+
+- **Shrink-to-fit (LY-4):** `CardFace`'s text boxes measure themselves before they paint. Text taller or wider than its box drops to the largest size, to within a quarter point, that fits, down to `MIN_TEXT_PT` (6 pt). Text that still overflows stays at 6 pt and the end clips. A box set below 6 pt never grows. The search is `fitTextSize` in `src/model/layout.ts`.
+- **Every width:** the fitted size is in points, so it's worked out again when the face width, the text, the style or the box size changes, and once more when the bundled fonts finish loading. It works the same on table, hand, viewer and enlarge faces, and on a landscape layout's turned canvas.
+- **Padding:** a text box's padding follows its set size (`--box-size`), so shrinking only frees room for text.
+- **For the editor (5g):** each text box has `data-fit="shrunk"` or `data-fit="clipped"`, and `CardFace` takes `onFit(boxId, { size, clipped })`, called after each fit.
+- **Tests:** LY-4 cases in `layout.test.ts` (the search) and `CardFace.test.tsx` (mocked measurements: unchanged, shrunk with its padding, clipped at 6 pt, `onFit`), and in `e2e/layouts.spec.ts` (shrinks and clips on table cards, a landscape card on the table and enlarged, 375 × 667 without sideways scroll). The TT-9 phone E2E from 5c now waits two frames after focusing the card before pressing I: on a narrow screen, focus scrolls the table, and that scroll closed the preview as it opened.
+- **Changed requirements:** LY-4 (the 6 pt minimum, padding, every width).
 
 ### Phase 5c: Landscape layouts (#90, 2026-10-27)
 
@@ -669,7 +678,7 @@ Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) i
 
 ## Next
 
-- **Phase 5d (#91)**, then 5e to 5i (#92 to #96) in order. 5e asks whether the editor is full screen (recommended) or a panel beside the table.
+- **Phase 5e to 5i (#92 to #96)** in order. 5e asks whether the editor is full screen (recommended) or a panel beside the table.
 - **After V1, in this order:** the demo on its own path (#63), the card set library (#67), games (#65), then accounts and sync (#45). #45's docs-only step 1 (confirming Supabase, writing the accounts requirements) can happen any time.
 - **#71: keys act on the hovered card or pile when nothing on the table has focus**, an owner request from the #70 review. Single-letter keys without focus need an off switch (WCAG 2.1.4), so it goes with #53.
 - **#68: no text-field focus on touch screens in the other dialogs** (Move to…, pile viewer, Draw/Mill/Peek count, pile name). It isn't tied to a phase, and the owner chooses when.
@@ -728,7 +737,7 @@ Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) i
 - In this cloud environment the pinned `@playwright/test` wants a newer Chromium than the one installed. Local E2E ran with a scratch config pointing `launchOptions.executablePath` at `/opt/pw-browsers/chromium`. That config isn't committed, and CI is unaffected.
 - The form error colour uses `--seat-a` (5.4:1 on the panel), because the tokens have no error colour. Add an error token if the design gets one.
 - **Reload is two clicks, not one:** "Reload <file>…" reopens the file picker, because browsers can't re-read a chosen file. A true one-click reload needs the File System Access API, which works in Chromium only and falls back to the picker elsewhere. That fits with the card library (#67), where the file handle can be saved with the card set.
-- Until 5d's shrink-to-fit, text that doesn't fit its box clips at the end. A long name wraps and loses its second line, where the old face cut it off with an ellipsis.
+- Shrink-to-fit measures each text box on every card as it draws. A table full of long-text cards hasn't been timed; boxes that fit at their set size cost one measurement.
 - The default layout has square corners on its plates and the cost and stats pills, since boxes have no corner radius (LY-4 doesn't list it).
 - The shared-pile back colour `#3F433D` isn't a design token. The design has no shared seat, so add a token if the design gets one.
 - The dark theme follows the system only. A manual light/dark toggle goes in the Settings screen when it exists (`applyTheme` already takes the choice).
