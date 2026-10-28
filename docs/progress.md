@@ -10,9 +10,23 @@ The phases after 3 were reordered (2026-10-27): Phase 4 is now storage and card 
 
 Phase 4 (#74) is done, split into 4a (#84) and 4b (#85). 4a: every save goes through one storage interface (`src/storage/storage.ts`) with keys built from the base path and the "guest" profile, older saves are dropped with a notice, a browser that can't save shows a one-line notice, and options are read through one resolver (`src/options/resolver.ts`). The theme is the first option read that way, from the account settings item. 4b: loading a CSV into a pile saves a card set item, the pile records its id, and the session keeps its own copy of the definitions. Card sets are the only items the app writes so far.
 
-Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) is done: every card face is drawn from a layout's boxes, through the built-in default layout, which looks close to the old face. 5b (#89) is done: each card's layout is chosen by its `layout` column, then the type mapping, then the default option, and saved layouts load at start and autosave as their own items. 5c (#90) is done: a landscape layout draws sideways on the portrait card and upright, on a card turned on its side, in the enlarge preview. 5d (#91) is done: text that overflows its box shrinks to fit, down to 6 pt, then clips, and each box reports how it fit for the editor's warning (5g). There's no editor yet, so only hand-made data shows a custom layout.
+Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) is done: every card face is drawn from a layout's boxes, through the built-in default layout, which looks close to the old face. 5b (#89) is done: each card's layout is chosen by its `layout` column, then the type mapping, then the default option, and saved layouts load at start and autosave as their own items. 5c (#90) is done: a landscape layout draws sideways on the portrait card and upright, on a card turned on its side, in the enlarge preview. 5d (#91) is done: text that overflows its box shrinks to fit, down to 6 pt, then clips, and each box reports how it fit for the editor's warning (5g). 5e (#92) is done: a full-screen layout screen, opened from the toolbar or with L and loaded on first use, lists the layouts with create, rename, duplicate and delete. There's no canvas yet (5f), so a new layout is blank and only a copy of the built-in one shows anything.
 
 ## Done
+
+### Phase 5e: Layout list (#92, 2026-10-28)
+
+- **Full screen (owner decision):** the layout screen (`src/editor/LayoutEditor.tsx`) is a full-screen modal `<dialog>` over the table, which stays as it was underneath. Back to table or Esc closes it, and focus goes back to where it was. It opens from the toolbar's Card layouts button (the Main board's icon) and with L, a page-wide single key like D and ? (WCAG 2.1.4), listed in the ? reference.
+- **Loaded on first use (PF-3):** `SessionScreen` loads it with `React.lazy`, so its code is its own chunk (about 2 KB gzipped) fetched the first time it opens.
+- **The list (LY-1):** the built-in Default comes first, which can only be duplicated, then the saved layouts sorted by name. Each row has a small card thumbnail, the name, the orientation and box count, and Rename, Duplicate and Delete buttons named for the layout ("Rename Hero").
+  - New layout adds a blank portrait layout, "Layout 1", "Layout 2" and so on. Duplicate makes "<name> copy" ("copy 2" and on if taken), the built-in layout included. Both focus the new row's Rename button.
+  - Rename (`LayoutNameDialog`) refuses an empty name or one another layout has, ignoring case and outer spaces, with Default counted as taken, because the `layout` column picks a layout by name (LY-8). On a touch screen it doesn't focus the field.
+  - Delete asks first (`DeleteLayoutDialog`), then focus moves to the next row, the one before, or New layout. Cards that used the layout fall through to their next one (LY-8).
+  - Each action is announced in a live region inside the screen, since a modal dialog hides the page's own.
+- **Model and storage:** `src/model/layoutNames.ts` has the name check and `newLayout` and `duplicateLayout`. `useLayouts().deleteLayout(id)` removes the layout at once, drops a save still waiting for it and deletes its item. A layout deleted before storage is ready isn't brought back by the first read.
+- **Enter in the rename field:** it submits on keydown, and the closing dialog hands focus back to the row's Rename button, which the same key's keypress then clicked in Chrome, reopening the dialog. The screen ignores a keyboard click on Rename from the key that just renamed. The keyboard E2E covers it.
+- **Tests:** `layoutNames.test.ts`, LY-1 cases in `LayoutsProvider.test.tsx` (delete, a dropped waiting save) and `LayoutEditor.test.tsx` (the list, create, rename with refused names, duplicate, delete and cancel with focus, toolbar and L), and `e2e/layoutEditor.spec.ts` (the whole keyboard path with a reload, PF-3's chunk loading only on open, a mouse path, and 375 × 667: full screen, the list scrolls inside, no sideways scroll, dialog buttons visible).
+- **Changed requirements:** LY-1 (the screen, names, the built-in layout, delete) and A11Y-4 (the L key), plus a decision-log entry for the full-screen editor.
 
 ### Phase 5d: Shrink-to-fit text (#91, 2026-10-27)
 
@@ -678,7 +692,7 @@ Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) i
 
 ## Next
 
-- **Phase 5e to 5i (#92 to #96)** in order. 5e asks whether the editor is full screen (recommended) or a panel beside the table.
+- **Phase 5f to 5i (#93 to #96)** in order. 5f adds the canvas to the full-screen layout screen: selecting a layout in the list opens it.
 - **After V1, in this order:** the demo on its own path (#63), the card set library (#67), games (#65), then accounts and sync (#45). #45's docs-only step 1 (confirming Supabase, writing the accounts requirements) can happen any time.
 - **#71: keys act on the hovered card or pile when nothing on the table has focus**, an owner request from the #70 review. Single-letter keys without focus need an off switch (WCAG 2.1.4), so it goes with #53.
 - **#68: no text-field focus on touch screens in the other dialogs** (Move to…, pile viewer, Draw/Mill/Peek count, pile name). It isn't tied to a phase, and the owner chooses when.
@@ -690,7 +704,8 @@ Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) i
 
 - Saved layouts load a moment after the page starts, so cards may first draw with the built-in layout and then switch.
 - Keyboard E2E tests that check focus (counters, Move to…, the solo turn) sometimes fail when the whole suite runs locally at full load. They fail on `main` too and pass on a rerun, so they're timing-related, not from a change.
-- A layout save that fails is silent: the layout stays in the app for the visit. The editor (5e) may want to say so.
+- A layout save or delete that fails is silent: the layout stays as it is in the app for the visit. The layout screen could say so, perhaps with the storage notice.
+- The pile viewer isn't code-split yet, although PF-3 asks for it. Only the layout editor is.
 - Only card sets and layouts are saved so far. Nothing reads card sets back yet: the card library (#67) will list them. A theme choice needs the Settings screen, so the theme option can only be seen with hand-made data.
 - Undoing a CSV load reverts the session but leaves the saved card set as loaded. The set belongs to the library, not to the session.
 - A card set saved before the startup storage check finishes (the first moments after the page loads) isn't saved. The session still has its copy.
@@ -895,3 +910,5 @@ Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) i
 | 2026-10-27 | A card's layout is worked out from its columns each time it's drawn, not stored on table cards (LY-8, AR-4, #89) | A layout id on each table card | Owner decision. Edits and mapping changes reach cards in play (LY-10) |
 | 2026-10-27 | Layout autosave is per item: one second after a layout's first unsaved change (PS-1) | One timer for all layouts | A change rewrites only that layout's item, and each item saves at most once a second |
 | 2026-10-27 | A landscape layout's canvas turns 90° anticlockwise on the portrait card (#90) | Clockwise | Turning on the table goes clockwise, so one turn makes it read upright |
+| 2026-10-28 | The layout editor is a full screen over the table (#92) | A panel beside the table | Owner decision. A panel has no room on a phone for the canvas, box settings and preview; edits show on the table when it closes (LY-10) |
+| 2026-10-28 | Layout names are unique, ignoring case and outer spaces, and "Default" is taken (LY-1) | Allowing duplicate names | The `layout` column picks a layout by name (LY-8), so two layouts with one name couldn't both be chosen |

@@ -1,0 +1,124 @@
+/* The full-screen layout screen (LY-1), built from the PileViewer sheet's tokens. */
+.layout-editor {
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-top: 4px solid var(--accent);
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.layout-editor[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.layout-editor::backdrop {
+  background: var(--scrim);
+}
+
+.layout-editor__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--divider);
+  background: var(--panel);
+}
+
+.layout-editor__back,
+.layout-editor__new {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+}
+
+.layout-editor__title {
+  /* Doesn't shrink: on a phone New layout wraps to its own line instead. */
+  flex: 1 0 auto;
+  margin: 0;
+  white-space: nowrap;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.layout-editor__body {
+  /* Start from the content height, not 0%: some mobile Safari versions collapse a 0% basis. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-4);
+}
+
+.layout-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.layout-list__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-menu);
+  background: var(--panel);
+}
+
+.layout-list__thumb {
+  flex: none;
+  border-radius: 4px;
+  box-shadow: var(--shadow-card);
+}
+
+.layout-list__text {
+  display: flex;
+  flex: 1 1 160px;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.layout-list__name {
+  overflow-wrap: anywhere;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.layout-list__meta {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.layout-list__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+/* On a phone the buttons take their own line and share its width. */
+@media (max-width: 480px) {
+  .layout-list__actions {
+    flex: 1 1 100%;
+  }
+
+  .layout-list__actions .button {
+    flex: 1 1 auto;
+    padding: 0 var(--space-2);
+  }
+}

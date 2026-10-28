@@ -30,6 +30,7 @@ export const SHORTCUT_GROUPS: Group[] = [
     shortcuts: [
       { keys: ['D'], action: 'Draw a card' },
       { keys: ['?'], action: 'Show these shortcuts' },
+      { keys: ['L'], action: 'Card layouts' },
       { keys: ['+', '−'], action: 'Zoom in or out' },
       { keys: ['0'], action: 'Fit all cards' },
       { keys: ['G'], action: 'Snap to grid on or off' },

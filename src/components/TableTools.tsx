@@ -13,6 +13,7 @@ const ICONS = {
   zoomIn: 'M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-4-4M8 11h6M11 8v6',
   fit: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',
   grid: 'M4 4h16v16H4zM9.3 4v16M14.7 4v16M4 9.3h16M4 14.7h16',
+  layout: 'M6 3h12v18H6zM9 6h6v5H9zM9 14h6M9 17h4',
   help: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM9.5 9.5a2.5 2.5 0 0 1 4.9.7c0 1.7-2.4 2.3-2.4 3.8M12 17h.01',
 };
 
@@ -50,13 +51,15 @@ interface TableToolsProps {
   addPileRef?: Ref<HTMLButtonElement>;
   /** A11Y-4: opens the shortcut reference. Left out, there's no Keyboard shortcuts button. */
   onShortcuts?: () => void;
+  /** LY-1: opens the layout screen. Left out, there's no Card layouts button. */
+  onLayouts?: () => void;
 }
 
 /**
  * The header's table tools, from the Main board: undo and redo (TT-15), zoom and
  * fit all (TT-1), grid snap (TT-2), and Add pile (SP-4), which puts a pile on the table.
  */
-export function TableTools({ onAddPile, addPileRef, onShortcuts }: TableToolsProps = {}) {
+export function TableTools({ onAddPile, addPileRef, onShortcuts, onLayouts }: TableToolsProps = {}) {
   const canUndo = useSessionStore((s) => s.past.length > 0);
   const canRedo = useSessionStore((s) => s.future.length > 0);
   const undo = useSessionStore((s) => s.undo);
@@ -136,6 +139,11 @@ export function TableTools({ onAddPile, addPileRef, onShortcuts }: TableToolsPro
           </svg>
           Add pile
         </button>
+      )}
+      {onLayouts && (
+        <Tool label="Card layouts (L)" onClick={onLayouts}>
+          <Icon d={ICONS.layout} />
+        </Tool>
       )}
       {onShortcuts && (
         <Tool label="Keyboard shortcuts (?)" onClick={onShortcuts}>
