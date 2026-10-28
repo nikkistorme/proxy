@@ -1,7 +1,8 @@
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent, type RefObject } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent, type RefObject } from 'react';
 import { CardFace } from '../components/CardFace';
 import type { LayoutItem } from '../layouts/LayoutsProvider';
-import type { LayoutBox, LayoutOrientation } from '../model/layout';
+import { contrastWarning, describeRatio } from '../model/contrast';
+import { boxValue, MIN_TEXT_PT, type LayoutBox, type LayoutOrientation, type TextFit } from '../model/layout';
 import {
   addedBoxRect,
   BOX_STEP,
@@ -45,6 +46,12 @@ type Drag =
     };
 
 const boxName = (index: number) => `Box ${index + 1}`;
+
+/** What's wrong with a box: short, for its name on the canvas, and long, for the properties panel (LY-4, A11Y-9). */
+interface BoxWarnings {
+  short: string[];
+  long: string[];
+}
 
 /** The stage's size, so the card can fill it at the card's own proportions. */
 function useStageSize(ref: RefObject<HTMLElement | null>) {
@@ -107,6 +114,27 @@ export function LayoutCanvas({ layout, onChange, onBack, announce, columns = NO_
   const selectedIndex = layout.boxes.findIndex((box) => box.id === selectedId);
   const selected = layout.boxes[selectedIndex];
   const face = useMemo(() => sampleFace(layout.boxes), [layout.boxes]);
+  /** Boxes whose text still overflows at the smallest size, as the card reports them. */
+  const [clipped, setClipped] = useState<Record<string, boolean>>({});
+  const onFit = useCallback((id: string, fit: TextFit) => {
+    setClipped((current) => (current[id] === fit.clipped ? current : { ...current, [id]: fit.clipped }));
+  }, []);
+
+  function warningsFor(box: LayoutBox, index: number): BoxWarnings {
+    const warnings: BoxWarnings = { short: [], long: [] };
+    // A box that draws no text reports no new fit and has no text to read, so it has no warnings.
+    if (box.content.kind === 'color' || !boxValue(face, box.content)) return warnings;
+    if (clipped[box.id]) {
+      warnings.short.push('text clipped');
+      warnings.long.push(`Text is clipped: it doesn't fit even at ${MIN_TEXT_PT} pt. Make the box bigger or the text smaller.`);
+    }
+    const contrast = contrastWarning(layout.boxes, index);
+    if (contrast) {
+      warnings.short.push(`low contrast ${describeRatio(contrast.ratio)}`);
+      warnings.long.push(`Low contrast: ${describeRatio(contrast.ratio)} against the background. Text this size needs at least ${contrast.minimum} to 1.`);
+    }
+    return warnings;
+  }
 
   useEffect(() => {
     addRef.current?.focus();
@@ -316,7 +344,7 @@ export function LayoutCanvas({ layout, onChange, onBack, announce, columns = NO_
           <div className="layout-canvas__card" style={{ width: shown }}>
             {/* The boxes over the card name themselves; a sample card's text says nothing more. */}
             <div aria-hidden="true">
-              <CardFace face={face} layout={layout} width={cardWidth} upright />
+              <CardFace face={face} layout={layout} width={cardWidth} upright onFit={onFit} />
             </div>
             <div
               ref={overlayRef}
@@ -328,43 +356,54 @@ export function LayoutCanvas({ layout, onChange, onBack, announce, columns = NO_
               onPointerUp={onPointerUp}
               onPointerCancel={onPointerCancel}
             >
-              {layout.boxes.map((box, index) => (
-                <div
-                  key={box.id}
-                  data-box-id={box.id}
-                  className={`layout-canvas__box${box.id === selectedId ? ' layout-canvas__box--selected' : ''}`}
-                  style={{
-                    left: `${box.x}%`,
-                    top: `${box.y}%`,
-                    width: `${box.width}%`,
-                    height: `${box.height}%`,
-                  }}
-                >
-                  <button
-                    type="button"
-                    className="layout-canvas__box-button"
-                    aria-label={`${boxName(index)}, ${describeBoxContent(box.content)}, ${describeBoxPlace(box)}, ${describeBoxSize(box)}`}
-                    aria-describedby={hintId}
-                    onFocus={() => setSelectedId(box.id)}
-                    onKeyDown={(event) => onBoxKeyDown(event, box, index)}
-                    onPointerDown={(event) => onBoxPointerDown(event, box)}
+              {layout.boxes.map((box, index) => {
+                const warnings = warningsFor(box, index);
+                return (
+                  <div
+                    key={box.id}
+                    data-box-id={box.id}
+                    className={`layout-canvas__box${box.id === selectedId ? ' layout-canvas__box--selected' : ''}`}
+                    style={{
+                      left: `${box.x}%`,
+                      top: `${box.y}%`,
+                      width: `${box.width}%`,
+                      height: `${box.height}%`,
+                    }}
                   >
-                    <span className="layout-canvas__box-number" aria-hidden="true">
-                      {index + 1}
-                    </span>
-                  </button>
-                  {box.id === selectedId &&
-                    CORNERS.map((corner) => (
-                      <span
-                        key={corner}
-                        className={`layout-canvas__handle layout-canvas__handle--${corner}`}
-                        data-corner={corner}
-                        aria-hidden="true"
-                        onPointerDown={(event) => onBoxPointerDown(event, box, corner)}
-                      />
-                    ))}
-                </div>
-              ))}
+                    <button
+                      type="button"
+                      className="layout-canvas__box-button"
+                      aria-label={[boxName(index), describeBoxContent(box.content), describeBoxPlace(box), describeBoxSize(box), ...warnings.short].join(', ')}
+                      aria-describedby={hintId}
+                      onFocus={() => setSelectedId(box.id)}
+                      onKeyDown={(event) => onBoxKeyDown(event, box, index)}
+                      onPointerDown={(event) => onBoxPointerDown(event, box)}
+                    >
+                      <span className="layout-canvas__box-number" aria-hidden="true">
+                        {index + 1}
+                      </span>
+                      {warnings.short.length > 0 && (
+                        <span className="layout-canvas__box-warning" aria-hidden="true">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round">
+                            <path d="M12 3l10 18H2z" />
+                            <path d="M12 10v4M12 17.5v.5" strokeLinecap="round" />
+                          </svg>
+                        </span>
+                      )}
+                    </button>
+                    {box.id === selectedId &&
+                      CORNERS.map((corner) => (
+                        <span
+                          key={corner}
+                          className={`layout-canvas__handle layout-canvas__handle--${corner}`}
+                          data-corner={corner}
+                          aria-hidden="true"
+                          onPointerDown={(event) => onBoxPointerDown(event, box, corner)}
+                        />
+                      ))}
+                  </div>
+                );
+              })}
               {draft && (
                 <div
                   className="layout-canvas__draft"
@@ -380,7 +419,13 @@ export function LayoutCanvas({ layout, onChange, onBack, announce, columns = NO_
             </div>
           </div>
         </div>
-        <BoxProperties box={selected} name={selected && boxName(selectedIndex)} columns={columns} onChange={updateBox} />
+        <BoxProperties
+          box={selected}
+          name={selected && boxName(selectedIndex)}
+          columns={columns}
+          warnings={selected && warningsFor(selected, selectedIndex).long}
+          onChange={updateBox}
+        />
       </div>
     </section>
   );

@@ -235,3 +235,104 @@ describe('LY-5 fixed text and colour boxes', () => {
     expect(hex).toHaveValue('#29303b');
   });
 });
+
+describe('LY-4 text styles', () => {
+  it('sets every text style by keyboard and saves it', async () => {
+    const { user, backend } = await openHero();
+    await user.click(screen.getByRole('button', { name: 'Add box' }));
+    await user.type(within(panel()).getByRole('textbox', { name: 'Text' }), 'Hero');
+
+    const size = within(panel()).getByRole('spinbutton', { name: 'Size (pt)' });
+    await user.clear(size);
+    await user.type(size, '14.5');
+    await user.selectOptions(within(panel()).getByRole('combobox', { name: 'Weight' }), 'Bold');
+    // Each choice is a radio group: Tab in, arrow to the next.
+    await user.click(within(panel()).getByRole('radio', { name: 'Text' }));
+    await user.keyboard('{ArrowRight}');
+    expect(within(panel()).getByRole('radio', { name: 'Numbers' })).toBeChecked();
+    await user.click(within(panel()).getByRole('radio', { name: 'Left' }));
+    await user.keyboard('{ArrowRight}');
+    await user.click(within(panel()).getByRole('radio', { name: 'Top' }));
+    await user.keyboard('{ArrowRight}{ArrowRight}');
+    const color = within(panel()).getByRole('textbox', { name: 'Text colour' });
+    await user.clear(color);
+    await user.type(color, '#29303b');
+
+    const none = within(panel()).getByRole('checkbox', { name: 'No background' });
+    expect(none).toBeChecked();
+    await user.click(none);
+    const background = within(panel()).getByRole('textbox', { name: 'Background' });
+    expect(background).toHaveValue('#ffffff');
+    await user.clear(background);
+    await user.type(background, '#fbf8f2');
+
+    await waitFor(
+      () =>
+        expect(savedBox(backend)?.style).toEqual({
+          size: 14.5,
+          weight: 700,
+          align: 'center',
+          valign: 'bottom',
+          font: 'mono',
+          color: '#29303b',
+          background: '#fbf8f2',
+        }),
+      { timeout: 2000 },
+    );
+
+    await user.click(none);
+    expect(within(panel()).queryByRole('textbox', { name: 'Background' })).not.toBeInTheDocument();
+    await waitFor(() => expect(savedBox(backend)?.style).not.toHaveProperty('background'), { timeout: 2000 });
+  });
+
+  it('refuses a size out of range', async () => {
+    const { user, backend } = await openHero();
+    await user.click(screen.getByRole('button', { name: 'Add box' }));
+    const size = within(panel()).getByRole('spinbutton', { name: 'Size (pt)' });
+    await user.clear(size);
+    await user.type(size, '3');
+    expect(size).toHaveAttribute('aria-invalid', 'true');
+    expect(size).toHaveAccessibleDescription('Enter a size from 4 to 72 pt.');
+    await waitFor(() => expect(savedBox(backend)).toBeDefined(), { timeout: 2000 });
+    expect(savedBox(backend)?.style.size).toBe(10);
+  });
+
+  it('gives image boxes only a background, and colour boxes only their colour', async () => {
+    const { user } = await openHero();
+    await user.click(screen.getByRole('button', { name: 'Add box' }));
+    await user.click(within(panel()).getByRole('radio', { name: 'Column as image' }));
+    expect(within(panel()).queryByRole('spinbutton', { name: 'Size (pt)' })).not.toBeInTheDocument();
+    expect(within(panel()).getByRole('checkbox', { name: 'No background' })).toBeInTheDocument();
+    await user.click(within(panel()).getByRole('radio', { name: 'Colour' }));
+    expect(within(panel()).queryByRole('checkbox', { name: 'No background' })).not.toBeInTheDocument();
+  });
+
+  it('warns when text is clipped at the smallest size', async () => {
+    // jsdom can't lay text out, so every text box measures as overflowing.
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(1000);
+    const { user } = await openHero();
+    await user.click(screen.getByRole('button', { name: 'Add box' }));
+    expect(screen.getByRole('button', { name: /^Box 1, empty,/ })).not.toHaveAccessibleName(/clipped/);
+    await user.type(within(panel()).getByRole('textbox', { name: 'Text' }), 'A long rules text');
+    expect(await screen.findByRole('button', { name: /^Box 1, text “A long rules text”, .*, text clipped$/ })).toBeInTheDocument();
+    expect(panel()).toHaveTextContent("Text is clipped: it doesn't fit even at 6 pt.");
+  });
+});
+
+describe('A11Y-9 contrast warning', () => {
+  it('warns when a text box fails contrast against its background', async () => {
+    const { user } = await openHero();
+    await user.click(screen.getByRole('button', { name: 'Add box' }));
+    await user.type(within(panel()).getByRole('textbox', { name: 'Text' }), 'Hero');
+    const color = within(panel()).getByRole('textbox', { name: 'Text colour' });
+    await user.clear(color);
+    await user.type(color, '#eeeeee');
+    expect(screen.getByRole('button', { name: /^Box 1, .*, low contrast 1.1 to 1$/ })).toBeInTheDocument();
+    expect(panel()).toHaveTextContent('Low contrast: 1.1 to 1 against the background. Text this size needs at least 4.5 to 1.');
+
+    await user.clear(color);
+    await user.type(color, '#1e1c1a');
+    expect(screen.getByRole('button', { name: /^Box 1,/ })).not.toHaveAccessibleName(/contrast/);
+    expect(panel()).not.toHaveTextContent('Low contrast');
+  });
+});
