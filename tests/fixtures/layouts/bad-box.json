@@ -1,0 +1,22 @@
+{
+  "format": "proxy-layouts",
+  "version": 1,
+  "layouts": [
+    {
+      "id": "fixture-broken",
+      "name": "Broken",
+      "orientation": "portrait",
+      "boxes": [
+        {
+          "id": "name",
+          "x": 4,
+          "y": 2,
+          "width": 140,
+          "height": 8,
+          "content": { "kind": "column", "columns": ["name"], "as": "text" },
+          "style": { "size": 13, "weight": 700, "align": "left", "valign": "middle", "font": "sans", "color": "#1e1c1a" }
+        }
+      ]
+    }
+  ]
+}

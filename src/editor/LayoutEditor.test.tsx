@@ -1,6 +1,8 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import badBox from '../../tests/fixtures/layouts/bad-box.json?raw';
+import twoLayouts from '../../tests/fixtures/layouts/two-layouts.json?raw';
 import { testContext } from '../actions/testing';
 import { SessionScreen } from '../components/SessionScreen';
 import { LayoutsProvider } from '../layouts/LayoutsProvider';
@@ -220,5 +222,60 @@ describe('LY-8 choosing layouts by type and by default', () => {
   it('says how to add types when there are none', async () => {
     await setup();
     expect(within(choices()).getByText('No card types yet. Load a CSV with a type column, or add a type.')).toBeInTheDocument();
+  });
+});
+
+describe('LY-9 exporting and importing layouts', () => {
+  const files = () => screen.getByRole('region', { name: 'Layout files' });
+  const villain: Layout = { ...hero, id: 'l-villain', name: 'Villain', orientation: 'portrait' };
+
+  it('exports the saved layouts to a JSON file', async () => {
+    const blobs: Blob[] = [];
+    const createUrl = vi.fn((blob: Blob) => {
+      blobs.push(blob);
+      return 'blob:layouts';
+    });
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL: createUrl, revokeObjectURL: vi.fn() }));
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const { user } = await setup({ [layoutKey('l-hero')]: hero, [layoutKey('l-villain')]: villain });
+    await within(list()).findByText('Villain');
+    await user.click(within(files()).getByRole('button', { name: 'Export layouts' }));
+    expect(click).toHaveBeenCalledOnce();
+    expect((click.mock.contexts[0] as HTMLAnchorElement).download).toBe('proxy-layouts.json');
+    const file = JSON.parse(await (blobs[0] as Blob).text());
+    expect(file).toMatchObject({ format: 'proxy-layouts', version: 1 });
+    expect(file.layouts.map((layout: Layout) => layout.name)).toEqual(['Hero', 'Villain']);
+    expect(file.layouts[0]).not.toHaveProperty('updatedAt');
+    expect(within(files()).getByText('Exported 2 layouts to proxy-layouts.json.')).toBeInTheDocument();
+    expect(status()).toHaveTextContent('Exported 2 layouts to proxy-layouts.json.');
+    click.mockRestore();
+    vi.unstubAllGlobals();
+  });
+
+  it('turns Export off while there are no saved layouts', async () => {
+    await setup();
+    expect(within(files()).getByRole('button', { name: 'Export layouts' })).toBeDisabled();
+  });
+
+  it('imports a file into the list and saves each layout, renaming a taken name', async () => {
+    const { user, backend } = await setup({ [layoutKey('l-hero')]: hero });
+    await within(list()).findByText('Hero');
+    await user.upload(screen.getByTestId('layout-file'), new File([twoLayouts], 'two-layouts.json', { type: 'application/json' }));
+    expect(await within(files()).findByText(/^Imported 2 layouts from two-layouts.json\./)).toHaveTextContent(
+      'Imported 2 layouts from two-layouts.json. Names already in use were changed: Hero to Hero copy.',
+    );
+    expect(names()).toEqual(['Default', 'Hero', 'Hero copy', 'Site']);
+    await waitFor(() => expect(backend.data.get(layoutKey('fixture-site'))).toMatchObject({ name: 'Site', orientation: 'landscape' }), { timeout: 2000 });
+  });
+
+  it('says why a file is refused, and leaves the layouts as they were', async () => {
+    const { user } = await setup({ [layoutKey('l-hero')]: hero });
+    await within(list()).findByText('Hero');
+    await user.upload(screen.getByTestId('layout-file'), new File([badBox], 'bad-box.json', { type: 'application/json' }));
+    const error = await within(files()).findByText(/^Couldn't import/);
+    expect(error).toHaveTextContent("Couldn't import bad-box.json. Box 1 of layout Broken in this file isn't valid.");
+    expect(error).toHaveClass('form-error');
+    expect(status()).toHaveTextContent("Couldn't import bad-box.json.");
+    expect(names()).toEqual(['Default', 'Hero']);
   });
 });
