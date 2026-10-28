@@ -240,6 +240,7 @@ describe('LY-5 fixed text and colour boxes', () => {
 });
 
 describe('LY-4 text styles', () => {
+  // Many keystrokes: about 2s here, and over the 5s default in CI with coverage on.
   it('sets every text style by keyboard and saves it', async () => {
     const { user, backend } = await openHero();
     await user.click(screen.getByRole('button', { name: 'Add box' }));
@@ -286,7 +287,7 @@ describe('LY-4 text styles', () => {
     await user.click(none);
     expect(within(panel()).queryByRole('textbox', { name: 'Background' })).not.toBeInTheDocument();
     await waitFor(() => expect(savedBox(backend)?.style).not.toHaveProperty('background'), { timeout: 2000 });
-  });
+  }, 15_000);
 
   it('refuses a size out of range', async () => {
     const { user, backend } = await openHero();

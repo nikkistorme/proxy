@@ -5,6 +5,7 @@ import { DEFAULT_LAYOUT, type LayoutDesign } from '../model/layout';
 import { duplicateLayout, newLayout, validateLayoutName } from '../model/layoutNames';
 import type { PreviewPosition, PreviewSet } from '../model/preview';
 import { DeleteLayoutDialog } from './DeleteLayoutDialog';
+import { LayoutChoices } from './LayoutChoices';
 import { LayoutCanvas } from './LayoutCanvas';
 import './LayoutEditor.css';
 import { LayoutNameDialog } from './LayoutNameDialog';
@@ -29,6 +30,8 @@ interface LayoutEditorProps {
   columns?: readonly string[];
   /** The loaded card sets, previewed on the canvas (LY-7). */
   previewSets?: readonly PreviewSet[];
+  /** Card types in the loaded cards, to map to layouts (LY-8). */
+  types?: readonly string[];
 }
 
 /**
@@ -37,7 +40,7 @@ interface LayoutEditorProps {
  * delete, and Edit opens a layout on the canvas (LY-2) in the same screen.
  * It's a modal <dialog>, so the table stays as it was underneath.
  */
-export default function LayoutEditor({ onClose, columns, previewSets }: LayoutEditorProps) {
+export default function LayoutEditor({ onClose, columns, previewSets, types }: LayoutEditorProps) {
   const { layouts, saveLayout, deleteLayout } = useLayouts();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const newRef = useRef<HTMLButtonElement>(null);
@@ -216,6 +219,7 @@ export default function LayoutEditor({ onClose, columns, previewSets }: LayoutEd
               />
             ))}
           </ul>
+          <LayoutChoices layouts={sorted} types={types} announce={announce} />
         </div>
       )}
 
