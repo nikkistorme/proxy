@@ -120,8 +120,10 @@ test.describe('LY-7 preview on a phone', () => {
     // Stepping to a longer name doesn't change the card's size.
     await preview(page).getByRole('button', { name: 'Next card' }).click();
     await expect(preview(page)).toContainText('Wolf form, back');
-    // The screen may scroll to the row, so compare the card's size, not its place.
-    expect(await card(page).boundingBox()).toMatchObject({ width: cardBox.width, height: cardBox.height });
+    // The screen may scroll to the row, so compare the card's size, not its place, to the pixel (Firefox measures 366.99999 after scrolling).
+    const after = await card(page).boundingBox();
+    expect(after?.width).toBeCloseTo(cardBox.width, 0);
+    expect(after?.height).toBeCloseTo(cardBox.height, 0);
     const canvas = editor(page).locator('.layout-canvas');
     expect(await canvas.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
   });
