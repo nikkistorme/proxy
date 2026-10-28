@@ -120,7 +120,7 @@ test.describe('SP-6 pile actions', () => {
     await field.fill('99');
     await page.keyboard.press('Enter');
     await expect(field).toHaveAttribute('aria-invalid', 'true');
-    await expect(field).toHaveAccessibleDescription('Enter a whole number from 1 to 58.');
+    await expect(field).toHaveAccessibleDescription('Error: Enter a whole number from 1 to 58.');
     await expect(page.getByRole('dialog', { name: 'Draw from P1 main deck' })).toBeVisible();
   });
 });

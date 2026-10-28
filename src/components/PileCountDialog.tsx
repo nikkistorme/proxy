@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import type { Pile } from '../model/session';
 import { Dialog } from './Dialog';
 import './Form.css';
+import { FieldControl, FieldError } from './FieldError';
 
 export type CountRequest =
   | { mode: 'draw'; pile: Pile; handName: string }
@@ -75,27 +76,25 @@ export function PileCountDialog({ request, onConfirm, onClose }: PileCountDialog
                   ? 'Cards to look at'
                   : 'Cards to move'}
             </label>
-            <input
-              id={countId}
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={max}
-              required
-              value={value}
-              aria-invalid={showError && !valid}
-              aria-describedby={showError && error ? errorId : undefined}
-              className="form-input form-input--number"
-              data-autofocus
-              onFocus={(event) => event.currentTarget.select()}
-              onChange={(event) => setValue(event.currentTarget.value)}
-              onBlur={() => setShowError(true)}
-            />
-            {showError && error && (
-              <p id={errorId} className="form-error">
-                {error}
-              </p>
-            )}
+            <FieldControl invalid={showError && !valid} className="form-control--number">
+              <input
+                id={countId}
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={max}
+                required
+                value={value}
+                aria-invalid={showError && !valid}
+                aria-describedby={showError && error ? errorId : undefined}
+                className="form-input form-input--number"
+                data-autofocus
+                onFocus={(event) => event.currentTarget.select()}
+                onChange={(event) => setValue(event.currentTarget.value)}
+                onBlur={() => setShowError(true)}
+              />
+            </FieldControl>
+            {showError && error && <FieldError id={errorId}>{error}</FieldError>}
           </div>
 
           {request.mode === 'mill' && (

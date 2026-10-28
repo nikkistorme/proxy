@@ -34,15 +34,61 @@
   outline: none;
 }
 
+/* Errors (A11Y-13): an icon and "Error:" as well as colour, from FieldError.tsx. */
 .form-input[aria-invalid='true'] {
-  border: 2px solid var(--seat-a);
+  padding-right: calc(var(--space-3) + 20px);
+  border: 2px solid var(--error);
+}
+
+/* The error border stays while focused, so focus adds a ring outside it. */
+.form-input[aria-invalid='true']:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.form-control {
+  position: relative;
+}
+
+/* Narrow number fields: the wrapper takes their width, so the icon sits inside the field. */
+.form-control--number {
+  width: 8rem;
+}
+
+.form-control__icon {
+  position: absolute;
+  top: 50%;
+  right: var(--space-3);
+  color: var(--error);
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .form-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
   margin: 0;
-  color: var(--seat-a);
+  color: var(--error);
   font-size: 13px;
   font-weight: 600;
+}
+
+.form-error__icon {
+  flex: none;
+  margin-top: 1px;
+}
+
+.form-error__label {
+  font-weight: 700;
+}
+
+/* Forced colours drop the red, so the icons take the text colour and stay visible. */
+@media (forced-colors: active) {
+  .form-control__icon,
+  .form-error__icon {
+    color: CanvasText;
+  }
 }
 
 .form-choices {

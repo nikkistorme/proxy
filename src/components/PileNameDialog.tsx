@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import type { Pile, Seat } from '../model/session';
 import { Dialog } from './Dialog';
 import './Form.css';
+import { FieldControl, FieldError } from './FieldError';
 
 export type PileNameRequest = { mode: 'add'; defaultOwnerId: string | undefined } | { mode: 'rename'; pile: Pile };
 
@@ -54,25 +55,23 @@ export function PileNameDialog({ request, seats, validateName, onConfirm, onClos
             <label htmlFor={nameId} className="form-label">
               Name
             </label>
-            <input
-              id={nameId}
-              type="text"
-              autoComplete="off"
-              required
-              value={name}
-              aria-invalid={showError && error !== undefined}
-              aria-describedby={showError && error ? errorId : undefined}
-              className="form-input"
-              data-autofocus
-              onFocus={(event) => event.currentTarget.select()}
-              onChange={(event) => setName(event.currentTarget.value)}
-              onBlur={() => setShowError(name !== '')}
-            />
-            {showError && error && (
-              <p id={errorId} className="form-error">
-                {error}.
-              </p>
-            )}
+            <FieldControl invalid={showError && error !== undefined}>
+              <input
+                id={nameId}
+                type="text"
+                autoComplete="off"
+                required
+                value={name}
+                aria-invalid={showError && error !== undefined}
+                aria-describedby={showError && error ? errorId : undefined}
+                className="form-input"
+                data-autofocus
+                onFocus={(event) => event.currentTarget.select()}
+                onChange={(event) => setName(event.currentTarget.value)}
+                onBlur={() => setShowError(name !== '')}
+              />
+            </FieldControl>
+            {showError && error && <FieldError id={errorId}>{error}.</FieldError>}
           </div>
 
           {isAdd && (

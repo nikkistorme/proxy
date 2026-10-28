@@ -3,6 +3,7 @@ import { Dialog } from '../components/Dialog';
 import { touchScreen } from '../components/touchScreen';
 import type { LayoutItem } from '../layouts/LayoutsProvider';
 import '../components/Form.css';
+import { FieldControl, FieldError } from '../components/FieldError';
 
 interface LayoutNameDialogProps {
   /** The layout to rename. Give each opening its own `key`, so it starts with fresh values. */
@@ -49,25 +50,23 @@ export function LayoutNameDialog({ layout, validateName, onConfirm, onClose }: L
           <label htmlFor={nameId} className="form-label">
             Name
           </label>
-          <input
-            id={nameId}
-            type="text"
-            autoComplete="off"
-            required
-            value={name}
-            aria-invalid={showError && error !== undefined}
-            aria-describedby={showError && error ? errorId : undefined}
-            className="form-input"
-            {...(touch ? {} : { 'data-autofocus': true })}
-            onFocus={(event) => event.currentTarget.select()}
-            onChange={(event) => setName(event.currentTarget.value)}
-            onBlur={() => setShowError(name !== '')}
-          />
-          {showError && error && (
-            <p id={errorId} className="form-error">
-              {error}.
-            </p>
-          )}
+          <FieldControl invalid={showError && error !== undefined}>
+            <input
+              id={nameId}
+              type="text"
+              autoComplete="off"
+              required
+              value={name}
+              aria-invalid={showError && error !== undefined}
+              aria-describedby={showError && error ? errorId : undefined}
+              className="form-input"
+              {...(touch ? {} : { 'data-autofocus': true })}
+              onFocus={(event) => event.currentTarget.select()}
+              onChange={(event) => setName(event.currentTarget.value)}
+              onBlur={() => setShowError(name !== '')}
+            />
+          </FieldControl>
+          {showError && error && <FieldError id={errorId}>{error}.</FieldError>}
         </div>
       )}
     </Dialog>

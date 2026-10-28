@@ -207,10 +207,10 @@ describe('LY-8 choosing layouts by type and by default', () => {
     await within(list()).findByText('Villain');
     const field = within(choices()).getByRole('textbox', { name: 'Card type' });
     await user.click(within(choices()).getByRole('button', { name: 'Add type' }));
-    expect(field).toHaveAccessibleDescription('Enter a card type.');
+    expect(field).toHaveAccessibleDescription('Error: Enter a card type.');
     await user.type(field, ' monster {Enter}');
     expect(field).toHaveAttribute('aria-invalid', 'true');
-    expect(field).toHaveAccessibleDescription('Monster is already listed.');
+    expect(field).toHaveAccessibleDescription('Error: Monster is already listed.');
     await user.clear(field);
     await user.type(field, 'Boss{Enter}');
     expect(within(choices()).getByRole('combobox', { name: 'Layout for Boss cards' })).toHaveFocus();
@@ -278,8 +278,8 @@ describe('LY-9 exporting and importing layouts', () => {
     const { user } = await setup({ [layoutKey('l-hero')]: hero });
     await within(list()).findByText('Hero');
     await user.upload(screen.getByTestId('layout-file'), new File([badBox], 'bad-box.json', { type: 'application/json' }));
-    const error = await within(files()).findByText(/^Couldn't import/);
-    expect(error).toHaveTextContent("Couldn't import bad-box.json. Box 1 of layout Broken in this file isn't valid.");
+    const error = (await within(files()).findByText(/^Couldn't import/)).closest('p');
+    expect(error).toHaveTextContent("Error: Couldn't import bad-box.json. Box 1 of layout Broken in this file isn't valid.");
     expect(error).toHaveClass('form-error');
     expect(status()).toHaveTextContent("Couldn't import bad-box.json.");
     expect(names()).toEqual(['Default', 'Hero']);

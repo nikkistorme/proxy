@@ -47,7 +47,7 @@ describe('SP-6 draw N', () => {
       if (bad) await user.type(field, bad);
       await user.click(screen.getByRole('button', { name: 'Draw' }));
       expect(field).toHaveAttribute('aria-invalid', 'true');
-      expect(field).toHaveAccessibleDescription('Enter a whole number from 1 to 5.');
+      expect(field).toHaveAccessibleDescription('Error: Enter a whole number from 1 to 5.');
     }
     expect(onConfirm).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();

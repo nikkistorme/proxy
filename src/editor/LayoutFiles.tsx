@@ -1,6 +1,7 @@
 import { useId, useRef, useState, type ChangeEvent } from 'react';
 import type { LayoutItem } from '../layouts/LayoutsProvider';
 import { LAYOUT_FILE_NAME, layoutsToFile, mergeImportedLayouts, readLayoutFile } from '../model/layoutFile';
+import { FieldError } from '../components/FieldError';
 
 interface LayoutFilesProps {
   /** The saved layouts, in list order. */
@@ -75,7 +76,12 @@ export function LayoutFiles({ layouts, onImport, announce }: LayoutFilesProps) {
         </button>
         <input ref={fileRef} type="file" accept=".json,application/json" hidden data-testid="layout-file" onChange={(event) => void importLayouts(event)} />
       </div>
-      {result && <p className={result.error ? 'form-error layout-files__result' : 'layout-files__result'}>{result.text}</p>}
+      {result &&
+        (result.error ? (
+          <FieldError className="layout-files__result">{result.text}</FieldError>
+        ) : (
+          <p className="layout-files__result">{result.text}</p>
+        ))}
     </section>
   );
 }

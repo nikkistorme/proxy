@@ -3,6 +3,7 @@ import type { LayoutItem } from '../layouts/LayoutsProvider';
 import { DEFAULT_LAYOUT } from '../model/layout';
 import { layoutNameKey } from '../model/layoutChoice';
 import { useOption, useSetOption } from '../storage/StorageProvider';
+import { FieldControl, FieldError } from '../components/FieldError';
 
 /** The select value for "no mapping": the type's cards use the default layout. */
 const USE_DEFAULT = '';
@@ -152,26 +153,28 @@ export function LayoutChoices({ layouts, types = NO_TYPES, announce }: LayoutCho
           <label htmlFor={`${id}-add`} className="form-label">
             Card type
           </label>
-          <input
-            id={`${id}-add`}
-            className="form-input"
-            value={draft}
-            autoComplete="off"
-            aria-invalid={error !== undefined}
-            aria-describedby={error ? `${id}-error` : undefined}
-            onChange={(event) => {
-              setDraft(event.target.value);
-              setError(undefined);
-            }}
-          />
+          <FieldControl invalid={error !== undefined}>
+            <input
+              id={`${id}-add`}
+              className="form-input"
+              value={draft}
+              autoComplete="off"
+              aria-invalid={error !== undefined}
+              aria-describedby={error ? `${id}-error` : undefined}
+              onChange={(event) => {
+                setDraft(event.target.value);
+                setError(undefined);
+              }}
+            />
+          </FieldControl>
         </div>
         <button type="submit" className="button">
           Add type
         </button>
         {error && (
-          <p id={`${id}-error`} className="form-error layout-choices__error">
+          <FieldError id={`${id}-error`} className="layout-choices__error">
             {error}
-          </p>
+          </FieldError>
         )}
       </form>
     </section>

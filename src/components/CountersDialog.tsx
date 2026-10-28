@@ -8,6 +8,7 @@ import { LiveRegion } from './LiveRegion';
 import './CountersDialog.css';
 import './Form.css';
 import { touchScreen } from './touchScreen';
+import { FieldControl, FieldError } from './FieldError';
 
 export interface CountersRequest {
   cardId: string;
@@ -109,34 +110,32 @@ export function CountersDialog({ request, onClose }: CountersDialogProps) {
               New counter name
             </label>
             <div className="counters-add__row">
-              <input
-                ref={newNameRef}
-                id={newNameId}
-                className="form-input"
-                value={newName}
-                placeholder="Damage, +1/+1…"
-                aria-invalid={error !== undefined}
-                aria-describedby={error ? errorId : undefined}
-                {...(startOn === undefined && !touch && { 'data-autofocus': true })}
-                onChange={(event) => {
-                  setNewName(event.currentTarget.value);
-                  setError(undefined);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key !== 'Enter') return;
-                  event.preventDefault();
-                  add();
-                }}
-              />
+              <FieldControl invalid={error !== undefined}>
+                <input
+                  ref={newNameRef}
+                  id={newNameId}
+                  className="form-input"
+                  value={newName}
+                  placeholder="Damage, +1/+1…"
+                  aria-invalid={error !== undefined}
+                  aria-describedby={error ? errorId : undefined}
+                  {...(startOn === undefined && !touch && { 'data-autofocus': true })}
+                  onChange={(event) => {
+                    setNewName(event.currentTarget.value);
+                    setError(undefined);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter') return;
+                    event.preventDefault();
+                    add();
+                  }}
+                />
+              </FieldControl>
               <button ref={addRef} type="button" className="button" onClick={add}>
                 Add counter
               </button>
             </div>
-            {error && (
-              <p id={errorId} className="form-error">
-                {error}
-              </p>
-            )}
+            {error && <FieldError id={errorId}>{error}</FieldError>}
           </div>
           <LiveRegion />
         </>
@@ -218,31 +217,29 @@ function CounterRow({ counter, startHere, touch, focusNow, onFocused, onSet, onR
           <label htmlFor={nameId} className="form-label">
             Counter name
           </label>
-          <input
-            id={nameId}
-            className="form-input"
-            value={nameDraft}
-            aria-invalid={nameError !== undefined}
-            aria-describedby={nameError ? errorId : undefined}
-            onChange={(event) => {
-              setNameDraft(event.currentTarget.value);
-              setNameError(undefined);
-            }}
-            onBlur={commitName}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.preventDefault();
-                commitName();
-              } else if (event.key === 'Escape') {
-                commitName();
-              }
-            }}
-          />
-          {nameError && (
-            <p id={errorId} className="form-error">
-              {nameError}
-            </p>
-          )}
+          <FieldControl invalid={nameError !== undefined}>
+            <input
+              id={nameId}
+              className="form-input"
+              value={nameDraft}
+              aria-invalid={nameError !== undefined}
+              aria-describedby={nameError ? errorId : undefined}
+              onChange={(event) => {
+                setNameDraft(event.currentTarget.value);
+                setNameError(undefined);
+              }}
+              onBlur={commitName}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  commitName();
+                } else if (event.key === 'Escape') {
+                  commitName();
+                }
+              }}
+            />
+          </FieldControl>
+          {nameError && <FieldError id={errorId}>{nameError}</FieldError>}
         </div>
         <div className="counters-row__value" role="group" aria-label={`${counter.name} value`}>
           <button type="button" className="button counters-row__step" aria-label={`Decrease ${counter.name}`} onKeyDown={onStepKey} onClick={() => step(-1)}>
