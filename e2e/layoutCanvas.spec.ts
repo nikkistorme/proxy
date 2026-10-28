@@ -135,7 +135,12 @@ test.describe('LY-2 layout canvas on a phone', () => {
 
   test('fits the screen, with the tools in view and the whole card showing', async ({ page }) => {
     await openNewLayout(page);
+    // Choosing a box doesn't change the card's size (owner review: it shrank on iOS).
+    const card = editor(page).locator('.layout-canvas__card');
+    const before = await card.boundingBox();
     await page.getByRole('button', { name: 'Add box' }).click();
+    await expect(page.getByRole('button', { name: 'Delete Box 1' })).toBeVisible();
+    expect(await card.boundingBox()).toEqual(before);
     expect(await editor(page).evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
     const canvas = editor(page).locator('.layout-canvas');
     expect(await canvas.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
@@ -151,5 +156,18 @@ test.describe('LY-2 layout canvas on a phone', () => {
       expect(card.y + card.height).toBeLessThanOrEqual(667);
       expect(card.width).toBeGreaterThan(150);
     }
+  });
+});
+
+test.describe('LY-2 layout canvas in the dark theme', () => {
+  test.use({ colorScheme: 'dark' });
+
+  test('the card has a visible edge', async ({ page }) => {
+    await openNewLayout(page);
+    const edge = await editor(page)
+      .locator('.layout-canvas__card')
+      .evaluate((el) => getComputedStyle(el).boxShadow);
+    // --control in the dark theme, #6A7168: 3:1 against the screen.
+    expect(edge).toContain('rgb(106, 113, 104) 0px 0px 0px 1px');
   });
 });

@@ -294,11 +294,10 @@ export function LayoutCanvas({ layout, onChange, onBack, announce }: LayoutCanva
           </svg>
           Add box
         </button>
-        {selected && (
-          <button type="button" className="button" onClick={() => remove(selected.id)}>
-            Delete {boxName(selectedIndex)}
-          </button>
-        )}
+        {/* Always there, so choosing a box doesn't reflow the tools and resize the card. */}
+        <button type="button" className="button layout-canvas__delete" aria-disabled={!selected} onClick={() => selected && remove(selected.id)}>
+          {selected ? `Delete ${boxName(selectedIndex)}` : 'Delete box'}
+        </button>
       </div>
 
       <p id={hintId} className="layout-canvas__hint">

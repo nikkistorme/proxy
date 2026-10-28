@@ -80,6 +80,12 @@ describe('LY-2 layout canvas', () => {
     await user.click(screen.getByRole('button', { name: 'Delete Box 1' }));
     expect(boxes()).toHaveLength(0);
     expect(screen.getByRole('button', { name: 'Add box' })).toHaveFocus();
+
+    // With no box chosen it stays in place, so the tools don't reflow, and does nothing.
+    const remove = screen.getByRole('button', { name: 'Delete box' });
+    expect(remove).toHaveAttribute('aria-disabled', 'true');
+    await user.click(remove);
+    expect(status()).toHaveTextContent('Deleted Box 1.');
   });
 
   it('switches the orientation, and the list shows it', async () => {
