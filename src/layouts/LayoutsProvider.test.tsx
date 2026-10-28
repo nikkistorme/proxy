@@ -93,6 +93,23 @@ describe('LY-8 table cards use the chosen layout', () => {
   });
 });
 
+describe('TT-9 landscape layouts', () => {
+  it('a landscape card reads sideways on the table and upright when enlarged', async () => {
+    const location: Layout = { ...titled('l-location', 'Location', 'Location frame'), orientation: 'landscape' };
+    await setup('name,layout\nHarbour,Location\n', { [layoutKey('l-location')]: location });
+    const onTable = await face('Location frame. Harbour');
+    expect(onTable.querySelector('.card-face__canvas')).not.toBeNull();
+    expect(parseFloat(onTable.style.width)).toBeLessThan(parseFloat(onTable.style.height));
+
+    within(table()).getByRole('button', { name: 'Harbour' }).focus();
+    await userEvent.keyboard('i');
+    const preview = screen.getByRole('dialog', { name: 'Enlarged: Harbour' });
+    const enlarged = within(preview).getByRole('img', { name: 'Location frame. Harbour' });
+    expect(enlarged.querySelector('.card-face__canvas')).toBeNull();
+    expect([enlarged.style.width, enlarged.style.height]).toEqual(['302px', '216px']);
+  });
+});
+
 describe('LY-10 editing a layout re-renders cards using it', () => {
   it('redraws table cards straight away', async () => {
     await setup('name,layout\nTroll,Hero\nGoblin,\n', { [layoutKey('l-hero')]: hero }, <SaveButton layout={titled('l-hero', 'Hero', 'New frame')} />);

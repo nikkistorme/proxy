@@ -27,3 +27,8 @@
 .card-face__box--mono {
   font-family: var(--font-num);
 }
+
+/* A landscape layout's 88 × 63 mm canvas, turned on the portrait card. */
+.card-face__canvas {
+  position: absolute;
+}

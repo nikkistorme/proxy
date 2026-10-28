@@ -93,3 +93,39 @@ describe('LY-6 positions in percentages', () => {
     expect(box?.style.fontSize).toBe('calc(12 * var(--card-pt))');
   });
 });
+
+describe('Layouts orientation: landscape layouts', () => {
+  const landscape: LayoutDesign = {
+    name: 'Location',
+    orientation: 'landscape',
+    boxes: [
+      { id: 'title', x: 0, y: 0, width: 100, height: 20, content: { kind: 'text', text: 'Location' }, style },
+      { id: 'name', x: 0, y: 30, width: 100, height: 20, content: { kind: 'column', columns: ['name'], as: 'text' }, style },
+    ],
+  };
+
+  it('draws an 88 × 63 mm canvas turned anticlockwise on the portrait card', () => {
+    const { container } = render(<CardFace face={{ name: 'Harbour', fields: {} }} layout={landscape} width={200} />);
+    const card = screen.getByRole('img', { name: 'Location. Harbour' });
+    expect([card.style.width, card.style.height]).toEqual(['200px', '280px']);
+    const canvas = container.querySelector<HTMLElement>('.card-face__canvas');
+    expect([canvas?.style.width, canvas?.style.height]).toEqual(['280px', '200px']);
+    expect([canvas?.style.left, canvas?.style.top]).toEqual(['-40px', '40px']);
+    expect(canvas?.style.transform).toBe('rotate(-90deg)');
+    expect(canvas?.querySelectorAll('.card-face__box')).toHaveLength(2);
+  });
+
+  it('shows it upright on a card turned on its side when asked, with the same text size', () => {
+    const { container } = render(<CardFace face={{ name: 'Harbour', fields: {} }} layout={landscape} width={200} upright />);
+    const card = screen.getByRole('img', { name: 'Location. Harbour' });
+    expect([card.style.width, card.style.height]).toEqual(['280px', '200px']);
+    expect(container.querySelector('.card-face__canvas')).toBeNull();
+    expect(card.style.getPropertyValue('--card-pt')).toBe(render(<CardFace face={{ name: 'B', fields: {} }} width={200} />).container.querySelector<HTMLElement>('.card-face')?.style.getPropertyValue('--card-pt'));
+  });
+
+  it('leaves portrait layouts unturned', () => {
+    const { container } = render(<CardFace face={{ name: 'A', fields: {} }} layout={layoutOf()} upright />);
+    expect(container.querySelector('.card-face__canvas')).toBeNull();
+    expect(container.querySelector<HTMLElement>('.card-face')?.style.width).toBe('126px');
+  });
+});

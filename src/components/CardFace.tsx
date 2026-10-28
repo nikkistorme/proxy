@@ -11,6 +11,8 @@ interface CardFaceProps {
   width?: number;
   /** The layout to draw with. Defaults to the one LY-8 chooses for the face. */
   layout?: LayoutDesign;
+  /** Shows a landscape layout upright, in a card turned on its side (the enlarge preview, TT-9). */
+  upright?: boolean;
 }
 
 /** What the card says, in the order its layout shows it. */
@@ -63,18 +65,31 @@ function Box({ box, face }: { box: LayoutBox; face: CardFaceData }) {
 /**
  * A card face drawn from a layout's boxes (LY-3, LY-5, LY-6). Positions are
  * percentages of the card and text sizes points on it, so the face looks the
- * same at any `width`.
+ * same at any `width`. A landscape layout is drawn on an 88 × 63 mm canvas
+ * turned 90° anticlockwise on the portrait card, so it reads upright once the
+ * card is turned on the table; `upright` shows it unturned instead.
  */
-export function CardFace({ face, width = 126, layout: given }: CardFaceProps) {
+export function CardFace({ face, width = 126, layout: given, upright = false }: CardFaceProps) {
   const chosen = useLayoutFor(face);
   const layout = given ?? chosen;
-  const style = { '--card-pt': `${width / CARD_WIDTH_PT}px`, width, height: Math.round((width * 336) / 240) } as CSSProperties;
+  const height = Math.round((width * 336) / 240);
+  const landscape = layout.orientation === 'landscape';
+  const size = landscape && upright ? { width: height, height: width } : { width, height };
+  const style = { '--card-pt': `${width / CARD_WIDTH_PT}px`, ...size } as CSSProperties;
+  const boxes = layout.boxes.map((box) => <Box key={box.id} box={box} face={face} />);
 
   return (
-    <div className="card-face" role="img" aria-label={cardFaceLabel(face, layout)} style={style}>
-      {layout.boxes.map((box) => (
-        <Box key={box.id} box={box} face={face} />
-      ))}
+    <div className={`card-face${landscape ? ' card-face--landscape' : ''}`} role="img" aria-label={cardFaceLabel(face, layout)} style={style}>
+      {landscape && !upright ? (
+        <div
+          className="card-face__canvas"
+          style={{ width: height, height: width, left: (width - height) / 2, top: (height - width) / 2, transform: 'rotate(-90deg)' }}
+        >
+          {boxes}
+        </div>
+      ) : (
+        boxes
+      )}
     </div>
   );
 }

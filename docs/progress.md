@@ -10,9 +10,16 @@ The phases after 3 were reordered (2026-10-27): Phase 4 is now storage and card 
 
 Phase 4 (#74) is done, split into 4a (#84) and 4b (#85). 4a: every save goes through one storage interface (`src/storage/storage.ts`) with keys built from the base path and the "guest" profile, older saves are dropped with a notice, a browser that can't save shows a one-line notice, and options are read through one resolver (`src/options/resolver.ts`). The theme is the first option read that way, from the account settings item. 4b: loading a CSV into a pile saves a card set item, the pile records its id, and the session keeps its own copy of the definitions. Card sets are the only items the app writes so far.
 
-Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) is done: every card face is drawn from a layout's boxes, through the built-in default layout, which looks close to the old face. 5b (#89) is done: each card's layout is chosen by its `layout` column, then the type mapping, then the default option, and saved layouts load at start and autosave as their own items. There's no editor yet, so only hand-made data shows a custom layout.
+Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) is done: every card face is drawn from a layout's boxes, through the built-in default layout, which looks close to the old face. 5b (#89) is done: each card's layout is chosen by its `layout` column, then the type mapping, then the default option, and saved layouts load at start and autosave as their own items. 5c (#90) is done: a landscape layout draws sideways on the portrait card and upright, on a card turned on its side, in the enlarge preview. There's no editor yet, so only hand-made data shows a custom layout.
 
 ## Done
+
+### Phase 5c: Landscape layouts (#90, 2026-10-27)
+
+- **On the card (Layouts orientation):** `CardFace` draws a landscape layout's boxes on an 88 × 63 mm canvas (`.card-face__canvas`) turned 90° anticlockwise inside the portrait card, so a card turned once on the table (clockwise) reads upright. Box percentages are of that canvas; text sizes in points are unchanged. Hand, piles, viewer and dialogs show the same portrait card.
+- **Enlarged (TT-9):** `CardFace` takes `upright`, which shows a landscape layout unturned on a card turned on its side. `CardEnlarge` passes it, so a landscape card's preview is 302 × 216 px, upright however the card sits on the table. On a phone narrower than about 360 px it shrinks to fit. The footer follows the preview's width, and the preview is placed again when a flip changes the orientation.
+- **Tests:** landscape cases in `CardFace.test.tsx`, a TT-9 case in `LayoutsProvider.test.tsx` (sideways on the table, 302 × 216 when enlarged), and two in `e2e/layouts.spec.ts` (text runs up the table card and across the enlarged one; at 320 × 568 the preview fits with no sideways scroll).
+- **Changed requirements:** TT-9 (the preview's swapped size), the Layouts Orientation paragraph (the turn direction, percentages of the canvas, portrait everywhere but the preview), and the landscape open question, marked answered.
 
 ### Phase 5b: Layout choice, storage and autosave (#89, 2026-10-27)
 
@@ -662,7 +669,7 @@ Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) i
 
 ## Next
 
-- **Phase 5c: landscape layouts (#90)**, then 5d to 5i (#91 to #96) in order. 5e asks whether the editor is full screen (recommended) or a panel beside the table.
+- **Phase 5d (#91)**, then 5e to 5i (#92 to #96) in order. 5e asks whether the editor is full screen (recommended) or a panel beside the table.
 - **After V1, in this order:** the demo on its own path (#63), the card set library (#67), games (#65), then accounts and sync (#45). #45's docs-only step 1 (confirming Supabase, writing the accounts requirements) can happen any time.
 - **#71: keys act on the hovered card or pile when nothing on the table has focus**, an owner request from the #70 review. Single-letter keys without focus need an off switch (WCAG 2.1.4), so it goes with #53.
 - **#68: no text-field focus on touch screens in the other dialogs** (Move to…, pile viewer, Draw/Mill/Peek count, pile name). It isn't tied to a phase, and the owner chooses when.
@@ -693,7 +700,7 @@ Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) i
 - A card's menu opened by a touch hold doesn't take focus, the same as a pile's: the browser's own mousedown after a touch moves focus back to the card.
 - The enlarge preview is sized in CSS px, so it shrinks with browser zoom like the rest of the page. The table's own zoom doesn't change it, as TT-9 asks (checked with the owner).
 - The enlarge preview's hover runs on a mouse only. The preview closes when the table scrolls or zooms, rather than following the card.
-- Until Phase 5 layouts, "landscape" in TT-9 means a card turned on the table. Landscape layouts will need the preview's size to swap.
+- A landscape layout can only be seen with a layout seeded into storage until the editor's orientation toggle (5f).
 - In the counters dialog, typing a minus in the value field steps it down rather than typing a negative number. Values below zero are reached with − or the arrow keys.
 - Counter pills scale with the table's zoom like the Actions button, so below 100% they're under 24px tall. C and the card menu always work.
 - Merging piles by touch needs a check on an iPhone, like the other touch drags.
@@ -878,3 +885,4 @@ Phase 5 (Layouts, #35) is split into 5a to 5i, sub-issues #88 to #96. 5a (#88) i
 | 2026-10-27 | Reloading a pile updates the card set it records, even from a differently named file | A new set per file name | Keeps one set per pile until the card library (#67) can manage sets |
 | 2026-10-27 | A card's layout is worked out from its columns each time it's drawn, not stored on table cards (LY-8, AR-4, #89) | A layout id on each table card | Owner decision. Edits and mapping changes reach cards in play (LY-10) |
 | 2026-10-27 | Layout autosave is per item: one second after a layout's first unsaved change (PS-1) | One timer for all layouts | A change rewrites only that layout's item, and each item saves at most once a second |
+| 2026-10-27 | A landscape layout's canvas turns 90° anticlockwise on the portrait card (#90) | Clockwise | Turning on the table goes clockwise, so one turn makes it read upright |
