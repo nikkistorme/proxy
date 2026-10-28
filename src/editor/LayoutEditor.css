@@ -279,6 +279,12 @@
   background: var(--accent-soft);
 }
 
+/* The Snap to grid toggle stands alone, so it doesn't share the radio pair's joined corners. */
+.layout-canvas__snap.layout-canvas__option {
+  margin-left: 0;
+  border-radius: var(--radius-control);
+}
+
 .layout-canvas__option input {
   width: 18px;
   height: 18px;
@@ -409,6 +415,21 @@
   cursor: crosshair;
   /* Drawing and dragging by touch shouldn't scroll the screen. */
   touch-action: none;
+}
+
+/* The 2% grid while snapping is on (LY-2): faint rules under the card face, so boxes draw over them. */
+.layout-canvas__grid {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image:
+    linear-gradient(to right, var(--divider) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--divider) 1px, transparent 1px);
+  background-size: 2% 2%;
+}
+
+.layout-canvas__face {
+  position: relative;
 }
 
 .layout-canvas__box {

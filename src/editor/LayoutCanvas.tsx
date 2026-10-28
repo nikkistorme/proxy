@@ -9,13 +9,15 @@ import {
   describeBoxContent,
   describeBoxPlace,
   describeBoxSize,
+  dragBox,
   isDrawn,
-  moveBox,
   newBox,
   rectFromPoints,
-  resizeBox,
   resizeFromCorner,
   sampleFace,
+  snapPoint,
+  stepBox,
+  stepSize,
   type BoxRect,
   type Corner,
   type Point,
@@ -83,6 +85,9 @@ interface LayoutCanvasProps {
   /** The previewed card, kept by the editor so it stays while moving between layouts. */
   preview?: PreviewPosition;
   onPreview?: (position: PreviewPosition) => void;
+  /** Whether boxes snap to the 2% grid, kept by the editor so it stays while moving between layouts. */
+  snap?: boolean;
+  onSnap?: (snap: boolean) => void;
 }
 
 const NO_COLUMNS: readonly string[] = [];
@@ -92,7 +97,8 @@ const FIRST: PreviewPosition = { index: 0 };
 /**
  * The layout editor's canvas (LY-2): the card drawn from the layout, with each
  * box as a button over it. Boxes are added by button or drawn by pointer, and
- * moved and resized by pointer or with the arrow keys (Shift resizes).
+ * moved and resized by pointer or with the arrow keys (Shift resizes),
+ * snapping to a 2% grid unless snapping is turned off.
  */
 export function LayoutCanvas({
   layout,
@@ -103,6 +109,8 @@ export function LayoutCanvas({
   previewSets = NO_SETS,
   preview = FIRST,
   onPreview,
+  snap = true,
+  onSnap,
 }: LayoutCanvasProps) {
   const headingId = useId();
   const hintId = useId();
@@ -222,11 +230,11 @@ export function LayoutCanvas({
     if (!step || event.altKey || event.ctrlKey || event.metaKey) return;
     event.preventDefault();
     if (event.shiftKey) {
-      const resized = resizeBox(box, ...step);
+      const resized = stepSize(box, ...step, snap);
       updateBox(resized);
       announce(`${boxName(index)} ${describeBoxSize(resized)}.`);
     } else {
-      const moved = moveBox(box, ...step);
+      const moved = stepBox(box, ...step, snap);
       updateBox(moved);
       announce(`${boxName(index)} ${describeBoxPlace(moved)}.`);
     }
@@ -252,7 +260,7 @@ export function LayoutCanvas({
   function onOverlayPointerDown(event: PointerEvent) {
     if (event.target !== overlayRef.current) return;
     setSelectedId(undefined);
-    startDrag(event, { kind: 'draw', start: toCard(event) });
+    startDrag(event, { kind: 'draw', start: snapPoint(toCard(event), snap) });
   }
 
   function onBoxPointerDown(event: PointerEvent, box: LayoutBox, corner?: Corner) {
@@ -273,7 +281,7 @@ export function LayoutCanvas({
     const current = drag.current;
     if (!current) return;
     if (current.kind === 'draw') {
-      const point = toCard(event);
+      const point = snapPoint(toCard(event), snap);
       setDraft(isDrawn(current.start, point) ? rectFromPoints(current.start, point) : undefined);
       return;
     }
@@ -287,7 +295,7 @@ export function LayoutCanvas({
     current.moved = true;
     const dx = (px.x / rect.width) * 100;
     const dy = (px.y / rect.height) * 100;
-    updateBox(current.kind === 'move' ? moveBox(current.box, dx, dy) : resizeFromCorner(current.box, current.corner ?? 'se', dx, dy));
+    updateBox(current.kind === 'move' ? dragBox(current.box, dx, dy, snap) : resizeFromCorner(current.box, current.corner ?? 'se', dx, dy, snap));
   }
 
   function onPointerUp(event: PointerEvent) {
@@ -295,7 +303,7 @@ export function LayoutCanvas({
     drag.current = undefined;
     if (!current) return;
     if (current.kind === 'draw') {
-      const end = toCard(event);
+      const end = snapPoint(toCard(event), snap);
       setDraft(undefined);
       if (isDrawn(current.start, end)) insert(rectFromPoints(current.start, end));
       return;
@@ -362,10 +370,23 @@ export function LayoutCanvas({
         <button type="button" className="button layout-canvas__delete" aria-disabled={!selected} onClick={() => selected && remove(selected.id)}>
           {selected ? `Delete ${boxName(selectedIndex)}` : 'Delete box'}
         </button>
+        <label className="layout-canvas__option layout-canvas__snap">
+          <input
+            type="checkbox"
+            checked={snap}
+            onChange={(event) => {
+              onSnap?.(event.target.checked);
+              announce(event.target.checked ? 'Snapping to the grid.' : 'Snapping off.');
+            }}
+          />
+          Snap to grid
+        </label>
       </div>
 
       <p id={hintId} className="layout-canvas__hint">
-        Drag on the card to draw a box. Arrow keys move the chosen box, Shift + arrow keys resize it, and Delete removes it.
+        {snap
+          ? 'Drag on the card to draw a box; boxes snap to the grid. Arrow keys move the chosen box a grid step, Shift + arrow keys resize it, and Delete removes it.'
+          : 'Drag on the card to draw a box. Arrow keys move the chosen box 1%, Shift + arrow keys resize it, and Delete removes it.'}
       </p>
 
       <div className="layout-canvas__work">
@@ -374,7 +395,9 @@ export function LayoutCanvas({
           <div ref={stageRef} className="layout-canvas__stage">
             <div className="layout-canvas__card" style={{ width: shown }}>
               {/* The boxes over the card name themselves, and the preview row names the card. */}
-              <div aria-hidden="true">
+              {/* Under the face, so boxes draw over the grid. */}
+              {snap && <div className="layout-canvas__grid" aria-hidden="true" />}
+              <div className="layout-canvas__face" aria-hidden="true">
                 <CardFace face={face} layout={layout} width={cardWidth} upright onFit={onFit} />
               </div>
               <div

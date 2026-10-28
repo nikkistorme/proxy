@@ -67,8 +67,8 @@ test.describe('LY-7 preview with real cards', () => {
     await expect(preview(page)).toContainText('Werewolf 1 of 3');
     await expect(card(page).getByText('Howls at night')).toBeVisible();
 
-    // Past Delete box and the two boxes on the card to the preview's Previous and Next, below the card.
-    for (let i = 0; i < 4; i++) await page.keyboard.press('Tab');
+    // Past Delete box, Snap to grid and the two boxes on the card to the preview's Previous and Next, below the card.
+    for (let i = 0; i < 5; i++) await page.keyboard.press('Tab');
     await expect(preview(page).getByRole('button', { name: 'Previous card' })).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(preview(page).getByRole('button', { name: 'Next card' })).toBeFocused();
