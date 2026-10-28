@@ -252,9 +252,15 @@ describe('LY-9 exporting and importing layouts', () => {
     vi.unstubAllGlobals();
   });
 
-  it('turns Export off while there are no saved layouts', async () => {
-    await setup();
-    expect(within(files()).getByRole('button', { name: 'Export layouts' })).toBeDisabled();
+  it('shows Export as off while there are no saved layouts, and says why when pressed', async () => {
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const { user } = await setup();
+    const button = within(files()).getByRole('button', { name: 'Export layouts' });
+    expect(button).toHaveAttribute('aria-disabled', 'true');
+    await user.click(button);
+    expect(click).not.toHaveBeenCalled();
+    expect(status()).toHaveTextContent('There are no saved layouts to export yet.');
+    click.mockRestore();
   });
 
   it('imports a file into the list and saves each layout, renaming a taken name', async () => {

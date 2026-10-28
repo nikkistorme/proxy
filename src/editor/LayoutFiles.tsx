@@ -25,6 +25,10 @@ export function LayoutFiles({ layouts, onImport, announce }: LayoutFilesProps) {
   }
 
   function exportLayouts() {
+    if (layouts.length === 0) {
+      report('There are no saved layouts to export yet.');
+      return;
+    }
     const url = URL.createObjectURL(new Blob([layoutsToFile(layouts)], { type: 'application/json' }));
     const link = document.createElement('a');
     link.href = url;
@@ -62,7 +66,8 @@ export function LayoutFiles({ layouts, onImport, announce }: LayoutFilesProps) {
         Export saves your layouts to a file, to keep or share. Importing a file adds its layouts, and replaces any that came from the same layout.
       </p>
       <div className="layout-files__actions">
-        <button type="button" className="button" disabled={layouts.length === 0} onClick={exportLayouts}>
+        {/* Stays focusable when there's nothing to export, like the canvas's Delete box, and says why. */}
+        <button type="button" className="button layout-files__export" aria-disabled={layouts.length === 0} onClick={exportLayouts}>
           Export layouts
         </button>
         <button type="button" className="button" onClick={() => fileRef.current?.click()}>

@@ -78,7 +78,10 @@ test.describe('LY-9 exporting and importing layouts', () => {
     await layoutsButton(page).focus();
     await page.keyboard.press('l');
     await expect(names(page)).toHaveText(['Default']);
-    await expect(exportButton).toBeDisabled();
+    await expect(exportButton).toHaveAttribute('aria-disabled', 'true');
+    // Greyed out with the disabled token, unlike Import.
+    const colour = (button: typeof exportButton) => button.evaluate((el) => getComputedStyle(el).color);
+    expect(await colour(exportButton)).not.toBe(await colour(files(page).getByRole('button', { name: 'Import layouts…' })));
 
     const importButton = files(page).getByRole('button', { name: 'Import layouts…' });
     await tabTo(page, importButton);
