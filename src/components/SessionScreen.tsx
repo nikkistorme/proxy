@@ -6,6 +6,7 @@ import { addPile, deletePile, mergePiles, renamePile, validatePileName } from '.
 import { importCards } from '../csv/importCards';
 import { cardColumns } from '../model/card';
 import { cardSetItem } from '../model/cardSet';
+import { previewCardSets } from '../model/preview';
 import type { SessionState, Pile } from '../model/session';
 import { readingOrder, tableItems } from '../model/tableNavigation';
 import { StorageNotice } from '../storage/StorageNotice';
@@ -583,7 +584,7 @@ export function SessionScreen() {
       <ShortcutsDialog open={shortcutsOpen} onClose={closeShortcuts} />
       {layoutsOpen && (
         <Suspense fallback={null}>
-          <LayoutEditor onClose={closeLayouts} columns={cardColumns(Object.values(session.definitions))} />
+          <LayoutEditor onClose={closeLayouts} columns={cardColumns(Object.values(session.definitions))} previewSets={previewCardSets(session)} />
         </Suspense>
       )}
       <PeekDialog key={peekRequest ? `peek-${peekRequest.pileId}` : 'closed'} request={peekRequest} onClose={closePeek} />

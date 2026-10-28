@@ -2,7 +2,10 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LayoutsProvider } from '../layouts/LayoutsProvider';
+import { cardsFrom, sessionWithDeck, testContext } from '../actions/testing';
+import { loadPile } from '../actions/loadPile';
 import type { Layout } from '../model/layout';
+import { previewCardSets, type PreviewSet } from '../model/preview';
 import { memoryBackend } from '../storage/backends';
 import { itemKey, SAVE_VERSION } from '../storage/storage';
 import { StorageProvider } from '../storage/StorageProvider';
@@ -12,13 +15,13 @@ const layoutKey = (id: string) => itemKey(import.meta.env.BASE_URL, 'guest', 'la
 const hero: Layout = { id: 'l-hero', name: 'Hero', orientation: 'portrait', boxes: [], updatedAt: '', version: SAVE_VERSION };
 
 /** The layout screen with Hero saved, open on Hero's canvas. */
-async function openHero(columns?: string[]) {
+async function openHero(columns?: string[], previewSets?: PreviewSet[]) {
   const backend = memoryBackend({ [layoutKey('l-hero')]: hero });
   const user = userEvent.setup();
   render(
     <StorageProvider backend={backend}>
       <LayoutsProvider>
-        <LayoutEditor onClose={vi.fn()} columns={columns} />
+        <LayoutEditor onClose={vi.fn()} columns={columns} previewSets={previewSets} />
       </LayoutsProvider>
     </StorageProvider>,
   );
@@ -334,5 +337,75 @@ describe('A11Y-9 contrast warning', () => {
     await user.type(color, '#1e1c1a');
     expect(screen.getByRole('button', { name: /^Box 1,/ })).not.toHaveAccessibleName(/contrast/);
     expect(panel()).not.toHaveTextContent('Low contrast');
+  });
+});
+
+/** Definition ids env-1, env-2, … for a second load. */
+function envIds() {
+  let next = 0;
+  return () => `env-${++next}`;
+}
+
+describe('LY-7 preview with real cards', () => {
+  const deck = () => previewCardSets(sessionWithDeck('name,cost\nImp,1\nOgre,\nTroll,5\n'));
+  const preview = () => screen.getByRole('group', { name: 'Preview' });
+
+  it('steps through a card set with Next and Previous, wrapping and announcing each card', async () => {
+    const { user } = await openHero(['cost', 'name'], deck());
+    expect(preview()).toHaveTextContent('Imp 1 of 3');
+    await user.click(within(preview()).getByRole('button', { name: 'Next card' }));
+    expect(preview()).toHaveTextContent('Ogre 2 of 3');
+    expect(status()).toHaveTextContent('Previewing Ogre, 2 of 3.');
+    await user.click(within(preview()).getByRole('button', { name: 'Previous card' }));
+    await user.click(within(preview()).getByRole('button', { name: 'Previous card' }));
+    expect(preview()).toHaveTextContent('Troll 3 of 3');
+    await user.click(within(preview()).getByRole('button', { name: 'Next card' }));
+    expect(preview()).toHaveTextContent('Imp 1 of 3');
+  });
+
+  it('draws the previewed card, so warnings follow its real text', async () => {
+    const { user } = await openHero(['cost', 'name'], deck());
+    await user.click(screen.getByRole('button', { name: 'Add box' }));
+    await user.click(within(panel()).getByRole('radio', { name: 'Column as text' }));
+    await user.type(within(panel()).getByRole('combobox', { name: 'Column' }), 'cost');
+    const color = within(panel()).getByRole('textbox', { name: 'Text colour' });
+    await user.clear(color);
+    await user.type(color, '#eeeeee');
+    // Imp has a cost to draw, so its contrast is checked; Ogre has none, so nothing is.
+    expect(screen.getByRole('button', { name: /^Box 1, shows cost, .*, low contrast 1.1 to 1$/ })).toBeInTheDocument();
+    await user.click(within(preview()).getByRole('button', { name: 'Next card' }));
+    expect(screen.getByRole('button', { name: /^Box 1, shows cost,/ })).not.toHaveAccessibleName(/contrast/);
+  });
+
+  it('chooses between card sets, and keeps the card when coming back to a layout', async () => {
+    const one = sessionWithDeck('name\nImp\nOgre\n');
+    const pile = one.piles.find((p) => p.id !== 'pile-p1-main');
+    if (!pile) throw new Error('no second pile');
+    const two = loadPile(
+      one,
+      { pileId: pile.id, cardSetId: 'set-2', sourceName: 'env.csv', cards: cardsFrom('name\nStorm\nFlood\n'), keepOrder: true },
+      // Its own ids, so the second deck's definitions don't replace the first's.
+      { ...testContext(3), newId: envIds() },
+    ).state;
+    const { user } = await openHero([], previewCardSets(two));
+    const sets = within(preview()).getByRole('combobox', { name: 'Card set' });
+    await user.selectOptions(sets, 'deck.csv');
+    await user.click(within(preview()).getByRole('button', { name: 'Next card' }));
+    expect(preview()).toHaveTextContent('Ogre 2 of 2');
+
+    await user.selectOptions(sets, 'env.csv');
+    expect(preview()).toHaveTextContent('Storm 1 of 2');
+    expect(status()).toHaveTextContent('Previewing Storm, 1 of 2.');
+    await user.click(within(preview()).getByRole('button', { name: 'Next card' }));
+
+    await user.click(screen.getByRole('button', { name: 'Back to layouts' }));
+    await user.click(screen.getByRole('button', { name: 'Edit Hero' }));
+    expect(preview()).toHaveTextContent('Flood 2 of 2');
+  });
+
+  it('shows column names until a CSV is loaded, and says how to preview real cards', async () => {
+    await openHero();
+    expect(screen.queryByRole('group', { name: 'Preview' })).not.toBeInTheDocument();
+    expect(screen.getByText(/Load a CSV into a pile to preview the layout with real cards/)).toBeInTheDocument();
   });
 });

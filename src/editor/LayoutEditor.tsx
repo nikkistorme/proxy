@@ -3,6 +3,7 @@ import { CardFace } from '../components/CardFace';
 import { useLayouts, type LayoutItem } from '../layouts/LayoutsProvider';
 import { DEFAULT_LAYOUT, type LayoutDesign } from '../model/layout';
 import { duplicateLayout, newLayout, validateLayoutName } from '../model/layoutNames';
+import type { PreviewPosition, PreviewSet } from '../model/preview';
 import { DeleteLayoutDialog } from './DeleteLayoutDialog';
 import { LayoutCanvas } from './LayoutCanvas';
 import './LayoutEditor.css';
@@ -26,6 +27,8 @@ interface LayoutEditorProps {
   onClose: () => void;
   /** Column names from the loaded cards, suggested for column boxes (LY-3). */
   columns?: readonly string[];
+  /** The loaded card sets, previewed on the canvas (LY-7). */
+  previewSets?: readonly PreviewSet[];
 }
 
 /**
@@ -34,7 +37,7 @@ interface LayoutEditorProps {
  * delete, and Edit opens a layout on the canvas (LY-2) in the same screen.
  * It's a modal <dialog>, so the table stays as it was underneath.
  */
-export default function LayoutEditor({ onClose, columns }: LayoutEditorProps) {
+export default function LayoutEditor({ onClose, columns, previewSets }: LayoutEditorProps) {
   const { layouts, saveLayout, deleteLayout } = useLayouts();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const newRef = useRef<HTMLButtonElement>(null);
@@ -43,6 +46,8 @@ export default function LayoutEditor({ onClose, columns }: LayoutEditorProps) {
   const [deleting, setDeleting] = useState<LayoutItem>();
   /** The layout open on the canvas, if any. */
   const [editingId, setEditingId] = useState<string>();
+  /** The card the canvas previews, kept while moving between layouts (LY-7). */
+  const [preview, setPreview] = useState<PreviewPosition>({ index: 0 });
   const [announcement, setAnnouncement] = useState({ id: 0, text: '' });
   /** The row and button to focus once the list has rendered, after an action or a dialog. */
   const pendingFocus = useRef<{ id: string; action: 'edit' | 'rename' | 'delete' }>(undefined);
@@ -183,7 +188,17 @@ export default function LayoutEditor({ onClose, columns }: LayoutEditorProps) {
       </header>
 
       {editing ? (
-        <LayoutCanvas key={editing.id} layout={editing} onChange={saveLayout} onBack={closeCanvas} announce={announce} columns={columns} />
+        <LayoutCanvas
+          key={editing.id}
+          layout={editing}
+          onChange={saveLayout}
+          onBack={closeCanvas}
+          announce={announce}
+          columns={columns}
+          previewSets={previewSets}
+          preview={preview}
+          onPreview={setPreview}
+        />
       ) : (
         <div className="layout-editor__body">
           <ul className="layout-list" aria-labelledby={titleId}>

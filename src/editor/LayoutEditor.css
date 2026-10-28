@@ -216,11 +216,79 @@
   font-size: 13px;
 }
 
+/* The preview row (LY-7): which real card the canvas draws, with previous and next. */
+.layout-canvas__preview {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.layout-canvas__preview-set {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  font-size: 14px;
+}
+
+.layout-canvas__set-select {
+  width: auto;
+  max-width: 16rem;
+  min-width: 0;
+}
+
+.layout-canvas__step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  min-height: 40px;
+  padding: 0;
+}
+
+.layout-canvas__preview-card {
+  /* One line whatever the name, so stepping between cards never moves or resizes the card. */
+  display: flex;
+  flex: 0 1 auto;
+  align-items: baseline;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.layout-canvas__preview-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.layout-canvas__preview-count {
+  flex: none;
+  margin-left: var(--space-2);
+  color: var(--muted);
+  font-family: var(--font-num);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
 .layout-canvas__work {
   /* The card beside its properties, which are always there so choosing a box never resizes the card. */
   display: flex;
   flex: 1 1 auto;
   gap: var(--space-4);
+  min-height: 0;
+}
+
+/* The card's column: the stage takes the height, and the preview row sits below it. */
+.layout-canvas__view {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
   min-height: 0;
 }
 
@@ -502,6 +570,10 @@
   .layout-canvas__work {
     flex: none;
     flex-direction: column;
+  }
+
+  .layout-canvas__view {
+    flex: none;
   }
 
   .layout-canvas__stage {
