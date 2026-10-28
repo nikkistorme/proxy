@@ -1,0 +1,84 @@
+{
+  "format": "proxy-layouts",
+  "version": 1,
+  "layouts": [
+    {
+      "id": "fixture-hero",
+      "name": "Hero",
+      "orientation": "portrait",
+      "boxes": [
+        {
+          "id": "frame",
+          "x": 0,
+          "y": 0,
+          "width": 100,
+          "height": 100,
+          "content": { "kind": "color" },
+          "style": { "size": 10, "weight": 400, "align": "left", "valign": "top", "font": "sans", "color": "#1e1c1a", "background": "#29303b" }
+        },
+        {
+          "id": "art",
+          "x": 4,
+          "y": 12,
+          "width": 92,
+          "height": 42,
+          "content": { "kind": "column", "columns": ["image", "art"], "as": "image" },
+          "style": { "size": 10, "weight": 400, "align": "left", "valign": "top", "font": "sans", "color": "#1e1c1a", "background": "#8e9db6" }
+        },
+        {
+          "id": "name",
+          "x": 4,
+          "y": 2,
+          "width": 76,
+          "height": 8,
+          "content": { "kind": "column", "columns": ["name"], "as": "text" },
+          "style": { "size": 13, "weight": 700, "align": "left", "valign": "middle", "font": "sans", "color": "#1e1c1a", "background": "#e3e7ee" }
+        },
+        {
+          "id": "cost",
+          "x": 82,
+          "y": 2,
+          "width": 14,
+          "height": 8,
+          "content": { "kind": "column", "columns": ["cost"], "as": "text" },
+          "style": { "size": 10.5, "weight": 700, "align": "center", "valign": "middle", "font": "mono", "color": "#ffffff", "background": "#29303b" },
+          "label": "Cost"
+        },
+        {
+          "id": "rules",
+          "x": 4,
+          "y": 58,
+          "width": 92,
+          "height": 38,
+          "content": { "kind": "column", "columns": ["text"], "as": "text" },
+          "style": { "size": 10, "weight": 400, "align": "left", "valign": "top", "font": "sans", "color": "#1e1c1a", "background": "#fbf8f2" }
+        }
+      ]
+    },
+    {
+      "id": "fixture-site",
+      "name": "Site",
+      "orientation": "landscape",
+      "boxes": [
+        {
+          "id": "banner",
+          "x": 0,
+          "y": 0,
+          "width": 100,
+          "height": 14,
+          "content": { "kind": "text", "text": "SITE" },
+          "style": { "size": 9, "weight": 600, "align": "center", "valign": "middle", "font": "sans", "color": "#ffffff", "background": "#29303b" }
+        },
+        {
+          "id": "name",
+          "x": 6,
+          "y": 20,
+          "width": 88,
+          "height": 20,
+          "content": { "kind": "column", "columns": ["name"], "as": "text" },
+          "style": { "size": 16, "weight": 500, "align": "left", "valign": "top", "font": "sans", "color": "#1e1c1a" }
+        }
+      ]
+    }
+  ]
+}

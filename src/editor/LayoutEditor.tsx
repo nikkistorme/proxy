@@ -6,6 +6,7 @@ import { duplicateLayout, newLayout, validateLayoutName } from '../model/layoutN
 import type { PreviewPosition, PreviewSet } from '../model/preview';
 import { DeleteLayoutDialog } from './DeleteLayoutDialog';
 import { LayoutChoices } from './LayoutChoices';
+import { LayoutFiles } from './LayoutFiles';
 import { LayoutCanvas } from './LayoutCanvas';
 import './LayoutEditor.css';
 import { LayoutNameDialog } from './LayoutNameDialog';
@@ -223,6 +224,7 @@ export default function LayoutEditor({ onClose, columns, previewSets, types }: L
               />
             ))}
           </ul>
+          <LayoutFiles layouts={sorted} onImport={saveLayout} announce={announce} />
           <LayoutChoices layouts={sorted} types={types} announce={announce} />
         </div>
       )}
