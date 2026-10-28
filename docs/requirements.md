@@ -217,6 +217,7 @@ Target: WCAG 2.2 Level AA across the whole app, including the layout editor. Dra
 - A11Y-10: honor `prefers-reduced-motion` for shuffles, flips and card movement.
 - A11Y-11: the app works at 200% browser zoom and reflows its panels at 320 CSS px width (1.4.10). The table itself may scroll in two dimensions, which is an allowed exception.
 - A11Y-12: on touch screens, text fields and dropdowns use at least 16px text, so iOS Safari doesn't zoom the page when one takes focus. Pinch zoom stays on: the viewport tag never sets `maximum-scale` or `user-scalable=no` (1.4.4).
+- A11Y-13 (1.4.1 Use of Color, 3.3.1 Error Identification): a field error never relies on colour alone. Each message has an error icon, hidden from screen readers, and starts with "Error:", and the invalid field shows the icon inside it, with or without focus, as well as a red border. The field is marked invalid and described by its message. Error text meets 4.5:1 and the icon and border 3:1 in both themes, using the `--error` token, and both icons stay visible in forced-colours mode. Every form uses this one pattern.
 
 **Acceptance criteria**
 
@@ -361,7 +362,7 @@ The build runs on a personal Claude account with usage limits, so work happens i
 | 5. Layouts | Layout editor, portrait and landscape, preview; each layout autosaves as its own item; layout options read through the resolver | LY-1 to LY-10, PS-1 for layouts | A custom layout renders cards on the table and is still there after a reload |
 | 6. Formats | Presets, the format editor and a setup screen; formats autosave as their own items; format options read through the resolver | FS-1 to FS-4, PS-1 for formats | A 1v1 PvP session can be set up and played |
 | 7. Session saves and Sheets | Session autosave with its undo history, snapshots, the JSON bundle, Google Sheets URLs on card sets | PS-1 to PS-5, CD-7 to CD-12 | Reload restores a session from separately saved items; a sheet URL loads a card set into a pile |
-| 8. Polish | Demo data, performance budgets, remaining accessibility | DM-1 to DM-6, PF-1 to PF-4, A11Y-7 to A11Y-12 | All budgets and axe checks pass |
+| 8. Polish | Demo data, performance budgets, remaining accessibility | DM-1 to DM-6, PF-1 to PF-4, A11Y-7 to A11Y-13 | All budgets and axe checks pass |
 
 **Rules for Claude Code**
 

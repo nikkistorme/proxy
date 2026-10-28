@@ -2,6 +2,7 @@ import { useId, useRef, useState } from 'react';
 import type { BoxContent, BoxStyle, LayoutBox } from '../model/layout';
 import { parseColumns, parseHexColor } from '../model/layoutBoxes';
 import '../components/Form.css';
+import { FieldControl, FieldError } from '../components/FieldError';
 
 type Shows = 'column-text' | 'column-image' | 'text' | 'color';
 
@@ -79,16 +80,18 @@ function ColorField({ label, value, onChange }: ColorFieldProps) {
         {label}
       </label>
       <div className="box-properties__color">
-        <input
-          id={id}
-          className="form-input box-properties__hex"
-          value={draft}
-          spellCheck={false}
-          autoComplete="off"
-          aria-invalid={invalid || undefined}
-          aria-describedby={invalid ? errorId : undefined}
-          onChange={(event) => type(event.target.value)}
-        />
+        <FieldControl invalid={invalid} className="box-properties__hex-control">
+          <input
+            id={id}
+            className="form-input box-properties__hex"
+            value={draft}
+            spellCheck={false}
+            autoComplete="off"
+            aria-invalid={invalid || undefined}
+            aria-describedby={invalid ? errorId : undefined}
+            onChange={(event) => type(event.target.value)}
+          />
+        </FieldControl>
         <input
           type="color"
           className="box-properties__swatch"
@@ -97,11 +100,7 @@ function ColorField({ label, value, onChange }: ColorFieldProps) {
           onChange={(event) => pick(event.target.value)}
         />
       </div>
-      {invalid && (
-        <p id={errorId} className="form-error">
-          Enter a hex colour, such as #29303b.
-        </p>
-      )}
+      {invalid && <FieldError id={errorId}>Enter a hex colour, such as #29303b.</FieldError>}
     </div>
   );
 }
@@ -149,23 +148,25 @@ function SizeField({ value, onChange }: { value: number; onChange: (size: number
       <label className="form-label" htmlFor={id}>
         Size (pt)
       </label>
-      <input
-        id={id}
-        className="form-input box-properties__size"
-        type="number"
-        inputMode="decimal"
-        min={MIN_SIZE}
-        max={MAX_SIZE}
-        step={0.5}
-        value={draft}
-        aria-invalid={invalid || undefined}
-        aria-describedby={invalid ? `${id}-error` : undefined}
-        onChange={(event) => type(event.target.value)}
-      />
+      <FieldControl invalid={invalid} className="form-control--number">
+        <input
+          id={id}
+          className="form-input box-properties__size"
+          type="number"
+          inputMode="decimal"
+          min={MIN_SIZE}
+          max={MAX_SIZE}
+          step={0.5}
+          value={draft}
+          aria-invalid={invalid || undefined}
+          aria-describedby={invalid ? `${id}-error` : undefined}
+          onChange={(event) => type(event.target.value)}
+        />
+      </FieldControl>
       {invalid && (
-        <p id={`${id}-error`} className="form-error">
+        <FieldError id={`${id}-error`}>
           Enter a size from {MIN_SIZE} to {MAX_SIZE} pt.
-        </p>
+        </FieldError>
       )}
     </div>
   );

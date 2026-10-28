@@ -283,7 +283,7 @@ describe('LY-5 fixed text and colour boxes', () => {
     await user.clear(hex);
     await user.type(hex, 'zz');
     expect(hex).toHaveAttribute('aria-invalid', 'true');
-    expect(hex).toHaveAccessibleDescription('Enter a hex colour, such as #29303b.');
+    expect(hex).toHaveAccessibleDescription('Error: Enter a hex colour, such as #29303b.');
     await user.clear(hex);
     await user.type(hex, '#123');
     expect(hex).not.toHaveAttribute('aria-invalid');
@@ -352,7 +352,7 @@ describe('LY-4 text styles', () => {
     await user.clear(size);
     await user.type(size, '3');
     expect(size).toHaveAttribute('aria-invalid', 'true');
-    expect(size).toHaveAccessibleDescription('Enter a size from 4 to 72 pt.');
+    expect(size).toHaveAccessibleDescription('Error: Enter a size from 4 to 72 pt.');
     await waitFor(() => expect(savedBox(backend)).toBeDefined(), { timeout: 2000 });
     expect(savedBox(backend)?.style.size).toBe(10);
   });

@@ -54,11 +54,11 @@ describe('SP-4 add a pile', () => {
     const field = screen.getByRole('textbox', { name: 'Name' });
     await user.click(screen.getByRole('button', { name: 'Add pile' }));
     expect(field).toHaveAttribute('aria-invalid', 'true');
-    expect(field).toHaveAccessibleDescription('A pile needs a name.');
+    expect(field).toHaveAccessibleDescription('Error: A pile needs a name.');
 
     await user.type(field, ' board CARDS ');
     await user.click(screen.getByRole('button', { name: 'Add pile' }));
-    expect(field).toHaveAccessibleDescription('There is already a pile called Board cards.');
+    expect(field).toHaveAccessibleDescription('Error: There is already a pile called Board cards.');
     expect(onConfirm).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
   });
@@ -81,7 +81,7 @@ describe('SP-4 rename a pile', () => {
     await user.clear(field);
     await user.type(field, 'P1 MAIN DECK');
     await user.tab();
-    expect(field).toHaveAccessibleDescription('There is already a pile called P1 main deck.');
+    expect(field).toHaveAccessibleDescription('Error: There is already a pile called P1 main deck.');
     await user.clear(field);
     await user.type(field, 'BOARD CARDS{Enter}');
     expect(onConfirm).toHaveBeenCalledWith('BOARD CARDS', undefined);

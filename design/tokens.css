@@ -26,6 +26,9 @@
   --seat-env: #6B4C8A;    /* Environment, square, 6.4:1 */
   --on-seat: #FFFFFF;
 
+  /* Errors: always paired with an icon and "Error:" (A11Y-13) */
+  --error: #B42318;       /* 6.0:1, 6.6:1 on --panel */
+
   /* Card backs (same in both themes) */
   --back-a: #7A3412;      /* diagonal stripes */
   --back-b: #1D4475;      /* dot grid */
@@ -75,6 +78,7 @@
   --seat-b: #8AB8EE;      /* 8.7:1 */
   --seat-env: #C6A6E3;    /* 8.6:1 */
   --on-seat: #141715;
+  --error: #FF8A80;       /* 7.9:1, 7.2:1 on --panel */
   --shadow-card: 0 1px 2px rgba(0,0,0,0.55), 0 4px 10px rgba(0,0,0,0.35);
 }
 

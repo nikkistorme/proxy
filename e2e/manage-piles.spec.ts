@@ -35,7 +35,7 @@ test.describe('SP-4 manage piles', () => {
     const rename = page.getByRole('dialog', { name: 'Rename Env discard' });
     await rename.getByRole('textbox', { name: 'Name' }).fill('board cards');
     await rename.getByRole('button', { name: 'Rename' }).click();
-    await expect(rename.getByRole('textbox')).toHaveAccessibleDescription('There is already a pile called Board cards.');
+    await expect(rename.getByRole('textbox')).toHaveAccessibleDescription('Error: There is already a pile called Board cards.');
     await expectNoAxeViolations(page);
     await rename.getByRole('textbox', { name: 'Name' }).fill('Graveyard');
     await rename.getByRole('button', { name: 'Rename' }).click();
