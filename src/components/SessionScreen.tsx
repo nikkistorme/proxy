@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { loadPile } from '../actions/loadPile';
 import { peekTop } from '../actions/peek';
 import { draw, mill, revealTop, shuffle } from '../actions/pileActions';
@@ -39,6 +39,9 @@ function faceOf(session: SessionState, cardId: string) {
 
 const ADD_PILE = 'add-pile';
 
+/** The layout screen loads the first time it opens (PF-3). */
+const LayoutEditor = lazy(() => import('../editor/LayoutEditor'));
+
 /** The pile the active seat draws from: its first owned pile (its main deck). */
 function drawPileFor(session: SessionState): Pile | undefined {
   return session.piles.find((p) => p.ownerSeatId === session.activeSeatId);
@@ -67,6 +70,9 @@ export function SessionScreen() {
   const [diceOpen, setDiceOpen] = useState(false);
   const diceButtonRef = useRef<HTMLButtonElement>(null);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [layoutsOpen, setLayoutsOpen] = useState(false);
+  /** Where focus was when the layout screen opened, to go back to when it closes. */
+  const layoutsReturnRef = useRef<HTMLElement | null>(null);
   /** Where focus was when the shortcut reference opened, to go back to when it closes. */
   const shortcutsReturnRef = useRef<HTMLElement | null>(null);
   /** A pile id, or ADD_PILE, to focus once it has rendered (after adding or deleting a pile). */
@@ -95,6 +101,16 @@ export function SessionScreen() {
     setShortcutsOpen(true);
   }, []);
 
+  const openLayouts = useCallback(() => {
+    layoutsReturnRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setLayoutsOpen(true);
+  }, []);
+
+  function closeLayouts() {
+    setLayoutsOpen(false);
+    if (layoutsReturnRef.current?.isConnected) layoutsReturnRef.current.focus();
+  }
+
   function closeShortcuts() {
     setShortcutsOpen(false);
     if (shortcutsReturnRef.current?.isConnected) shortcutsReturnRef.current.focus();
@@ -122,13 +138,13 @@ export function SessionScreen() {
     };
   }, []);
 
-  // D draws, ? opens the shortcut reference, and V on a focused pile opens its viewer,
+  // D draws, ? opens the shortcut reference, L the layout screen, and V on a focused pile opens its viewer,
   // while focus is in the table, the hand or the table tools (WCAG 2.1.4) and no
   // menu or dialog is open.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
-      if ((key !== 'd' && key !== 'v' && key !== '?') || event.ctrlKey || event.metaKey || event.altKey) return;
+      if ((key !== 'd' && key !== 'v' && key !== 'l' && key !== '?') || event.ctrlKey || event.metaKey || event.altKey) return;
       const target = event.target as HTMLElement;
       if (!inShortcutScope(target)) return;
       // Read what's open from the page, not React state, which can lag a dialog closing.
@@ -136,6 +152,11 @@ export function SessionScreen() {
       if (key === '?') {
         event.preventDefault();
         openShortcuts();
+        return;
+      }
+      if (key === 'l') {
+        event.preventDefault();
+        openLayouts();
         return;
       }
       if (key === 'v') {
@@ -150,7 +171,7 @@ export function SessionScreen() {
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [drawOne, openShortcuts]);
+  }, [drawOne, openShortcuts, openLayouts]);
 
   const closeMenu = useCallback(() => {
     if (menuPileId) tileRefs.current[menuPileId]?.focus();
@@ -442,7 +463,7 @@ export function SessionScreen() {
         <h1 className="session__title">Proxy</h1>
         <span className="session__format">Solo PvE</span>
         <SessionMenu />
-        <TableTools addPileRef={addPileRef} onShortcuts={openShortcuts} onAddPile={() => setNameRequest({ mode: 'add', defaultOwnerId: session.activeSeatId })} />
+        <TableTools addPileRef={addPileRef} onShortcuts={openShortcuts} onLayouts={openLayouts} onAddPile={() => setNameRequest({ mode: 'add', defaultOwnerId: session.activeSeatId })} />
       </header>
       <StorageNotice />
 
@@ -559,6 +580,11 @@ export function SessionScreen() {
         }}
       />
       <ShortcutsDialog open={shortcutsOpen} onClose={closeShortcuts} />
+      {layoutsOpen && (
+        <Suspense fallback={null}>
+          <LayoutEditor onClose={closeLayouts} />
+        </Suspense>
+      )}
       <PeekDialog key={peekRequest ? `peek-${peekRequest.pileId}` : 'closed'} request={peekRequest} onClose={closePeek} />
       <PileViewer key={viewerPileId ?? 'closed'} pileId={viewerPileId} onClose={closeViewer} />
       <Toast />

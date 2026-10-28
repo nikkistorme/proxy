@@ -127,6 +127,43 @@ describe('LY-10 editing a layout re-renders cards using it', () => {
   });
 });
 
+/** Calls `deleteLayout` with the given id, as the layout screen does. */
+function DeleteButton({ id }: { id: string }) {
+  const { deleteLayout } = useLayouts();
+  return (
+    <button type="button" onClick={() => deleteLayout(id)}>
+      Delete {id}
+    </button>
+  );
+}
+
+describe('LY-1 deleting a layout', () => {
+  it('removes its item, and its cards fall through to the next layout (LY-8)', async () => {
+    const backend = await setup('name,layout\nTroll,Hero\n', { [layoutKey('l-hero')]: hero }, <DeleteButton id="l-hero" />);
+    expect(await face('Hero frame. Troll')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Delete l-hero' }));
+    expect(await face('Troll')).toBeInTheDocument();
+    await waitFor(() => expect(backend.data.has(layoutKey('l-hero'))).toBe(false));
+  });
+
+  it('drops a save still waiting for it', async () => {
+    const backend = await setup(
+      'name\nTroll\n',
+      {},
+      <>
+        <SaveButton layout={spell} />
+        <DeleteButton id="l-spell" />
+      </>,
+    );
+    const set = vi.spyOn(backend, 'set');
+    vi.useFakeTimers();
+    act(() => screen.getByRole('button', { name: 'Save Spell' }).click());
+    act(() => screen.getByRole('button', { name: 'Delete l-spell' }).click());
+    await act(async () => vi.advanceTimersByTime(LAYOUT_SAVE_DELAY * 2));
+    expect(set).not.toHaveBeenCalled();
+  });
+});
+
 describe('PS-1 layouts autosave as their own items', () => {
   it('saves only the changed layout, at most once a second', async () => {
     const edited = titled('l-hero', 'Hero', 'New frame');

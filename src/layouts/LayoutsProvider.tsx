@@ -15,9 +15,11 @@ interface LayoutsContextValue {
   layouts: LayoutItem[];
   /** Adds or replaces a layout. Cards using it re-render at once (LY-10); its item autosaves (PS-1). */
   saveLayout: (layout: LayoutItem) => void;
+  /** Removes a layout and its item (LY-1). Cards that used it fall through to their next choice (LY-8). */
+  deleteLayout: (id: string) => void;
 }
 
-const LayoutsContext = createContext<LayoutsContextValue>({ layouts: [], saveLayout: () => {} });
+const LayoutsContext = createContext<LayoutsContextValue>({ layouts: [], saveLayout: () => {}, deleteLayout: () => {} });
 
 export function LayoutsProvider({ children }: { children: ReactNode }) {
   const storage = useStorage();
@@ -26,6 +28,8 @@ export function LayoutsProvider({ children }: { children: ReactNode }) {
   /** The latest unsaved version of each layout, and its timer, by id. */
   const pending = useRef(new Map<string, LayoutItem>());
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  /** Layouts deleted this visit, so a list that finishes reading late doesn't bring them back. */
+  const deleted = useRef(new Set<string>());
 
   const flush = useCallback((id: string) => {
     clearTimeout(timers.current.get(id));
@@ -55,6 +59,16 @@ export function LayoutsProvider({ children }: { children: ReactNode }) {
     [flush],
   );
 
+  const deleteLayout = useCallback((id: string) => {
+    setLayouts((current) => current.filter((item) => item.id !== id));
+    clearTimeout(timers.current.get(id));
+    timers.current.delete(id);
+    pending.current.delete(id);
+    deleted.current.add(id);
+    // Like a failed save, a failed delete leaves things as they are for this visit.
+    storageRef.current?.delete('layout', id).catch(() => {});
+  }, []);
+
   // Read the saved layouts once storage is ready. Anything changed meanwhile wins.
   useEffect(() => {
     storageRef.current = storage;
@@ -62,7 +76,9 @@ export function LayoutsProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     void storage.list<Layout>('layout').then((saved) => {
       if (cancelled) return;
-      setLayouts((current) => [...saved.filter((item) => !current.some((own) => own.id === item.id)), ...current]);
+      [...deleted.current].forEach((id) => void storage.delete('layout', id).catch(() => {}));
+      const fresh = saved.filter((item) => !deleted.current.has(item.id));
+      setLayouts((current) => [...fresh.filter((item) => !current.some((own) => own.id === item.id)), ...current]);
       // Changes made before storage was ready save now.
       [...pending.current.keys()].filter((id) => !timers.current.has(id)).forEach(flush);
     });
@@ -81,11 +97,11 @@ export function LayoutsProvider({ children }: { children: ReactNode }) {
     };
   }, [flush]);
 
-  const value = useMemo(() => ({ layouts, saveLayout }), [layouts, saveLayout]);
+  const value = useMemo(() => ({ layouts, saveLayout, deleteLayout }), [layouts, saveLayout, deleteLayout]);
   return <LayoutsContext.Provider value={value}>{children}</LayoutsContext.Provider>;
 }
 
-/** Every layout in the app, and the way to change one. */
+/** Every layout in the app, and the ways to change them. */
 export function useLayouts(): LayoutsContextValue {
   return useContext(LayoutsContext);
 }

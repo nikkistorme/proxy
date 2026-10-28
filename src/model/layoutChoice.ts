@@ -3,7 +3,7 @@ import { DEFAULT_LAYOUT, type Layout, type LayoutDesign } from './layout';
 import type { Options } from '../options/resolver';
 
 /** Layout names and types match without regard to case or spaces at either end. */
-function nameKey(value: string): string {
+export function layoutNameKey(value: string): string {
   return value.trim().toLowerCase();
 }
 
@@ -21,13 +21,13 @@ export function chooseLayout(
 ): LayoutDesign {
   const byId = (id: string | null | undefined) => (id ? layouts.find((layout) => layout.id === id) : undefined);
 
-  const named = nameKey(faceValue(face, 'layout'));
-  const byName = named ? layouts.find((layout) => nameKey(layout.name) === named) : undefined;
+  const named = layoutNameKey(faceValue(face, 'layout'));
+  const byName = named ? layouts.find((layout) => layoutNameKey(layout.name) === named) : undefined;
   if (byName) return byName;
 
-  const type = nameKey(faceValue(face, 'type'));
+  const type = layoutNameKey(faceValue(face, 'type'));
   const mappedId = type
-    ? Object.entries(options.layoutByType).find(([key]) => nameKey(key) === type)?.[1]
+    ? Object.entries(options.layoutByType).find(([key]) => layoutNameKey(key) === type)?.[1]
     : undefined;
   return byId(mappedId) ?? byId(options.defaultLayout) ?? DEFAULT_LAYOUT;
 }
