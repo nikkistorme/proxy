@@ -15,7 +15,7 @@ const layoutKey = (id: string) => itemKey(import.meta.env.BASE_URL, 'guest', 'la
 const hero: Layout = { id: 'l-hero', name: 'Hero', orientation: 'landscape', boxes: [], updatedAt: '', version: SAVE_VERSION };
 
 /** The layout screen over memory storage seeded with `items`, once the saved layouts are read. */
-async function setup(items: Record<string, unknown> = {}) {
+async function setup(items: Record<string, unknown> = {}, types?: string[]) {
   const backend = memoryBackend(items);
   const list = vi.spyOn(backend, 'keys');
   const onClose = vi.fn();
@@ -23,7 +23,7 @@ async function setup(items: Record<string, unknown> = {}) {
   render(
     <StorageProvider backend={backend}>
       <LayoutsProvider>
-        <LayoutEditor onClose={onClose} />
+        <LayoutEditor onClose={onClose} types={types} />
       </LayoutsProvider>
     </StorageProvider>,
   );
@@ -146,5 +146,79 @@ describe('LY-1 opening the layout screen', () => {
     screen.getByRole('button', { name: 'Card layouts (L)' }).focus();
     await user.keyboard('l');
     expect(await screen.findByRole('dialog', { name: 'Card layouts' })).toBeInTheDocument();
+  });
+});
+
+describe('LY-8 choosing layouts by type and by default', () => {
+  const settingsKey = itemKey(import.meta.env.BASE_URL, 'guest', 'settings', 'account');
+  const villain: Layout = { ...hero, id: 'l-villain', name: 'Villain' };
+  const seeded = (options: object = {}) => ({
+    [layoutKey('l-hero')]: hero,
+    [layoutKey('l-villain')]: villain,
+    [settingsKey]: { id: 'account', updatedAt: '', version: SAVE_VERSION, options },
+  });
+  const choices = () => within(editor()).getByRole('region', { name: 'Choosing layouts' });
+  const typeList = () => within(choices()).getByRole('list', { name: 'Card types' });
+  const savedOptions = (backend: ReturnType<typeof memoryBackend>) => (backend.data.get(settingsKey) as { options?: object } | undefined)?.options;
+
+  it('maps a loaded type to a layout and back to the default, saving each choice', async () => {
+    const { user, backend } = await setup(seeded(), ['Monster', 'Hero']);
+    await within(list()).findByText('Villain');
+    expect(
+      within(typeList())
+        .getAllByRole('listitem')
+        .map((row) => within(row).getByRole('combobox').getAttribute('aria-label')),
+    ).toEqual(['Layout for Hero cards', 'Layout for Monster cards']);
+    const monster = within(choices()).getByRole('combobox', { name: 'Layout for Monster cards' });
+    expect(monster).toHaveValue('');
+    await user.selectOptions(monster, 'Villain');
+    expect(status()).toHaveTextContent('Monster cards use Villain.');
+    await waitFor(() => expect(savedOptions(backend)).toEqual({ layoutByType: { monster: 'l-villain' } }));
+
+    await user.selectOptions(monster, 'Use default layout');
+    expect(status()).toHaveTextContent('Monster cards use the default layout.');
+    await waitFor(() => expect(savedOptions(backend)).toEqual({ layoutByType: {} }));
+  });
+
+  it('sets the default layout, and the built-in one again', async () => {
+    const { user, backend } = await setup(seeded());
+    await within(list()).findByText('Villain');
+    const fallback = within(choices()).getByRole('combobox', { name: 'Default layout' });
+    expect(fallback).toHaveDisplayValue('Default (built in)');
+    await user.selectOptions(fallback, 'Hero');
+    expect(status()).toHaveTextContent('Cards with no other layout use Hero.');
+    await waitFor(() => expect(savedOptions(backend)).toEqual({ defaultLayout: 'l-hero' }));
+    await user.selectOptions(fallback, 'Default (built in)');
+    expect(status()).toHaveTextContent('Cards with no other layout use Default.');
+    await waitFor(() => expect(savedOptions(backend)).toEqual({ defaultLayout: null }));
+  });
+
+  it('lists mapped types no loaded card has, and shows a mapping to a deleted layout as the default', async () => {
+    await setup(seeded({ layoutByType: { boss: 'l-villain', minion: 'l-gone' } }));
+    await within(list()).findByText('Villain');
+    expect(within(choices()).getByRole('combobox', { name: 'Layout for boss cards' })).toHaveDisplayValue('Villain');
+    expect(within(choices()).getByRole('combobox', { name: 'Layout for minion cards' })).toHaveDisplayValue('Use default layout');
+  });
+
+  it('adds a type by hand, focusing its picker, and refuses blanks and repeats', async () => {
+    const { user } = await setup(seeded(), ['Monster']);
+    await within(list()).findByText('Villain');
+    const field = within(choices()).getByRole('textbox', { name: 'Card type' });
+    await user.click(within(choices()).getByRole('button', { name: 'Add type' }));
+    expect(field).toHaveAccessibleDescription('Enter a card type.');
+    await user.type(field, ' monster {Enter}');
+    expect(field).toHaveAttribute('aria-invalid', 'true');
+    expect(field).toHaveAccessibleDescription('Monster is already listed.');
+    await user.clear(field);
+    await user.type(field, 'Boss{Enter}');
+    expect(within(choices()).getByRole('combobox', { name: 'Layout for Boss cards' })).toHaveFocus();
+    expect(status()).toHaveTextContent('Added Boss. Choose its layout.');
+    expect(field).toHaveValue('');
+    expect(field).not.toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('says how to add types when there are none', async () => {
+    await setup();
+    expect(within(choices()).getByText('No card types yet. Load a CSV with a type column, or add a type.')).toBeInTheDocument();
   });
 });

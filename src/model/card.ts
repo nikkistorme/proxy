@@ -66,3 +66,15 @@ export function cardColumns(cards: Iterable<ImportedCard>): string[] {
   }
   return [...columns].sort((a, b) => a.localeCompare(b));
 }
+
+/** Every card type the cards have, front or back, once each ignoring case and outer spaces, sorted: the types to map to layouts (LY-8). */
+export function cardTypes(cards: Iterable<ImportedCard>): string[] {
+  const types = new Map<string, string>();
+  for (const card of cards) {
+    for (const face of card.back ? [card.front, card.back] : [card.front]) {
+      const type = face.type?.trim();
+      if (type && !types.has(type.toLowerCase())) types.set(type.toLowerCase(), type);
+    }
+  }
+  return [...types.values()].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+}

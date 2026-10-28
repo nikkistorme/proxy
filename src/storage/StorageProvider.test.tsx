@@ -1,8 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { memoryBackend } from './backends';
 import { itemKey, SAVE_VERSION, type StorageBackend } from './storage';
+import { StorageProvider, useOption, useSetOption, type SetOption } from './StorageProvider';
 
 const settingsKey = itemKey(import.meta.env.BASE_URL, 'guest', 'settings', 'account');
 
@@ -41,5 +42,37 @@ describe('PS-6 storage unavailable', () => {
     render(<App storageBackend={blocked} />);
     expect(await screen.findByRole('note')).toHaveTextContent('progress won’t be saved');
     expect(screen.getByRole('button', { name: /^P1 main deck,/ })).toBeInTheDocument();
+  });
+});
+
+describe('AR-7 setting an option', () => {
+  it('reaches readers at once and saves the settings item, keeping the other options', async () => {
+    const backend = memoryBackend({ [settingsKey]: { id: 'account', updatedAt: '', version: SAVE_VERSION, options: { theme: 'dark' } } });
+    let setOption: SetOption = () => {};
+    function Reader() {
+      setOption = useSetOption();
+      return (
+        <p>
+          {useOption('theme')}, {useOption('defaultLayout') ?? 'built in'}
+        </p>
+      );
+    }
+    render(
+      <StorageProvider backend={backend}>
+        <Reader />
+      </StorageProvider>,
+    );
+    // The saved theme shows once the startup check has run, so saves go to this backend.
+    expect(await screen.findByText('dark, built in')).toBeInTheDocument();
+    act(() => setOption('defaultLayout', 'l-hero'));
+    expect(screen.getByText('dark, l-hero')).toBeInTheDocument();
+    act(() => setOption('layoutByType', { hero: 'l-hero' }));
+    await waitFor(() =>
+      expect(backend.data.get(settingsKey)).toMatchObject({
+        id: 'account',
+        version: SAVE_VERSION,
+        options: { theme: 'dark', defaultLayout: 'l-hero', layoutByType: { hero: 'l-hero' } },
+      }),
+    );
   });
 });
