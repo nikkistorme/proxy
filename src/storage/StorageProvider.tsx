@@ -6,6 +6,8 @@ import { createStorage, type Storage, type StorageBackend, type StoredItem } fro
 /** The account's options, saved as one settings item per profile (AR-7). */
 export interface AccountSettings extends StoredItem {
   options: Partial<Options>;
+  /** The session to reopen (PS-2). App state rather than an option, so it skips the resolver. */
+  currentSessionId?: string;
 }
 
 /**
@@ -23,26 +25,45 @@ interface StorageContextValue {
   dropped: boolean;
   account: Partial<Options>;
   setOption: SetOption;
+  currentSessionId?: string;
+  setCurrentSessionId: (id: string) => void;
 }
 
 /** Sets an option at the account level, the only level in V1 (AR-7). */
 export type SetOption = <K extends OptionName>(name: K, value: Options[K]) => void;
 
-const StorageContext = createContext<StorageContextValue>({ available: true, dropped: false, account: {}, setOption: () => {} });
+const StorageContext = createContext<StorageContextValue>({ available: true, dropped: false, account: {}, setOption: () => {}, setCurrentSessionId: () => {} });
 
 export function StorageProvider({ backend, children }: { backend?: StorageBackend; children: ReactNode }) {
-  const [value, setValue] = useState<Omit<StorageContextValue, 'setOption'>>({ available: true, dropped: false, account: {} });
+  const [value, setValue] = useState<Omit<StorageContextValue, 'setOption' | 'setCurrentSessionId'>>({ available: true, dropped: false, account: {} });
   /** The latest account options and storage, so quick changes in a row each save on top of the last. */
   const account = useRef<Partial<Options>>({});
+  const currentId = useRef<string>(undefined);
   const storageRef = useRef<Storage>(undefined);
 
-  const setOption = useCallback<SetOption>((name, option) => {
-    const options = { ...account.current, [name]: option };
-    account.current = options;
-    setValue((current) => ({ ...current, account: options }));
-    // A failed save keeps the option in the app for this visit, like layouts.
-    storageRef.current?.put<AccountSettings>('settings', { id: ACCOUNT_SETTINGS_ID, options }).catch(() => {});
+  /** Writes both parts of the settings item, so saving one never drops the other. */
+  const saveSettings = useCallback(() => {
+    // A failed save keeps the setting in the app for this visit, like layouts.
+    storageRef.current?.put<AccountSettings>('settings', { id: ACCOUNT_SETTINGS_ID, options: account.current, currentSessionId: currentId.current }).catch(() => {});
   }, []);
+
+  const setOption = useCallback<SetOption>(
+    (name, option) => {
+      account.current = { ...account.current, [name]: option };
+      setValue((current) => ({ ...current, account: account.current }));
+      saveSettings();
+    },
+    [saveSettings],
+  );
+
+  const setCurrentSessionId = useCallback(
+    (id: string) => {
+      currentId.current = id;
+      setValue((current) => ({ ...current, currentSessionId: id }));
+      saveSettings();
+    },
+    [saveSettings],
+  );
 
 
   useEffect(() => {
@@ -54,19 +75,20 @@ export function StorageProvider({ backend, children }: { backend?: StorageBacken
       const preferred = backend ?? indexedDbBackend();
       const available = await canSave(preferred);
       const storage = createStorage(available ? preferred : memoryBackend(), { onDropped: markDropped });
-      const settings = await storage.get<AccountSettings>('settings', ACCOUNT_SETTINGS_ID);
+      const settings = await storage.get<AccountSettings>('settings', ACCOUNT_SETTINGS_ID).catch(() => undefined);
       if (cancelled) return;
       // An option set before the startup check finished wins over the saved one.
       account.current = { ...settings?.options, ...account.current };
+      currentId.current ??= settings?.currentSessionId;
       storageRef.current = storage;
-      setValue((current) => ({ ...current, storage, available, account: account.current }));
+      setValue((current) => ({ ...current, storage, available, account: account.current, currentSessionId: currentId.current }));
     })();
     return () => {
       cancelled = true;
     };
   }, [backend]);
 
-  const context = useMemo(() => ({ ...value, setOption }), [value, setOption]);
+  const context = useMemo(() => ({ ...value, setOption, setCurrentSessionId }), [value, setOption, setCurrentSessionId]);
   return <StorageContext.Provider value={context}>{children}</StorageContext.Provider>;
 }
 
@@ -89,4 +111,10 @@ export function useSetOption(): SetOption {
 export function useOption<K extends OptionName>(name: K): Options[K] {
   const { account } = useContext(StorageContext);
   return useMemo(() => resolveOption(name, { account }), [name, account]);
+}
+
+/** The id of the session to reopen (PS-2), once storage is ready, and a way to record the current one. */
+export function useCurrentSession(): Pick<StorageContextValue, 'currentSessionId' | 'setCurrentSessionId'> {
+  const { currentSessionId, setCurrentSessionId } = useContext(StorageContext);
+  return { currentSessionId, setCurrentSessionId };
 }

@@ -16,11 +16,20 @@ Field errors no longer rely on colour (#42, A11Y-13, outside the phases): every 
 
 Phase 6 (Formats, #115) is done. It was split into 6a to 6g, sub-issues #116 to #122, and a 1v1 PvP session can be set up and played by mouse and by keyboard (6g, #122). 6a (#116) is done: sessions are built from a format with `createSession(format)`, the three presets are in `src/model/format.ts`, each seat's colour, shape and card back follow its place (first player, second player or environment), and the header shows the format name. The app still starts from Solo PvE until the setup screen (6c). 6b (#117) is done: each seat in the seat bar is a button that makes it the active seat, which swaps the hand tray, and S and Shift+S step to the next and previous seat. Switching isn't an undo step; undo and redo show the hand of the seat that took the action. 6c (#118) is done: **New session…** in the This session menu opens a setup dialog with the three presets (seats and piles shown), asks first when the session has cards, and starts a session from the chosen format. The choice is saved as the `defaultFormat` option, and on reload an untouched session switches to it. 6d (#119) is done: saved formats are their own items, the setup dialog's **Edit formats…** and **Edit a copy** buttons open a full-screen Formats screen (presets read-only with Duplicate; saved formats with Rename, Duplicate and Delete), and the setup dialog and the saved default include saved formats. 6e (#120) is done: a preset's **Edit a copy** (in the setup dialog and on the Formats screen) makes a saved copy and opens it in a full-screen format editor, and **Edit** on a saved format opens the same editor. There, seats are renamed, piles are added, renamed, given an owner and removed, and Uses dice is switched, all autosaving. 6f (#121) is done: each seat in the editor also has up to 4 counters, added, renamed, given a starting value and removed, and a new session starts its seat counters at those values.
 
-Phase 7 (Session saves and Sheets, #141) is planned as 7a to 7g, sub-issues #142 to #148. None is built yet.
+Phase 7 (Session saves and Sheets, #141) is planned as 7a to 7g, sub-issues #142 to #148. 7a (#142) is done: the session autosaves as its own item and reopening the app restores it (Resume), behind a loading overlay. Next is 7b (#143), saving the undo history.
 
 The design now has a UI placement guide (`design/ui-placement.md`, rules UI-1 to UI-8, with `FuturePlacement.dc.html`), and the plan follows it (2026-10-29). V1 keeps today's shell: V1 issues add no header or toolbar control (UI-3) and put new controls at the guide's address, or in the This session menu until the Session menu exists. So 6d's Formats screen opens from the setup dialog, and 6e's format editor is full screen. After V1, the shell moves to the guide in its own issues, #130 to #135 (action registry, workspace with Home, Library and Settings, header slots and Session menu, side panel, seat dock, command palette), before the card set library (#67). Smaller moves ride along with the feature that touches them. Each issue now has a Placement section.
 
 ## Done
+
+### Phase 7a: Session autosave and Resume (#142, 2026-10-29)
+
+- **Session item (PS-1, PS-2):** kind `session`, UUID id (`SessionItem`, `src/store/sessionItem.ts`): the session state, the log, zoom and snap. Not the scroll position, `columns` or the last roll. `useSavedItems('session', 1000)` handles the debounce, the `pagehide` flush and delete. The store has a `sessionId` (new for `createSessionStore` and each `startSession`) and a `restoreSession` action (no undo step, no announcement, empty history).
+- **Current session:** `AccountSettings.currentSessionId` beside `options`. `StorageProvider` writes both parts on every settings save (so neither drops the other) and exposes `useCurrentSession()`.
+- **`SessionPersistence` (`src/components/SessionPersistence.tsx`)** replaces `DefaultFormat` (removed). Once storage, the session items and the formats have loaded: a session touched before that stays and is saved as current; else the saved current session is restored; else a new session starts from `defaultFormat`, silently. Then each change saves, **New session…** deletes the old item and records the new id, and any other session item is deleted.
+- **Loading overlay:** `role="status"` "Loading your session…" with a spinner, over the page; the app beneath gets `inert` (set in a layout effect, before the first paint). It is transparent for 300 ms, then fades in. With `prefers-reduced-motion` the spinner is still. After 5 s it gives up, starts a new session from `defaultFormat` and saves nothing that visit, so a slow read can't overwrite the saved session. Nothing in the overlay takes focus, so loading never moves it.
+- **Tests:** store cases; `SessionPersistence.test.tsx` (overlay and inert, timeout, save then restore through memory storage, touched before ready, no saved session, stray items, New session…, older version dropped, options and `currentSessionId` together, PS-6); `StorageProvider.test.tsx` PS-5 now checks the settings are rewritten without the old options; `SetupDialog.test.tsx` uses `SessionPersistence`; `e2e/resume.spec.ts` (keyboard reload with table, hand, pile, Life, seat, log, zoom, snap and empty undo; New session… then reload with one session item left and an axe scan; storage unavailable; 375 × 667 reload and overlay).
+- **Changed requirements:** PS-1, PS-2, SP-1.
 
 ### Tests: slimmer Edit a copy unit tests (2026-10-29)
 
@@ -895,8 +904,7 @@ The design now has a UI placement guide (`design/ui-placement.md`, rules UI-1 to
 
 Every issue fills in its Placement section (`design/ui-placement.md`). No issue adds a header or toolbar control (UI-3).
 
-- **Phase 7 (Session saves and Sheets, #141):** split into 7a to 7g, sub-issues #142 to #148. Each starts only with the owner's go-ahead, 7a first. Each is planned in Opus and built in Sonnet.
-  - 7a (#142): the session autosaves as its own item and reopening the app restores it (Resume), with its log; New session… replaces the session item.
+- **Phase 7 (Session saves and Sheets, #141):** split into 7a to 7g, sub-issues #142 to #148. 7a is done. Each starts only with the owner's go-ahead, 7b next. Each is planned in Opus and built in Sonnet.
   - 7b (#143): undo and redo history saved in a compact form (each definition once), up to 200 steps.
   - 7c (#144): Save snapshot… and Snapshots… (a dialog) in the This session menu; loading a snapshot is an undo step.
   - 7d (#145): Export session… and Import bundle… in the This session menu, with a bundle fixture (QA-4).
@@ -922,6 +930,9 @@ Every issue fills in its Placement section (`design/ui-placement.md`). No issue 
 
 ## Open problems
 
+- Two open tabs both save to the same session item, and the last save wins. New session… in one tab deletes the item the other tab still saves to, which brings it back as a stray that the next start deletes.
+- A saved session is read in full at startup before the table shows; a very large session means a longer overlay. Undo history (7b) will add to this.
+- If the 5 s loading timeout fires, that visit saves nothing, with no notice. Storage that slow is rare.
 - Component tests that render the whole `SessionScreen` and walk several screens (about 10 files, the slowest being `App.test.tsx`, `FormatsScreen.test.tsx`, `SetupDialog.test.tsx` and `LayoutEditor.test.tsx`) are the slow and flaky part of the unit suite on CI. When an issue touches one, keep its unit tests to that component and leave whole flows to E2E. `userEvent.setup({ delay: null })` could also speed the typing-heavy tests, such as `LayoutCanvas.test.tsx`.
 - A seat's counters can't be reordered in the format editor; they keep the order they were added in.
 - Renaming a counter or changing its starting value isn't announced, like seat and pile renames in 6e; only adds and removes are.

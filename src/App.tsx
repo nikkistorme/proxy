@@ -1,5 +1,5 @@
 import { useLayoutEffect } from 'react';
-import { DefaultFormat } from './components/DefaultFormat';
+import { SessionPersistence } from './components/SessionPersistence';
 import { SessionScreen } from './components/SessionScreen';
 import { FormatsProvider } from './formats/FormatsProvider';
 import { LayoutsProvider } from './layouts/LayoutsProvider';
@@ -23,8 +23,9 @@ export function App({ storageBackend }: { storageBackend?: StorageBackend }) {
       <LayoutsProvider>
         <FormatsProvider>
           <SessionStoreProvider>
-            <DefaultFormat />
-            <SessionScreen />
+            <SessionPersistence>
+              <SessionScreen />
+            </SessionPersistence>
           </SessionStoreProvider>
         </FormatsProvider>
       </LayoutsProvider>

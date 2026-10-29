@@ -31,7 +31,8 @@ describe('PS-5 older saves notice', () => {
     const backend = memoryBackend({ [settingsKey]: { id: 'account', updatedAt: '', version: SAVE_VERSION - 1, options: { theme: 'dark' } } });
     render(<App storageBackend={backend} />);
     expect(await screen.findByRole('note')).toHaveTextContent('Saves from an older version of Proxy were removed.');
-    expect(backend.data.has(settingsKey)).toBe(false);
+    // The old item was dropped; the session id is then written to a fresh one without its options.
+    await waitFor(() => expect(backend.data.get(settingsKey)).toMatchObject({ options: {}, currentSessionId: expect.any(String) }));
     expect(document.documentElement.dataset.theme).not.toBe('dark');
   });
 });

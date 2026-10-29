@@ -9,8 +9,8 @@ import { memoryBackend } from '../storage/backends';
 import { itemKey, SAVE_VERSION } from '../storage/storage';
 import { StorageProvider, useOption } from '../storage/StorageProvider';
 import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
-import { DefaultFormat } from './DefaultFormat';
 import { LiveRegion } from './LiveRegion';
+import { SessionPersistence } from './SessionPersistence';
 import { SessionScreen } from './SessionScreen';
 import { SetupDialog } from './SetupDialog';
 
@@ -32,8 +32,9 @@ function renderScreen(session = createSession(SOLO_PVE), items: Record<string, u
     <StorageProvider backend={memoryBackend(items)}>
       <FormatsProvider>
         <SessionStoreProvider store={store}>
-          <DefaultFormat />
-          <SessionScreen />
+          <SessionPersistence>
+            <SessionScreen />
+          </SessionPersistence>
           <LiveRegion />
           <Saved />
         </SessionStoreProvider>
@@ -103,7 +104,7 @@ describe('SP-1 saved default format', () => {
     render(
       <StorageProvider backend={memoryBackend({})}>
         <SessionStoreProvider store={store}>
-          <DefaultFormat />
+          <SessionPersistence>{null}</SessionPersistence>
         </SessionStoreProvider>
       </StorageProvider>,
     );

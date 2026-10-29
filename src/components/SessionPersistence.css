@@ -1,0 +1,54 @@
+.session-shell {
+  display: contents;
+}
+
+/* Covers the page from the first frame so nothing can be used, but stays
+   transparent for 300 ms so a fast load never flashes (PS-2). */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 16px;
+  text-align: center;
+  opacity: 0;
+  animation: loading-overlay-in 150ms ease-out 300ms forwards;
+}
+
+.loading-overlay__spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--divider);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: loading-overlay-spin 800ms linear infinite;
+}
+
+@keyframes loading-overlay-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes loading-overlay-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-overlay {
+    animation-duration: 0s;
+  }
+
+  .loading-overlay__spinner {
+    animation: none;
+  }
+}
