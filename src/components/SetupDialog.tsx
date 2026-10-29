@@ -1,18 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { PRESETS, presetById, type Format } from '../model/format';
-import type { SeatPlace } from '../model/session';
+import { useFormats } from '../formats/FormatsProvider';
+import { formatById, PRESETS, type Format } from '../model/format';
 import { useSetOption } from '../storage/StorageProvider';
 import { useSessionStore } from '../store/sessionStore';
 import { Dialog } from './Dialog';
-import { seatIdentity } from './seatIdentity';
+import { FormatSummary } from './FormatSummary';
 import './Form.css';
 import './SetupDialog.css';
 
-/** The place of each seat in a format, as `createSession` gives it. */
-function seatPlaces(format: Format): SeatPlace[] {
-  let players = 0;
-  return format.seats.map((seat) => (seat.kind === 'environment' ? 'environment' : players++ === 0 ? 'player-1' : 'player-2'));
-}
+const byName = (a: Format, b: Format) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true });
 
 interface SetupDialogProps {
   open: boolean;
@@ -29,11 +25,14 @@ export function SetupDialog({ open, onClose }: SetupDialogProps) {
   const hasCards = useSessionStore((s) => Object.keys(s.session.cards).length > 0);
   const startSession = useSessionStore((s) => s.startSession);
   const setOption = useSetOption();
-  const [chosenId, setChosenId] = useState(currentId);
+  const { formats } = useFormats();
+  const sorted = [...formats].sort(byName);
+  // Starts on the session's format if it still exists, else Solo PvE.
+  const [chosenId, setChosenId] = useState(() => formatById(formats, currentId).id);
   const [confirming, setConfirming] = useState(false);
   const started = useRef(false);
   const question = useRef<HTMLParagraphElement>(null);
-  const format = presetById(chosenId);
+  const format = formatById(formats, chosenId);
 
   useEffect(() => {
     if (confirming) question.current?.focus();
@@ -73,39 +72,22 @@ export function SetupDialog({ open, onClose }: SetupDialogProps) {
       ) : (
         <fieldset className="form-choices setup-dialog__choices">
           <legend className="form-label">Format</legend>
-          {PRESETS.map((preset) => {
-            const places = seatPlaces(preset);
-            return (
-              <label key={preset.id} className="form-choice setup-dialog__choice">
-                <input
-                  type="radio"
-                  name="format"
-                  value={preset.id}
-                  checked={chosenId === preset.id}
-                  onChange={() => setChosenId(preset.id)}
-                  {...(chosenId === preset.id ? { 'data-autofocus': true } : {})}
-                />
-                <span className="setup-dialog__details">
-                  <span className="form-choice__name">{preset.name}</span>
-                  <span className="setup-dialog__seats">
-                    {preset.seats.map((seat, i) => {
-                      const identity = seatIdentity(places[i]);
-                      return (
-                        <span key={seat.id} className="setup-dialog__seat" style={{ color: identity.color }}>
-                          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                            <path d={identity.shape} />
-                          </svg>
-                          <span className="setup-dialog__seat-name">{seat.name}</span>
-                          <span className="visually-hidden"> ({identity.shapeName})</span>
-                        </span>
-                      );
-                    })}
-                  </span>
-                  <span className="form-choice__meta">Piles: {preset.piles.map((pile) => pile.name).join(', ')}</span>
-                </span>
-              </label>
-            );
-          })}
+          {[...PRESETS, ...sorted].map((choice) => (
+            <label key={choice.id} className="form-choice setup-dialog__choice">
+              <input
+                type="radio"
+                name="format"
+                value={choice.id}
+                checked={chosenId === choice.id}
+                onChange={() => setChosenId(choice.id)}
+                {...(chosenId === choice.id ? { 'data-autofocus': true } : {})}
+              />
+              <span className="setup-dialog__details">
+                <span className="form-choice__name">{choice.name}</span>
+                <FormatSummary format={choice} />
+              </span>
+            </label>
+          ))}
         </fieldset>
       )}
     </Dialog>

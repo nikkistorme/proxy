@@ -14,6 +14,7 @@ const ICONS = {
   fit: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',
   grid: 'M4 4h16v16H4zM9.3 4v16M14.7 4v16M4 9.3h16M4 14.7h16',
   layout: 'M6 3h12v18H6zM9 6h6v5H9zM9 14h6M9 17h4',
+  formats: 'M4 5h16v4H4zM4 11h16v4H4zM4 17h16v3H4z',
   help: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM9.5 9.5a2.5 2.5 0 0 1 4.9.7c0 1.7-2.4 2.3-2.4 3.8M12 17h.01',
 };
 
@@ -53,13 +54,15 @@ interface TableToolsProps {
   onShortcuts?: () => void;
   /** LY-1: opens the layout screen. Left out, there's no Card layouts button. */
   onLayouts?: () => void;
+  /** Opens the Formats screen (FS-2). It has no keyboard shortcut. */
+  onFormats?: () => void;
 }
 
 /**
  * The header's table tools, from the Main board: undo and redo (TT-15), zoom and
  * fit all (TT-1), grid snap (TT-2), and Add pile (SP-4), which puts a pile on the table.
  */
-export function TableTools({ onAddPile, addPileRef, onShortcuts, onLayouts }: TableToolsProps = {}) {
+export function TableTools({ onAddPile, addPileRef, onShortcuts, onLayouts, onFormats }: TableToolsProps = {}) {
   const canUndo = useSessionStore((s) => s.past.length > 0);
   const canRedo = useSessionStore((s) => s.future.length > 0);
   const undo = useSessionStore((s) => s.undo);
@@ -143,6 +146,11 @@ export function TableTools({ onAddPile, addPileRef, onShortcuts, onLayouts }: Ta
       {onLayouts && (
         <Tool label="Card layouts (L)" onClick={onLayouts}>
           <Icon d={ICONS.layout} />
+        </Tool>
+      )}
+      {onFormats && (
+        <Tool label="Formats" onClick={onFormats}>
+          <Icon d={ICONS.formats} />
         </Tool>
       )}
       {onShortcuts && (

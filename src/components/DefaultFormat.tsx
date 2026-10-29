@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { presetById } from '../model/format';
+import { useFormats } from '../formats/FormatsProvider';
+import { formatById } from '../model/format';
 import { useOption, useStorage } from '../storage/StorageProvider';
 import { useSessionStoreApi } from '../store/sessionStore';
 
@@ -11,17 +12,20 @@ import { useSessionStoreApi } from '../store/sessionStore';
 export function DefaultFormat() {
   const storage = useStorage();
   const defaultFormat = useOption('defaultFormat');
+  const { formats, loaded } = useFormats();
   const store = useSessionStoreApi();
   const done = useRef(false);
 
   useEffect(() => {
-    if (!storage || done.current) return;
+    if (!storage || !loaded || done.current) return;
     done.current = true;
     const { session, past, startSession } = store.getState();
-    if (past.length === 0 && Object.keys(session.cards).length === 0 && session.formatId !== defaultFormat) {
-      startSession(presetById(defaultFormat), { silent: true });
+    // A default that was deleted gives Solo PvE.
+    const wanted = formatById(formats, defaultFormat);
+    if (past.length === 0 && Object.keys(session.cards).length === 0 && session.formatId !== wanted.id) {
+      startSession(wanted, { silent: true });
     }
-  }, [storage, defaultFormat, store]);
+  }, [storage, loaded, formats, defaultFormat, store]);
 
   return null;
 }

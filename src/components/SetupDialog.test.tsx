@@ -1,10 +1,12 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { sessionWithDeck, testContext } from '../actions/testing';
+import { FormatsProvider } from '../formats/FormatsProvider';
 import { PVP_1V1, SOLO_PVE } from '../model/format';
 import { createSession } from '../model/session';
 import { memoryBackend } from '../storage/backends';
+import { itemKey, SAVE_VERSION } from '../storage/storage';
 import { StorageProvider, useOption } from '../storage/StorageProvider';
 import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
 import { DefaultFormat } from './DefaultFormat';
@@ -15,16 +17,22 @@ function Saved() {
   return <span data-testid="saved-format">{useOption('defaultFormat')}</span>;
 }
 
-function renderScreen(session = createSession(SOLO_PVE)) {
+const formatKey = (id: string) => itemKey(import.meta.env.BASE_URL, 'guest', 'format', id);
+const settingsKey = itemKey(import.meta.env.BASE_URL, 'guest', 'settings', 'account');
+const mine = { ...PVP_1V1, id: 'f-mine', name: 'My duel', updatedAt: '', version: SAVE_VERSION };
+
+function renderScreen(session = createSession(SOLO_PVE), items: Record<string, unknown> = {}) {
   const store = createSessionStore(session, testContext());
   render(
-    <StorageProvider backend={memoryBackend()}>
-      <SessionStoreProvider store={store}>
-        <DefaultFormat />
-        <SessionScreen />
-        <LiveRegion />
-        <Saved />
-      </SessionStoreProvider>
+    <StorageProvider backend={memoryBackend(items)}>
+      <FormatsProvider>
+        <SessionStoreProvider store={store}>
+          <DefaultFormat />
+          <SessionScreen />
+          <LiveRegion />
+          <Saved />
+        </SessionStoreProvider>
+      </FormatsProvider>
     </StorageProvider>,
   );
   return { store, user: userEvent.setup() };
@@ -95,5 +103,56 @@ describe('SP-1 saved default format', () => {
       </StorageProvider>,
     );
     expect(store.getState().session.formatId).toBe(SOLO_PVE.id);
+  });
+});
+
+describe('SP-1 saved formats in the setup dialog', () => {
+  it('lists saved formats after the presets and starts a session from one', async () => {
+    const { store, user } = renderScreen(createSession(SOLO_PVE), { [formatKey('f-mine')]: mine });
+    await screen.findByRole('button', { name: 'This session' });
+    await waitFor(() => expect(store.getState().session.formatId).toBe(SOLO_PVE.id));
+    await user.click(screen.getByRole('button', { name: 'This session' }));
+    await user.click(screen.getByRole('menuitem', { name: 'New session…' }));
+    // The saved format is read a moment after the page starts.
+    await user.click(await screen.findByRole('radio', { name: /^My duel/ }));
+    expect(screen.getAllByRole('radio').map((r) => r.closest('label')?.querySelector('.form-choice__name')?.textContent)).toEqual(['Solo PvE', 'Co-op PvE', '1v1 PvP', 'My duel']);
+    await user.click(screen.getByRole('button', { name: 'Start session' }));
+    expect(store.getState().session.formatId).toBe('f-mine');
+    expect(store.getState().session.formatName).toBe('My duel');
+    expect(store.getState().session.seats.map((s) => s.name)).toEqual(['Player 1', 'Player 2']);
+    expect(screen.getByTestId('saved-format')).toHaveTextContent('f-mine');
+  });
+
+  it('starts on the current format when it is a saved one', async () => {
+    const session = { ...createSession(PVP_1V1), formatId: 'f-mine', formatName: 'My duel' };
+    const { user } = renderScreen(session, { [formatKey('f-mine')]: mine, [settingsKey]: { id: 'account', options: { defaultFormat: 'f-mine' }, updatedAt: '', version: SAVE_VERSION } });
+    await user.click(screen.getByRole('button', { name: 'This session' }));
+    await user.click(screen.getByRole('menuitem', { name: 'New session…' }));
+    expect(await screen.findByRole('radio', { name: /^My duel/ })).toBeChecked();
+  });
+
+  it('starts on Solo PvE when the current format has been deleted', async () => {
+    const session = { ...createSession(PVP_1V1), formatId: 'f-gone', formatName: 'Gone' };
+    const { user } = renderScreen(session);
+    await openSetup(user);
+    expect(screen.getByRole('radio', { name: /^Solo PvE/ })).toBeChecked();
+  });
+});
+
+describe('SP-1 default format with saved formats', () => {
+  it('switches an untouched session to a saved default once the formats have loaded', async () => {
+    const { store } = renderScreen(createSession(SOLO_PVE), {
+      [formatKey('f-mine')]: mine,
+      [settingsKey]: { id: 'account', options: { defaultFormat: 'f-mine' }, updatedAt: '', version: SAVE_VERSION },
+    });
+    await waitFor(() => expect(store.getState().session.formatId).toBe('f-mine'));
+    expect(store.getState().session.formatName).toBe('My duel');
+  });
+
+  it('uses Solo PvE when the saved default was deleted', async () => {
+    const { store } = renderScreen(createSession(PVP_1V1), {
+      [settingsKey]: { id: 'account', options: { defaultFormat: 'f-gone' }, updatedAt: '', version: SAVE_VERSION },
+    });
+    await waitFor(() => expect(store.getState().session.formatId).toBe(SOLO_PVE.id));
   });
 });

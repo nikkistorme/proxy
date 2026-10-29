@@ -1,0 +1,22 @@
+.format-summary__seats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+}
+
+.format-summary__seat {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.format-summary__seat svg {
+  flex: none;
+}
+
+.format-summary__piles {
+  color: var(--muted);
+  font-size: 13px;
+}

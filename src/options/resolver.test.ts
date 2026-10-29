@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { presetById } from '../model/format';
 import { DEFAULT_OPTIONS, resolveOption } from './resolver';
 
 describe('AR-7 options resolver', () => {
@@ -34,11 +33,5 @@ describe('AR-7 format option', () => {
   it('defaults to Solo PvE and reads the account value', () => {
     expect(resolveOption('defaultFormat', {})).toBe('preset-solo-pve');
     expect(resolveOption('defaultFormat', { account: { defaultFormat: 'preset-1v1-pvp' } })).toBe('preset-1v1-pvp');
-  });
-
-  it('presetById falls back to Solo PvE for an unknown id (FS-1)', () => {
-    expect(presetById('preset-coop-pve').name).toBe('Co-op PvE');
-    expect(presetById('nope').id).toBe('preset-solo-pve');
-    expect(presetById(undefined).id).toBe('preset-solo-pve');
   });
 });
