@@ -50,8 +50,9 @@ A format is a preset that defines the seats at the table and the piles each one 
 
 **Acceptance criteria**
 
-- [ ] Starting a 1v1 PvP session creates two seats, two empty hands and three empty piles.
-- [ ] Switching seats swaps the hand tray in one action, by click or keyboard shortcut.
+- [x] Starting a 1v1 PvP session creates two seats, two empty hands and three empty piles. (`e2e/pvp-session.spec.ts`)
+- [x] Switching seats swaps the hand tray in one action, by click or keyboard shortcut. (`e2e/pvp-session.spec.ts`, `e2e/seat-switcher.spec.ts`)
+- [x] An edited copy of a preset is still there after a reload and starts a session with its seats, piles and counters. (`e2e/format-editor.spec.ts`)
 
 ## Card data
 
