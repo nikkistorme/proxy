@@ -6,6 +6,8 @@ const axeTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
 });
 
 const screen = (page: Page) => page.getByRole('dialog', { name: 'Formats' });
@@ -96,12 +98,13 @@ test.describe('FS-2 saved formats', () => {
     await page.keyboard.press('Escape');
     await expect(header(page)).toContainText('Tourney');
 
-    // Its saved item is gone, and the deleted default now means Solo PvE.
-    await page.waitForTimeout(300);
+    // Its saved item is gone. The session resumes with its seats, and the deleted default now means Solo PvE.
+    await page.waitForTimeout(1200);
     await page.reload();
-    await expect(header(page)).toContainText('Solo PvE');
+    await expect(header(page)).toContainText('Tourney');
     await openSetup(page);
     await expect(page.getByRole('radio')).toHaveCount(3);
+    await expect(page.getByRole('radio', { name: /^Solo PvE/ })).toBeChecked();
   });
 
   test('mouse: Edit formats…, duplicate, rename and delete, with no axe violations', async ({ page }) => {

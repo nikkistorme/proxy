@@ -29,6 +29,8 @@ function savedBoxes(page: Page) {
 /** A new layout, open on the canvas, with one box showing fixed text. */
 async function openWithTextBox(page: Page, text: string) {
   await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
   await page.getByRole('button', { name: 'Card layouts (L)' }).click();
   await page.getByRole('button', { name: 'New layout' }).click();
   await page.getByRole('button', { name: 'Edit Layout 1' }).click();

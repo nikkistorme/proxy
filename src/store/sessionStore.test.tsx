@@ -224,3 +224,36 @@ describe('SP-1 startSession', () => {
     expect(store.getState().announcement.text).toBe('');
   });
 });
+
+describe('PS-1 session id', () => {
+  it('gives every store and every started session a new id', () => {
+    const a = createSessionStore(createSession(SOLO_PVE), testContext());
+    const b = createSessionStore(createSession(SOLO_PVE), testContext());
+    expect(a.getState().sessionId).not.toBe(b.getState().sessionId);
+    const before = a.getState().sessionId;
+    a.getState().startSession(PVP_1V1);
+    expect(a.getState().sessionId).not.toBe(before);
+  });
+});
+
+describe('PS-2 restore a saved session', () => {
+  it('loads the state, log, zoom and snap with an id, and no undo history', () => {
+    const store = createSessionStore(sessionWithDeck(), testContext());
+    store.getState().dispatch((g) => draw(g, { pileId: 'pile-p1-main' }));
+    store.getState().roll('d6');
+    store.getState().setView({ columns: 7 });
+    const announced = store.getState().announcement;
+    const saved = sessionWithDeck('name\nAnt\n');
+    const log = [{ id: 1, text: 'Rolled a d6: 4', at: 5 }];
+    store.getState().restoreSession({ id: 'saved-1', session: saved, log, zoom: 1.5, snap: true });
+    const state = store.getState();
+    expect(state.session).toBe(saved);
+    expect(state.sessionId).toBe('saved-1');
+    expect(state.log).toBe(log);
+    expect(state.view).toEqual({ zoom: 1.5, snap: true, columns: 7 });
+    expect([state.past, state.future, state.lastRoll]).toEqual([[], [], undefined]);
+    expect(state.announcement).toBe(announced);
+    state.undo();
+    expect(store.getState().session).toBe(saved);
+  });
+});

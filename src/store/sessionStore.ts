@@ -70,8 +70,19 @@ export interface CardDrag {
 /** TT-15 asks for at least 200 undo steps. */
 export const HISTORY_LIMIT = 200;
 
+/** What a saved session brings back (PS-2): the state, the log and how the table is zoomed. */
+export interface RestoredSession {
+  id: string;
+  session: SessionState;
+  log: LogEntry[];
+  zoom: number;
+  snap: boolean;
+}
+
 export interface SessionStore {
   session: SessionState;
+  /** The id of this session's saved item (PS-1). New sessions get a new one. */
+  sessionId: string;
   announcement: Announcement;
   /** Sessions before each action, oldest first. Actions never mutate, so these share unchanged parts. */
   past: HistoryEntry[];
@@ -96,6 +107,11 @@ export interface SessionStore {
    * setup dialog's confirm step is the guard. `silent` skips the announcement.
    */
   startSession: (format: Format, options?: { silent?: boolean }) => void;
+  /**
+   * PS-2: loads a saved session at startup. Not an undo step and not announced;
+   * the undo history starts empty (it isn't saved yet).
+   */
+  restoreSession: (saved: RestoredSession) => void;
   /**
    * TT-15: goes back one action, or announces that there is nothing to undo.
    * Undo and redo show the seat that took the action (FS-3).
@@ -143,6 +159,7 @@ export function createSessionStore(session: SessionState = createSession(SOLO_PV
     const next = (text: string): Announcement => ({ text, id: get().announcement.id + 1 });
     return {
       session,
+      sessionId: crypto.randomUUID(),
       announcement: { text: '', id: 0 },
       past: [],
       future: [],
@@ -192,6 +209,7 @@ export function createSessionStore(session: SessionState = createSession(SOLO_PV
         const first = fresh.seats.find((seat) => seat.id === fresh.activeSeatId);
         set({
           session: fresh,
+          sessionId: crypto.randomUUID(),
           past: [],
           future: [],
           log: [],
@@ -202,6 +220,19 @@ export function createSessionStore(session: SessionState = createSession(SOLO_PV
           ...(options?.silent ? {} : { announcement: next(`New ${format.name} session started. ${first?.name ?? 'The first seat'} is the active seat.`) }),
         });
       },
+      restoreSession: (saved) =>
+        set({
+          session: saved.session,
+          sessionId: saved.id,
+          past: [],
+          future: [],
+          log: saved.log,
+          lastRoll: undefined,
+          placing: undefined,
+          drag: undefined,
+          toast: undefined,
+          view: { ...get().view, zoom: saved.zoom, snap: saved.snap },
+        }),
       switchSeat: (seatId) => {
         const result = setActiveSeat(get().session, { seatId });
         set({ session: result.state, announcement: next(result.announcement) });

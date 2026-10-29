@@ -53,6 +53,8 @@ test.describe('LY-9 exporting and importing layouts', () => {
   test('exports, clears the browser data and imports the file by keyboard, restoring the layouts exactly', async ({ page }) => {
     // Start from the fixture's layouts, imported by mouse.
     await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
     await layoutsButton(page).click();
     await files(page).getByTestId('layout-file').setInputFiles(fixture);
     await expect(names(page)).toHaveText(['Default', 'Hero', 'Site']);
@@ -101,6 +103,8 @@ test.describe('LY-9 exporting and importing layouts', () => {
 
   test('imports by mouse, refuses a file that is not layouts, with no axe violations', async ({ page }) => {
     await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
     await layoutsButton(page).click();
     const chooser = page.waitForEvent('filechooser');
     await files(page).getByRole('button', { name: 'Import layouts…' }).click();
@@ -125,6 +129,8 @@ test.describe('LY-9 layout files on a phone', () => {
 
   test('puts Export and Import side by side, with no sideways scroll', async ({ page }) => {
     await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
     await layoutsButton(page).click();
     await files(page).getByTestId('layout-file').setInputFiles(fixture);
     const exportButton = files(page).getByRole('button', { name: 'Export layouts' });

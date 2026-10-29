@@ -34,6 +34,8 @@ test.describe('LY-1 layout list', () => {
       if (/LayoutEditor/.test(request.url())) editorScripts.push(request.url());
     });
     await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
     await expect(layoutsButton(page)).toBeVisible();
     expect(editorScripts).toEqual([]);
 
@@ -92,6 +94,8 @@ test.describe('LY-1 layout list', () => {
 
   test('duplicates, renames and deletes layouts by mouse, with no axe violations', async ({ page }) => {
     await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
     await layoutsButton(page).click();
     await page.getByRole('button', { name: 'Duplicate Default' }).click();
     await expect(names(page)).toHaveText(['Default', 'Default copy']);
@@ -115,6 +119,8 @@ test.describe('LY-1 layout list on a phone', () => {
 
   test('fits the screen, the list scrolls, and the rename dialog’s buttons stay visible', async ({ page }) => {
     await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
     await layoutsButton(page).click();
     const create = page.getByRole('button', { name: 'New layout' });
     for (let i = 0; i < 6; i++) await create.click();

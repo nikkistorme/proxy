@@ -6,6 +6,8 @@ const axeTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 test.beforeEach(async ({ page }) => {
   await page.route('https://example.test/**', (route) => route.abort());
   await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
 });
 
 const table = (page: Page) => page.getByRole('group', { name: /^Table, / });

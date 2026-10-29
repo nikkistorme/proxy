@@ -47,6 +47,8 @@ async function seedVillain(page: Page) {
 /** Villain saved, and a Monster (Troll) and an untyped card (Goblin) on the table. */
 async function setUp(page: Page) {
   await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
   await seedVillain(page);
   await page.reload();
   const mainPile = page.getByRole('button', { name: /^P1 main deck,/ });

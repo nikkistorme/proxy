@@ -8,6 +8,8 @@ const axeTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 test.beforeEach(async ({ page }) => {
   await page.route('https://example.test/**', (route) => route.abort());
   await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
 });
 
 const mainPile = (page: Page) => page.getByRole('button', { name: /^P1 main deck,/ });
@@ -125,6 +127,8 @@ test.describe('TT-8 counters on a phone', () => {
     const page = await context.newPage();
     await page.route('https://example.test/**', (route) => route.abort());
     await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
     expect(await page.evaluate(() => matchMedia('(pointer: coarse)').matches)).toBe(true);
     const card = await emberShardOnTable(page);
     await card.focus();

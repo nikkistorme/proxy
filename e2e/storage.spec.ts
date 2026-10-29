@@ -16,6 +16,8 @@ async function blockStorage(page: Page) {
 test.describe('PS-6 storage unavailable', () => {
   test('shows no notice when the browser can save', async ({ page }) => {
     await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
     await expect(page.getByRole('button', { name: /^P1 main deck,/ })).toBeVisible();
     // The startup check is quick; give it a moment to show a notice if it were going to.
     await page.waitForTimeout(300);
@@ -25,6 +27,8 @@ test.describe('PS-6 storage unavailable', () => {
   test('says progress won’t be saved and the table still works', async ({ page }) => {
     await blockStorage(page);
     await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
     await expect(notice(page)).toHaveText('This browser can’t save right now, so progress won’t be saved.');
     await page.getByRole('button', { name: /^P1 main deck,/ }).click({ button: 'right' });
     await expect(page.getByRole('menuitem', { name: 'Load CSV…' })).toBeVisible();
@@ -39,6 +43,8 @@ test.describe('PS-6 storage notice on a phone', () => {
   test('fits without sideways scrolling', async ({ page }) => {
     await blockStorage(page);
     await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
     await expect(notice(page)).toBeVisible();
     const box = await notice(page).boundingBox();
     expect(box?.width).toBeLessThanOrEqual(375);
