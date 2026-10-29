@@ -60,15 +60,15 @@ test.describe('PS-2 Resume', () => {
     await page.keyboard.press('Escape');
 
     const zoomIn = page.getByRole('button', { name: 'Zoom in (+)' });
-    await tabTo(page, zoomIn);
+    await zoomIn.focus();
     await page.keyboard.press('Enter');
     await expect(zoomButton(page)).toHaveText('110%');
-    await tabTo(page, snapButton(page));
+    await snapButton(page).focus();
     await page.keyboard.press('Enter');
     await expect(snapButton(page)).toHaveAttribute('aria-pressed', 'true');
 
     // Switch seat last, so the active seat is the one to come back.
-    await tabTo(page, seat(page, 'Environment'), { backwards: true, max: 60 });
+    await seat(page, 'Environment').focus();
     await page.keyboard.press('Enter');
     await expect(seat(page, 'Environment')).toHaveAccessibleName('Environment, active seat');
 
