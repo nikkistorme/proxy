@@ -386,6 +386,8 @@ Not in the first version; each may be revisited later.
 - Reading private or unpublished spreadsheets, or any import that needs a Google sign-in. Only published CSV URLs are supported.
 - Mobile-first touch play. Phones must not break, but the target is a laptop or desktop screen.
 - Selecting several table cards and group actions (TT-3, #29), stacks (TT-7, #30), and remapping shortcuts or customising menus and clicks (#53). These come after V1 as feature issues, not phases.
+- Moving the UI to the placement guide's shell (`design/ui-placement.md`): header slots and a Session menu, table tools on the table, a tabbed side panel, a seat dock, a workspace with Home, Library and Settings, and a command palette (#130 to #135). V1 places new controls by the guide but keeps today's shell.
+- Editing card data inside Proxy (#136, after the card set library #67).
 
 ## Open questions
 
@@ -418,3 +420,4 @@ Not in the first version; each may be revisited later.
 | 2026-10-27 | A session keeps its own copy of the card definitions it loaded, as well as recording each pile's card set (AR-4) | Referencing the card set only | The session plays offline, survives a deleted set, and a Phase 7 session save is complete on its own |
 | 2026-10-27 | A card's layout is worked out from its columns each time it's drawn (LY-8, AR-4) | Storing a layout id on each table card | Owner decision (#89). Layout edits and mapping changes reach cards already in play (LY-10) |
 | 2026-10-28 | The layout editor is a full screen (LY-1, #92) | A panel beside the table | Owner decision. A side panel leaves no room on a phone for the canvas, box settings and preview. Edits still show on real cards in the editor's preview (LY-7), and on the table as soon as it closes (LY-10) |
+| 2026-10-29 | Features get an address in `design/ui-placement.md` (UI-1 to UI-8) before they get UI. V1 adds no header control; the shell moves to the guide after V1 (#130 to #135) | Restructuring the shell inside V1 | Owner decision. Keeps V1's scope and stops the header growing meanwhile |
