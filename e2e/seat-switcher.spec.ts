@@ -39,16 +39,18 @@ test.describe('FS-3 seat switcher', () => {
     await expect(env).toBeFocused();
     await expect(env).toHaveAccessibleName('Environment, active seat');
     await expect(p1Hand(page)).toHaveCount(0);
-    // Single keys do nothing in the seat bar (WCAG 2.1.4); they work from the table tools.
+    // Single keys do nothing in the seat bar (WCAG 2.1.4); they work from the table.
     await page.keyboard.press('s');
     await expect(env).toHaveAccessibleName('Environment, active seat');
-    await tabTo(page, page.getByRole('button', { name: /^Undo/ }));
+    // The table comes after the seat bar in Tab order. Firefox leaves the page rather than wrap round to the toolbar.
+    const pile = page.getByRole('button', { name: /^P1 main deck/ });
+    await tabTo(page, pile);
     await page.keyboard.press('s');
     await expect(p1Hand(page)).toBeVisible();
     await expect(status(page)).toHaveText('Player 1 is the active seat. Hand: 0 cards.');
     await page.keyboard.press('Shift+S');
     await expect(p1Hand(page)).toHaveCount(0);
-    await expect(page.getByRole('button', { name: /^Undo/ })).toBeFocused();
+    await expect(pile).toBeFocused();
   });
 });
 
