@@ -53,7 +53,7 @@ test.describe('PS-2 Resume', () => {
     await expect(life(page)).toContainText('19');
 
     const dice = page.getByRole('button', { name: 'Dice & coins' });
-    await tabTo(page, dice, { backwards: true });
+    await dice.focus();
     await page.keyboard.press('Enter');
     await page.keyboard.press('Enter'); // Roll d20
     await expect(status(page)).toHaveText(/^Rolled d20: \d+\.$/);
