@@ -5,7 +5,8 @@ import { loadPile } from '../actions/loadPile';
 import { moveCard } from '../actions/moveCard';
 import { draw } from '../actions/pileActions';
 import { cardsFrom, testContext, pilesOutOfTheWay } from '../actions/testing';
-import { createSoloSession, type SessionState } from '../model/session';
+import { createSession, type SessionState } from '../model/session';
+import { SOLO_PVE } from '../model/format';
 import { CARD_H, CARD_W } from '../model/tablePlacement';
 import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
 import { HandTray } from './HandTray';
@@ -15,7 +16,7 @@ const csv = 'name,type\nTroll,Creature\nOgre,Creature\nImp,Creature\n';
 
 /** Troll and Ogre on the table at (16, 16) and (158, 16), and Imp in Player 1's hand. */
 function setup() {
-  let session: SessionState = pilesOutOfTheWay(loadPile(createSoloSession(), { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state);
+  let session: SessionState = pilesOutOfTheWay(loadPile(createSession(SOLO_PVE), { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state);
   for (const name of ['Troll', 'Ogre']) session = moveCard(session, { cardId: idOf(session, name), to: { zone: 'table' } }).state;
   session = draw(session, { pileId: 'pile-p1-main' }).state;
   const store = createSessionStore(session, testContext());

@@ -12,7 +12,7 @@ import { moveDestinations } from './moveDestinations';
 import { filterColumns, filterEntries, pileEntries, type PileEntry } from './pileFilter';
 import './Form.css';
 import './PileViewer.css';
-import { seatIdentity } from './seatIdentity';
+import { seatIdentity, seatPlace } from './seatIdentity';
 
 const ICONS = {
   shuffle: 'M4 7h3l10 10h3M4 17h3l3-3M14 10l3-3h3M18 4l2 3-2 3M18 14l2 3-2 3',
@@ -241,7 +241,7 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
     filtered ? `${matches.length} of ${count} match${search.trim() ? ` “${search.trim()}”` : ''}` : cardCount,
     ...chosenFilters.map((c) => `${c.label}: ${filters[c.column]}`),
   ].join(' · ');
-  const identity = seatIdentity(pile?.ownerSeatId);
+  const identity = seatIdentity(seatPlace(session.seats, pile?.ownerSeatId));
   const canDraw = count > 0;
   const canShuffle = count > 1;
 

@@ -3,7 +3,8 @@ import { useStore } from 'zustand';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import { roll, type Die, type Roll } from '../actions/dice';
 import type { Destination } from '../actions/moveCard';
-import { createSoloSession, type ActionContext, type ActionResult, type SessionState } from '../model/session';
+import { createSession, type ActionContext, type ActionResult, type SessionState } from '../model/session';
+import { SOLO_PVE } from '../model/format';
 import { cryptoRandomInt } from '../model/random';
 import { PLACEMENT_COLUMNS } from '../model/tablePlacement';
 
@@ -114,7 +115,7 @@ export interface SessionStore {
 
 export const liveContext: ActionContext = { randomInt: cryptoRandomInt, newId: () => crypto.randomUUID() };
 
-export function createSessionStore(session: SessionState = createSoloSession(), context: ActionContext = liveContext): StoreApi<SessionStore> {
+export function createSessionStore(session: SessionState = createSession(SOLO_PVE), context: ActionContext = liveContext): StoreApi<SessionStore> {
   return createStore<SessionStore>()((set, get) => {
     const next = (text: string): Announcement => ({ text, id: get().announcement.id + 1 });
     return {

@@ -38,8 +38,8 @@ const MAX_PILLS = 3;
  * so a face full of text never becomes the button's name (A11Y-6).
  */
 export function TableCard({ view, layer, tabbable, register, onFocus, onKeyDown, onKeyUp, menuOpen, onOpenMenu, onPointerDown, dragging, onOpenCounters, onHover }: TableCardProps) {
-  const { entry, face, ownerSeatId, missing, doubleFaced, label } = view;
-  const identity = seatIdentity(ownerSeatId);
+  const { entry, face, ownerPlace, missing, doubleFaced, label } = view;
+  const identity = seatIdentity(ownerPlace);
   // The outer box is the area the card covers on screen, turned or not, so the
   // Actions button sits at its bottom-right corner. Only the card inside turns.
   const box = cardBox(entry);

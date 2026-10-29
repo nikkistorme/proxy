@@ -6,7 +6,8 @@ import { moveCard } from '../actions/moveCard';
 import { cardsFrom, pilesOutOfTheWay, testContext } from '../actions/testing';
 import { TableSurface } from '../components/TableSurface';
 import type { Layout } from '../model/layout';
-import { createSoloSession, type SessionState } from '../model/session';
+import { createSession, type SessionState } from '../model/session';
+import { SOLO_PVE } from '../model/format';
 import { memoryBackend } from '../storage/backends';
 import { itemKey, SAVE_VERSION } from '../storage/storage';
 import { StorageProvider } from '../storage/StorageProvider';
@@ -48,7 +49,7 @@ function SaveButton({ layout }: { layout: LayoutItem }) {
 
 /** Every card of the CSV on the table, over memory storage seeded with `items`. */
 async function setup(csv: string, items: Record<string, unknown>, extra?: React.ReactNode) {
-  let session: SessionState = loadPile(createSoloSession(), { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
+  let session: SessionState = loadPile(createSession(SOLO_PVE), { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
   for (const card of Object.values(session.cards)) session = moveCard(session, { cardId: card.id, to: { zone: 'table' } }).state;
   const backend = memoryBackend(items);
   const list = vi.spyOn(backend, 'keys');

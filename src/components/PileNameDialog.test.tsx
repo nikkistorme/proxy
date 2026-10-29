@@ -2,10 +2,11 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { validatePileName } from '../actions/piles';
-import { createSoloSession } from '../model/session';
+import { createSession } from '../model/session';
+import { SOLO_PVE } from '../model/format';
 import { PileNameDialog, type PileNameRequest } from './PileNameDialog';
 
-const session = createSoloSession();
+const session = createSession(SOLO_PVE);
 const board = session.piles.find((p) => p.id === 'pile-board');
 if (!board) throw new Error('Solo session has a Board cards pile');
 

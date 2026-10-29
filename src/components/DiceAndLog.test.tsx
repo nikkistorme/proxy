@@ -2,13 +2,14 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { testContext } from '../actions/testing';
-import { createSoloSession } from '../model/session';
+import { createSession } from '../model/session';
+import { SOLO_PVE } from '../model/format';
 import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
 import { LiveRegion } from './LiveRegion';
 import { SessionScreen } from './SessionScreen';
 import { timeAgo } from './SessionLog';
 
-function renderScreen(session = createSoloSession()) {
+function renderScreen(session = createSession(SOLO_PVE)) {
   const store = createSessionStore(session, testContext());
   const user = userEvent.setup();
   render(
@@ -49,7 +50,7 @@ describe('TT-14 Dice & coins', () => {
   });
 
   it('is hidden when the session doesn’t use dice', () => {
-    renderScreen({ ...createSoloSession(), usesDice: false });
+    renderScreen({ ...createSession(SOLO_PVE), usesDice: false });
     expect(screen.queryByRole('button', { name: 'Dice & coins' })).not.toBeInTheDocument();
   });
 });

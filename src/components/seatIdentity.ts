@@ -1,8 +1,11 @@
+import type { Seat, SeatPlace } from '../model/session';
+
 /**
  * Seat identity from the design system: colour, shape and card-back pattern,
- * so seats never rely on colour alone. The design's first seat (triangle,
- * stripes) goes to Player 1, its second (circle, dots) to Player 2, and the
- * environment's (square, fine rules) to Environment. Shared piles are neutral.
+ * so seats never rely on colour alone. It follows the seat's place, not its id
+ * or name: the design's first seat (triangle, stripes) goes to the first
+ * player, its second (circle, dots) to the second player, and the
+ * environment's (square, fine rules) to the environment. Shared piles are neutral.
  */
 export interface SeatIdentity {
   /** CSS colour for text and marks, from the seat tokens. */
@@ -22,14 +25,19 @@ const SHAPES = {
   diamond: 'M8 1.5l6.5 6.5-6.5 6.5-6.5-6.5z',
 };
 
-const IDENTITIES: Record<string, SeatIdentity> = {
-  'seat-p1': { color: 'var(--seat-a)', shape: SHAPES.triangle, backClass: 'card-back--a', shapeName: 'triangle' },
-  'seat-p2': { color: 'var(--seat-b)', shape: SHAPES.circle, backClass: 'card-back--b', shapeName: 'circle' },
-  'seat-env': { color: 'var(--seat-env)', shape: SHAPES.square, backClass: 'card-back--env', shapeName: 'square' },
+const IDENTITIES: Record<SeatPlace, SeatIdentity> = {
+  'player-1': { color: 'var(--seat-a)', shape: SHAPES.triangle, backClass: 'card-back--a', shapeName: 'triangle' },
+  'player-2': { color: 'var(--seat-b)', shape: SHAPES.circle, backClass: 'card-back--b', shapeName: 'circle' },
+  environment: { color: 'var(--seat-env)', shape: SHAPES.square, backClass: 'card-back--env', shapeName: 'square' },
 };
 
 const SHARED: SeatIdentity = { color: 'var(--muted)', shape: SHAPES.diamond, backClass: 'card-back--shared', shapeName: 'diamond' };
 
-export function seatIdentity(seatId: string | undefined): SeatIdentity {
-  return (seatId && IDENTITIES[seatId]) || SHARED;
+export function seatIdentity(place: SeatPlace | undefined): SeatIdentity {
+  return place ? IDENTITIES[place] : SHARED;
+}
+
+/** The place of a seat by id, or undefined for a shared pile or an unknown seat. */
+export function seatPlace(seats: readonly Seat[], seatId: string | undefined): SeatPlace | undefined {
+  return seatId === undefined ? undefined : seats.find((seat) => seat.id === seatId)?.place;
 }

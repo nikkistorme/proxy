@@ -10,7 +10,7 @@ import { HandCardMenu, type HandCommand } from './HandCardMenu';
 import './HandTray.css';
 import { moveDestinations } from './moveDestinations';
 import { MoveDialog, type MoveRequest } from './MoveDialog';
-import { seatIdentity } from './seatIdentity';
+import { seatIdentity, seatPlace } from './seatIdentity';
 
 interface HandTrayProps {
   seatId: string;
@@ -28,8 +28,8 @@ const HAND_KEYS: Record<string, HandCommand> = { p: 'play', m: 'move' };
  */
 export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
   const headingId = useId();
-  const identity = seatIdentity(seatId);
   const session = useSessionStore((s) => s.session);
+  const identity = seatIdentity(seatPlace(session.seats, seatId));
   const dispatch = useSessionStore((s) => s.dispatch);
   const setPlacing = useSessionStore((s) => s.setPlacing);
   const announce = useSessionStore((s) => s.announce);

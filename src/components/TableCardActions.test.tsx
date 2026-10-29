@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { loadPile } from '../actions/loadPile';
 import { moveCard } from '../actions/moveCard';
 import { cardsFrom, tableIds, testContext } from '../actions/testing';
-import { createSoloSession, type SessionState } from '../model/session';
+import { createSession, type SessionState } from '../model/session';
+import { SOLO_PVE } from '../model/format';
 import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
 import { TableSurface } from './TableSurface';
 import { Toast } from './Toast';
@@ -13,7 +14,7 @@ const csv = 'name,id,back_of,type,text\nTroll,,,Creature,Smash.\nMoonrise Hunter
 
 /** Troll and Daylight Hunter on the table, with the toast. */
 function setup() {
-  let session: SessionState = loadPile(createSoloSession(), { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
+  let session: SessionState = loadPile(createSession(SOLO_PVE), { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
   for (const name of ['Troll', 'Daylight Hunter']) {
     const card = Object.values(session.cards).find((c) => session.definitions[c.definitionId]?.front.name === name);
     if (card) session = moveCard(session, { cardId: card.id, to: { zone: 'table' } }).state;

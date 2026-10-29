@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createSoloSession } from '../model/session';
+import { createSession } from '../model/session';
+import { SOLO_PVE } from '../model/format';
 import { peekTop, reorderTop } from './peek';
 import { sessionWithDeck, namesOf } from './testing';
 
@@ -16,7 +17,7 @@ describe('SP-9 peek at the top cards', () => {
 
   it('returns what there is when the pile is short, and says when it is empty', () => {
     expect(peekTop(sessionWithDeck(deck), { pileId: MAIN, count: 10 }).cardIds).toHaveLength(4);
-    expect(peekTop(createSoloSession(), { pileId: MAIN, count: 2 })).toEqual({ cardIds: [], announcement: 'P1 main deck is empty.' });
+    expect(peekTop(createSession(SOLO_PVE), { pileId: MAIN, count: 2 })).toEqual({ cardIds: [], announcement: 'P1 main deck is empty.' });
     expect(() => peekTop(sessionWithDeck(deck), { pileId: MAIN, count: 0 })).toThrow(RangeError);
   });
 });
