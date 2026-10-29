@@ -46,7 +46,6 @@ const HAND = 'hand';
 
 /** The layout screen loads the first time it opens (PF-3). */
 const LayoutEditor = lazy(() => import('../editor/LayoutEditor'));
-const FormatsScreen = lazy(() => import('../formats/FormatsScreen'));
 
 /** The pile the active seat draws from: its first owned pile (its main deck). */
 function drawPileFor(session: SessionState): Pile | undefined {
@@ -79,9 +78,6 @@ export function SessionScreen() {
   const diceButtonRef = useRef<HTMLButtonElement>(null);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [layoutsOpen, setLayoutsOpen] = useState(false);
-  const [formatsOpen, setFormatsOpen] = useState(false);
-  /** Where focus was when the Formats screen opened, to go back to when it closes. */
-  const formatsReturnRef = useRef<HTMLElement | null>(null);
   /** Where focus was when the layout screen opened, to go back to when it closes. */
   const layoutsReturnRef = useRef<HTMLElement | null>(null);
   /** Where focus was when the shortcut reference opened, to go back to when it closes. */
@@ -120,16 +116,6 @@ export function SessionScreen() {
   function closeLayouts() {
     setLayoutsOpen(false);
     if (layoutsReturnRef.current?.isConnected) layoutsReturnRef.current.focus();
-  }
-
-  const openFormats = useCallback(() => {
-    formatsReturnRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    setFormatsOpen(true);
-  }, []);
-
-  function closeFormats() {
-    setFormatsOpen(false);
-    if (formatsReturnRef.current?.isConnected) formatsReturnRef.current.focus();
   }
 
   function closeShortcuts() {
@@ -496,7 +482,7 @@ export function SessionScreen() {
         <h1 className="session__title">Proxy</h1>
         <span className="session__format">{session.formatName}</span>
         <SessionMenu />
-        <TableTools addPileRef={addPileRef} onShortcuts={openShortcuts} onLayouts={openLayouts} onFormats={openFormats} onAddPile={() => setNameRequest({ mode: 'add', defaultOwnerId: session.activeSeatId })} />
+        <TableTools addPileRef={addPileRef} onShortcuts={openShortcuts} onLayouts={openLayouts} onAddPile={() => setNameRequest({ mode: 'add', defaultOwnerId: session.activeSeatId })} />
       </header>
       <StorageNotice />
 
@@ -634,11 +620,6 @@ export function SessionScreen() {
             previewSets={previewCardSets(session)}
             types={cardTypes(Object.values(session.definitions))}
           />
-        </Suspense>
-      )}
-      {formatsOpen && (
-        <Suspense fallback={null}>
-          <FormatsScreen onClose={closeFormats} />
         </Suspense>
       )}
       <PeekDialog key={peekRequest ? `peek-${peekRequest.pileId}` : 'closed'} request={peekRequest} onClose={closePeek} />

@@ -20,3 +20,11 @@
 .setup-dialog__confirm:focus {
   outline: none;
 }
+
+/* Edit formats… and Edit a copy, below the list (UI-3: no header or toolbar control). */
+.setup-dialog__edit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}

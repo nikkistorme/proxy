@@ -114,12 +114,12 @@ describe('FS-2 formats list', () => {
   });
 });
 
-describe('FS-2 Formats tool', () => {
-  it('opens the screen from the toolbar and returns focus to the button when it closes', async () => {
+describe('FS-2 opening the Formats screen', () => {
+  async function renderSession(items: Record<string, unknown> = {}) {
     const store = createSessionStore(createSession(SOLO_PVE), testContext());
     const user = userEvent.setup();
     render(
-      <StorageProvider backend={memoryBackend()}>
+      <StorageProvider backend={memoryBackend(items)}>
         <FormatsProvider>
           <SessionStoreProvider store={store}>
             <SessionScreen />
@@ -127,11 +127,58 @@ describe('FS-2 Formats tool', () => {
         </FormatsProvider>
       </StorageProvider>,
     );
-    const button = screen.getByRole('button', { name: 'Formats' });
-    await user.click(button);
+    await user.click(screen.getByRole('button', { name: 'This session' }));
+    await user.click(screen.getByRole('menuitem', { name: 'New session…' }));
+    return user;
+  }
+
+  it('has no Formats button in the toolbar (UI-3)', () => {
+    render(
+      <StorageProvider backend={memoryBackend()}>
+        <FormatsProvider>
+          <SessionStoreProvider store={createSessionStore(createSession(SOLO_PVE), testContext())}>
+            <SessionScreen />
+          </SessionStoreProvider>
+        </FormatsProvider>
+      </StorageProvider>,
+    );
+    expect(screen.queryByRole('button', { name: /^Formats/ })).not.toBeInTheDocument();
+  });
+
+  it('Edit formats… opens it, and Back to New session returns to the dialog on the same choice', async () => {
+    const user = await renderSession();
+    await user.click(screen.getByRole('radio', { name: /^Co-op PvE/ }));
+    await user.click(screen.getByRole('button', { name: 'Edit formats…' }));
     expect(await screen.findByRole('dialog', { name: 'Formats' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Back to table' }));
-    expect(screen.queryByRole('dialog', { name: 'Formats' })).not.toBeInTheDocument();
-    expect(button).toHaveFocus();
+    expect(screen.queryByRole('dialog', { name: 'New session' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Back to New session' }));
+    expect(await screen.findByRole('dialog', { name: 'New session' })).toBeInTheDocument();
+    const radio = screen.getByRole('radio', { name: /^Co-op PvE/ });
+    expect(radio).toBeChecked();
+    await waitFor(() => expect(radio).toHaveFocus());
+  });
+
+  it('Back selects Solo PvE when the chosen format was deleted', async () => {
+    const user = await renderSession({ [formatKey('f-a')]: saved('f-a', 'Apple') });
+    await user.click(await screen.findByRole('radio', { name: /^Apple/ }));
+    await user.click(screen.getByRole('button', { name: 'Edit formats…' }));
+    await user.click(await screen.findByRole('button', { name: 'Delete Apple' }));
+    await user.click(screen.getByRole('button', { name: 'Delete format' }));
+    await user.click(screen.getByRole('button', { name: 'Back to New session' }));
+    expect(await screen.findByRole('radio', { name: /^Solo PvE/ })).toBeChecked();
+  });
+
+  it('Edit a copy shows only for presets, duplicates, focuses the copy and comes back with it selected', async () => {
+    const user = await renderSession({ [formatKey('f-a')]: saved('f-a', 'Apple') });
+    expect(screen.getByRole('button', { name: 'Edit a copy of Solo PvE' })).toBeInTheDocument();
+    await user.click(await screen.findByRole('radio', { name: /^Apple/ }));
+    expect(screen.queryByRole('button', { name: /^Edit a copy/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('radio', { name: /^1v1 PvP/ }));
+    await user.click(screen.getByRole('button', { name: 'Edit a copy of 1v1 PvP' }));
+    const formats = await screen.findByRole('dialog', { name: 'Formats' });
+    expect(within(formats).getByRole('status')).toHaveTextContent('Duplicated 1v1 PvP as 1v1 PvP copy.');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Rename 1v1 PvP copy' })).toHaveFocus());
+    await user.click(screen.getByRole('button', { name: 'Back to New session' }));
+    expect(await screen.findByRole('radio', { name: /^1v1 PvP copy/ })).toBeChecked();
   });
 });

@@ -12,6 +12,12 @@ const byName = (a: FormatItem, b: FormatItem) => a.name.localeCompare(b.name, un
 interface FormatsScreenProps {
   /** Called once the screen has closed: Esc or Back to table. */
   onClose: () => void;
+  /** The back button's label. */
+  backLabel?: string;
+  /** A row to put focus on its Rename button when the screen opens, like a copy just made. */
+  focusId?: string;
+  /** Announced when the screen opens. */
+  announcement?: string;
 }
 
 /**
@@ -20,16 +26,16 @@ interface FormatsScreenProps {
  * saved formats, which can be renamed, duplicated and deleted. It reuses the
  * layout screen's frame: a modal <dialog> over the table.
  */
-export default function FormatsScreen({ onClose }: FormatsScreenProps) {
+export default function FormatsScreen({ onClose, backLabel = 'Back to table', focusId, announcement: opening = '' }: FormatsScreenProps) {
   const { formats, saveFormat, deleteFormat } = useFormats();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const backRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
   const [renaming, setRenaming] = useState<FormatItem>();
   const [deleting, setDeleting] = useState<FormatItem>();
-  const [announcement, setAnnouncement] = useState({ id: 0, text: '' });
+  const [announcement, setAnnouncement] = useState({ id: 0, text: opening });
   /** The row and button to focus once the list has rendered, after an action or a dialog. */
-  const pendingFocus = useRef<{ id: string; action: 'rename' | 'duplicate' | 'delete' }>(undefined);
+  const pendingFocus = useRef<{ id: string; action: 'rename' | 'duplicate' | 'delete' } | undefined>(focusId ? { id: focusId, action: 'rename' } : undefined);
   /** Where focus goes once the delete dialog closes after a delete. */
   const afterDelete = useRef<{ id: string; action: 'rename' | 'duplicate' }>(undefined);
   /** Set from a rename until the next key event: see `openRename`. */
@@ -124,7 +130,7 @@ export default function FormatsScreen({ onClose }: FormatsScreenProps) {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M15 6l-6 6 6 6" />
           </svg>
-          Back to table
+          {backLabel}
         </button>
         <h2 id={titleId} className="layout-editor__title">
           Formats
