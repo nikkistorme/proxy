@@ -14,6 +14,7 @@ This project runs on the owner's personal Claude usage. Be economical.
 - `docs/progress.md` holds the current state, what's next, **open problems** and the **decision log** from earlier sessions. Check them before re-deciding anything or reopening a settled question.
 - The PR workflow (preview links, How to test steps, waiting for the owner to test, and the storage rule for previews) is under **Pull requests** below.
 - **Propose a short plan before coding** (files to touch, tests to add). Wait for approval.
+- **Plan in Opus, build in Sonnet.** Plan the issue in an Opus session. Once the owner approves the plan, start a fresh Sonnet session (medium effort) on the issue's branch to build it. Its brief carries the whole approved plan, the owner's decisions and what done looks like, and says which parts of `docs/progress.md` to read. The build session opens the PR, turns on Auto-fix and stops for the owner's test.
 - If the task looks bigger than one session, **stop and propose a split** before writing code.
 - Do not touch files outside the issue's scope. No drive-by refactors or reformatting.
 - **Ask before adding any dependency** not listed under Stack.
