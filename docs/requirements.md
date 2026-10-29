@@ -44,8 +44,8 @@ A format is a preset that defines the seats at the table and the piles each one 
 **Requirements**
 
 - FS-1: Ship the three presets above.
-- FS-2: Users can edit a preset (rename seats, add or remove piles) and save it as a new format.
-- FS-3: Each player seat has its own hand. A seat switcher changes which hand is shown in the hand tray.
+- FS-2: Users can edit a preset (rename seats, add or remove piles) and save it as a new format. In V1 seats are renamed but not added or removed, so every format has the seats of one of the three presets.
+- FS-3: Each player seat has its own hand. A seat switcher changes which hand is shown in the hand tray. Switching seats isn't an undo step.
 - FS-4: Each seat has its own counters (for example, life and resources). Counter names and starting values are set per format.
 
 **Acceptance criteria**
@@ -413,6 +413,7 @@ Not in the first version; each may be revisited later.
 | 2026-10-27 | Storage and card sets (#74) move ahead of layouts as Phase 4. Layouts, formats, session saves and Sheets, and polish become Phases 5 to 8 | Storage after layouts and formats (the old Phase 6) | Layouts, formats and the resolver all save something, so storage first avoids stand-in state, export-only layouts and rewiring the layout preview onto card sets |
 | 2026-10-27 | Until V1 ships, older saves are dropped with a notice, not migrated (PS-5) | Migrations from the first save | Models keep changing through Phases 5 to 7. Migrations start at V1, before sync makes old data expensive to drop |
 | 2026-10-27 | After V1: the demo path (#63), card sets (#67), games (#65), then accounts (#45) | Accounts earlier | Sync is a second storage implementation and needs every item kind settled first. #45 builds on the demo's own path and on games and card sets. Its docs-only step 1 can happen any time |
+| 2026-10-28 | Phase 6 (#115): the format editor renames seats but doesn't add or remove them; the app keeps opening on the table with the last format set up until Phase 7 adds Resume; switching seats isn't an undo step | Adding seats; a start screen in Phase 6; switching as an undo step | Owner decisions. Three seat identities cover every format, existing E2E tests keep their start, and switching is like a dice roll |
 | 2026-10-27 | One-per-profile items, such as the account settings, use a fixed id; everything else gets a UUID (AR-6) | A UUID for every item | A settings item made on two devices should be the same item when sync arrives, not two to choose between |
 | 2026-10-27 | A session keeps its own copy of the card definitions it loaded, as well as recording each pile's card set (AR-4) | Referencing the card set only | The session plays offline, survives a deleted set, and a Phase 7 session save is complete on its own |
 | 2026-10-27 | A card's layout is worked out from its columns each time it's drawn (LY-8, AR-4) | Storing a layout id on each table card | Owner decision (#89). Layout edits and mapping changes reach cards already in play (LY-10) |
