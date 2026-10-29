@@ -1,9 +1,9 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { sessionWithDeck, testContext } from '../actions/testing';
-import { FormatsProvider } from '../formats/FormatsProvider';
-import { PVP_1V1, SOLO_PVE } from '../model/format';
+import { FormatsProvider, useFormats } from '../formats/FormatsProvider';
+import { PVP_1V1, SOLO_PVE, type Format } from '../model/format';
 import { createSession } from '../model/session';
 import { memoryBackend } from '../storage/backends';
 import { itemKey, SAVE_VERSION } from '../storage/storage';
@@ -12,9 +12,14 @@ import { createSessionStore, SessionStoreProvider } from '../store/sessionStore'
 import { DefaultFormat } from './DefaultFormat';
 import { LiveRegion } from './LiveRegion';
 import { SessionScreen } from './SessionScreen';
+import { SetupDialog } from './SetupDialog';
 
 function Saved() {
   return <span data-testid="saved-format">{useOption('defaultFormat')}</span>;
+}
+
+function SavedNames() {
+  return <span data-testid="saved-names">{useFormats().formats.map((format) => format.name).join(', ')}</span>;
 }
 
 const formatKey = (id: string) => itemKey(import.meta.env.BASE_URL, 'guest', 'format', id);
@@ -140,17 +145,32 @@ describe('SP-1 saved formats in the setup dialog', () => {
 });
 
 describe('SP-1 Edit a copy', () => {
-  it('shows for presets only and opens the copy in the format editor', async () => {
-    const { user } = renderScreen(createSession(SOLO_PVE), { [formatKey(mine.id)]: mine });
-    await openSetup(user);
+  // The setup dialog's part only: it saves the copy and hands it on. Opening it in
+  // the format editor is the Formats screen's test, and the whole path is in
+  // e2e/format-editor.spec.ts.
+  it('shows for presets only, saves a copy of the chosen preset and hands it on', async () => {
+    const onEditCopy = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <StorageProvider backend={memoryBackend({ [formatKey(mine.id)]: mine })}>
+        <FormatsProvider>
+          <SessionStoreProvider store={createSessionStore(createSession(SOLO_PVE), testContext())}>
+            <SetupDialog open onClose={() => {}} onEditFormats={() => {}} onEditCopy={onEditCopy} />
+            <SavedNames />
+          </SessionStoreProvider>
+        </FormatsProvider>
+      </StorageProvider>,
+    );
     await user.click(await screen.findByRole('radio', { name: /^My duel/ }));
     expect(screen.queryByRole('button', { name: /^Edit a copy/ })).not.toBeInTheDocument();
     await user.click(screen.getByRole('radio', { name: /^Co-op PvE/ }));
     await user.click(screen.getByRole('button', { name: 'Edit a copy of Co-op PvE' }));
-    const formats = await screen.findByRole('dialog', { name: 'Formats' });
-    expect(await screen.findByRole('textbox', { name: 'Seat 3 name' })).toHaveValue('Environment');
-    expect(formats).toHaveTextContent('Co-op PvE copy');
-    expect(screen.getByRole('button', { name: 'Back to formats' })).toHaveFocus();
+    expect(onEditCopy).toHaveBeenCalledOnce();
+    const [copy, message] = onEditCopy.mock.calls[0] as [Format, string];
+    expect(copy.name).toBe('Co-op PvE copy');
+    expect(copy.seats.map((seat) => seat.name)).toEqual(['Player 1', 'Player 2', 'Environment']);
+    expect(message).toBe('Duplicated Co-op PvE as Co-op PvE copy. Editing Co-op PvE copy.');
+    expect(screen.getByTestId('saved-names')).toHaveTextContent('My duel, Co-op PvE copy');
   });
 });
 

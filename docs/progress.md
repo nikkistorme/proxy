@@ -22,6 +22,11 @@ The design now has a UI placement guide (`design/ui-placement.md`, rules UI-1 to
 
 ## Done
 
+### Tests: slimmer Edit a copy unit tests (2026-10-29)
+
+- The SetupDialog and FormatsScreen "Edit a copy" unit tests rendered the whole session screen and walked menu, setup dialog, Formats screen and editor in jsdom. On CI they ran past Vitest's 5-second limit (PR #149). Each now renders only its component: the setup dialog saves the copy and hands it on; the Formats screen opens on a copy (`editId`) in the editor. The whole path stays in `e2e/format-editor.spec.ts`. Each takes about 0.6 s under full load, down from about 2.3 s, and the FormatsScreen test no longer needs its 20-second timeout.
+- **Changed requirements:** none.
+
 ### Planning: Phase 7 split (#141, 2026-10-29)
 
 - **Issues:** parent #141 with sub-issues 7a to 7g (#142 to #148), each with requirement IDs, scope, Placement, out of scope and acceptance criteria.
@@ -917,6 +922,7 @@ Every issue fills in its Placement section (`design/ui-placement.md`). No issue 
 
 ## Open problems
 
+- Component tests that render the whole `SessionScreen` and walk several screens (about 10 files, the slowest being `App.test.tsx`, `FormatsScreen.test.tsx`, `SetupDialog.test.tsx` and `LayoutEditor.test.tsx`) are the slow and flaky part of the unit suite on CI. When an issue touches one, keep its unit tests to that component and leave whole flows to E2E. `userEvent.setup({ delay: null })` could also speed the typing-heavy tests, such as `LayoutCanvas.test.tsx`.
 - A seat's counters can't be reordered in the format editor; they keep the order they were added in.
 - Renaming a counter or changing its starting value isn't announced, like seat and pile renames in 6e; only adds and removes are.
 - A format save or delete that fails is silent, like layouts: the format stays as it is in the app for the visit.

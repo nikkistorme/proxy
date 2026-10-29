@@ -195,20 +195,25 @@ describe('FS-2 opening the Formats screen', () => {
     await user.click(screen.getByRole('button', { name: 'Back to New session' }));
     expect(await screen.findByRole('radio', { name: /^Solo PvE/ })).toBeChecked();
   });
+});
 
-  it('Edit a copy shows only for presets, opens the copy in the editor and comes back with it selected', async () => {
-    const user = await renderSession({ [formatKey('f-a')]: saved('f-a', 'Apple') });
-    expect(screen.getByRole('button', { name: 'Edit a copy of Solo PvE' })).toBeInTheDocument();
-    await user.click(await screen.findByRole('radio', { name: /^Apple/ }));
-    expect(screen.queryByRole('button', { name: /^Edit a copy/ })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('radio', { name: /^1v1 PvP/ }));
-    await user.click(screen.getByRole('button', { name: 'Edit a copy of 1v1 PvP' }));
-    const formats = await screen.findByRole('dialog', { name: 'Formats' });
-    expect(within(formats).getByRole('status')).toHaveTextContent('Duplicated 1v1 PvP as 1v1 PvP copy.');
+describe('FS-2 opening on a copy', () => {
+  // The setup dialog's Edit a copy opens the screen this way (see its own test);
+  // the whole path, back to the dialog with the copy chosen, is in e2e/format-editor.spec.ts.
+  it('opens the copy in the editor, announces it, and Back to formats focuses its Edit button', async () => {
+    const copy = saved('f-copy', '1v1 PvP copy');
+    const user = userEvent.setup();
+    render(
+      <StorageProvider backend={memoryBackend({ [formatKey(copy.id)]: copy })}>
+        <FormatsProvider>
+          <FormatsScreen onClose={() => {}} backLabel="Back to New session" editId={copy.id} announcement="Duplicated 1v1 PvP as 1v1 PvP copy. Editing 1v1 PvP copy." />
+        </FormatsProvider>
+      </StorageProvider>,
+    );
     expect(await screen.findByRole('textbox', { name: 'Seat 1 name' })).toBeInTheDocument();
+    expect(status()).toHaveTextContent('Duplicated 1v1 PvP as 1v1 PvP copy.');
+    expect(screen.getByRole('button', { name: 'Back to formats' })).toHaveFocus();
     await user.click(screen.getByRole('button', { name: 'Back to formats' }));
     expect(screen.getByRole('button', { name: 'Edit 1v1 PvP copy' })).toHaveFocus();
-    await user.click(screen.getByRole('button', { name: 'Back to New session' }));
-    expect(await screen.findByRole('radio', { name: /^1v1 PvP copy/ })).toBeChecked();
-  }, 20000);
+  });
 });
