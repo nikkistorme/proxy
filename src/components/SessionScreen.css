@@ -82,6 +82,7 @@
 
 .seat-bar__counters {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
 }
 

@@ -89,3 +89,15 @@ describe('FS-1 formatById', () => {
     expect(formatById([saved], undefined).id).toBe('preset-solo-pve');
   });
 });
+
+describe('FS-4 seat counters in a new session', () => {
+  it('starts each seat’s counters at the format’s values', () => {
+    const format: Format = {
+      ...PVP_1V1,
+      seats: PVP_1V1.seats.map((seat) => ({ ...seat, counters: seat.counters.map((c) => (c.name === 'Life' ? { ...c, value: 30 } : c)) })),
+    };
+    const session = createSession(format);
+    expect(session.seats.map((seat) => seat.counters.find((c) => c.name === 'Life')?.value)).toEqual([30, 30]);
+    expect(session.seats[0]?.counters.map((c) => c.name)).toEqual(['Life', 'Energy']);
+  });
+});
