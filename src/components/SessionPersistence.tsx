@@ -3,15 +3,32 @@ import { useFormats } from '../formats/FormatsProvider';
 import { formatById } from '../model/format';
 import { useCurrentSession, useOption, useStorage } from '../storage/StorageProvider';
 import { useSavedItems } from '../storage/useSavedItems';
-import { SESSION_SAVE_DELAY, type SessionItem } from '../store/sessionItem';
-import { useSessionStoreApi, type SessionStore } from '../store/sessionStore';
+import { decodeShared, encodeShared } from '../model/sharedEncoding';
+import { SESSION_SAVE_DELAY, type SavedHistory, type SessionItem } from '../store/sessionItem';
+import { HISTORY_LIMIT, useSessionStoreApi, type HistoryEntry, type SessionStore } from '../store/sessionStore';
 import './SessionPersistence.css';
 
 /** If reading the saved session never finishes, the app stops waiting after this long. */
 export const LOAD_TIMEOUT = 5000;
 
 function toItem(state: SessionStore): Omit<SessionItem, 'updatedAt' | 'version'> {
-  return { id: state.sessionId, state: state.session, log: state.log, zoom: state.view.zoom, snap: state.view.snap };
+  const history: SavedHistory = { session: state.session, past: state.past.slice(-HISTORY_LIMIT), future: state.future.slice(-HISTORY_LIMIT) };
+  return { id: state.sessionId, state: state.session, log: state.log, zoom: state.view.zoom, snap: state.view.snap, history: encodeShared(history) };
+}
+
+const isEntries = (value: unknown): value is HistoryEntry[] =>
+  Array.isArray(value) && value.every((entry) => typeof entry === 'object' && entry !== null && typeof entry.announcement === 'string' && typeof entry.session === 'object' && entry.session !== null);
+
+/** The saved undo history, or nothing when it is missing or can't be read: the session still comes back (PS-2). */
+function readHistory(saved: Pick<SessionItem, 'history'>): SavedHistory | undefined {
+  if (!saved.history) return undefined;
+  try {
+    const decoded = decodeShared(saved.history) as Partial<SavedHistory> | null;
+    if (!decoded || typeof decoded.session !== 'object' || decoded.session === null || !isEntries(decoded.past) || !isEntries(decoded.future)) return undefined;
+    return decoded as SavedHistory;
+  } catch {
+    return undefined;
+  }
 }
 
 /**
@@ -76,7 +93,16 @@ export function SessionPersistence({ children }: { children: ReactNode }) {
     if (touched) {
       // Something was done before storage was ready, so the session in memory wins.
     } else if (saved) {
-      state.restoreSession({ id: saved.id, session: saved.state, log: saved.log, zoom: saved.zoom, snap: saved.snap });
+      const history = readHistory(saved);
+      state.restoreSession({
+        id: saved.id,
+        session: history?.session ?? saved.state,
+        log: saved.log,
+        zoom: saved.zoom,
+        snap: saved.snap,
+        past: history?.past.slice(-HISTORY_LIMIT),
+        future: history?.future.slice(-HISTORY_LIMIT),
+      });
       restored = true;
     } else {
       startFromDefault();

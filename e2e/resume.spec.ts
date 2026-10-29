@@ -37,7 +37,7 @@ async function reload(page: Page) {
 }
 
 test.describe('PS-2 Resume', () => {
-  test('keyboard: play a few moves, reload, and the same session is back with an empty undo', async ({ page }) => {
+  test('keyboard: play a few moves, reload, and the same session is back with its undo history', async ({ page }) => {
     await loadDeck(page);
     await expect(mainPile(page)).toBeFocused();
     await page.keyboard.press('d');
@@ -82,12 +82,56 @@ test.describe('PS-2 Resume', () => {
     await expect(life(page)).toContainText('19');
     await expect(zoomButton(page)).toHaveText('110%');
     await expect(snapButton(page)).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.getByRole('button', { name: /^Undo \(Ctrl\+Z\)/ })).toHaveAccessibleName('Undo (Ctrl+Z), nothing to undo');
+    await expect(page.getByRole('button', { name: /^Undo \(Ctrl\+Z\)/ })).not.toHaveAccessibleName('Undo (Ctrl+Z), nothing to undo');
 
     await sessionButton(page).click();
     await page.getByRole('menuitem', { name: 'Session log' }).click();
     await expect(page.getByRole('dialog', { name: 'Session log' }).getByRole('listitem')).toHaveCount(1);
     await expect(page.getByRole('dialog', { name: 'Session log' }).getByRole('listitem').first()).toContainText(/Rolled d20: \d+/);
+  });
+
+  test('keyboard: undo and redo step through the same moves after a reload', async ({ page }) => {
+    await loadDeck(page);
+    await expect(mainPile(page)).toBeFocused();
+    for (const left of ['3 cards', '2 cards', '1 card']) {
+      await page.keyboard.press('d');
+      await expect(status(page)).toHaveText(new RegExp(`^Player 1 drew .+ from P1 main deck\\. ${left} left\\.$`));
+    }
+    await reload(page);
+    await expect(hand(page).getByRole('list')).toHaveAccessibleName(/^Player 1's hand, 3 cards\./);
+
+    await mainPile(page).focus();
+    for (const left of ['1 card', '2 cards', '3 cards']) {
+      await page.keyboard.press('Control+z');
+      await expect(status(page)).toHaveText(new RegExp(`^Undone: Player 1 drew .+ from P1 main deck\\. ${left} left\\.$`));
+    }
+    await expect(hand(page).getByRole('list')).toHaveCount(0);
+    await page.keyboard.press('Control+Shift+z');
+    await expect(status(page)).toHaveText(/^Redone: Player 1 drew .+ from P1 main deck\. 3 cards left\.$/);
+    await expect(hand(page).getByRole('list')).toHaveAccessibleName(/^Player 1's hand, 1 card\./);
+    await page.keyboard.press('Control+z'); // the last draw
+    await page.keyboard.press('Control+z'); // the CSV load
+    await expect(status(page)).toHaveText(/^Undone: Loaded double-faced\.csv/);
+    await page.keyboard.press('Control+z');
+    await expect(status(page)).toHaveText('Nothing to undo.');
+  });
+
+  test('mouse: the Undo and Redo buttons step through the same moves after a reload', async ({ page }) => {
+    await loadDeck(page);
+    for (let i = 0; i < 3; i++) await hand(page).getByRole('button', { name: 'Draw' }).click();
+    await reload(page);
+    await expect(hand(page).getByRole('list')).toHaveAccessibleName(/^Player 1's hand, 3 cards\./);
+
+    const undo = page.getByRole('button', { name: /^Undo \(Ctrl\+Z\)/ });
+    const redo = page.getByRole('button', { name: /^Redo/ });
+    for (let i = 0; i < 3; i++) await undo.click();
+    await expect(hand(page).getByRole('list')).toHaveCount(0);
+    await redo.click();
+    await expect(hand(page).getByRole('list')).toHaveAccessibleName(/^Player 1's hand, 1 card\./);
+    await undo.click(); // the last draw
+    await undo.click(); // the CSV load
+    await expect(status(page)).toHaveText(/^Undone: Loaded double-faced\.csv/);
+    await expect(undo).toHaveAccessibleName('Undo (Ctrl+Z), nothing to undo');
   });
 
   test('mouse: New session… then reload opens the new session, with no axe violations', async ({ page }) => {
