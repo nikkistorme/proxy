@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { testContext } from '../actions/testing';
@@ -46,20 +46,21 @@ describe('FS-2 formats list', () => {
     if (!preset || !savedRow) throw new Error('No rows');
     expect(within(preset).getByText('Built in')).toBeInTheDocument();
     expect(within(preset).getByText(/Piles: P1 main deck, P2 main deck, Board cards/)).toBeInTheDocument();
-    expect(within(preset).getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual(['Duplicate 1v1 PvP']);
-    expect(within(savedRow).getAllByRole('button').map((b) => b.textContent)).toEqual(['Rename', 'Duplicate', 'Delete']);
+    expect(within(preset).getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual(['Edit a copy of 1v1 PvP']);
+    expect(within(savedRow).getAllByRole('button').map((b) => b.textContent)).toEqual(['Edit', 'Rename', 'Duplicate', 'Delete']);
     expect(screen.getByRole('button', { name: 'Back to table' })).toHaveFocus();
   });
 
-  it('duplicates a preset, saves the copy, announces it and focuses its Rename button', async () => {
-    const { user, backend } = await setup();
-    await user.click(screen.getByRole('button', { name: 'Duplicate 1v1 PvP' }));
-    expect(names()).toEqual(['Solo PvE', 'Co-op PvE', '1v1 PvP', '1v1 PvP copy']);
-    expect(status()).toHaveTextContent('Duplicated 1v1 PvP as 1v1 PvP copy.');
-    expect(screen.getByRole('button', { name: 'Rename 1v1 PvP copy' })).toHaveFocus();
-    await user.click(screen.getByRole('button', { name: 'Duplicate 1v1 PvP' }));
-    expect(names()).toContain('1v1 PvP copy 2');
-    await waitFor(() => expect([...backend.data.keys()].filter((k) => k.includes('|format|'))).toHaveLength(2), { timeout: 3000 });
+  it('duplicates a saved format, saves the copy, announces it and focuses its Rename button', async () => {
+    const { user, backend } = await setup({ [formatKey('f-a')]: saved('f-a', 'Apple') });
+    await waitFor(() => expect(names()).toContain('Apple'));
+    await user.click(screen.getByRole('button', { name: 'Duplicate Apple' }));
+    expect(names()).toEqual(['Solo PvE', 'Co-op PvE', '1v1 PvP', 'Apple', 'Apple copy']);
+    expect(status()).toHaveTextContent('Duplicated Apple as Apple copy.');
+    expect(screen.getByRole('button', { name: 'Rename Apple copy' })).toHaveFocus();
+    await user.click(screen.getByRole('button', { name: 'Duplicate Apple' }));
+    expect(names()).toContain('Apple copy 2');
+    await waitFor(() => expect([...backend.data.keys()].filter((k) => k.includes('|format|'))).toHaveLength(3), { timeout: 3000 });
   });
 
   it('renames a saved format, refusing empty and taken names', async () => {
@@ -103,7 +104,7 @@ describe('FS-2 formats list', () => {
     await user.click(screen.getByRole('button', { name: 'Delete Berry' }));
     await user.click(screen.getByRole('button', { name: 'Delete format' }));
     expect(names()).toEqual(['Solo PvE', 'Co-op PvE', '1v1 PvP']);
-    expect(screen.getByRole('button', { name: 'Duplicate 1v1 PvP' })).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Edit a copy of 1v1 PvP' })).toHaveFocus();
     await waitFor(() => expect([...backend.data.keys()].some((k) => k.includes('|format|'))).toBe(false));
   });
 
@@ -111,6 +112,33 @@ describe('FS-2 formats list', () => {
     const { user, onClose } = await setup();
     await user.click(screen.getByRole('button', { name: 'Back to table' }));
     expect(onClose).toHaveBeenCalled();
+  });
+});
+
+describe('FS-2 Edit a copy and the editor', () => {
+  it('a preset’s Edit a copy saves a copy and opens it in the editor; Back returns to its Edit button', async () => {
+    const { user, backend } = await setup();
+    await user.click(screen.getByRole('button', { name: 'Edit a copy of 1v1 PvP' }));
+    expect(screen.getByRole('textbox', { name: 'Seat 1 name' })).toHaveValue('Player 1');
+    expect(screen.getByRole('heading', { name: '1v1 PvP copy' })).toBeInTheDocument();
+    expect(status()).toHaveTextContent('Duplicated 1v1 PvP as 1v1 PvP copy. Editing 1v1 PvP copy.');
+    expect(screen.getByRole('button', { name: 'Back to formats' })).toHaveFocus();
+    await user.click(screen.getByRole('button', { name: 'Back to formats' }));
+    expect(names()).toEqual(['Solo PvE', 'Co-op PvE', '1v1 PvP', '1v1 PvP copy']);
+    expect(screen.getByRole('button', { name: 'Edit 1v1 PvP copy' })).toHaveFocus();
+    await waitFor(() => expect([...backend.data.keys()].filter((k) => k.includes('|format|'))).toHaveLength(1), { timeout: 3000 });
+  });
+
+  it('Edit opens a saved format; the dialog’s cancel (Esc) goes back to the list, not out of the screen', async () => {
+    const { user, onClose } = await setup({ [formatKey('f-a')]: saved('f-a', 'Apple') });
+    await waitFor(() => expect(names()).toContain('Apple'));
+    await user.click(screen.getByRole('button', { name: 'Edit Apple' }));
+    expect(status()).toHaveTextContent('Editing Apple.');
+    // jsdom doesn't turn Esc into a cancel event; the E2E test presses the key.
+    fireEvent(screenDialog(), new Event('cancel', { cancelable: true }));
+    expect(names()).toContain('Apple');
+    expect(screen.getByRole('button', { name: 'Edit Apple' })).toHaveFocus();
+    expect(onClose).not.toHaveBeenCalled();
   });
 });
 
@@ -168,7 +196,7 @@ describe('FS-2 opening the Formats screen', () => {
     expect(await screen.findByRole('radio', { name: /^Solo PvE/ })).toBeChecked();
   });
 
-  it('Edit a copy shows only for presets, duplicates, focuses the copy and comes back with it selected', async () => {
+  it('Edit a copy shows only for presets, opens the copy in the editor and comes back with it selected', async () => {
     const user = await renderSession({ [formatKey('f-a')]: saved('f-a', 'Apple') });
     expect(screen.getByRole('button', { name: 'Edit a copy of Solo PvE' })).toBeInTheDocument();
     await user.click(await screen.findByRole('radio', { name: /^Apple/ }));
@@ -177,7 +205,9 @@ describe('FS-2 opening the Formats screen', () => {
     await user.click(screen.getByRole('button', { name: 'Edit a copy of 1v1 PvP' }));
     const formats = await screen.findByRole('dialog', { name: 'Formats' });
     expect(within(formats).getByRole('status')).toHaveTextContent('Duplicated 1v1 PvP as 1v1 PvP copy.');
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Rename 1v1 PvP copy' })).toHaveFocus());
+    expect(await screen.findByRole('textbox', { name: 'Seat 1 name' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Back to formats' }));
+    expect(screen.getByRole('button', { name: 'Edit 1v1 PvP copy' })).toHaveFocus();
     await user.click(screen.getByRole('button', { name: 'Back to New session' }));
     expect(await screen.findByRole('radio', { name: /^1v1 PvP copy/ })).toBeChecked();
   }, 20000);

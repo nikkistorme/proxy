@@ -19,7 +19,7 @@ interface SetupDialogProps {
   initialId?: string;
   /** Edit formats…: the parent closes this dialog and opens the Formats screen, remembering the choice. */
   onEditFormats: (chosenId: string) => void;
-  /** Edit a copy: a preset was duplicated, and the Formats screen opens on the copy. */
+  /** Edit a copy: a preset was duplicated, and the Formats screen opens the copy in its editor. */
   onEditCopy: (copy: Format, message: string) => void;
 }
 
@@ -55,7 +55,7 @@ export function SetupDialog({ open, onClose, initialId, onEditFormats, onEditCop
   function editCopy() {
     const copy = duplicateFormat(formats, format);
     saveFormat(copy);
-    onEditCopy(copy, `Duplicated ${format.name} as ${copy.name}.`);
+    onEditCopy(copy, `Duplicated ${format.name} as ${copy.name}. Editing ${copy.name}.`);
   }
 
   function submit(): boolean {
