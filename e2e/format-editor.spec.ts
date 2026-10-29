@@ -137,3 +137,112 @@ test.describe('FS-2 format editor on a phone', () => {
     await expect(dice).toBeInViewport();
   });
 });
+
+test.describe('FS-4 seat counters', () => {
+  const seats = (page: Page) => page.getByRole('region', { name: 'Seats' });
+
+  test('keyboard: set Life to 30, add and remove counters, reload and start a session from the copy', async ({ page }) => {
+    await tabTo(page, sessionButton(page));
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Enter'); // New session…
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowDown');
+    await expect(page.getByRole('radio', { name: /^1v1 PvP/ })).toBeChecked();
+    await tabTo(page, page.getByRole('button', { name: 'Edit a copy of 1v1 PvP' }));
+    await page.keyboard.press('Enter');
+    await expect(screen(page)).toBeVisible();
+
+    // Life 30 for both players: focusing a field selects it, so typing replaces the value.
+    for (const seat of [1, 2]) {
+      const life = page.getByRole('textbox', { name: `Seat ${seat} counter 1 starting value` });
+      await tabTo(page, life, { max: 60 });
+      await page.keyboard.type('30');
+      await expect(life).toHaveValue('30');
+    }
+
+    // An out-of-range value shows an error.
+    const energy1 = page.getByRole('textbox', { name: 'Seat 1 counter 2 starting value' });
+    await tabTo(page, energy1, { backwards: true, max: 60 });
+    await page.keyboard.type('1000');
+    await expect(screen(page).getByText('The starting value must be from -999 to 999.')).toBeVisible();
+    await page.keyboard.press('ControlOrMeta+a');
+    await page.keyboard.type('-2');
+    await expect(screen(page).getByText('The starting value must be from -999 to 999.')).toHaveCount(0);
+
+    // Add a counter to Player 1 and name it.
+    await tabTo(page, page.getByRole('button', { name: 'Add counter to Player 1' }), { max: 60 });
+    await page.keyboard.press('Enter');
+    const added = page.getByRole('textbox', { name: 'Seat 1 counter 3 name' });
+    await expect(added).toBeFocused();
+    await expect(screen(page).getByRole('status')).toHaveText('Added counter Counter 3 to Player 1.');
+    await page.keyboard.type('Mana');
+
+    // Remove Energy from Player 2: focus goes to the previous counter's Remove button.
+    await tabTo(page, page.getByRole('button', { name: 'Remove Player 2 Energy' }), { max: 60 });
+    await page.keyboard.press('Enter');
+    await expect(screen(page).getByRole('status')).toHaveText('Removed Player 2 Energy.');
+    await expect(page.getByRole('button', { name: 'Remove Player 2 Life' })).toBeFocused();
+
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
+    await expect(setup(page)).toBeVisible();
+
+    await page.waitForTimeout(1200);
+    await page.reload();
+    await openSetup(page);
+    await page.getByRole('radio', { name: /^1v1 PvP copy/ }).focus();
+    await page.keyboard.press('Space');
+    await page.keyboard.press('Enter');
+    await expect(header(page)).toContainText('1v1 PvP copy');
+    for (const name of ['Player 1 Life', 'Player 2 Life']) await expect(seats(page).getByRole('group', { name })).toContainText('30');
+    await expect(seats(page).getByRole('group', { name: 'Player 1 Energy' })).toContainText('-2');
+    await expect(seats(page).getByRole('group', { name: 'Player 1 Mana' })).toContainText('0');
+    await expect(seats(page).getByRole('group', { name: 'Player 2 Energy' })).toHaveCount(0);
+  });
+
+  test('mouse: counters on the Environment seat, remove and add, with no axe violations', async ({ page }) => {
+    await openSetup(page);
+    await page.getByRole('button', { name: 'Edit formats…' }).click();
+    await page.getByRole('button', { name: 'Edit a copy of Co-op PvE' }).click();
+    await page.getByRole('button', { name: 'Add counter to Environment' }).click();
+    await page.getByRole('textbox', { name: 'Seat 3 counter 1 name' }).fill('Doom');
+    await page.getByRole('textbox', { name: 'Seat 3 counter 1 starting value' }).fill('5');
+    await page.getByRole('button', { name: 'Remove Player 1 Energy' }).click();
+    await page.getByRole('textbox', { name: 'Seat 1 counter 1 starting value' }).fill('x');
+    await expect(screen(page).getByText('The starting value must be a whole number.')).toBeVisible();
+    const results = await new AxeBuilder({ page }).include('.layout-editor').withTags(axeTags).analyze();
+    expect(results.violations).toEqual([]);
+    await page.getByRole('textbox', { name: 'Seat 1 counter 1 starting value' }).fill('25');
+    await page.getByRole('button', { name: 'Back to formats' }).click();
+    await page.getByRole('button', { name: 'Edit Co-op PvE copy' }).click();
+    await expect(page.getByRole('textbox', { name: 'Seat 1 counter 1 starting value' })).toHaveValue('25');
+    await expect(page.getByRole('textbox', { name: 'Seat 3 counter 1 name' })).toHaveValue('Doom');
+    await expect(page.getByRole('button', { name: 'Remove Player 1 Energy' })).toHaveCount(0);
+  });
+
+  test.describe('on a phone', () => {
+    test.use({ viewport: { width: 375, height: 667 } });
+
+    test('four counters fit the editor and the seat bar with no sideways scroll', async ({ page }) => {
+      await openSetup(page);
+      await page.getByRole('radio', { name: /^1v1 PvP/ }).check();
+      await page.getByRole('button', { name: 'Edit a copy of 1v1 PvP' }).click();
+      await page.getByRole('button', { name: 'Add counter to Player 1' }).click();
+      await page.getByRole('button', { name: 'Add counter to Player 1' }).click();
+      await expect(screen(page).getByText('A seat can have up to 4 counters.')).toBeVisible();
+      expect(await screen(page).evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+      const body = screen(page).locator('.layout-editor__body');
+      expect(await body.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+      await expect(page.getByRole('button', { name: 'Back to formats' })).toBeInViewport();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+
+      await page.keyboard.press('Escape');
+      await page.keyboard.press('Escape');
+      await page.getByRole('radio', { name: /^1v1 PvP copy/ }).check();
+      await page.getByRole('button', { name: 'Start session' }).click();
+      await expect(seats(page).getByRole('group', { name: 'Player 1 Counter 4' })).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+      expect(await seats(page).evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+    });
+  });
+});

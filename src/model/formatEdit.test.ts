@@ -1,6 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { COOP_PVE, PVP_1V1 } from './format';
-import { addPile, removePile, renamePile, renameSeat, setPileOwner, setUsesDice, validatePileName, validateSeatName } from './formatEdit';
+import {
+  addCounter,
+  addPile,
+  parseCounterValue,
+  removeCounter,
+  removePile,
+  renameCounter,
+  renamePile,
+  renameSeat,
+  setCounterValue,
+  setPileOwner,
+  setUsesDice,
+  validateCounterName,
+  validateCounterValue,
+  validatePileName,
+  validateSeatName,
+} from './formatEdit';
 
 describe('FS-2 seat names', () => {
   it('renames one seat, trimmed, and leaves the rest', () => {
@@ -60,5 +76,64 @@ describe('FS-2 dice', () => {
   it('turns dice on and off', () => {
     expect(setUsesDice(PVP_1V1, false).usesDice).toBe(false);
     expect(setUsesDice(setUsesDice(PVP_1V1, false), true).usesDice).toBe(true);
+  });
+});
+
+describe('FS-4 seat counters', () => {
+  const p2 = (f: typeof PVP_1V1) => f.seats[1]?.counters ?? [];
+
+  it('adds a counter at 0 with a free name and a counter- id, to one seat only', () => {
+    const { format, counter } = addCounter(PVP_1V1, 'seat-p2');
+    expect(counter).toMatchObject({ name: 'Counter 3', value: 0 });
+    expect(counter?.id).toMatch(/^counter-/);
+    expect(p2(format).map((c) => c.name)).toEqual(['Life', 'Energy', 'Counter 3']);
+    expect(format.seats[0]?.counters).toHaveLength(2);
+    expect(PVP_1V1.seats[1]?.counters).toHaveLength(2);
+  });
+
+  it('skips default names a seat already has', () => {
+    const { format, counter } = addCounter(PVP_1V1, 'seat-p1');
+    const renamed = renameCounter(format, 'seat-p1', counter?.id ?? '', 'Counter 4');
+    expect(addCounter(renamed, 'seat-p1').counter?.name).toBe('Counter 5');
+  });
+
+  it('adds nothing to a seat with 4 counters', () => {
+    let format = addCounter(PVP_1V1, 'seat-p1').format;
+    format = addCounter(format, 'seat-p1').format;
+    expect(format.seats[0]?.counters).toHaveLength(4);
+    const full = addCounter(format, 'seat-p1');
+    expect(full.counter).toBeUndefined();
+    expect(full.format).toBe(format);
+  });
+
+  it('lets the environment seat have counters', () => {
+    const { format } = addCounter(COOP_PVE, 'seat-env');
+    expect(format.seats[2]?.counters).toHaveLength(1);
+  });
+
+  it('removes, renames and sets a value by id', () => {
+    const removed = removeCounter(PVP_1V1, 'seat-p2', 'p2-energy');
+    expect(p2(removed).map((c) => c.name)).toEqual(['Life']);
+    const renamed = renameCounter(PVP_1V1, 'seat-p2', 'p2-life', '  HP ');
+    expect(p2(renamed)[0]?.name).toBe('HP');
+    const set = setCounterValue(PVP_1V1, 'seat-p1', 'p1-life', 30);
+    expect(set.seats[0]?.counters[0]?.value).toBe(30);
+    expect(set.seats[1]?.counters[0]?.value).toBe(20);
+  });
+
+  it('refuses empty names and a name the same seat has, but allows another seat’s', () => {
+    expect(validateCounterName(PVP_1V1, 'seat-p1', 'p1-life', ' ')).toBe('A counter needs a name');
+    expect(validateCounterName(PVP_1V1, 'seat-p1', 'p1-life', ' ENERGY ')).toBe('There is already a counter called Energy');
+    expect(validateCounterName(PVP_1V1, 'seat-p1', 'p1-life', 'LIFE')).toBeUndefined();
+    expect(validateCounterName(COOP_PVE, 'seat-env', 'x', 'Life')).toBeUndefined();
+  });
+
+  it('accepts whole numbers from -999 to 999, with - or −', () => {
+    for (const ok of ['0', '30', '-5', '−5', ' 999 ', '-999', '007']) expect(validateCounterValue(ok), ok).toBeUndefined();
+    expect(parseCounterValue('−5')).toBe(-5);
+    expect(parseCounterValue('-5')).toBe(-5);
+    expect(validateCounterValue('')).toBe('A starting value is needed');
+    for (const bad of ['1.5', 'abc', '-', '+3', '1e2', '1 2']) expect(validateCounterValue(bad), bad).toBe('The starting value must be a whole number');
+    for (const bad of ['1000', '-1000']) expect(validateCounterValue(bad), bad).toBe('The starting value must be from -999 to 999');
   });
 });

@@ -1,8 +1,8 @@
 import { newItemId } from '../storage/storage';
-import type { Format, FormatPile } from './format';
+import type { Format, FormatCounter, FormatPile } from './format';
 import { layoutNameKey } from './layoutChoice';
 
-/* Pure edits to a format's seats and piles (FS-2). Each returns a new format. Seats can't be added or removed in V1. */
+/* Pure edits to a format's seats, piles and seat counters (FS-2, FS-4). Each returns a new format. Seats can't be added or removed in V1. */
 
 /** Why a seat can't have this name, or undefined. Seat names are unique within the format, ignoring case and outer spaces. */
 export function validateSeatName(format: Format, seatId: string, name: string): string | undefined {
@@ -62,4 +62,68 @@ export function setPileOwner<T extends Format>(format: T, pileId: string, ownerS
 
 export function setUsesDice<T extends Format>(format: T, usesDice: boolean): T {
   return { ...format, usesDice };
+}
+
+/** A seat holds at most this many counters, so its seat bar row fits a phone (FS-4). */
+export const MAX_COUNTERS = 4;
+export const COUNTER_MIN = -999;
+export const COUNTER_MAX = 999;
+
+function mapSeat<T extends Format>(format: T, seatId: string, edit: (counters: FormatCounter[]) => FormatCounter[]): T {
+  return { ...format, seats: format.seats.map((seat) => (seat.id === seatId ? { ...seat, counters: edit(seat.counters) } : seat)) };
+}
+
+/** Why a counter can't have this name, or undefined. Names are unique within their seat, ignoring case and outer spaces. */
+export function validateCounterName(format: Format, seatId: string, counterId: string, name: string): string | undefined {
+  const key = layoutNameKey(name);
+  if (key === '') return 'A counter needs a name';
+  const seat = format.seats.find((s) => s.id === seatId);
+  const clash = seat?.counters.find((counter) => counter.id !== counterId && layoutNameKey(counter.name) === key);
+  if (clash) return `There is already a counter called ${clash.name}`;
+  return undefined;
+}
+
+/** Reads a starting value: a whole number with an optional leading "-" or "−". Undefined when it isn't one. */
+export function parseCounterValue(text: string): number | undefined {
+  const match = /^([-−]?)(\d+)$/.exec(text.trim());
+  if (!match) return undefined;
+  const n = Number(match[2]);
+  return match[1] ? -n : n;
+}
+
+/** Why a starting value can't be used, or undefined. */
+export function validateCounterValue(text: string): string | undefined {
+  if (text.trim() === '') return 'A starting value is needed';
+  const n = parseCounterValue(text);
+  if (n === undefined) return 'The starting value must be a whole number';
+  if (n < COUNTER_MIN || n > COUNTER_MAX) return `The starting value must be from ${COUNTER_MIN} to ${COUNTER_MAX}`;
+  return undefined;
+}
+
+/** "Counter 3", then "Counter 4", … the first that the seat doesn't have. */
+function freeCounterName(counters: FormatCounter[]): string {
+  const taken = new Set(counters.map((counter) => layoutNameKey(counter.name)));
+  let n = counters.length + 1;
+  while (taken.has(layoutNameKey(`Counter ${n}`))) n++;
+  return `Counter ${n}`;
+}
+
+/** Adds a counter at 0 to the end of a seat's counters, or returns the format as it was when the seat is full. */
+export function addCounter<T extends Format>(format: T, seatId: string): { format: T; counter?: FormatCounter } {
+  const seat = format.seats.find((s) => s.id === seatId);
+  if (!seat || seat.counters.length >= MAX_COUNTERS) return { format };
+  const counter: FormatCounter = { id: `counter-${newItemId()}`, name: freeCounterName(seat.counters), value: 0 };
+  return { format: mapSeat(format, seatId, (counters) => [...counters, counter]), counter };
+}
+
+export function removeCounter<T extends Format>(format: T, seatId: string, counterId: string): T {
+  return mapSeat(format, seatId, (counters) => counters.filter((counter) => counter.id !== counterId));
+}
+
+export function renameCounter<T extends Format>(format: T, seatId: string, counterId: string, name: string): T {
+  return mapSeat(format, seatId, (counters) => counters.map((counter) => (counter.id === counterId ? { ...counter, name: name.trim() } : counter)));
+}
+
+export function setCounterValue<T extends Format>(format: T, seatId: string, counterId: string, value: number): T {
+  return mapSeat(format, seatId, (counters) => counters.map((counter) => (counter.id === counterId ? { ...counter, value } : counter)));
 }
