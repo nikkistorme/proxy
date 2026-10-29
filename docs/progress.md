@@ -16,6 +16,8 @@ Field errors no longer rely on colour (#42, A11Y-13, outside the phases): every 
 
 Phase 6 (Formats, #115) is done. It was split into 6a to 6g, sub-issues #116 to #122, and a 1v1 PvP session can be set up and played by mouse and by keyboard (6g, #122). 6a (#116) is done: sessions are built from a format with `createSession(format)`, the three presets are in `src/model/format.ts`, each seat's colour, shape and card back follow its place (first player, second player or environment), and the header shows the format name. The app still starts from Solo PvE until the setup screen (6c). 6b (#117) is done: each seat in the seat bar is a button that makes it the active seat, which swaps the hand tray, and S and Shift+S step to the next and previous seat. Switching isn't an undo step; undo and redo show the hand of the seat that took the action. 6c (#118) is done: **New session…** in the This session menu opens a setup dialog with the three presets (seats and piles shown), asks first when the session has cards, and starts a session from the chosen format. The choice is saved as the `defaultFormat` option, and on reload an untouched session switches to it. 6d (#119) is done: saved formats are their own items, the setup dialog's **Edit formats…** and **Edit a copy** buttons open a full-screen Formats screen (presets read-only with Duplicate; saved formats with Rename, Duplicate and Delete), and the setup dialog and the saved default include saved formats. 6e (#120) is done: a preset's **Edit a copy** (in the setup dialog and on the Formats screen) makes a saved copy and opens it in a full-screen format editor, and **Edit** on a saved format opens the same editor. There, seats are renamed, piles are added, renamed, given an owner and removed, and Uses dice is switched, all autosaving. 6f (#121) is done: each seat in the editor also has up to 4 counters, added, renamed, given a starting value and removed, and a new session starts its seat counters at those values.
 
+Phase 7 (Session saves and Sheets, #141) is planned as 7a to 7g, sub-issues #142 to #148. None is built yet.
+
 The design now has a UI placement guide (`design/ui-placement.md`, rules UI-1 to UI-8, with `FuturePlacement.dc.html`), and the plan follows it (2026-10-29). V1 keeps today's shell: V1 issues add no header or toolbar control (UI-3) and put new controls at the guide's address, or in the This session menu until the Session menu exists. So 6d's Formats screen opens from the setup dialog, and 6e's format editor is full screen. After V1, the shell moves to the guide in its own issues, #130 to #135 (action registry, workspace with Home, Library and Settings, header slots and Session menu, side panel, seat dock, command palette), before the card set library (#67). Smaller moves ride along with the feature that touches them. Each issue now has a Placement section.
 
 ## Done
@@ -24,6 +26,14 @@ The design now has a UI placement guide (`design/ui-placement.md`, rules UI-1 to
 
 - The SetupDialog and FormatsScreen "Edit a copy" unit tests rendered the whole session screen and walked menu, setup dialog, Formats screen and editor in jsdom. On CI they ran past Vitest's 5-second limit (PR #149). Each now renders only its component: the setup dialog saves the copy and hands it on; the Formats screen opens on a copy (`editId`) in the editor. The whole path stays in `e2e/format-editor.spec.ts`. Each takes about 0.6 s under full load, down from about 2.3 s, and the FormatsScreen test no longer needs its 20-second timeout.
 - **Changed requirements:** none.
+
+### Planning: Phase 7 split (#141, 2026-10-29)
+
+- **Issues:** parent #141 with sub-issues 7a to 7g (#142 to #148), each with requirement IDs, scope, Placement, out of scope and acceptance criteria.
+- **Owner decisions:** no start screen in V1, reopening restores the last session (confirmed); New session… makes a new session item and deletes the old one, with the current session's id in the account settings; loading a snapshot is an undo step; a bundle import asks first, replaces items with the same id, adds the rest and makes its session current; Snapshots… is a dialog, not a submenu; a format's default sheet URLs are fetched when a session starts, and a failed one leaves that pile empty with its error.
+- **Saving undo history:** 7b saves each card definition once and has steps refer to it, keeping the 200-step cap.
+- **Left out of Phase 7:** a start screen or session list (#131), the demo (Phase 8), Lighthouse budgets (PF-4, Phase 8).
+- **Changed requirements:** none; each sub-issue updates its own.
 
 ### Phase 6g: Phase 6 close-out (#122, 2026-10-29)
 
@@ -885,13 +895,14 @@ The design now has a UI placement guide (`design/ui-placement.md`, rules UI-1 to
 
 Every issue fills in its Placement section (`design/ui-placement.md`). No issue adds a header or toolbar control (UI-3).
 
-- **Phase 7 (Session saves and Sheets):** plan and split it in an Opus session, once the owner gives the go-ahead. #115 is closed by the owner after the 6g merge.
-- **Phase 7 (Session saves and Sheets), placement to carry into its split:**
-  - Snapshots (PS-3): Save snapshot… and Snapshots ▸ in the This session menu (the Session menu's third group, #132).
-  - JSON bundle (PS-4): Export session… and the bundle import in the This session menu for V1; the whole-bundle export and import move to Settings › Data with #131.
-  - Reload all (CD-12): in the This session menu, shown only when a card set is URL-backed (UI-4).
-  - Resume: reopening the app restores the last session (PS-2), which is the guide's "the app keeps opening on the last session". A start screen isn't built in V1; Home comes with #131. Confirm when Phase 7 is planned.
-  - Sheet URLs (CD-7) stay where a pile is loaded: the setup dialog and the pile menu.
+- **Phase 7 (Session saves and Sheets, #141):** split into 7a to 7g, sub-issues #142 to #148. Each starts only with the owner's go-ahead, 7a first. Each is planned in Opus and built in Sonnet.
+  - 7a (#142): the session autosaves as its own item and reopening the app restores it (Resume), with its log; New session… replaces the session item.
+  - 7b (#143): undo and redo history saved in a compact form (each definition once), up to 200 steps.
+  - 7c (#144): Save snapshot… and Snapshots… (a dialog) in the This session menu; loading a snapshot is an undo step.
+  - 7d (#145): Export session… and Import bundle… in the This session menu, with a bundle fixture (QA-4).
+  - 7e (#146): Load from URL… in the pile menu, edit-link help, Reload, last-fetched time and offline fallback (CD-7 to CD-11). May split in two if its plan is too big.
+  - 7f (#147): a Sheet URL per pile in the format editor, fetched when a session starts, and Reload all in the This session menu, shown only with a URL-backed card set (CD-12).
+  - 7g (#148): close-out, save and reload and the bundle by mouse and keyboard (QA-5), and no new header control.
 - **Phase 8 (Polish), placement to carry into its split:** Load demo (DM-5) has no start screen in V1, so it goes in the setup dialog until Home exists (#131). The manual theme choice waits for Settings › Appearance (#131).
 - **After V1, in this order:**
   1. The demo on its own path (#63).
@@ -1170,3 +1181,9 @@ Every issue fills in its Placement section (`design/ui-placement.md`). No issue 
 | 2026-10-29 | 6d opens the Formats screen from the setup dialog, and 6e's format editor is full screen (UI-3, UI-8, owner) | A toolbar button and a dialog editor | No new header control, and the format screens drop straight into Library › Formats later |
 | 2026-10-29 | Editing card sets in Proxy is its own issue (#136) after #67 (owner) | Folding it into #67; parking it | #67 keeps the CSV or sheet as the source of truth, and editing adds its own rules (Sheet-linked sets read-only) |
 | 2026-10-29 | V1 has no start screen: reopening restores the last session, and Home comes with #131 | A start screen in Phase 7 | The guide keeps the app opening on the last session, and Home belongs to the workspace. Confirm when Phase 7 is planned |
+| 2026-10-29 | Reopening the app restores the last session; New session… replaces the session item, and the account settings record the current session's id (owner, #141) | A session list; keeping every session item | Nothing lists sessions before Home (#131), so old items would pile up unseen; snapshots keep a session on purpose |
+| 2026-10-29 | Loading a snapshot is an undo step (owner, #141) | Clearing undo history like New session | Loading the wrong snapshot can be undone |
+| 2026-10-29 | Importing a bundle asks first, replaces items with the same id, adds the rest and makes its session current (owner, #141) | Merging or picking items | Simple and predictable for a restore |
+| 2026-10-29 | Snapshots… opens a dialog, not a "Snapshots ▸" submenu (owner, #141) | A submenu | The menu has no submenus, and snapshots move to the Log tab with #133 |
+| 2026-10-29 | A format's default sheet URLs are fetched when a session starts; a failed fetch leaves that pile empty with its error (owner, #141) | Loading only on Reload all | The format sets up the whole table in one step |
+| 2026-10-29 | Saved undo history stores each card definition once, with steps referring to it, capped at 200 steps (#141) | Plain JSON of every step; diffs between steps | Avoids repeating the card list in every step while keeping restore simple |
