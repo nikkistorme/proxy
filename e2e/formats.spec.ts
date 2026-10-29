@@ -34,7 +34,12 @@ test.describe('FS-2 saved formats', () => {
     await page.keyboard.press('Enter');
     await expect(screen(page)).toBeVisible();
     await expect(setup(page)).toBeHidden();
+    // The copy opens in the editor (FS-2); Back to formats lists it.
+    await expect(page.getByRole('button', { name: 'Back to formats' })).toBeFocused();
+    await page.keyboard.press('Enter');
     await expect(names(page)).toHaveText(['Solo PvE', 'Co-op PvE', '1v1 PvP', '1v1 PvP copy']);
+    await expect(page.getByRole('button', { name: 'Edit 1v1 PvP copy', exact: true })).toBeFocused();
+    await page.keyboard.press('Tab');
     await expect(page.getByRole('button', { name: 'Rename 1v1 PvP copy', exact: true })).toBeFocused();
 
     await page.keyboard.press('Enter');
@@ -85,7 +90,7 @@ test.describe('FS-2 saved formats', () => {
     await page.keyboard.press('Enter');
     await expect(confirm).toBeHidden();
     await expect(names(page)).toHaveText(['Solo PvE', 'Co-op PvE', '1v1 PvP']);
-    await expect(page.getByRole('button', { name: 'Duplicate 1v1 PvP', exact: true })).toBeFocused();
+    await expect(page.getByRole('button', { name: 'Edit a copy of 1v1 PvP', exact: true })).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(page.getByRole('radio', { name: /^Solo PvE/ })).toBeChecked();
     await page.keyboard.press('Escape');
@@ -102,7 +107,8 @@ test.describe('FS-2 saved formats', () => {
   test('mouse: Edit formats…, duplicate, rename and delete, with no axe violations', async ({ page }) => {
     await openSetup(page);
     await page.getByRole('button', { name: 'Edit formats…' }).click();
-    await page.getByRole('button', { name: 'Duplicate Co-op PvE', exact: true }).click();
+    await page.getByRole('button', { name: 'Edit a copy of Co-op PvE', exact: true }).click();
+    await page.getByRole('button', { name: 'Back to formats' }).click();
     await expect(names(page)).toHaveText(['Solo PvE', 'Co-op PvE', '1v1 PvP', 'Co-op PvE copy']);
     const results = await new AxeBuilder({ page }).include('.layout-editor').withTags(axeTags).analyze();
     expect(results.violations).toEqual([]);
@@ -137,8 +143,10 @@ test.describe('FS-2 Formats screen on a phone', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
     await page.getByRole('button', { name: 'Edit formats…' }).click();
 
-    const duplicate = page.getByRole('button', { name: 'Duplicate 1v1 PvP', exact: true });
-    for (let i = 0; i < 3; i++) await duplicate.click();
+    for (let i = 0; i < 3; i++) {
+      await page.getByRole('button', { name: 'Edit a copy of 1v1 PvP', exact: true }).click();
+      await page.getByRole('button', { name: 'Back to formats' }).click();
+    }
     await expect(names(page)).toHaveCount(6);
 
     expect(await screen(page).boundingBox()).toMatchObject({ x: 0, y: 0, width: 375, height: 667 });

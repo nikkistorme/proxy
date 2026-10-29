@@ -139,6 +139,21 @@ describe('SP-1 saved formats in the setup dialog', () => {
   });
 });
 
+describe('SP-1 Edit a copy', () => {
+  it('shows for presets only and opens the copy in the format editor', async () => {
+    const { user } = renderScreen(createSession(SOLO_PVE), { [formatKey(mine.id)]: mine });
+    await openSetup(user);
+    await user.click(await screen.findByRole('radio', { name: /^My duel/ }));
+    expect(screen.queryByRole('button', { name: /^Edit a copy/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('radio', { name: /^Co-op PvE/ }));
+    await user.click(screen.getByRole('button', { name: 'Edit a copy of Co-op PvE' }));
+    const formats = await screen.findByRole('dialog', { name: 'Formats' });
+    expect(await screen.findByRole('textbox', { name: 'Seat 3 name' })).toHaveValue('Environment');
+    expect(formats).toHaveTextContent('Co-op PvE copy');
+    expect(screen.getByRole('button', { name: 'Back to formats' })).toHaveFocus();
+  });
+});
+
 describe('SP-1 default format with saved formats', () => {
   it('switches an untouched session to a saved default once the formats have loaded', async () => {
     const { store } = renderScreen(createSession(SOLO_PVE), {

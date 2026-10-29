@@ -5,6 +5,7 @@ import { PRESETS, SOLO_PVE, type Format, type FormatItem } from '../model/format
 import { duplicateFormat, validateFormatName } from '../model/formatNames';
 import '../editor/LayoutEditor.css';
 import { DeleteFormatDialog } from './DeleteFormatDialog';
+import { FormatEditor } from './FormatEditor';
 import { useFormats } from './FormatsProvider';
 
 const byName = (a: FormatItem, b: FormatItem) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true });
@@ -14,40 +15,49 @@ interface FormatsScreenProps {
   onClose: () => void;
   /** The back button's label. */
   backLabel?: string;
-  /** A row to put focus on its Rename button when the screen opens, like a copy just made. */
-  focusId?: string;
+  /** A saved format to open in the editor straight away, like a copy just made. */
+  editId?: string;
   /** Announced when the screen opens. */
   announcement?: string;
 }
 
 /**
- * The full-screen Formats screen (FS-2), opened from the toolbar and loaded on
+ * The full-screen Formats screen (FS-2), opened from the setup dialog and loaded on
  * first use (PF-3). It lists the presets, which can only be duplicated, and the
- * saved formats, which can be renamed, duplicated and deleted. It reuses the
- * layout screen's frame: a modal <dialog> over the table.
+ * saved formats, which can be edited, renamed, duplicated and deleted. A preset's
+ * Edit a copy makes a saved copy and opens it. Edit opens a format's seats and
+ * piles in the editor, in the same screen. It reuses the layout screen's frame:
+ * a modal <dialog> over the table.
  */
-export default function FormatsScreen({ onClose, backLabel = 'Back to table', focusId, announcement: opening = '' }: FormatsScreenProps) {
+export default function FormatsScreen({ onClose, backLabel = 'Back to table', editId, announcement: opening = '' }: FormatsScreenProps) {
   const { formats, saveFormat, deleteFormat } = useFormats();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const backRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
   const [renaming, setRenaming] = useState<FormatItem>();
   const [deleting, setDeleting] = useState<FormatItem>();
+  /** The format open in the editor, if any. */
+  const [editingId, setEditingId] = useState(editId);
   const [announcement, setAnnouncement] = useState({ id: 0, text: opening });
   /** The row and button to focus once the list has rendered, after an action or a dialog. */
-  const pendingFocus = useRef<{ id: string; action: 'rename' | 'duplicate' | 'delete' } | undefined>(focusId ? { id: focusId, action: 'rename' } : undefined);
+  const pendingFocus = useRef<{ id: string; action: 'edit' | 'rename' | 'duplicate' | 'delete' } | undefined>(undefined);
   /** Where focus goes once the delete dialog closes after a delete. */
   const afterDelete = useRef<{ id: string; action: 'rename' | 'duplicate' }>(undefined);
   /** Set from a rename until the next key event: see `openRename`. */
   const renameKeyHeld = useRef(false);
 
   const sorted = [...formats].sort(byName);
+  const editing = formats.find((format) => format.id === editingId);
 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (dialog && !dialog.open) dialog.showModal();
-    backRef.current?.focus();
   }, []);
+
+  // Back is the first thing focused, on the list and on the editor (no text field on touch screens).
+  useEffect(() => {
+    backRef.current?.focus();
+  }, [editing?.id]);
 
   // Runs after every render, so it finds rows that have just appeared.
   useEffect(() => {
@@ -66,6 +76,24 @@ export default function FormatsScreen({ onClose, backLabel = 'Back to table', fo
     saveFormat(copy);
     announce(`Duplicated ${source.name} as ${copy.name}.`);
     pendingFocus.current = { id: copy.id, action: 'rename' };
+  }
+
+  // A preset's Edit a copy: the copy opens in the editor.
+  function editCopy(source: Format) {
+    const copy = duplicateFormat(formats, source);
+    saveFormat(copy);
+    announce(`Duplicated ${source.name} as ${copy.name}. Editing ${copy.name}.`);
+    setEditingId(copy.id);
+  }
+
+  function openEditor(format: FormatItem) {
+    setEditingId(format.id);
+    announce(`Editing ${format.name}.`);
+  }
+
+  function closeEditor() {
+    if (editing) pendingFocus.current = { id: editing.id, action: 'edit' };
+    setEditingId(undefined);
   }
 
   // Enter in the name field submits on keydown, and the closing dialog hands focus
@@ -124,13 +152,19 @@ export default function FormatsScreen({ onClose, backLabel = 'Back to table', fo
       aria-labelledby={titleId}
       // Nested dialogs' close events reach here too; only act on our own.
       onClose={(event) => event.target === event.currentTarget && onClose()}
+      onCancel={(event) => {
+        // Esc in the editor goes back to the list, not out of the screen.
+        if (event.target !== event.currentTarget || !editing) return;
+        event.preventDefault();
+        closeEditor();
+      }}
     >
       <header className="layout-editor__header">
-        <button ref={backRef} type="button" className="button layout-editor__back" onClick={() => dialogRef.current?.close()}>
+        <button ref={backRef} type="button" className="button layout-editor__back" onClick={() => (editing ? closeEditor() : dialogRef.current?.close())}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M15 6l-6 6 6 6" />
           </svg>
-          {backLabel}
+          {editing ? 'Back to formats' : backLabel}
         </button>
         <h2 id={titleId} className="layout-editor__title">
           Formats
@@ -138,20 +172,25 @@ export default function FormatsScreen({ onClose, backLabel = 'Back to table', fo
       </header>
 
       <div className="layout-editor__body">
-        <ul className="layout-list" aria-labelledby={titleId}>
-          {PRESETS.map((preset) => (
-            <Row key={preset.id} format={preset} meta="Built in" onDuplicate={() => duplicate(preset)} />
-          ))}
-          {sorted.map((format) => (
-            <Row
-              key={format.id}
-              format={format}
-              onRename={(event) => openRename(event, format)}
-              onDuplicate={() => duplicate(format)}
-              onDelete={() => setDeleting(format)}
-            />
-          ))}
-        </ul>
+        {editing ? (
+          <FormatEditor key={editing.id} format={editing} onChange={saveFormat} announce={announce} />
+        ) : (
+          <ul className="layout-list" aria-labelledby={titleId}>
+            {PRESETS.map((preset) => (
+              <Row key={preset.id} format={preset} meta="Built in" onDuplicate={() => editCopy(preset)} />
+            ))}
+            {sorted.map((format) => (
+              <Row
+                key={format.id}
+                format={format}
+                onEdit={() => openEditor(format)}
+                onRename={(event) => openRename(event, format)}
+                onDuplicate={() => duplicate(format)}
+                onDelete={() => setDeleting(format)}
+              />
+            ))}
+          </ul>
+        )}
       </div>
 
       <div role="status" aria-live="polite" className="visually-hidden">
@@ -173,12 +212,13 @@ export default function FormatsScreen({ onClose, backLabel = 'Back to table', fo
 interface RowProps {
   format: Format;
   meta?: string;
+  onEdit?: () => void;
   onRename?: (event: MouseEvent) => void;
   onDuplicate: () => void;
   onDelete?: () => void;
 }
 
-function Row({ format, meta, onRename, onDuplicate, onDelete }: RowProps) {
+function Row({ format, meta, onEdit, onRename, onDuplicate, onDelete }: RowProps) {
   return (
     <li className="layout-list__row" data-format-id={format.id}>
       <div className="layout-list__text">
@@ -187,13 +227,25 @@ function Row({ format, meta, onRename, onDuplicate, onDelete }: RowProps) {
         <FormatSummary format={format} />
       </div>
       <div className="layout-list__actions">
+        {onEdit && (
+          <button type="button" className="button" data-action="edit" aria-label={`Edit ${format.name}`} onClick={onEdit}>
+            Edit
+          </button>
+        )}
         {onRename && (
           <button type="button" className="button" data-action="rename" aria-label={`Rename ${format.name}`} onClick={onRename}>
             Rename
           </button>
         )}
-        <button type="button" className="button" data-action="duplicate" aria-label={`Duplicate ${format.name}`} onClick={onDuplicate}>
-          Duplicate
+        {/* A preset has nothing to change in place, so its copy opens in the editor. */}
+        <button
+          type="button"
+          className="button"
+          data-action="duplicate"
+          aria-label={onEdit ? `Duplicate ${format.name}` : `Edit a copy of ${format.name}`}
+          onClick={onDuplicate}
+        >
+          {onEdit ? 'Duplicate' : 'Edit a copy'}
         </button>
         {onDelete && (
           <button type="button" className="button" data-action="delete" aria-label={`Delete ${format.name}`} onClick={onDelete}>

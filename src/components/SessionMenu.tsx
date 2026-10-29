@@ -20,7 +20,7 @@ export function SessionMenu() {
   /** When the setup dialog opened, or undefined while it's closed. */
   const [setupOpenedAt, setSetupOpenedAt] = useState<number>();
   /** The Formats screen while it's open (FS-2), reached from the setup dialog. `chosenId` is the format to select when the setup dialog comes back. */
-  const [formatsScreen, setFormatsScreen] = useState<{ chosenId: string; focusId?: string; message?: string }>();
+  const [formatsScreen, setFormatsScreen] = useState<{ chosenId: string; editId?: string; message?: string }>();
   /** Set while the setup dialog closes to hand over to the Formats screen, so its close doesn't move focus to the menu button. */
   const handingOver = useRef(false);
   /** The format the reopened setup dialog starts on. */
@@ -32,7 +32,7 @@ export function SessionMenu() {
     buttonRef.current?.focus();
   }, []);
 
-  function openFormats(screen: { chosenId: string; focusId?: string; message?: string }) {
+  function openFormats(screen: { chosenId: string; editId?: string; message?: string }) {
     handingOver.current = true;
     setFormatsScreen(screen);
     setSetupOpenedAt(undefined);
@@ -81,7 +81,7 @@ export function SessionMenu() {
         open={setupOpenedAt !== undefined}
         initialId={initialId}
         onEditFormats={(chosenId) => openFormats({ chosenId })}
-        onEditCopy={(copy, message) => openFormats({ chosenId: copy.id, focusId: copy.id, message })}
+        onEditCopy={(copy, message) => openFormats({ chosenId: copy.id, editId: copy.id, message })}
         onClose={(started) => {
           setSetupOpenedAt(undefined);
           if (handingOver.current) handingOver.current = false;
@@ -91,7 +91,7 @@ export function SessionMenu() {
       />
       {formatsScreen && (
         <Suspense fallback={null}>
-          <FormatsScreen onClose={closeFormats} backLabel="Back to New session" focusId={formatsScreen.focusId} announcement={formatsScreen.message} />
+          <FormatsScreen onClose={closeFormats} backLabel="Back to New session" editId={formatsScreen.editId} announcement={formatsScreen.message} />
         </Suspense>
       )}
       <SessionLog
