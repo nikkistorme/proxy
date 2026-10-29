@@ -48,6 +48,12 @@ Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122. 6a (#11
 - Pile names are "P1 main deck" and "P2 main deck" in every preset. The spec's format table said "P1 main" for Co-op and PvP, and now matches.
 - Tests: `src/model/format.test.ts` (FS-1 for all three presets, FS-4 starting counters, identity by place). Every existing test passes with only the factory call changed.
 
+### Planning: shared setups and log rewind (2026-10-28)
+
+- **#106, shared setups (after #45):** the owner publishes a session as a frozen setup and shares a link (`?setup=<id>`). Each tester opens their own copy, with no account needed. Testers can't edit layouts, card sets or formats, or share again. They can manage piles and export their copy (owner decisions). Their own theme and settings apply. Suggested split and open questions are in the issue.
+- **#107, rewind from the session log:** the log lists every action, and "Rewind to here" returns the session to an entry's point as one undoable step.
+- No requirements changed yet: each issue adds its own requirements when it's picked up, like #45 and #63.
+
 ### Planning: Phase 6 split (#115, 2026-10-28)
 
 - **Issues:** parent #115 with sub-issues 6a to 6g (#116 to #122), each with requirement IDs, scope, out of scope and acceptance criteria.
@@ -826,6 +832,7 @@ Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122. 6a (#11
   - 6f (#121): format editor for seat counters.
   - 6g (#122): close-out, a 1v1 PvP session set up and played by mouse and keyboard.
 - **After V1, in this order:** the demo on its own path (#63), the card set library (#67), games (#65), then accounts and sync (#45). #45's docs-only step 1 (confirming Supabase, writing the accounts requirements) can happen any time.
+- **After V1, as feature issues:** shared setups (#106), after accounts (#45), and rewinding from the session log (#107), which isn't tied to a phase.
 - **#71: keys act on the hovered card or pile when nothing on the table has focus**, an owner request from the #70 review. Single-letter keys without focus need an off switch (WCAG 2.1.4), so it goes with #53.
 - **#68: no text-field focus on touch screens in the other dialogs** (Move to…, pile viewer, Draw/Mill/Peek count, pile name). It isn't tied to a phase, and the owner chooses when.
 - **After V1, as feature issues:** selection and group actions (#29), stacks (#30), and control settings with shortcut remapping (#53).
