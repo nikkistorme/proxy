@@ -59,6 +59,8 @@ const face = (page: Page, label: string) => table(page).locator(`.card-face[aria
 test.describe('LY-8 and PS-1 stored layouts', () => {
   test('a stored layout draws table cards and is still there after a reload', async ({ page }) => {
     await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
     await seedLayout(page);
     await page.reload();
     await bothOnTable(page);
@@ -77,6 +79,8 @@ test.describe('LY-8 stored layouts on a phone', () => {
 
   test('draws the stored layout without sideways scrolling', async ({ page }) => {
     await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
     await seedLayout(page);
     await page.reload();
     await bothOnTable(page);
@@ -97,6 +101,8 @@ test.describe('TT-9 landscape layouts', () => {
 
   test('a landscape card reads sideways on the table and upright when enlarged', async ({ page }) => {
     await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
     await seedLayout(page, location);
     await page.reload();
     await bothOnTable(page, csv);
@@ -123,6 +129,8 @@ test.describe('TT-9 landscape layouts on a phone', () => {
 
   test('the enlarged landscape card fits without sideways scrolling', async ({ page }) => {
     await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
     await seedLayout(page, location);
     await page.reload();
     await bothOnTable(page, 'name,layout\nHarbour,Location\nGoblin,\n');
@@ -152,6 +160,8 @@ const cutOff = (box: Locator) => box.evaluate((el) => el.scrollHeight > el.clien
 test.describe('LY-4 shrink-to-fit', () => {
   test('long text shrinks to fit, and too much text clips at 6 pt', async ({ page }) => {
     await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
     await seedLayout(page, rulesLayout('Rules', 'portrait'));
     await page.reload();
     await bothOnTable(page, `name,layout,rules\nTroll,Rules,"${someRules}"\nGoblin,Rules,"${tooManyRules}"\n`);
@@ -173,6 +183,8 @@ test.describe('LY-4 shrink-to-fit', () => {
 
   test('a landscape card shrinks its text on the table and in the enlarged preview', async ({ page }) => {
     await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
     await seedLayout(page, rulesLayout('Wide', 'landscape'));
     await page.reload();
     await bothOnTable(page, `name,layout,rules\nHarbour,Wide,"${someRules} ${someRules}"\nGoblin,\n`);
@@ -197,6 +209,8 @@ test.describe('LY-4 shrink-to-fit on a phone', () => {
 
   test('shrunk text fits without sideways scrolling', async ({ page }) => {
     await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
     await seedLayout(page, rulesLayout('Rules', 'portrait'));
     await page.reload();
     await bothOnTable(page, `name,layout,rules\nTroll,Rules,"${someRules}"\nGoblin,\n`);

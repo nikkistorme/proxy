@@ -3,6 +3,8 @@ import { expect, test } from '@playwright/test';
 test.describe('AR-8 app icon', () => {
   test('links the SVG, PNG and Apple touch icons under the base path, and each loads', async ({ page, baseURL }) => {
     await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
     const basePath = new URL(baseURL ?? '').pathname;
 
     const icons = [

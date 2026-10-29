@@ -115,8 +115,8 @@ test.describe('PS-2 Resume', () => {
 
   test('PS-6 when the browser can’t save, the app still works', async ({ page }) => {
     await page.addInitScript(() => {
-      indexedDB.open = () => {
-        throw new DOMException('blocked', 'SecurityError');
+      IDBFactory.prototype.open = () => {
+        throw new DOMException('Storage is blocked', 'SecurityError');
       };
     });
     await page.reload();

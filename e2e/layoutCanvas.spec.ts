@@ -29,6 +29,8 @@ function savedLayouts(page: Page) {
 /** A new layout, open on the canvas. */
 async function openNewLayout(page: Page) {
   await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
   await layoutsButton(page).click();
   await page.getByRole('button', { name: 'New layout' }).click();
   await page.getByRole('button', { name: 'Edit Layout 1' }).click();
@@ -38,6 +40,8 @@ async function openNewLayout(page: Page) {
 test.describe('LY-2 layout canvas', () => {
   test('adds, moves and resizes a box and turns the layout landscape by keyboard, and it lasts after a reload', async ({ page }) => {
     await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
     await layoutsButton(page).focus();
     await page.keyboard.press('l');
     await expect(page.getByRole('button', { name: 'New layout' })).toBeFocused();

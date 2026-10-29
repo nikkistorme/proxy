@@ -48,6 +48,8 @@ function savedBoxes(page: Page) {
 /** Troll loaded into P1's main deck and put on the table, drawn with the built-in layout. */
 async function setUp(page: Page) {
   await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
   const mainPile = page.getByRole('button', { name: /^P1 main deck,/ });
   await mainPile.click({ button: 'right' });
   const chooser = page.waitForEvent('filechooser');

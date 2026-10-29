@@ -47,6 +47,8 @@ async function seedHero(page: Page) {
 /** Hero saved, and a CSV with a double-faced card loaded into P1's main deck. */
 async function setUp(page: Page) {
   await page.goto('./');
+  // The app can't be used until the saved session has been read (PS-2).
+  await expect(page.getByText('Loading your session…')).toHaveCount(0);
   await seedHero(page);
   await page.reload();
   await page.getByRole('button', { name: /^P1 main deck,/ }).click({ button: 'right' });
