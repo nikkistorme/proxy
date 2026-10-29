@@ -4,6 +4,7 @@ This folder holds everything needed to build Proxy's UI:
 
 - `brief.md`: the design brief, covering scope, screens, components, interaction and accessibility rules.
 - `tokens.css`: colour, type, spacing, radius and shadow tokens for light and dark themes.
+  - `ui-placement.md`: where every current and planned feature lives, and the UI-1 to UI-8 rules issues cite. Read it before adding any control.
 - `mockups/*.dc.html`: the design canvas source, one file per board.
 
 Live canvas (view only): https://claude.ai/artifact/SXNrbAZTgX6KJxAbFFVGxp
@@ -22,6 +23,7 @@ The `.dc.html` files are reference designs, not app code. Each one is HTML with 
 | `CardStates.dc.html` | Every card, card back, counter and pile state |
 | `DesignSystem.dc.html` | Tokens, type, seat identity, motion, focus and icons |
 | `Card.dc.html` | Sample card face. Stands in for user-built layouts and is not app chrome. |
+| `FuturePlacement.dc.html` | Future-state placement guide: principles, the places, header slots, object-action options, seat dock, workspace, phone and the feature map. Low-fidelity; `ui-placement.md` is the text version. Where it differs from `Main.dc.html` (header, seat bar, table tools), it is the direction to move towards. |
 
 ## Decisions made during design
 
@@ -37,6 +39,7 @@ These answer the brief's open questions or go beyond it:
 8. **Overlays on cards** (counters, the double-faced badge, the stack chip) are dark pills with a white edge, so they read on any card art.
 9. **Seat identity:** Ash is a triangle with diagonal-stripe backs. Briar is a circle with dot-grid backs. Environment is a square with fine-rule backs.
 10. **Fonts:** Atkinson Hyperlegible Next for the UI. Atkinson Hyperlegible Mono for every number that changes, so digits never shift.
+11. **Placement (Oct 29, 2026):** features get an address in `ui-placement.md` before they get UI. The header has seven fixed slots, table tools move onto the table, the seat bar and hand tray merge into a seat dock, and the log, pile viewer and card details share one side-panel slot. Decision 2 (log dock open by default) is open again; see the guide's open questions.
 
 ## Not designed yet
 
