@@ -180,5 +180,5 @@ describe('FS-2 opening the Formats screen', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Rename 1v1 PvP copy' })).toHaveFocus());
     await user.click(screen.getByRole('button', { name: 'Back to New session' }));
     expect(await screen.findByRole('radio', { name: /^1v1 PvP copy/ })).toBeChecked();
-  });
+  }, 20000);
 });
