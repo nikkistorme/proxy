@@ -45,7 +45,7 @@ A format is a preset that defines the seats at the table and the piles each one 
 
 - FS-1: Ship the three presets above.
 - FS-2: Users can edit a preset (rename seats, add or remove piles) and save it as a new format. In V1 seats are renamed but not added or removed, so every format has the seats of one of the three presets.
-- FS-3: Each player seat has its own hand. A seat switcher changes which hand is shown in the hand tray. Switching seats isn't an undo step.
+- FS-3: Each player seat has its own hand. A seat switcher in the seat bar changes which hand is shown in the hand tray, by click or with S and Shift+S (next and previous seat). Switching seats isn't an undo step; undo and redo make the seat that took the action active, so its hand shows.
 - FS-4: Each seat has its own counters (for example, life and resources). Counter names and starting values are set per format.
 
 **Acceptance criteria**

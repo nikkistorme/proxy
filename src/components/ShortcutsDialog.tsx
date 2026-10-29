@@ -29,6 +29,8 @@ export const SHORTCUT_GROUPS: Group[] = [
     note: 'Single keys work while focus is in the table, the hand or the table tools.',
     shortcuts: [
       { keys: ['D'], action: 'Draw a card' },
+      { keys: ['S'], action: 'Switch to the next seat' },
+      { keys: ['Shift+S'], action: 'Switch to the previous seat' },
       { keys: ['?'], action: 'Show these shortcuts' },
       { keys: ['L'], action: 'Card layouts' },
       { keys: ['+', '−'], action: 'Zoom in or out' },

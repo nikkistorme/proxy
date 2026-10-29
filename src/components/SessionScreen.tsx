@@ -3,6 +3,7 @@ import { loadPile } from '../actions/loadPile';
 import { peekTop } from '../actions/peek';
 import { draw, mill, revealTop, shuffle } from '../actions/pileActions';
 import { addPile, deletePile, mergePiles, renamePile, validatePileName } from '../actions/piles';
+import { neighbourSeatId } from '../actions/seats';
 import { importCards } from '../csv/importCards';
 import { cardColumns, cardTypes } from '../model/card';
 import { cardSetItem } from '../model/cardSet';
@@ -12,7 +13,7 @@ import { readingOrder, tableItems } from '../model/tableNavigation';
 import { StorageNotice } from '../storage/StorageNotice';
 import { useStorage } from '../storage/StorageProvider';
 import { newItemId } from '../storage/storage';
-import { useSessionStore } from '../store/sessionStore';
+import { useSessionStore, useSessionStoreApi } from '../store/sessionStore';
 import { DiceDialog } from './DiceDialog';
 import { DeletePileDialog, type DeletePileRequest, type MergeChoice, type MergePilesRequest } from './DeletePileDialog';
 import './SessionScreen.css';
@@ -40,6 +41,8 @@ function faceOf(session: SessionState, cardId: string) {
 }
 
 const ADD_PILE = 'add-pile';
+/** Focus the hand tray's Draw button, or the table when the active seat has no hand. */
+const HAND = 'hand';
 
 /** The layout screen loads the first time it opens (PF-3). */
 const LayoutEditor = lazy(() => import('../editor/LayoutEditor'));
@@ -54,6 +57,8 @@ export function SessionScreen() {
   const session = useSessionStore((s) => s.session);
   const dispatch = useSessionStore((s) => s.dispatch);
   const announce = useSessionStore((s) => s.announce);
+  const switchSeat = useSessionStore((s) => s.switchSeat);
+  const store = useSessionStoreApi();
   const setPlacing = useSessionStore((s) => s.setPlacing);
   const showToast = useSessionStore((s) => s.showToast);
   const drag = useSessionStore((s) => s.drag);
@@ -118,11 +123,15 @@ export function SessionScreen() {
     if (shortcutsReturnRef.current?.isConnected) shortcutsReturnRef.current.focus();
   }
 
-  // Focus a pile, a table card or Add pile once it exists in the page. Runs after every render.
+  // Focus a pile, a table card, Add pile or the hand once it exists in the page. Runs after every render.
   useEffect(() => {
     const pending = pendingFocusRef.current;
     if (!pending) return;
     pendingFocusRef.current = undefined;
+    if (pending === HAND) {
+      (document.querySelector<HTMLElement>('.hand-tray__draw') ?? document.querySelector<HTMLElement>('.table-surface'))?.focus();
+      return;
+    }
     const card = document.querySelector<HTMLElement>(`.table-card[data-card-id="${pending}"] .table-card__button`);
     (pending === ADD_PILE ? addPileRef.current : (tileRefs.current[pending] ?? card))?.focus();
   });
@@ -140,13 +149,13 @@ export function SessionScreen() {
     };
   }, []);
 
-  // D draws, ? opens the shortcut reference, L the layout screen, and V on a focused pile opens its viewer,
+  // D draws, S and Shift+S switch seats, ? opens the shortcut reference, L the layout screen, and V on a focused pile opens its viewer,
   // while focus is in the table, the hand or the table tools (WCAG 2.1.4) and no
   // menu or dialog is open.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
-      if ((key !== 'd' && key !== 'v' && key !== 'l' && key !== '?') || event.ctrlKey || event.metaKey || event.altKey) return;
+      if ((key !== 'd' && key !== 's' && key !== 'v' && key !== 'l' && key !== '?') || event.ctrlKey || event.metaKey || event.altKey) return;
       const target = event.target as HTMLElement;
       if (!inShortcutScope(target)) return;
       // Read what's open from the page, not React state, which can lag a dialog closing.
@@ -161,6 +170,13 @@ export function SessionScreen() {
         openLayouts();
         return;
       }
+      if (key === 's') {
+        event.preventDefault();
+        // The hand tray changes with the seat, so focus in it goes to the new tray, or the table.
+        if (target.closest('.hand-tray')) pendingFocusRef.current = HAND;
+        switchSeat(neighbourSeatId(store.getState().session, event.shiftKey ? -1 : 1));
+        return;
+      }
       if (key === 'v') {
         const pileId = Object.keys(tileRefs.current).find((id) => tileRefs.current[id] === target);
         if (!pileId) return;
@@ -173,7 +189,7 @@ export function SessionScreen() {
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [drawOne, openShortcuts, openLayouts]);
+  }, [drawOne, openShortcuts, openLayouts, switchSeat, store]);
 
   const closeMenu = useCallback(() => {
     if (menuPileId) tileRefs.current[menuPileId]?.focus();
@@ -476,16 +492,29 @@ export function SessionScreen() {
             const identity = seatIdentity(seat.place);
             const active = seat.id === session.activeSeatId;
             return (
-              <li key={seat.id} className="seat-bar__seat" style={active ? { boxShadow: `inset 0 -3px 0 ${identity.color}` } : undefined}>
-                <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-                  <path d={identity.shape} fill={identity.color} />
-                </svg>
-                <span className={active ? 'seat-bar__name seat-bar__name--active' : 'seat-bar__name'}>{seat.name}</span>
-                {active && (
-                  <span className="seat-bar__badge" style={{ background: identity.color }}>
-                    Active
-                  </span>
-                )}
+              <li key={seat.id} className={active ? 'seat-bar__seat seat-bar__seat--active' : 'seat-bar__seat'}>
+                <button
+                  type="button"
+                  className="seat-bar__switch"
+                  aria-pressed={active}
+                  aria-label={`${seat.name}, ${active ? 'active seat' : 'switch to this seat'}`}
+                  style={active ? { boxShadow: `inset 0 -3px 0 ${identity.color}` } : undefined}
+                  onClick={() => switchSeat(seat.id)}
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                    <path d={identity.shape} fill={identity.color} />
+                  </svg>
+                  {/* The space keeps "Player 1 Active" readable as words, inside the name "Player 1, active seat" (WCAG 2.5.3). */}
+                  <span>{seat.name}</span>
+                  {active && (
+                    <>
+                      {' '}
+                      <span className="seat-bar__badge" style={{ background: identity.color }}>
+                        Active
+                      </span>
+                    </>
+                  )}
+                </button>
                 {seat.counters.length > 0 && (
                   <div className="seat-bar__counters">
                     {seat.counters.map((counter) => (
@@ -523,7 +552,7 @@ export function SessionScreen() {
         </section>
 
         {activeSeat?.hasHand && (
-          <HandTray seatId={activeSeat.id} seatName={activeSeat.name} onDraw={drawOne} />
+          <HandTray key={activeSeat.id} seatId={activeSeat.id} seatName={activeSeat.name} onDraw={drawOne} />
         )}
       </main>
 

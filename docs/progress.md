@@ -14,9 +14,18 @@ Phase 5 (Layouts, #35) is split into 5a to 5j, sub-issues #88 to #96 and #111, w
 
 Field errors no longer rely on colour (#42, A11Y-13, outside the phases): every field error has an icon and starts with "Error:", an invalid field shows an icon inside its right end, focused or not, and errors use the new `--error` token. Later forms reuse `FieldError` and `FieldControl` from `src/components/FieldError.tsx`.
 
-Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122. 6a (#116) is done: sessions are built from a format with `createSession(format)`, the three presets are in `src/model/format.ts`, each seat's colour, shape and card back follow its place (first player, second player or environment), and the header shows the format name. The app still starts from Solo PvE until the setup screen (6c).
+Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122. 6a (#116) is done: sessions are built from a format with `createSession(format)`, the three presets are in `src/model/format.ts`, each seat's colour, shape and card back follow its place (first player, second player or environment), and the header shows the format name. The app still starts from Solo PvE until the setup screen (6c). 6b (#117) is done: each seat in the seat bar is a button that makes it the active seat, which swaps the hand tray, and S and Shift+S step to the next and previous seat. Switching isn't an undo step; undo and redo show the hand of the seat that took the action.
 
 ## Done
+
+### Phase 6b: Seat switcher (#117, 2026-10-29)
+
+- `src/actions/seats.ts`: `setActiveSeat` makes a seat active and announces it ("Player 2 is the active seat. Hand: 3 cards." or "Environment is the active seat. It has no hand."). `neighbourSeatId` gives the next or previous seat in seat bar order, wrapping round.
+- The store's `switchSeat` runs it outside the undo history and leaves the redo list alone (owner decision). Undo and redo set the active seat to the one that took the action being undone or redone, so its hand is in the tray (owner decision, 2026-10-29: revisit if it feels odd in play).
+- Each seat's name in the seat bar is a button, "Player 1, active seat" or "Player 2, switch to this seat", with `aria-pressed`, styled as on the Main board: the active seat's group is outlined and lifted. Focus stays on the button after a click or Enter.
+- S and Shift+S switch seats from the table, the hand or the table tools (WCAG 2.1.4), and are in the shortcut reference. Pressed in the hand, focus moves to the new seat's Draw button, or to the table if the new seat has no hand.
+- The hand tray is keyed by seat, so its focus and drag state start fresh for each seat.
+- Tests: `src/actions/seats.test.ts` and `src/components/SeatSwitcher.test.tsx` (FS-3), `e2e/seat-switcher.spec.ts` by mouse and keyboard with an axe scan and a 375 × 667 check.
 
 ### Phase 6a: Format model and the three presets (#116, 2026-10-29)
 
@@ -799,8 +808,7 @@ Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122. 6a (#11
 
 ## Next
 
-- **Phase 6 (Formats, #115):** split into 6a to 6g, sub-issues #116 to #122. 6a (#116) is done. Each of the rest starts only with the owner's go-ahead, 6b next.
-  - 6b (#117): seat switcher in the seat bar, S and Shift+S.
+- **Phase 6 (Formats, #115):** split into 6a to 6g, sub-issues #116 to #122. 6a (#116) and 6b (#117) are done. Each of the rest starts only with the owner's go-ahead, 6c next.
   - 6c (#118): setup dialog from **New session…**; the last format chosen is the `defaultFormat` option.
   - 6d (#119): saved formats as their own items, and a Formats screen with duplicate, rename and delete.
   - 6e (#120): format editor for seats, piles and Uses dice.
@@ -824,7 +832,7 @@ Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122. 6a (#11
 - A card set saved before the startup storage check finishes (the first moments after the page loads) isn't saved. The session still has its copy.
 - Loading a different file into a pile updates that pile's card set and renames it after the new file, rather than making a new set. The card library (#67) may want to split them.
 - The storage notice can't be dismissed. It's one line, and it matters for the whole visit, but a close button could come with the Settings screen.
-- Page-wide single keys (D, ?, zoom, fit, snap) need focus in the table, the hand or the table tools (WCAG 2.1.4). Straight after the page loads, or after a click on the seat bar, D does nothing until you Tab or click into the table. An off switch with #53 could let them work everywhere for those who want it.
+- Page-wide single keys (D, S, ?, zoom, fit, snap) need focus in the table, the hand or the table tools (WCAG 2.1.4). Straight after the page loads, or after a click on the seat bar, D and S do nothing until you Tab or click into the table. An off switch with #53 could let them work everywhere for those who want it.
 - The shortcut reference is a hand-kept list (`SHORTCUT_GROUPS`), so a new key needs adding there too. Remapping (#53) would make one list drive both.
 - The session log lists only rolls for now. The goal is every action (owner, 2026-10-27), which could reuse each action's announcement.
 - The session log isn't saved yet. Phase 7 should save it with the session.
@@ -1059,3 +1067,4 @@ Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122. 6a (#11
 | 2026-10-28 | The new requirement is A11Y-13, not the A11Y-12 the issue proposed | — | #66 had already used A11Y-12 for the iOS field zoom rule |
 | 2026-10-28 | Phase 6 split into 6a to 6g (#115); seats renamed but not added or removed; the app opens on the table with the last format; switching seats isn't an undo step | Adding seats in V1; a start screen in Phase 6; switching as an undo step | Owner decisions while planning Phase 6 |
 | 2026-10-29 | Session seats and piles keep the format's own ids, and seat identity follows `Seat.place` (#116) | New ids for every session; identity by seat id | Solo PvE builds the same session as before, so saved ids and tests stay valid, and a renamed or re-id'd seat still gets its place's colour and shape |
+| 2026-10-29 | Undo and redo make the seat that took the action active (FS-3, owner) | Keeping whichever seat is active | The tray then shows the hand the undo changed. Revisit if it feels odd in play. |
