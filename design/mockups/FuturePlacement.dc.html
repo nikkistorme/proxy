@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&family=Atkinson+Hyperlegible+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F6F5F1;color:#1C1E1B;font-family:'Atkinson Hyperlegible Next',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#1D5C86;text-decoration:none}a:hover{color:#14425F;text-decoration:underline}
+*{box-sizing:border-box}
+</style>
+</helmet>
+
+<div style="max-width:1200px;margin:0 auto;padding:56px 28px 120px;display:flex;flex-direction:column;gap:80px">
+
+<header style="display:flex;flex-direction:column;gap:18px;max-width:820px">
+  <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:13px;color:#575B54;letter-spacing:.04em">PROXY · UI PLACEMENT GUIDE · DRAFT 1 · OCT 29 2026</div>
+  <h1 style="margin:0;font-size:48px;line-height:1.05;font-weight:600;letter-spacing:-.02em;text-wrap:pretty">Every feature gets an address before it gets a button.</h1>
+  <p style="margin:0;font-size:18px;line-height:1.55;color:#575B54;text-wrap:pretty">This guide sets out the places features live in, the rules for choosing between them, and where every current and planned feature goes. Issues cite the rule IDs (<span style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:15px">UI-n</span>) the same way they cite requirement IDs. Then new work fits the plan, and the header doesn't grow each time.</p>
+  <div style="font-size:14px;color:#575B54;line-height:1.5;padding:12px 14px;border:1px solid #DDDCD4;border-radius:8px;background:#fff">Grounded in the local codebase: <span style="font-family:'Atkinson Hyperlegible Mono',monospace">SessionScreen</span>, <span style="font-family:'Atkinson Hyperlegible Mono',monospace">SessionMenu</span>, <span style="font-family:'Atkinson Hyperlegible Mono',monospace">TableTools</span>, <span style="font-family:'Atkinson Hyperlegible Mono',monospace">design/tokens.css</span> and <span style="font-family:'Atkinson Hyperlegible Mono',monospace">HANDOFF.md</span>. The diagrams use Proxy's tokens and fonts but stay low-fidelity. New dialogs follow MoveDialog, side sheets follow PileViewer, menus follow ActionMenu.</div>
+  <nav style="display:flex;flex-wrap:wrap;gap:8px;padding-top:4px">
+    <a href="#principles" style="padding:6px 12px;border:1px solid #C5C8BB;border-radius:999px;font-size:14px;color:#1C1E1B;background:#fff;white-space:nowrap">Principles</a>
+    <a href="#places" style="padding:6px 12px;border:1px solid #C5C8BB;border-radius:999px;font-size:14px;color:#1C1E1B;background:#fff;white-space:nowrap">The places</a>
+    <a href="#header" style="padding:6px 12px;border:1px solid #C5C8BB;border-radius:999px;font-size:14px;color:#1C1E1B;background:#fff;white-space:nowrap">Header</a>
+    <a href="#actions" style="padding:6px 12px;border:1px solid #C5C8BB;border-radius:999px;font-size:14px;color:#1C1E1B;background:#fff;white-space:nowrap">Object actions</a>
+    <a href="#dock" style="padding:6px 12px;border:1px solid #C5C8BB;border-radius:999px;font-size:14px;color:#1C1E1B;background:#fff;white-space:nowrap">Seat dock</a>
+    <a href="#home" style="padding:6px 12px;border:1px solid #C5C8BB;border-radius:999px;font-size:14px;color:#1C1E1B;background:#fff;white-space:nowrap">Home, library, account</a>
+    <a href="#phone" style="padding:6px 12px;border:1px solid #C5C8BB;border-radius:999px;font-size:14px;color:#1C1E1B;background:#fff;white-space:nowrap">Phone</a>
+    <a href="#map" style="padding:6px 12px;border:1px solid #C5C8BB;border-radius:999px;font-size:14px;color:#1C1E1B;background:#fff;white-space:nowrap">Feature map</a>
+    <a href="#checklist" style="padding:6px 12px;border:1px solid #C5C8BB;border-radius:999px;font-size:14px;color:#1C1E1B;background:#fff;white-space:nowrap">Issue checklist</a>
+  </nav>
+</header>
+
+<section id="principles" style="display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:13px;color:#1D5C86">01 · PRINCIPLES</div>
+    <h2 style="margin:0;font-size:30px;font-weight:600;letter-spacing:-.01em">Eight rules for issues to cite</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px">
+    <sc-for list="{{ principles }}" as="p" hint-placeholder-count="8">
+      <div style="background:#fff;border:1px solid #DDDCD4;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:8px">
+        <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:13px;color:#1D5C86;font-weight:500">{{ p.id }}</div>
+        <div style="font-size:18px;font-weight:600;line-height:1.3;text-wrap:pretty">{{ p.t }}</div>
+        <div style="font-size:15px;line-height:1.55;color:#575B54;text-wrap:pretty">{{ p.d }}</div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="places" style="display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:13px;color:#1D5C86">02 · THE PLACES</div>
+    <h2 style="margin:0;font-size:30px;font-weight:600;letter-spacing:-.01em">Two modes, nine places</h2>
+    <p style="margin:0;font-size:16px;line-height:1.55;color:#575B54;max-width:760px;text-wrap:pretty">You picked three shell directions. They fit together as one: <strong>the table is full-screen</strong> while you play, with everything else in slide-over panels. Outside the table there's a <strong>workspace with a side rail</strong>, and its home page is <strong>organised by game</strong>. The app keeps opening on the last session; Back on the table goes to Home.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));gap:20px">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:12px;color:#575B54">PLAY MODE · THE TABLE</div>
+      <div style="position:relative;aspect-ratio:16/11;border:1px solid #C5C8BB;border-radius:10px;overflow:hidden;background:#fff;display:grid;grid-template-rows:12% minmax(0,1fr) 24%;grid-template-columns:minmax(0,1fr) 30%">
+        <div style="grid-column:1 / 3;background:#EDECE6;border-bottom:1px solid #C5C8BB;display:flex;align-items:center;padding:0 12px;gap:8px;font-size:12px;font-weight:600;color:#575B54"><span style="background:#1D5C86;color:#fff;border-radius:50%;width:18px;height:18px;display:grid;place-items:center;font-size:11px">A</span>Header</div>
+        <div style="position:relative;background:#D9DBD0;background-image:radial-gradient(#C5C8BB 1px,transparent 1px);background-size:14px 14px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#575B54">
+          <span style="display:flex;gap:6px;align-items:center"><span style="background:#1D5C86;color:#fff;border-radius:50%;width:18px;height:18px;display:grid;place-items:center;font-size:11px">B</span>Table</span>
+          <div style="position:absolute;right:8px;bottom:8px;width:26px;height:56%;background:#EDECE6;border:1px solid #C5C8BB;border-radius:6px;display:flex;align-items:flex-start;justify-content:center;padding-top:4px"><span style="background:#1D5C86;color:#fff;border-radius:50%;width:18px;height:18px;display:grid;place-items:center;font-size:11px">C</span></div>
+          <div style="position:absolute;left:50%;top:10px;transform:translateX(-50%);padding:4px 10px;background:#1C1E1B;color:#fff;border-radius:6px;font-size:11px;display:flex;gap:6px;align-items:center;white-space:nowrap"><span style="background:#1D5C86;color:#fff;border-radius:50%;width:16px;height:16px;display:grid;place-items:center;font-size:10px">D</span>Selection bar</div>
+        </div>
+        <div style="grid-row:2 / 4;grid-column:2;background:#F6F5F1;border-left:1px solid #C5C8BB;display:flex;align-items:flex-start;padding:12px;gap:6px;font-size:12px;font-weight:600;color:#575B54"><span style="background:#1D5C86;color:#fff;border-radius:50%;width:18px;height:18px;display:grid;place-items:center;font-size:11px">E</span>Side panel</div>
+        <div style="background:#EDECE6;border-top:1px solid #C5C8BB;display:flex;align-items:center;padding:0 12px;gap:6px;font-size:12px;font-weight:600;color:#575B54"><span style="background:#1D5C86;color:#fff;border-radius:50%;width:18px;height:18px;display:grid;place-items:center;font-size:11px">F</span>Seat dock</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:12px;color:#575B54">WORKSPACE MODE · EVERYTHING ELSE</div>
+      <div style="position:relative;aspect-ratio:16/11;border:1px solid #C5C8BB;border-radius:10px;overflow:hidden;background:#fff;display:grid;grid-template-columns:22% minmax(0,1fr)">
+        <div style="background:#EDECE6;border-right:1px solid #C5C8BB;padding:12px;display:flex;flex-direction:column;gap:8px;font-size:12px;color:#575B54">
+          <div style="display:flex;gap:6px;align-items:center;font-weight:600"><span style="background:#1D5C86;color:#fff;border-radius:50%;width:18px;height:18px;display:grid;place-items:center;font-size:11px">G</span>Rail</div>
+          <div>Home</div><div>Library</div><div>Settings</div>
+          <div style="flex:1"></div><div>Account</div>
+        </div>
+        <div style="display:grid;grid-template-rows:auto minmax(0,1fr);padding:14px;gap:10px">
+          <div style="display:flex;gap:6px;align-items:center;font-size:12px;font-weight:600;color:#575B54"><span style="background:#1D5C86;color:#fff;border-radius:50%;width:18px;height:18px;display:grid;place-items:center;font-size:11px">H</span>Page: Home · Library · Settings</div>
+          <div style="display:grid;grid-template-columns:40% minmax(0,1fr);gap:10px">
+            <div style="background:#D9DBD0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#575B54">List</div>
+            <div style="background:#D9DBD0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#575B54;gap:6px"><span style="background:#1D5C86;color:#fff;border-radius:50%;width:18px;height:18px;display:grid;place-items:center;font-size:11px">I</span>Editor / detail</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="background:#fff;border:1px solid #DDDCD4;border-radius:12px;overflow:hidden">
+    <sc-for list="{{ places }}" as="pl" hint-placeholder-count="9">
+      <div style="display:grid;grid-template-columns:44px minmax(0,1fr) minmax(0,2fr);gap:16px;padding:14px 20px;border-top:1px solid #E8E7E0;align-items:baseline">
+        <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:14px;color:#1D5C86;font-weight:500">{{ pl.k }}</div>
+        <div style="display:flex;flex-direction:column;gap:2px"><div style="font-size:15px;font-weight:600">{{ pl.n }}</div><div style="font-size:13px;color:#575B54">{{ pl.q }}</div></div>
+        <div style="font-size:14px;line-height:1.55;color:#575B54">{{ pl.d }}</div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="header" style="display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:13px;color:#1D5C86">03 · THE HEADER</div>
+    <h2 style="margin:0;font-size:30px;font-weight:600;letter-spacing:-.01em">Fixed slots, each shown only when it applies</h2>
+    <p style="margin:0;font-size:16px;line-height:1.55;color:#575B54;max-width:760px;text-wrap:pretty">The header has seven slots and no more. Most slots show only when they apply. A new feature can't add a slot; it goes inside one of the menus or into a panel.</p>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:12px;color:#B42318">TODAY · SessionScreen header + TableTools + seat bar</div>
+    <div style="border:1px solid #C5C8BB;border-radius:10px;background:#F6F5F1;overflow:hidden">
+      <div style="height:52px;display:flex;align-items:center;gap:6px;padding:0 12px;overflow:hidden;white-space:nowrap">
+        <div style="width:20px;height:24px;border-radius:3px;background:#1D5C86;flex:0 0 auto"></div>
+        <div style="font-size:16px;font-weight:700;padding-right:4px">Proxy</div>
+        <div style="font-size:12px;padding:2px 8px;border-radius:999px;background:#EDECE6;color:#575B54">Co-op PvE</div>
+        <div style="font-size:13px;padding:6px 10px;border:1px solid #7E8279;border-radius:6px;background:#fff">This session ▾</div>
+        <div style="flex:1"></div>
+        <sc-for list="{{ todayTools }}" as="t" hint-placeholder-count="11"><div style="height:32px;min-width:32px;padding:0 7px;border:1px solid {{ t.bd }};border-radius:6px;display:grid;place-items:center;font-size:12px;background:#fff;color:#1C1E1B;flex:0 0 auto">{{ t.l }}</div></sc-for>
+      </div>
+      <div style="height:44px;display:flex;align-items:center;gap:14px;padding:0 12px;border-top:1px solid #DDDCD4;font-size:13px;white-space:nowrap;overflow:hidden">
+        <span style="font-weight:600">▲ Player 1 <span style="background:#A8461A;color:#fff;border-radius:4px;padding:1px 5px;font-size:11px">Active</span></span><span style="color:#575B54">Life 20 · Energy 0</span>
+        <span>● Player 2</span><span style="color:#575B54">Life 20</span><span>■ Environment</span>
+        <div style="flex:1"></div><div style="padding:5px 10px;border:1px solid #7E8279;border-radius:6px;background:#fff">Dice &amp; coins</div>
+      </div>
+    </div>
+    <div style="font-size:14px;line-height:1.55;color:#575B54;max-width:860px">Today the header has 13 controls in one flat row: undo/redo sit next to zoom, a session action (Add pile) and two app-level screens (Card layouts, Shortcuts). The seat bar mixes seats with a table tool (Dice). And "This session" holds only New session and the log, which opens as a dialog.</div>
+    <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:12px;color:#575B54;padding-top:10px">PROPOSED · EVERYTHING VISIBLE (SIGNED IN, URL-BACKED SETS, OWNER)</div>
+    <div style="border:1px solid #C5C8BB;border-radius:10px;background:#F6F5F1;height:56px;display:flex;align-items:center;gap:10px;padding:0 12px;overflow:hidden">
+      <div style="width:34px;height:34px;border:1px solid #C5C8BB;border-radius:8px;display:grid;place-items:center;font-size:15px;flex:0 0 auto;background:#fff">←</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:15px;white-space:nowrap;min-width:0"><span style="color:#575B54">Ashfall</span><span style="color:#9A9D95">/</span><span style="font-weight:600">Turn 4 combat test</span><span style="font-size:11px;color:#575B54">▾</span></div>
+      <div style="flex:1"></div>
+      <div style="display:flex;gap:4px;flex:0 0 auto"><div style="width:34px;height:34px;border:1px solid #C5C8BB;border-radius:8px;display:grid;place-items:center;background:#fff">↶</div><div style="width:34px;height:34px;border:1px solid #C5C8BB;border-radius:8px;display:grid;place-items:center;background:#fff;color:#9A9D95">↷</div></div>
+      <div style="display:flex;border:1px solid #C5C8BB;border-radius:8px;overflow:hidden;font-size:13px;flex:0 0 auto;background:#fff"><div style="padding:8px 10px">Log</div><div style="padding:8px 10px;border-left:1px solid #C5C8BB">Piles</div><div style="padding:8px 10px;border-left:1px solid #C5C8BB">Details</div></div>
+      <div style="height:34px;padding:0 12px;border:1px solid #C5C8BB;border-radius:8px;display:flex;align-items:center;font-size:13px;flex:0 0 auto;background:#fff">Share</div>
+      <div style="height:34px;padding:0 10px;border:1px solid #C5C8BB;border-radius:8px;display:flex;align-items:center;gap:12px;font-size:13px;color:#575B54;flex:0 0 auto;background:#fff;white-space:nowrap">Search actions<span style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:11px;padding:1px 5px;border:1px solid #C5C8BB;border-radius:4px">⌘K</span></div>
+      <div style="width:34px;height:34px;border-radius:50%;background:#1D4475;color:#fff;display:grid;place-items:center;font-size:13px;flex:0 0 auto">N</div>
+    </div>
+    <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:12px;color:#575B54;padding-top:6px">MINIMUM (GUEST, FILE-BACKED SETS, OR A TESTER ON A SHARED SETUP)</div>
+    <div style="border:1px solid #C5C8BB;border-radius:10px;background:#F6F5F1;height:56px;display:flex;align-items:center;gap:10px;padding:0 12px;overflow:hidden">
+      <div style="width:34px;height:34px;border:1px solid #C5C8BB;border-radius:8px;display:grid;place-items:center;font-size:15px;background:#fff">←</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:15px;white-space:nowrap"><span style="font-weight:600">Shared: Ashfall starter</span><span style="font-size:11px;color:#575B54">▾</span></div>
+      <div style="flex:1"></div>
+      <div style="display:flex;gap:4px"><div style="width:34px;height:34px;border:1px solid #C5C8BB;border-radius:8px;display:grid;place-items:center;background:#fff">↶</div><div style="width:34px;height:34px;border:1px solid #C5C8BB;border-radius:8px;display:grid;place-items:center;background:#fff;color:#9A9D95">↷</div></div>
+      <div style="display:flex;border:1px solid #C5C8BB;border-radius:8px;overflow:hidden;font-size:13px;background:#fff"><div style="padding:8px 10px">Log</div><div style="padding:8px 10px;border-left:1px solid #C5C8BB">Piles</div><div style="padding:8px 10px;border-left:1px solid #C5C8BB">Details</div></div>
+      <div style="height:34px;padding:0 10px;border:1px solid #C5C8BB;border-radius:8px;display:flex;align-items:center;gap:12px;font-size:13px;color:#575B54;background:#fff;white-space:nowrap">Search actions<span style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:11px;padding:1px 5px;border:1px solid #C5C8BB;border-radius:4px">⌘K</span></div>
+    </div>
+  </div>
+  <div style="background:#fff;border:1px solid #DDDCD4;border-radius:12px;overflow:hidden">
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr) minmax(0,1.3fr);gap:16px;padding:10px 20px;background:#EDECE6;font-family:'Atkinson Hyperlegible Mono',monospace;font-size:12px;color:#575B54"><div>SLOT</div><div>HOLDS</div><div>SHOWN WHEN</div></div>
+    <sc-for list="{{ headerSlots }}" as="h" hint-placeholder-count="7">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr) minmax(0,1.3fr);gap:16px;padding:12px 20px;border-top:1px solid #E8E7E0;font-size:14px;line-height:1.5;align-items:baseline">
+        <div style="font-weight:600">{{ h.s }}</div><div style="color:#575B54">{{ h.c }}</div><div style="color:#575B54">{{ h.w }}</div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
+    <div style="background:#fff;border:1px solid #DDDCD4;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:16px;font-weight:600">Session menu (title ▾)</div>
+      <div style="font-size:14px;color:#575B54">Replaces "This session". Grouped, with dividers between groups:</div>
+      <div style="display:flex;flex-direction:column;border:1px solid #DDDCD4;border-radius:8px;padding:6px;font-size:14px">
+        <div style="padding:6px 10px">Rename session…</div><div style="padding:6px 10px">Game: Ashfall ▸ <span style="color:#575B54;font-size:12px">#65</span></div>
+        <div style="height:1px;background:#E8E7E0;margin:4px 0"></div>
+        <div style="padding:6px 10px">Setup &amp; piles…</div><div style="padding:6px 10px">Reload all card sets <span style="color:#575B54;font-size:12px">CD-12 · if URL-backed</span></div>
+        <div style="height:1px;background:#E8E7E0;margin:4px 0"></div>
+        <div style="padding:6px 10px">Save snapshot… <span style="color:#575B54;font-size:12px">PS-3</span></div><div style="padding:6px 10px">Snapshots ▸</div>
+        <div style="height:1px;background:#E8E7E0;margin:4px 0"></div>
+        <div style="padding:6px 10px">New session…</div><div style="padding:6px 10px">Export session…</div>
+      </div>
+    </div>
+    <div style="background:#fff;border:1px solid #DDDCD4;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:16px;font-weight:600">Table tools (on the table, bottom right)</div>
+      <div style="font-size:14px;color:#575B54">For the view, not the session. Six at most:</div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.5;color:#575B54">
+        <div>Zoom in · Zoom out · Fit all <span style="color:#575B54">TT-1</span></div>
+        <div>Snap to grid <span style="color:#575B54">TT-2</span></div>
+        <div>Dice &amp; coins <span style="color:#575B54">TT-14 · only if the format uses dice</span></div>
+        <div>Keyboard shortcuts <span style="color:#575B54">A11Y-4</span></div>
+      </div>
+      <div style="font-size:14px;color:#575B54;line-height:1.5;padding-top:6px;border-top:1px solid #E8E7E0">Layouts (L) leaves the header. It opens in the Library, and from a card's "Edit layout". The L shortcut still works.</div>
+    </div>
+  </div>
+</section>
+
+<section id="actions" style="display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:13px;color:#1D5C86">04 · OBJECT ACTIONS</div>
+    <h2 style="margin:0;font-size:30px;font-weight:600;letter-spacing:-.01em">Where card and pile actions show up: three options</h2>
+    <p style="margin:0;font-size:16px;line-height:1.55;color:#575B54;max-width:760px;text-wrap:pretty">Whichever option you pick, the actions come from one <strong>action registry</strong> (UI-2). Each action has an id, a label, a shortcut, the objects it applies to, and a <span style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:14px">can()</span> check. Menus, the palette, #53's settings and the announcements all read from it. That makes the choice below about presentation only. It can change later without a rework.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px">
+    <sc-for list="{{ actionOptions }}" as="o" hint-placeholder-count="3">
+      <div id="{{ o.id }}" style="background:#fff;border:{{ o.border }};border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:12px;padding:3px 8px;border-radius:6px;background:#1C1E1B;color:#fff">{{ o.id }}</div>
+          <div style="font-size:17px;font-weight:600;flex:1">{{ o.n }}</div>
+          <div style="font-size:12px;font-family:'Atkinson Hyperlegible Mono',monospace;color:#1D5C86">{{ o.tag }}</div>
+        </div>
+        <div style="position:relative;aspect-ratio:16/10;border:1px solid #C5C8BB;border-radius:8px;overflow:hidden;background:#D9DBD0;background-image:radial-gradient(#C5C8BB 1px,transparent 1px);background-size:14px 14px">
+          <div style="position:absolute;left:18%;top:28%;width:16%;aspect-ratio:63/88;background:#fff;border:2px solid #1D5C86;border-radius:4px"></div>
+          <div style="position:absolute;left:38%;top:34%;width:16%;aspect-ratio:63/88;background:#fff;border:{{ o.second }};border-radius:4px"></div>
+          <sc-if value="{{ o.menu }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;left:36%;top:18%;width:38%;background:#fff;border:1px solid #C5C8BB;border-radius:6px;box-shadow:0 8px 20px -8px rgba(0,0,0,.3);padding:4px;display:flex;flex-direction:column;gap:2px">
+              <div style="height:8px;background:#DDDCD4;border-radius:2px;margin:3px"></div><div style="height:8px;background:#DDDCD4;border-radius:2px;margin:3px"></div><div style="height:8px;background:#DDDCD4;border-radius:2px;margin:3px"></div><div style="height:8px;background:#DDDCD4;border-radius:2px;margin:3px"></div><div style="height:8px;background:#DDDCD4;border-radius:2px;margin:3px;width:60%"></div><div style="height:8px;background:#DDDCD4;border-radius:2px;margin:3px"></div><div style="height:8px;background:#DDDCD4;border-radius:2px;margin:3px;width:70%"></div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ o.bar }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;left:14%;top:8%;height:13%;width:58%;background:#1C1E1B;border-radius:6px;display:flex;align-items:center;gap:4px;padding:0 6px"><div style="flex:1;height:50%;background:#575B54;border-radius:3px"></div><div style="flex:1;height:50%;background:#575B54;border-radius:3px"></div><div style="flex:1;height:50%;background:#575B54;border-radius:3px"></div><div style="flex:1;height:50%;background:#575B54;border-radius:3px"></div><div style="flex:1;height:50%;background:#575B54;border-radius:3px"></div></div>
+          </sc-if>
+          <sc-if value="{{ o.panel }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;right:0;top:0;bottom:0;width:32%;background:#fff;border-left:1px solid #C5C8BB;padding:8px;display:flex;flex-direction:column;gap:6px">
+              <div style="height:9px;width:60%;background:#1C1E1B;border-radius:2px"></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px"><div style="height:14px;border:1px solid #C5C8BB;border-radius:3px"></div><div style="height:14px;border:1px solid #C5C8BB;border-radius:3px"></div><div style="height:14px;border:1px solid #C5C8BB;border-radius:3px"></div><div style="height:14px;border:1px solid #C5C8BB;border-radius:3px"></div></div>
+              <div style="height:6px;width:40%;background:#C5C8BB;border-radius:2px;margin-top:6px"></div><div style="height:6px;background:#DDDCD4;border-radius:2px"></div><div style="height:6px;background:#DDDCD4;border-radius:2px"></div>
+              <div style="height:6px;width:40%;background:#C5C8BB;border-radius:2px;margin-top:6px"></div><div style="height:6px;background:#DDDCD4;border-radius:2px"></div>
+            </div>
+          </sc-if>
+        </div>
+        <div style="font-size:14px;line-height:1.55;color:#575B54">{{ o.d }}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;line-height:1.5">
+          <div><div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:11px;color:#2f7a4a;padding-bottom:4px">GOOD</div><div style="color:#575B54">{{ o.pro }}</div></div>
+          <div><div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:11px;color:#B42318;padding-bottom:4px">COSTS</div><div style="color:#575B54">{{ o.con }}</div></div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="background:#1C1E1B;color:#F6F5F1;border-radius:12px;padding:22px 24px;display:flex;flex-direction:column;gap:10px">
+    <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:12px;color:#86BDE6">RECOMMENDATION</div>
+    <div style="font-size:18px;line-height:1.5;max-width:880px;text-wrap:pretty">Build <a href="#4a" style="color:#86BDE6">4a</a> + <a href="#4b" style="color:#86BDE6">4b</a> now, and make the Details panel from <a href="#4c" style="color:#86BDE6">4c</a> one tab of the side panel instead of a third way to act. Menus stay how you act on one card. The selection bar is how you act on several, and #29, #30 and #57 all reuse it. The Details tab shows counters, CSV fields and layout provenance without adding buttons.</div>
+  </div>
+</section>
+
+<section id="dock" style="display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:13px;color:#1D5C86">05 · SEAT DOCK</div>
+    <h2 style="margin:0;font-size:30px;font-weight:600;letter-spacing:-.01em">One strip per seat, not a seat bar plus a hand tray</h2>
+    <p style="margin:0;font-size:16px;line-height:1.55;color:#575B54;max-width:760px;text-wrap:pretty">The seat switcher, counters and hand are one component, so switching seats (S / Shift+S) changes everything in one place. Anything that belongs to a seat goes here later, such as hidden info or a seat's private piles.</p>
+  </div>
+  <div style="position:relative;border:1px solid #C5C8BB;border-radius:10px;background:#F6F5F1;display:grid;grid-template-columns:auto minmax(0,1fr) auto;min-height:150px;overflow:hidden">
+    <div style="display:flex;flex-direction:column;gap:4px;padding:10px;border-right:1px solid #DDDCD4">
+      <div style="height:34px;padding:0 14px;border-radius:7px;background:#1C1E1B;color:#fff;font-size:13px;display:flex;align-items:center;font-weight:500">Player 1</div>
+      <div style="height:34px;padding:0 14px;border-radius:7px;border:1px solid #C5C8BB;font-size:13px;display:flex;align-items:center;color:#575B54;background:#fff">Player 2</div>
+      <div style="height:34px;padding:0 14px;border-radius:7px;border:1px solid #C5C8BB;font-size:13px;display:flex;align-items:center;color:#575B54;background:#fff">Environment</div>
+    </div>
+    <div style="padding:10px 16px;display:flex;flex-direction:column;gap:6px;min-width:0">
+      <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:11px;color:#575B54">HAND · 5</div>
+      <div style="display:flex;gap:10px;overflow:hidden">
+        <sc-for list="{{ hand }}" as="c" hint-placeholder-count="5">
+          <div style="flex:0 0 auto;width:68px;aspect-ratio:63/88;border-radius:5px;background:#fff;border:1px solid #7E8279;padding:5px;display:flex;flex-direction:column;gap:4px"><div style="font-size:9px;font-weight:600;line-height:1.2">{{ c }}</div><div style="height:36%;border-radius:3px;background:repeating-linear-gradient(135deg,#ECEDE6 0 5px,#E0E1D8 5px 10px)"></div></div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="padding:10px 14px;border-left:1px solid #DDDCD4;display:flex;flex-direction:column;gap:8px;min-width:170px">
+      <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:11px;color:#575B54">COUNTERS</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:14px"><span style="flex:1">Life</span><span style="width:26px;height:26px;border:1px solid #C5C8BB;border-radius:6px;display:grid;place-items:center;background:#fff">−</span><span style="width:26px;text-align:center;font-family:'Atkinson Hyperlegible Mono',monospace">18</span><span style="width:26px;height:26px;border:1px solid #C5C8BB;border-radius:6px;display:grid;place-items:center;background:#fff">+</span></div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:14px"><span style="flex:1">Energy</span><span style="width:26px;height:26px;border:1px solid #C5C8BB;border-radius:6px;display:grid;place-items:center;background:#fff">−</span><span style="width:26px;text-align:center;font-family:'Atkinson Hyperlegible Mono',monospace">3</span><span style="width:26px;height:26px;border:1px solid #C5C8BB;border-radius:6px;display:grid;place-items:center;background:#fff">+</span></div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px 28px;font-size:14px;line-height:1.55;color:#575B54">
+    <div><strong style="color:#1C1E1B">Seats with no hand</strong> (Environment) show their counters and piles only. The hand area becomes "This seat has no hand".</div>
+    <div><strong style="color:#1C1E1B">Collapse</strong> to a single row (seat tabs + counters) to give the table more height. It's a view setting, so the toggle sits on the dock, not in the header.</div>
+    <div><strong style="color:#1C1E1B">More than 3 seats later:</strong> the seat tabs become a dropdown. Nothing else moves.</div>
+  </div>
+</section>
+
+<section id="home" style="display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:13px;color:#1D5C86">06 · HOME, LIBRARY, ACCOUNT</div>
+    <h2 style="margin:0;font-size:30px;font-weight:600;letter-spacing:-.01em">The workspace, organised by game</h2>
+    <p style="margin:0;font-size:16px;line-height:1.55;color:#575B54;max-width:760px;text-wrap:pretty">Home lists games and their sessions. The Library holds reusable things. Within a game, the "In this game" links open the Library filtered to that game, so a game is a filter, not a second copy of the Library.</p>
+  </div>
+  <div style="border:1px solid #C5C8BB;border-radius:10px;overflow:hidden;background:#F6F5F1;display:grid;grid-template-columns:200px minmax(0,1fr);min-height:520px">
+    <div style="border-right:1px solid #DDDCD4;padding:16px 12px;display:flex;flex-direction:column;gap:3px;background:#fff">
+      <div style="font-size:17px;font-weight:700;padding:0 8px 14px">Proxy</div>
+      <div style="padding:8px 10px;border-radius:7px;background:#EDECE6;font-size:14px;font-weight:500">Home</div>
+      <div style="padding:8px 10px;font-size:14px;color:#575B54">Library</div>
+      <div style="padding:8px 10px;font-size:14px;color:#575B54">Settings</div>
+      <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:11px;color:#575B54;padding:18px 10px 6px">GAMES</div>
+      <div style="padding:7px 10px;font-size:14px;display:flex;border-radius:7px;background:#E4EEF5;color:#1D5C86"><span style="flex:1">Ashfall</span><span>6</span></div>
+      <div style="padding:7px 10px;font-size:14px;display:flex"><span style="flex:1">Tidecall</span><span style="color:#575B54">2</span></div>
+      <div style="padding:7px 10px;font-size:14px;display:flex;color:#575B54"><span style="flex:1">No game</span><span>1</span></div>
+      <div style="padding:7px 10px;font-size:14px;color:#1D5C86">+ New game</div>
+      <div style="flex:1"></div>
+      <div style="padding:10px;border-top:1px solid #E8E7E0;display:flex;flex-direction:column;gap:4px">
+        <div style="font-size:13px;font-weight:500">Guest</div>
+        <div style="font-size:12px;color:#575B54;line-height:1.4">Saved in this browser only.</div>
+        <div style="font-size:13px;color:#1D5C86">Sign in to sync</div>
+      </div>
+    </div>
+    <div style="padding:22px 26px;display:flex;flex-direction:column;gap:18px;min-width:0">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="font-size:24px;font-weight:600">Ashfall</div>
+        <div style="font-size:13px;color:#1D5C86">Game options</div>
+        <div style="flex:1"></div>
+        <div style="height:36px;padding:0 14px;border-radius:8px;background:#1C1E1B;color:#fff;font-size:14px;display:flex;align-items:center">New session</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px">
+        <div style="background:#fff;border:1px solid #DDDCD4;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px">
+          <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:11px;color:#575B54">RESUME</div>
+          <div style="font-size:16px;font-weight:600">Turn 4 combat test</div>
+          <div style="font-size:13px;color:#575B54">Co-op PvE · 2 hours ago · 3 snapshots</div>
+        </div>
+        <div style="background:#fff;border:1px solid #DDDCD4;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:8px">
+          <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:11px;color:#575B54">IN THIS GAME</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px"><a href="#map">4 card sets</a><a href="#map">3 layouts</a><a href="#map">2 formats</a><a href="#map">1 shared setup</a></div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #DDDCD4;border-radius:10px;overflow:hidden">
+        <div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);padding:10px 16px;font-family:'Atkinson Hyperlegible Mono',monospace;font-size:11px;color:#575B54;background:#F6F5F1"><div>SESSION</div><div>FORMAT</div><div>LAST PLAYED</div></div>
+        <sc-for list="{{ sessions }}" as="s" hint-placeholder-count="4">
+          <div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);padding:11px 16px;border-top:1px solid #E8E7E0;font-size:14px"><div style="font-weight:500">{{ s.n }}</div><div style="color:#575B54">{{ s.f }}</div><div style="color:#575B54">{{ s.d }}</div></div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px">
+    <div style="background:#fff;border:1px solid #DDDCD4;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px">
+      <div style="font-size:17px;font-weight:600">Library › Card sets, edited in Proxy</div>
+      <p style="margin:0;font-size:14px;line-height:1.55;color:#575B54;text-wrap:pretty">This is your new idea: a card set is a table of cards you can edit in Proxy. CSV and Sheets are ways to <em>fill</em> it, not the only source. The set's page is a spreadsheet-style grid with the card previewed beside it. Edits reach cards in play the same way a re-import does (CD-5).</p>
+      <div style="border:1px solid #DDDCD4;border-radius:8px;overflow:hidden;font-size:13px">
+        <div style="display:grid;grid-template-columns:1.4fr .7fr .5fr 2fr;background:#F6F5F1;font-family:'Atkinson Hyperlegible Mono',monospace;font-size:11px;color:#575B54"><div style="padding:7px 10px">name</div><div style="padding:7px 10px">type</div><div style="padding:7px 10px">qty</div><div style="padding:7px 10px">text</div></div>
+        <div style="display:grid;grid-template-columns:1.4fr .7fr .5fr 2fr;border-top:1px solid #E8E7E0"><div style="padding:7px 10px">Ember Scout</div><div style="padding:7px 10px">Creature</div><div style="padding:7px 10px">3</div><div style="padding:7px 10px;color:#575B54">Haste.</div></div>
+        <div style="display:grid;grid-template-columns:1.4fr .7fr .5fr 2fr;border-top:1px solid #E8E7E0;background:#E4EEF5"><div style="padding:7px 10px">Soot Hound</div><div style="padding:7px 10px">Creature</div><div style="padding:7px 10px">2</div><div style="padding:7px 10px;color:#575B54">When it enters, mill 1.</div></div>
+        <div style="display:grid;grid-template-columns:1.4fr .7fr .5fr 2fr;border-top:1px solid #E8E7E0;color:#1D5C86"><div style="padding:7px 10px">+ Add card</div><div></div><div></div><div></div></div>
+      </div>
+      <div style="font-size:13px;line-height:1.55;color:#575B54"><strong>Source line</strong> on the set: "Edited in Proxy", "From ashfall.csv", or "Linked to Sheet · fetched 4 min ago". A set linked to a Sheet is read-only in Proxy, with "Unlink to edit here". That stops edits in two places from overwriting each other.</div>
+    </div>
+    <div style="background:#fff;border:1px solid #DDDCD4;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px">
+      <div style="font-size:17px;font-weight:600">Accounts (#45): three spots, no new chrome</div>
+      <div style="display:flex;flex-direction:column;gap:12px;font-size:14px;line-height:1.55;color:#575B54">
+        <div><strong style="color:#1C1E1B">Rail footer:</strong> "Guest · Saved in this browser only · Sign in to sync". When signed in: avatar, name, sync status.</div>
+        <div><strong style="color:#1C1E1B">Header avatar slot:</strong> on the table, only when signed in. It opens a small menu: sync status, Settings, Sign out. Guests get no avatar, so the header stays as short as today.</div>
+        <div><strong style="color:#1C1E1B">Settings › Account:</strong> profile, devices, export everything, delete account.</div>
+        <div><strong style="color:#1C1E1B">Sign-in prompts</strong> show up only where an account is needed: Share (#106) and "Sync" in the rail. No banner on the table.</div>
+        <div><strong style="color:#1C1E1B">Sync status</strong> is the existing "Saved" indicator with more states (Saved locally / Synced / Offline, will sync). One indicator, not a new one.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="phone" style="display:flex;flex-direction:column;gap:24px">
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:13px;color:#1D5C86">07 · PHONE</div>
+    <h2 style="margin:0;font-size:30px;font-weight:600;letter-spacing:-.01em">Same places, packed tighter</h2>
+    <p style="margin:0;font-size:16px;line-height:1.55;color:#575B54;max-width:760px;text-wrap:pretty">The places don't change on a phone; only how they're shown. Because each feature has an address, the phone version is a handful of rules, not a separate design.</p>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+    <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
+      <div style="width:240px;height:480px;border:8px solid #1C1E1B;border-radius:30px;overflow:hidden;background:#fff;display:grid;grid-template-rows:44px minmax(0,1fr) 120px">
+        <div style="display:flex;align-items:center;gap:6px;padding:0 8px;border-bottom:1px solid #DDDCD4;background:#F6F5F1">
+          <div style="width:28px;height:28px;border:1px solid #C5C8BB;border-radius:7px;display:grid;place-items:center;font-size:13px">←</div>
+          <div style="font-size:12px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden">Turn 4 combat ▾</div>
+          <div style="width:28px;height:28px;border:1px solid #C5C8BB;border-radius:7px;display:grid;place-items:center;font-size:13px">↶</div>
+          <div style="width:28px;height:28px;border:1px solid #C5C8BB;border-radius:7px;display:grid;place-items:center;font-size:13px">⋯</div>
+        </div>
+        <div style="position:relative;background:#D9DBD0;background-image:radial-gradient(#C5C8BB 1px,transparent 1px);background-size:12px 12px">
+          <div style="position:absolute;left:14%;top:14%;width:44px;aspect-ratio:63/88;background:#1D4475;border-radius:4px"></div>
+          <div style="position:absolute;left:48%;top:22%;width:44px;aspect-ratio:63/88;background:#fff;border:1px solid #7E8279;border-radius:4px"></div>
+          <div style="position:absolute;right:6px;bottom:6px;width:24px;height:70px;background:#fff;border:1px solid #C5C8BB;border-radius:6px"></div>
+        </div>
+        <div style="border-top:1px solid #DDDCD4;background:#F6F5F1;padding:6px 8px;display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;gap:4px;align-items:center"><div style="padding:4px 8px;border-radius:6px;background:#1C1E1B;color:#fff;font-size:11px">P1 ▾</div><div style="flex:1"></div><div style="font-size:11px;font-family:'Atkinson Hyperlegible Mono',monospace">♥ 18 · ⚡ 3</div></div>
+          <div style="display:flex;gap:5px;overflow:hidden"><div style="flex:0 0 auto;width:44px;aspect-ratio:63/88;background:#fff;border:1px solid #7E8279;border-radius:4px"></div><div style="flex:0 0 auto;width:44px;aspect-ratio:63/88;background:#fff;border:1px solid #7E8279;border-radius:4px"></div><div style="flex:0 0 auto;width:44px;aspect-ratio:63/88;background:#fff;border:1px solid #7E8279;border-radius:4px"></div><div style="flex:0 0 auto;width:44px;aspect-ratio:63/88;background:#fff;border:1px solid #7E8279;border-radius:4px"></div></div>
+        </div>
+      </div>
+      <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:12px;color:#575B54">TABLE · 375 WIDE</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
+      <div style="width:240px;height:480px;border:8px solid #1C1E1B;border-radius:30px;overflow:hidden;background:#fff;position:relative">
+        <div style="position:absolute;inset:0;background:rgba(30,29,27,.35)"></div>
+        <div style="position:absolute;left:0;right:0;bottom:0;height:62%;background:#fff;border-radius:16px 16px 0 0;padding:10px 14px;display:flex;flex-direction:column;gap:8px">
+          <div style="width:36px;height:4px;border-radius:2px;background:#C5C8BB;align-self:center"></div>
+          <div style="font-size:14px;font-weight:600">Soot Hound</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <div style="height:40px;border:1px solid #C5C8BB;border-radius:8px;font-size:12px;display:flex;align-items:center;justify-content:center">Rotate</div>
+            <div style="height:40px;border:1px solid #C5C8BB;border-radius:8px;font-size:12px;display:flex;align-items:center;justify-content:center">Flip</div>
+            <div style="height:40px;border:1px solid #C5C8BB;border-radius:8px;font-size:12px;display:flex;align-items:center;justify-content:center">Move to…</div>
+            <div style="height:40px;border:1px solid #C5C8BB;border-radius:8px;font-size:12px;display:flex;align-items:center;justify-content:center">Enlarge</div>
+          </div>
+          <div style="font-size:12px;line-height:2;color:#575B54;border-top:1px solid #E8E7E0;padding-top:4px">Add counter<br>Duplicate<br>Bring to front<br>Details</div>
+        </div>
+      </div>
+      <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:12px;color:#575B54">CARD MENU AS A BOTTOM SHEET</div>
+    </div>
+    <div style="flex:1;min-width:280px;display:flex;flex-direction:column;gap:12px">
+      <sc-for list="{{ phoneRules }}" as="r" hint-placeholder-count="6">
+        <div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;padding-bottom:12px;border-bottom:1px solid #DDDCD4;font-size:14px;line-height:1.5">
+          <div style="font-weight:600">{{ r.p }}</div><div style="color:#575B54">{{ r.d }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<section id="map" style="display:flex;flex-direction:column;gap:20px">
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:13px;color:#1D5C86">08 · FEATURE MAP</div>
+    <h2 style="margin:0;font-size:30px;font-weight:600;letter-spacing:-.01em">Every feature and its address</h2>
+    <p style="margin:0;font-size:16px;line-height:1.55;color:#575B54;max-width:760px">Place letters refer to <a href="#places">section 02</a>. "Change" says whether the current build needs to move something, so that work can happen as each feature is touched, not as one big rework.</p>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <sc-for list="{{ filters }}" as="fl" hint-placeholder-count="5">
+      <div onClick="{{ fl.on }}" style="cursor:pointer;white-space:nowrap;padding:6px 12px;border-radius:999px;font-size:13px;border:1px solid {{ fl.bd }};background:{{ fl.bg }};color:{{ fl.fg }}">{{ fl.label }}</div>
+    </sc-for>
+  </div>
+  <div style="background:#fff;border:1px solid #DDDCD4;border-radius:12px;overflow:hidden">
+    <div style="display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1.1fr) minmax(0,1.8fr) minmax(0,.9fr);gap:16px;padding:10px 20px;background:#EDECE6;font-family:'Atkinson Hyperlegible Mono',monospace;font-size:12px;color:#575B54">
+      <div>FEATURE</div><div>ADDRESS</div><div>ALSO REACHED FROM</div><div>CHANGE</div>
+    </div>
+    <sc-for list="{{ mapRows }}" as="row" hint-placeholder-count="30">
+      <div style="display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1.1fr) minmax(0,1.8fr) minmax(0,.9fr);gap:16px;padding:11px 20px;border-top:1px solid #E8E7E0;font-size:14px;line-height:1.45;align-items:baseline">
+        <div><div style="font-weight:500">{{ row.f }}</div><div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:11px;color:#575B54;padding-top:2px">{{ row.r }}</div></div>
+        <div style="display:flex;gap:8px;align-items:baseline"><span style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:12px;color:#1D5C86;font-weight:500">{{ row.k }}</span><span>{{ row.h }}</span></div>
+        <div style="color:#575B54">{{ row.e }}</div>
+        <div><span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:12px;background:{{ row.cbg }};color:{{ row.cfg }}">{{ row.c }}</span></div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section id="checklist" style="display:flex;flex-direction:column;gap:20px">
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div style="font-family:'Atkinson Hyperlegible Mono',monospace;font-size:13px;color:#1D5C86">09 · ISSUE CHECKLIST</div>
+    <h2 style="margin:0;font-size:30px;font-weight:600;letter-spacing:-.01em">Paste into the issue template</h2>
+  </div>
+  <div style="background:#1C1E1B;color:#EDECE6;border-radius:12px;padding:22px 24px;font-family:'Atkinson Hyperlegible Mono',monospace;font-size:14px;line-height:1.75;white-space:pre-wrap;overflow-x:auto">### Placement (UI-1 to UI-8)
+- Acts on: card / pile / stack / selection / seat / session / view / library item / person
+- Address: place letter + name (see docs/ui-placement.md)
+- Registry entry: action id, label, default shortcut (or none), applies to, can() capability
+- Header impact: none (if not none, say which slot and why — UI-3)
+- Shown when: always / condition (UI-4)
+- Phone: how it shows (sheet, menu, ⋯)
+- Testers (#106): visible / hidden</div>
+  <div style="font-size:14px;color:#575B54;line-height:1.55;max-width:760px">Suggested next step: save sections 01–03 and 08 as <span style="font-family:'Atkinson Hyperlegible Mono',monospace">docs/ui-placement.md</span>, then add a decision-log row: "Features get an address in the placement guide before they get UI".</div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { filter: 'All' };
+  renderVals() {
+    const P = (id, t, d) => ({ id, t, d });
+    const principles = [
+      P('UI-1', 'Place by what it acts on', 'A feature goes where its object lives: a card, pile, stack, selection, seat, the session, the view, a library item or the person. Never "the header, because there was room".'),
+      P('UI-2', 'One action registry', 'Every action is registered once, with its id, label, shortcut, the objects it applies to and a can() check. Menus, the command palette, #53 settings and announcements all read from it (extends AR-1, AR-2).'),
+      P('UI-3', 'The header has seven slots, total', 'Back, Session ▾, Undo/Redo, Panels, Share, ⌘K, Account. A new feature goes inside a slot\'s menu or panel, never in a new slot.'),
+      P('UI-4', 'Show only when it applies', 'Controls that depend on state (dice, Reload all, Share, the avatar) are hidden, not greyed out, when they don\'t apply. Same pattern as #106\'s tester mode.'),
+      P('UI-5', 'One side panel at a time', 'Log, Piles and Details share the right-hand slot as tabs. Opening one replaces the other, so the table is never covered twice.'),
+      P('UI-6', 'Menus have a fixed shape', 'Primary actions first, then groups divided by what they do, with destructive actions last. #53 can reorder and hide items within that shape.'),
+      P('UI-7', 'The palette lists everything', 'Ctrl/⌘ K finds every registered action and place, whatever the menus are set to. This is #53\'s guarantee that no action becomes unreachable.'),
+      P('UI-8', 'The workspace is for editing, the table is for playing', 'Editing reusable things (card sets, layouts, formats, setups) happens in the Library. The table only links to it ("Edit layout", "Open card set").'),
+    ];
+    const places = [
+      { k: 'A', n: 'Header', q: 'Session-wide, always reachable', d: 'Seven fixed slots (section 03). Session menu, undo/redo, panel tabs, Share, palette, account.' },
+      { k: 'B', n: 'Table objects', q: 'Card, pile, stack', d: 'Context menu (right-click, Enter, long-press) for one object. Click behaviour is set by #53.' },
+      { k: 'C', n: 'Table tools', q: 'The view', d: 'Zoom, fit, snap, dice, shortcut help. Six at most, on the table surface.' },
+      { k: 'D', n: 'Selection bar', q: '2+ selected things', d: 'Floats above the selection. Five actions + More. The same component is used in the pile viewer.' },
+      { k: 'E', n: 'Side panel', q: 'Needs room while playing', d: 'Tabs: Log (with rewind and snapshots), Piles (the pile viewer), Details (the focused card\'s fields, counters, layout).' },
+      { k: 'F', n: 'Seat dock', q: 'Belongs to a seat', d: 'Seat switcher, that seat\'s counters, its hand. Future seat-private things go here.' },
+      { k: 'G', n: 'Rail', q: 'Getting around the workspace', d: 'Home, Library, Settings; the games list; account status in the footer.' },
+      { k: 'H', n: 'Pages', q: 'Lists of things', d: 'Home (games and sessions), Library (card sets, layouts, formats, shared setups as tabs), Settings.' },
+      { k: 'I', n: 'Editors', q: 'Making things', d: 'Card set grid, layout editor, format editor, game options. Full screen, one at a time, with Back to the page they came from.' },
+    ];
+    const headerSlots = [
+      { s: '1 · Back', c: 'To Home (workspace)', w: 'Always' },
+      { s: '2 · Session ▾', c: 'Game / session name; opens the session menu', w: 'Always. The game prefix only when the session is linked to a game (#65)' },
+      { s: '3 · Undo / Redo', c: 'TT-15', w: 'Always' },
+      { s: '4 · Panels', c: 'Log · Piles · Details tabs for the side panel', w: 'Always. Details is disabled when nothing is focused' },
+      { s: '5 · Share', c: 'Share dialog, My shared setups (#106)', w: 'Owner of a session, signed in. Hidden for testers' },
+      { s: '6 · ⌘K', c: 'Command palette', w: 'Always. Collapses to an icon below 900px' },
+      { s: '7 · Account', c: 'Avatar menu: sync status, Settings, Sign out (#45)', w: 'Signed in only' },
+    ];
+    const actionOptions = [
+      { id: '4a', n: 'Context menus', tag: 'TODAY', menu: true, bar: false, panel: false, border: '1px solid #DDDCD4', second: '1px solid #7E8279',
+        d: 'Right-click, Enter or long-press opens the object\'s menu. #53 lets you hide and reorder items. This is what exists now.',
+        pro: 'Already built. Takes no space on screen. Matches A11Y-1/2.', con: 'Long menus as features grow, and it doesn\'t work for acting on several things at once.' },
+      { id: '4b', n: 'Selection bar', tag: 'FOR #29 #30 #57', menu: false, bar: true, panel: false, border: '1px solid #DDDCD4', second: '2px solid #1D5C86',
+        d: 'With 2+ selected, a bar floats above them: Rotate, Flip, Stack, Move to…, More. The pile viewer reuses it for multi-select.',
+        pro: 'One answer for three issues. Group actions are visible without a menu.', con: 'Covers part of the table. Needs a clear focus order (bar → selection).' },
+      { id: '4c', n: 'Inspector panel', tag: 'ALTERNATIVE', menu: false, bar: false, panel: true, border: '1px solid #DDDCD4', second: '1px solid #7E8279',
+        d: 'Selecting anything opens it in the side panel: four primary actions, plus counters, CSV fields and layout provenance.',
+        pro: 'Plenty of room for per-card state (counters, hidden info). Easy to scan.', con: 'Takes table width. Doubles up the menu. Opening a panel on every click feels heavy.' },
+    ];
+    const sessions = [
+      { n: 'Turn 4 combat test', f: 'Co-op PvE', d: '2 hours ago' },
+      { n: 'Solo balance pass', f: 'Solo PvE', d: 'Yesterday' },
+      { n: 'Deck B vs Deck C', f: '1v1 PvP', d: 'Oct 26' },
+      { n: 'Starter setup (shared)', f: 'Co-op PvE', d: 'Oct 25' },
+    ];
+    const todayTools = ['↶','↷','−','85%','+','Fit','#','+ Add pile','Layouts','?'].map(l => ({ l, bd: '#7E8279' }));
+    const hand = ['Ember Scout', 'Cinder Bolt', 'Ash Ward', 'Kiln Warden', 'Smoke Veil'];
+    const phoneRules = [
+      { p: 'Header', d: 'Back, Session ▾, Undo, and ⋯ (overflow: Redo, panels, Share, search, account). Same slots, folded.' },
+      { p: 'Context menu', d: 'Becomes a bottom sheet with a 2×2 grid of primary actions, then the rest as a list. Targets ≥ 44px.' },
+      { p: 'Selection bar', d: 'Sticks to the bottom above the dock, scrolls sideways, and More opens a sheet.' },
+      { p: 'Side panel', d: 'Full-screen sheet with tabs. Close returns to the table at the same zoom.' },
+      { p: 'Seat dock', d: 'Seat dropdown + counters on one row, hand below. Swipe up to expand the hand.' },
+      { p: 'Rail', d: 'Becomes a bottom tab bar: Home · Library · Settings. Games become a picker at the top of Home.' },
+    ];
+    const C = { keep: ['Keep', '#eceae4', '#575B54'], move: ['Move', '#fbe9df', '#8a3a17'], newp: ['New', '#e3edf8', '#1D5C86'] };
+    const R = (f, r, k, h, e, c, g) => ({ f, r, k, h, e, c: C[c][0], cbg: C[c][1], cfg: C[c][2], g });
+    const all = [
+      R('Undo / redo', 'TT-15', 'A', 'Header slot 3', 'Split from zoom in TableTools; Ctrl/⌘ Z', 'move', 'Table'),
+      R('New session · Setup', 'SP-1', 'A', 'Session menu', 'Home › New session; palette', 'move', 'Session'),
+      R('Snapshots', 'PS-3', 'A', 'Session menu', 'Log tab (snapshots are named points on the timeline)', 'newp', 'Session'),
+      R('Reload all card sets', 'CD-12', 'A', 'Session menu', 'Shown only when a set is URL-backed', 'move', 'Session'),
+      R('Export / import bundle', 'PS-4', 'H', 'Settings › Data', 'Session menu › Export session (current only)', 'move', 'Workspace'),
+      R('Session log + rewind', 'TT-14, #107', 'E', 'Side panel › Log', 'Leaves the This session dialog for the dock HANDOFF #2 described', 'move', 'Table'),
+      R('Pile viewer, peek', 'SP-7–9', 'E', 'Side panel › Piles', 'PileViewer sheet already slides from the right; dock it in the panel slot', 'move', 'Table'),
+      R('Pile viewer multi-select', '#43, #57', 'D', 'Selection bar (in the viewer)', 'Shift-click, Space', 'newp', 'Table'),
+      R('Card details', 'A11Y-6', 'E', 'Side panel › Details', 'Card menu › Details; Shift+I', 'move', 'Table'),
+      R('Card actions (rotate, flip, z-order…)', 'TT-5–11', 'B', 'Card context menu', 'Shortcuts; palette; selection bar for many', 'keep', 'Table'),
+      R('Card counters', 'TT-8', 'B', 'Card menu › Add counter', 'Counters show on the card; edit in Details', 'keep', 'Table'),
+      R('Pile actions (draw, shuffle, mill…)', 'SP-6', 'B', 'Pile context menu', 'Click = draw 1; shortcuts; palette', 'keep', 'Table'),
+      R('Add pile', 'SP-4', 'B', 'Table background menu › New pile', 'Session menu › Setup & piles; palette. Leaves TableTools', 'move', 'Table'),
+      R('Rename / merge / delete pile', 'SP-4', 'B', 'Pile menu (PileMenu)', 'Drag pile onto pile to merge', 'keep', 'Table'),
+      R('Selection & group actions', '#29', 'D', 'Selection bar', 'Marquee, Shift-click, Space', 'newp', 'Table'),
+      R('Stacks', '#30', 'B', 'Stack context menu', 'Selection bar › Stack; drop card on card', 'newp', 'Table'),
+      R('Zoom · fit · snap', 'TT-1, TT-2', 'C', 'Table tools', '+ − 0 G', 'keep', 'Table'),
+      R('Dice & coins', 'TT-14', 'C', 'Table tools', 'Leaves the seat bar. Only when the format uses dice; results in the Log', 'move', 'Table'),
+      R('Shortcut reference', 'A11Y-4', 'C', 'Table tools › ?', '? key; palette', 'keep', 'Table'),
+      R('Seat switcher + counters + hand', 'FS-3, TT-12/13', 'F', 'Seat dock', 'S / Shift+S', 'move', 'Table'),
+      R('Command palette', 'UI-7', 'A', 'Header slot 6', 'Ctrl/⌘ K anywhere', 'newp', 'Table'),
+      R('Games', '#65', 'G', 'Rail › Games; Home', 'Session menu › Game ▸ to link', 'newp', 'Workspace'),
+      R('Card sets library', '#67', 'H', 'Library › Card sets', 'Pile menu › Open card set; Home › In this game', 'newp', 'Workspace'),
+      R('Edit cards without CSV', 'new idea', 'I', 'Card set editor (grid)', 'Card menu › Edit card…; Details › Edit', 'newp', 'Workspace'),
+      R('Layouts + editor', 'LY-1–10', 'I', 'Library › Layouts', 'Leaves TableTools. Card menu › Edit layout; L key', 'move', 'Workspace'),
+      R('Layout editor undo', '#102', 'I', 'Inside the layout editor', 'Ctrl/⌘ Z while the editor has focus', 'newp', 'Workspace'),
+      R('Formats + editor', 'FS-1/2, #119–121', 'I', 'Library › Formats', 'New session dialog › Edit format', 'newp', 'Workspace'),
+      R('Shared setups', '#106', 'A', 'Header › Share', 'Library › Shared setups (manage, revoke)', 'newp', 'Session'),
+      R('Tester mode', '#106', 'A', 'Session ▾ shows "Shared:"', 'One-line notice; can() hides locked items', 'newp', 'Session'),
+      R('Control settings', '#53', 'H', 'Settings › Controls', 'Palette; shortcut reference › Customise', 'newp', 'Workspace'),
+      R('Game options / cascade', '#65, AR-7', 'H', 'Settings, with a scope switcher', 'Home › Game options', 'newp', 'Workspace'),
+      R('Accounts & sync', '#45', 'G', 'Rail footer; Settings › Account', 'Header avatar (signed in); Saved indicator', 'newp', 'Workspace'),
+      R('Demo', 'DM-5, #63', 'H', 'Home › Load demo', '/demo path', 'move', 'Workspace'),
+      R('PWA install', '#59', 'H', 'Settings › App', 'Browser install prompt only. No in-app banner', 'newp', 'Workspace'),
+      R('Theme, reduced motion', 'A11Y-9/10', 'H', 'Settings › Appearance', 'Follows system by default', 'newp', 'Workspace'),
+    ];
+    const groups = ['All', 'Table', 'Session', 'Workspace', 'Changes only'];
+    const f = this.state.filter;
+    const mapRows = all.filter(r => f === 'All' ? true : f === 'Changes only' ? r.c !== 'Keep' : r.g === f);
+    const filters = groups.map(label => {
+      const on = label === f;
+      return { label, on: () => this.setState({ filter: label }), bd: on ? '#1C1E1B' : '#C5C8BB', bg: on ? '#1C1E1B' : '#fff', fg: on ? '#fff' : '#1C1E1B' };
+    });
+    return { todayTools, principles, places, headerSlots, actionOptions, sessions, hand, phoneRules, mapRows, filters };
+  }
+}
+</script>
+</body>
+</html>
