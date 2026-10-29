@@ -18,6 +18,10 @@ Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122. 6a (#11
 
 ## Done
 
+### Workflow: plan in Opus, build in Sonnet (2026-10-29)
+
+- `CLAUDE.md` now says each issue is planned in an Opus session, then built in a fresh Sonnet session (medium effort) from the approved plan. #118 was built this way.
+
 ### Phase 6c: Setup dialog (#118, 2026-10-29)
 
 - The This session menu has **New session…** above Session log. It opens `SetupDialog` (`src/components/SetupDialog.tsx`) on the shared `Dialog`: the three presets as radio choices, each with its seats (shape and colour from `seatIdentity`) and piles, the current format selected and focused. Cancel and Escape return focus to the menu button; Start session moves focus to the table and announces "New 1v1 PvP session started. Player 1 is the active seat."
@@ -1076,3 +1080,4 @@ Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122. 6a (#11
 | 2026-10-29 | Session seats and piles keep the format's own ids, and seat identity follows `Seat.place` (#116) | New ids for every session; identity by seat id | Solo PvE builds the same session as before, so saved ids and tests stay valid, and a renamed or re-id'd seat still gets its place's colour and shape |
 | 2026-10-29 | Undo and redo make the seat that took the action active (FS-3, owner) | Keeping whichever seat is active | The tray then shows the hand the undo changed. Revisit if it feels odd in play. |
 | 2026-10-29 | Starting a new session clears undo history and isn't undoable; on reload the saved default format applies only while the session is untouched (#118, owner) | Making a new session an undo step; always switching to the default format on load | The confirm step is the guard, and a reload must never replace a session being played |
+| 2026-10-29 | Each issue is planned in an Opus session and built in a fresh Sonnet session from the approved plan (owner) | Planning and building in one session | Saves the owner's Claude usage. Tried on #118, where it worked well. |
