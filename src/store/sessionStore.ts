@@ -3,6 +3,7 @@ import { useStore } from 'zustand';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import { roll, type Die, type Roll } from '../actions/dice';
 import type { Destination } from '../actions/moveCard';
+import { setActiveSeat } from '../actions/seats';
 import { createSession, type ActionContext, type ActionResult, type SessionState } from '../model/session';
 import { SOLO_PVE } from '../model/format';
 import { cryptoRandomInt } from '../model/random';
@@ -84,7 +85,15 @@ export interface SessionStore {
   dispatch: <R extends ActionResult>(action: (session: SessionState, context: ActionContext) => R) => R;
   /** Announces something that isn't a session change, like why nothing happened. */
   announce: (text: string) => void;
-  /** TT-15: goes back one action, or announces that there is nothing to undo. */
+  /**
+   * FS-3: makes a seat active and announces it. Never an undo step, and the redo
+   * list stays as it is.
+   */
+  switchSeat: (seatId: string) => void;
+  /**
+   * TT-15: goes back one action, or announces that there is nothing to undo.
+   * Undo and redo show the seat that took the action (FS-3).
+   */
   undo: () => void;
   /** TT-15: replays the last undone action, or announces that there is nothing to redo. */
   redo: () => void;
@@ -111,6 +120,14 @@ export interface SessionStore {
   toast: Announcement | undefined;
   showToast: (text: string) => void;
   dismissToast: () => void;
+}
+
+/**
+ * A seat switch made after an action isn't part of that action, so the step that
+ * undo or redo puts aside takes the active seat of the session it came from (FS-3).
+ */
+function withActiveSeat(session: SessionState, activeSeatId: string): SessionState {
+  return session.activeSeatId === activeSeatId ? session : { ...session, activeSeatId };
 }
 
 export const liveContext: ActionContext = { randomInt: cryptoRandomInt, newId: () => crypto.randomUUID() };
@@ -164,6 +181,10 @@ export function createSessionStore(session: SessionState = createSession(SOLO_PV
         return result;
       },
       announce: (text) => set({ announcement: next(text) }),
+      switchSeat: (seatId) => {
+        const result = setActiveSeat(get().session, { seatId });
+        set({ session: result.state, announcement: next(result.announcement) });
+      },
       undo: () => {
         const { session: current, past, future } = get();
         const step = past.at(-1);
@@ -176,7 +197,7 @@ export function createSessionStore(session: SessionState = createSession(SOLO_PV
           session: step.session,
           announcement: next(`Undone: ${step.announcement}`),
           past: past.slice(0, -1),
-          future: [...future, { session: current, announcement: step.announcement }],
+          future: [...future, { session: withActiveSeat(current, step.session.activeSeatId), announcement: step.announcement }],
         });
       },
       redo: () => {
@@ -190,7 +211,7 @@ export function createSessionStore(session: SessionState = createSession(SOLO_PV
           toast: undefined,
           session: step.session,
           announcement: next(`Redone: ${step.announcement}`),
-          past: [...past, { session: current, announcement: step.announcement }],
+          past: [...past, { session: withActiveSeat(current, step.session.activeSeatId), announcement: step.announcement }],
           future: future.slice(0, -1),
         });
       },
