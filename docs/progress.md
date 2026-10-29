@@ -14,9 +14,17 @@ Phase 5 (Layouts, #35) is split into 5a to 5j, sub-issues #88 to #96 and #111, w
 
 Field errors no longer rely on colour (#42, A11Y-13, outside the phases): every field error has an icon and starts with "Error:", an invalid field shows an icon inside its right end, focused or not, and errors use the new `--error` token. Later forms reuse `FieldError` and `FieldControl` from `src/components/FieldError.tsx`.
 
-Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122. 6a (#116) is done: sessions are built from a format with `createSession(format)`, the three presets are in `src/model/format.ts`, each seat's colour, shape and card back follow its place (first player, second player or environment), and the header shows the format name. The app still starts from Solo PvE until the setup screen (6c). 6b (#117) is done: each seat in the seat bar is a button that makes it the active seat, which swaps the hand tray, and S and Shift+S step to the next and previous seat. Switching isn't an undo step; undo and redo show the hand of the seat that took the action.
+Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122. 6a (#116) is done: sessions are built from a format with `createSession(format)`, the three presets are in `src/model/format.ts`, each seat's colour, shape and card back follow its place (first player, second player or environment), and the header shows the format name. The app still starts from Solo PvE until the setup screen (6c). 6b (#117) is done: each seat in the seat bar is a button that makes it the active seat, which swaps the hand tray, and S and Shift+S step to the next and previous seat. Switching isn't an undo step; undo and redo show the hand of the seat that took the action. 6c (#118) is done: **New session…** in the This session menu opens a setup dialog with the three presets (seats and piles shown), asks first when the session has cards, and starts a session from the chosen format. The choice is saved as the `defaultFormat` option, and on reload an untouched session switches to it.
 
 ## Done
+
+### Phase 6c: Setup dialog (#118, 2026-10-29)
+
+- The This session menu has **New session…** above Session log. It opens `SetupDialog` (`src/components/SetupDialog.tsx`) on the shared `Dialog`: the three presets as radio choices, each with its seats (shape and colour from `seatIdentity`) and piles, the current format selected and focused. Cancel and Escape return focus to the menu button; Start session moves focus to the table and announces "New 1v1 PvP session started. Player 1 is the active seat."
+- A session with any cards first shows a confirm step in the same dialog ("Start a new 1v1 PvP session? The cards in this session will be cleared." with Start new session and Back). `Dialog` gained an `onCancel` prop so Back doesn't close it.
+- `startSession(format, { silent })` in the store replaces the session and clears past, future, log, lastRoll, placing, drag and toast. `presetById` (falls back to Solo PvE) is in `src/model/format.ts`, and `defaultFormat` is a new option in the resolver.
+- `DefaultFormat` (inside both providers) runs once when storage is ready: an untouched session (no undo steps, no cards) on a different format than the saved `defaultFormat` switches to it, silently.
+- Tests: `src/components/SetupDialog.test.tsx` (SP-1), store and resolver tests, `e2e/setup.spec.ts` by mouse and keyboard with an axe scan, a reload and a 375 × 667 check.
 
 ### Phase 6b: Seat switcher (#117, 2026-10-29)
 
@@ -808,8 +816,7 @@ Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122. 6a (#11
 
 ## Next
 
-- **Phase 6 (Formats, #115):** split into 6a to 6g, sub-issues #116 to #122. 6a (#116) and 6b (#117) are done. Each of the rest starts only with the owner's go-ahead, 6c next.
-  - 6c (#118): setup dialog from **New session…**; the last format chosen is the `defaultFormat` option.
+- **Phase 6 (Formats, #115):** split into 6a to 6g, sub-issues #116 to #122. 6a (#116), 6b (#117) and 6c (#118) are done. Each of the rest starts only with the owner's go-ahead, 6d next.
   - 6d (#119): saved formats as their own items, and a Formats screen with duplicate, rename and delete.
   - 6e (#120): format editor for seats, piles and Uses dice.
   - 6f (#121): format editor for seat counters.
@@ -1068,3 +1075,4 @@ Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122. 6a (#11
 | 2026-10-28 | Phase 6 split into 6a to 6g (#115); seats renamed but not added or removed; the app opens on the table with the last format; switching seats isn't an undo step | Adding seats in V1; a start screen in Phase 6; switching as an undo step | Owner decisions while planning Phase 6 |
 | 2026-10-29 | Session seats and piles keep the format's own ids, and seat identity follows `Seat.place` (#116) | New ids for every session; identity by seat id | Solo PvE builds the same session as before, so saved ids and tests stay valid, and a renamed or re-id'd seat still gets its place's colour and shape |
 | 2026-10-29 | Undo and redo make the seat that took the action active (FS-3, owner) | Keeping whichever seat is active | The tray then shows the hand the undo changed. Revisit if it feels odd in play. |
+| 2026-10-29 | Starting a new session clears undo history and isn't undoable; on reload the saved default format applies only while the session is untouched (#118, owner) | Making a new session an undo step; always switching to the default format on load | The confirm step is the guard, and a reload must never replace a session being played |

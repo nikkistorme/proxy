@@ -29,6 +29,8 @@ test.describe('TT-14 dice, coin and session log', () => {
     const menuButton = page.getByRole('button', { name: 'This session' });
     await tabTo(page, menuButton, { backwards: true });
     await page.keyboard.press('Enter');
+    await expect(page.getByRole('menuitem', { name: 'New session…' })).toBeFocused();
+    await page.keyboard.press('ArrowDown');
     await expect(page.getByRole('menuitem', { name: 'Session log' })).toBeFocused();
     await page.keyboard.press('Enter');
     const items = log(page).getByRole('listitem');

@@ -2,6 +2,7 @@
 // then the game's, then the account's, then the built-in default. V1 has only
 // the account level, saved as the profile's settings item.
 
+import { SOLO_PVE } from '../model/format';
 import type { ThemePreference } from '../theme';
 
 export interface Options {
@@ -10,6 +11,8 @@ export interface Options {
   layoutByType: Record<string, string>;
   /** The id of the layout used when nothing else picks one; `null` is the built-in layout (LY-8). */
   defaultLayout: string | null;
+  /** The id of the format a new session starts from, chosen in New session… (FS-1, SP-1). */
+  defaultFormat: string;
 }
 
 export type OptionName = keyof Options;
@@ -18,6 +21,7 @@ export const DEFAULT_OPTIONS: Options = {
   theme: 'system',
   layoutByType: {},
   defaultLayout: null,
+  defaultFormat: SOLO_PVE.id,
 };
 
 export interface OptionLevels {

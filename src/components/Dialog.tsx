@@ -16,6 +16,8 @@ interface DialogProps {
   primaryLabel: string;
   /** Adds a Cancel button that closes without submitting. */
   cancelLabel?: string;
+  /** What the cancel button does instead of closing, like a confirm step's Back. */
+  onCancel?: () => void;
   /** Makes the dialog a form: Enter or the main button submits. Return true to close. */
   onSubmit?: () => boolean;
   /**
@@ -42,6 +44,7 @@ export function Dialog({
   onClose,
   primaryLabel,
   cancelLabel,
+  onCancel,
   onSubmit,
   bodyLabel,
   width = 'wide',
@@ -86,7 +89,7 @@ export function Dialog({
         )}
         <div className="dialog__actions">
           {cancelLabel && (
-            <button type="button" className="button" onClick={close}>
+            <button type="button" className="button" onClick={onCancel ?? close}>
               {cancelLabel}
             </button>
           )}

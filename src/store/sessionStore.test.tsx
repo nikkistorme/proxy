@@ -5,7 +5,7 @@ import { draw, revealTop, shuffle } from '../actions/pileActions';
 import { cardsFrom, sessionWithDeck, namesOf, testContext } from '../actions/testing';
 import { LiveRegion } from '../components/LiveRegion';
 import { createSession } from '../model/session';
-import { SOLO_PVE } from '../model/format';
+import { PVP_1V1, SOLO_PVE } from '../model/format';
 import { createSessionStore, SessionStoreProvider, HISTORY_LIMIT, LOG_LIMIT, useSessionStore } from './sessionStore';
 
 describe('AR-2 store and live region', () => {
@@ -199,5 +199,28 @@ describe('TT-14 rolls in the session log', () => {
     expect(log).toHaveLength(LOG_LIMIT);
     expect(log[0]?.id).toBe(6);
     expect(log.at(-1)?.id).toBe(LOG_LIMIT + 5);
+  });
+});
+
+describe('SP-1 startSession', () => {
+  it('replaces the session and clears history, log and transient state', () => {
+    const store = createSessionStore(sessionWithDeck(), testContext());
+    store.getState().dispatch((g) => draw(g, { pileId: 'pile-p1-main' }));
+    store.getState().undo();
+    store.getState().roll('d6');
+    store.getState().showToast('x');
+    store.getState().startSession(PVP_1V1);
+    const state = store.getState();
+    expect(state.session.formatId).toBe(PVP_1V1.id);
+    expect(Object.keys(state.session.cards)).toHaveLength(0);
+    expect([state.past, state.future, state.log]).toEqual([[], [], []]);
+    expect([state.lastRoll, state.toast, state.placing, state.drag]).toEqual([undefined, undefined, undefined, undefined]);
+    expect(state.announcement.text).toBe('New 1v1 PvP session started. Player 1 is the active seat.');
+  });
+
+  it('can start silently', () => {
+    const store = createSessionStore(createSession(SOLO_PVE), testContext());
+    store.getState().startSession(PVP_1V1, { silent: true });
+    expect(store.getState().announcement.text).toBe('');
   });
 });
