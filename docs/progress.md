@@ -14,11 +14,21 @@ Phase 5 (Layouts, #35) is split into 5a to 5j, sub-issues #88 to #96 and #111, w
 
 Field errors no longer rely on colour (#42, A11Y-13, outside the phases): every field error has an icon and starts with "Error:", an invalid field shows an icon inside its right end, focused or not, and errors use the new `--error` token. Later forms reuse `FieldError` and `FieldControl` from `src/components/FieldError.tsx`.
 
-Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122. 6a (#116) is done: sessions are built from a format with `createSession(format)`, the three presets are in `src/model/format.ts`, each seat's colour, shape and card back follow its place (first player, second player or environment), and the header shows the format name. The app still starts from Solo PvE until the setup screen (6c). 6b (#117) is done: each seat in the seat bar is a button that makes it the active seat, which swaps the hand tray, and S and Shift+S step to the next and previous seat. Switching isn't an undo step; undo and redo show the hand of the seat that took the action. 6c (#118) is done: **New session…** in the This session menu opens a setup dialog with the three presets (seats and piles shown), asks first when the session has cards, and starts a session from the chosen format. The choice is saved as the `defaultFormat` option, and on reload an untouched session switches to it.
+Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122. 6a (#116) is done: sessions are built from a format with `createSession(format)`, the three presets are in `src/model/format.ts`, each seat's colour, shape and card back follow its place (first player, second player or environment), and the header shows the format name. The app still starts from Solo PvE until the setup screen (6c). 6b (#117) is done: each seat in the seat bar is a button that makes it the active seat, which swaps the hand tray, and S and Shift+S step to the next and previous seat. Switching isn't an undo step; undo and redo show the hand of the seat that took the action. 6c (#118) is done: **New session…** in the This session menu opens a setup dialog with the three presets (seats and piles shown), asks first when the session has cards, and starts a session from the chosen format. The choice is saved as the `defaultFormat` option, and on reload an untouched session switches to it. 6d (#119) is done: saved formats are their own items, the setup dialog's **Edit formats…** and **Edit a copy** buttons open a full-screen Formats screen (presets read-only with Duplicate; saved formats with Rename, Duplicate and Delete), and the setup dialog and the saved default include saved formats. A preset's Duplicate is the only way to make a saved format until the editor (6e).
 
 The design now has a UI placement guide (`design/ui-placement.md`, rules UI-1 to UI-8, with `FuturePlacement.dc.html`), and the plan follows it (2026-10-29). V1 keeps today's shell: V1 issues add no header or toolbar control (UI-3) and put new controls at the guide's address, or in the This session menu until the Session menu exists. So 6d's Formats screen opens from the setup dialog, and 6e's format editor is full screen. After V1, the shell moves to the guide in its own issues, #130 to #135 (action registry, workspace with Home, Library and Settings, header slots and Session menu, side panel, seat dock, command palette), before the card set library (#67). Smaller moves ride along with the feature that touches them. Each issue now has a Placement section.
 
 ## Done
+
+### Phase 6d: Saved formats and the Formats screen (#119, 2026-10-29)
+
+- **Storage (PS-1, AR-6):** `useSavedItems(kind, delay)` in `src/storage/useSavedItems.ts` holds the load, autosave, flush and delete logic that used to live in `LayoutsProvider`, and both providers use it. It returns `items`, `loaded` (the first list has finished, or failed), `save` and `remove`. `LayoutsProvider` keeps `LAYOUT_SAVE_DELAY` and its API; its tests pass unchanged. `FormatsProvider` (`src/formats/FormatsProvider.tsx`, inside `StorageProvider` and wrapping the session store) gives `useFormats()`: `formats`, `loaded`, `saveFormat`, `deleteFormat`.
+- **Model:** `FormatItem` and `formatById(saved, id)` (presets, then saved, else Solo PvE) replace `presetById`. `src/model/formatNames.ts` has `validateFormatName`, `copyName` and `duplicateFormat` (new UUID, free name, seat and pile ids unchanged).
+- **Entry (UI-3, owner decision):** 6d adds no header or toolbar control. `SessionMenu` loads `FormatsScreen` lazily; Edit formats… and Edit a copy (presets only) in `SetupDialog` open it, and Back to New session or Esc reopen the setup dialog on the chosen format.
+- **The screen (`src/formats/FormatsScreen.tsx`, lazy):** reuses the layout screen's frame and CSS. Rows show `FormatSummary` (seats and piles, moved out of `SetupDialog` with `seatPlaces`). Rename uses `NameDialog` (`LayoutNameDialog` made generic, now in `src/components/`), with the same Enter-key guard. Delete asks first (`DeleteFormatDialog`); focus then goes to the next row, else the one before, else the last preset's Duplicate. Each action is announced in the screen's own live region.
+- **Setup dialog and default:** `SetupDialog` lists presets then saved formats by name, starting on the session's format if it still exists, else Solo PvE. `DefaultFormat` waits for `useFormats().loaded` too; a deleted default gives Solo PvE.
+- **Tests:** `formatNames.test.ts`, `formatById` cases, `FormatsProvider.test.tsx`, `FormatsScreen.test.tsx`, new `SetupDialog` and `DefaultFormat` cases, and `e2e/formats.spec.ts` (keyboard path with a reload, a session started from the copy and a delete; a mouse path with axe; 375 × 667).
+- **Changed requirements:** FS-2, SP-1.
 
 ### Planning: UI placement guide in the plan (2026-10-29)
 
@@ -841,9 +851,8 @@ The design now has a UI placement guide (`design/ui-placement.md`, rules UI-1 to
 
 Every issue fills in its Placement section (`design/ui-placement.md`). No issue adds a header or toolbar control (UI-3).
 
-- **Phase 6 (Formats, #115):** split into 6a to 6g, sub-issues #116 to #122. 6a (#116), 6b (#117) and 6c (#118) are done. Each of the rest starts only with the owner's go-ahead, 6d next.
-  - 6d (#119): saved formats as their own items, and a Formats screen with duplicate, rename and delete, opened from the setup dialog (not the toolbar).
-  - 6e (#120): full-screen format editor for seats, piles and Uses dice, with Back to the Formats screen.
+- **Phase 6 (Formats, #115):** split into 6a to 6g, sub-issues #116 to #122. 6a (#116) to 6d (#119) are done. Each of the rest starts only with the owner's go-ahead, 6e next.
+  - 6e (#120): full-screen format editor for seats, piles and Uses dice, with Back to the Formats screen. A preset's button becomes "Edit a copy".
   - 6f (#121): format editor for seat counters.
   - 6g (#122): close-out, a 1v1 PvP session set up and played by mouse and keyboard, and no new header control.
 - **Phase 7 (Session saves and Sheets), placement to carry into its split:**
@@ -871,6 +880,8 @@ Every issue fills in its Placement section (`design/ui-placement.md`). No issue 
 
 ## Open problems
 
+- A format save or delete that fails is silent, like layouts: the format stays as it is in the app for the visit.
+- Saved formats load a moment after the page starts, so the Formats screen and the setup dialog can be opened before they appear, and an untouched session switches to a saved default only once they've loaded.
 - The placement guide's open questions are still open: context menus plus a selection bar (4a + 4b, recommended) or a full inspector; whether the side panel opens by default (HANDOFF decision 2 is open again, for #133); whether Home becomes the landing page once games exist (#65, #131); and whether a Sheet-linked card set stays read-only (#136).
 - Until #132, the header is one flat row of 13 controls. V1 adds none, and new session-wide actions go in the This session menu.
 - Saved layouts load a moment after the page starts, so cards may first draw with the built-in layout and then switch.
@@ -1120,6 +1131,7 @@ Every issue fills in its Placement section (`design/ui-placement.md`). No issue 
 | 2026-10-29 | Undo and redo make the seat that took the action active (FS-3, owner) | Keeping whichever seat is active | The tray then shows the hand the undo changed. Revisit if it feels odd in play. |
 | 2026-10-29 | Starting a new session clears undo history and isn't undoable; on reload the saved default format applies only while the session is untouched (#118, owner) | Making a new session an undo step; always switching to the default format on load | The confirm step is the guard, and a reload must never replace a session being played |
 | 2026-10-29 | Each issue is planned in an Opus session and built in a fresh Sonnet session from the approved plan (owner) | Planning and building in one session | Saves the owner's Claude usage. Tried on #118, where it worked well. |
+| 2026-10-29 | 6d: a preset row's button says "Duplicate" (6e renames it "Edit a copy"); format names are unique like layout names (ignoring case and outer spaces, preset names taken); the Formats screen opens from the setup dialog only, with no header or toolbar control and no shortcut; the layout provider's load, autosave and delete logic moved into one shared `useSavedItems` hook | Copying the provider; a toolbar button | One hook keeps the storage rules (PS-1) in one place; UI-3 |
 | 2026-10-29 | The shell moves to the placement guide after V1, in issues #130 to #135, before #67; V1 adds no header control and uses the guide's addresses (owner) | Restructuring in Phase 8; only moving things as features are touched | Keeps V1's scope, while the foundations (registry, workspace, header, panel) land before the features that need them |
 | 2026-10-29 | 6d opens the Formats screen from the setup dialog, and 6e's format editor is full screen (UI-3, UI-8, owner) | A toolbar button and a dialog editor | No new header control, and the format screens drop straight into Library › Formats later |
 | 2026-10-29 | Editing card sets in Proxy is its own issue (#136) after #67 (owner) | Folding it into #67; parking it | #67 keeps the CSV or sheet as the source of truth, and editing adds its own rules (Sheet-linked sets read-only) |

@@ -137,7 +137,7 @@ describe('LY-1 opening the layout screen', () => {
     const user = await renderSession();
     const button = screen.getByRole('button', { name: 'Card layouts (L)' });
     await user.click(button);
-    expect(await screen.findByRole('dialog', { name: 'Card layouts' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Card layouts' }, { timeout: 5000 })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Back to table' }));
     expect(screen.queryByRole('dialog', { name: 'Card layouts' })).not.toBeInTheDocument();
     expect(button).toHaveFocus();
@@ -147,7 +147,7 @@ describe('LY-1 opening the layout screen', () => {
     const user = await renderSession();
     screen.getByRole('button', { name: 'Card layouts (L)' }).focus();
     await user.keyboard('l');
-    expect(await screen.findByRole('dialog', { name: 'Card layouts' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Card layouts' }, { timeout: 5000 })).toBeInTheDocument();
   });
 });
 

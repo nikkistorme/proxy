@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, type MouseEvent } from 'react';
 import { CardFace } from '../components/CardFace';
+import { NameDialog } from '../components/NameDialog';
 import { useLayouts, type LayoutItem } from '../layouts/LayoutsProvider';
 import { DEFAULT_LAYOUT, type LayoutDesign } from '../model/layout';
 import { duplicateLayout, newLayout, validateLayoutName } from '../model/layoutNames';
@@ -9,7 +10,6 @@ import { LayoutChoices } from './LayoutChoices';
 import { LayoutFiles } from './LayoutFiles';
 import { LayoutCanvas } from './LayoutCanvas';
 import './LayoutEditor.css';
-import { LayoutNameDialog } from './LayoutNameDialog';
 
 /** The built-in layout's row id. It can be duplicated, not renamed or deleted. */
 const BUILT_IN = 'built-in';
@@ -233,9 +233,9 @@ export default function LayoutEditor({ onClose, columns, previewSets, types }: L
         <span key={announcement.id}>{announcement.text}</span>
       </div>
 
-      <LayoutNameDialog
+      <NameDialog
         key={renaming?.id}
-        layout={renaming}
+        item={renaming}
         validateName={(name, exceptId) => validateLayoutName(layouts, name, exceptId)}
         onConfirm={rename}
         onClose={closeRename}

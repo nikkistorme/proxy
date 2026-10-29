@@ -1,6 +1,7 @@
 import { useLayoutEffect } from 'react';
 import { DefaultFormat } from './components/DefaultFormat';
 import { SessionScreen } from './components/SessionScreen';
+import { FormatsProvider } from './formats/FormatsProvider';
 import { LayoutsProvider } from './layouts/LayoutsProvider';
 import type { StorageBackend } from './storage/storage';
 import { StorageProvider, useOption } from './storage/StorageProvider';
@@ -20,10 +21,12 @@ export function App({ storageBackend }: { storageBackend?: StorageBackend }) {
     <StorageProvider backend={storageBackend}>
       <Theme />
       <LayoutsProvider>
-        <SessionStoreProvider>
-          <DefaultFormat />
-          <SessionScreen />
-        </SessionStoreProvider>
+        <FormatsProvider>
+          <SessionStoreProvider>
+            <DefaultFormat />
+            <SessionScreen />
+          </SessionStoreProvider>
+        </FormatsProvider>
       </LayoutsProvider>
     </StorageProvider>
   );

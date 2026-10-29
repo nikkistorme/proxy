@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { seatIdentity, seatPlace } from '../components/seatIdentity';
-import { COOP_PVE, PRESETS, PVP_1V1, SOLO_PVE, type Format } from './format';
+import { COOP_PVE, formatById, PRESETS, PVP_1V1, SOLO_PVE, type Format } from './format';
 import { createSession } from './session';
 
 describe('FS-1 presets', () => {
@@ -72,5 +72,20 @@ describe('Seat identity follows the seat place', () => {
     expect(seatIdentity(seatPlace(seats, 'a')).shapeName).toBe('triangle');
     expect(seatIdentity(seatPlace(seats, 'b')).shapeName).toBe('circle');
     expect(seatIdentity(seatPlace(seats, undefined)).shapeName).toBe('diamond');
+  });
+});
+
+describe('FS-1 formatById', () => {
+  const saved: Format = { ...PVP_1V1, id: 'saved-1', name: 'Mine' };
+
+  it('finds a preset, then a saved format', () => {
+    expect(formatById([saved], 'preset-coop-pve').name).toBe('Co-op PvE');
+    expect(formatById([saved], 'saved-1').name).toBe('Mine');
+  });
+
+  it('falls back to Solo PvE for an unknown, deleted or missing id', () => {
+    expect(formatById([saved], 'nope').id).toBe('preset-solo-pve');
+    expect(formatById([], 'saved-1').id).toBe('preset-solo-pve');
+    expect(formatById([saved], undefined).id).toBe('preset-solo-pve');
   });
 });

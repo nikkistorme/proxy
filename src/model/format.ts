@@ -1,3 +1,5 @@
+import type { NewItem, StoredItem } from '../storage/storage';
+
 /** Player seats have a hand; the environment doesn't (FS-3). */
 export type SeatKind = 'player' | 'environment';
 
@@ -81,7 +83,10 @@ export const PVP_1V1: Format = {
 
 export const PRESETS: readonly Format[] = [SOLO_PVE, COOP_PVE, PVP_1V1];
 
-/** A preset by id; an unknown or missing id means Solo PvE (FS-1). */
-export function presetById(id: string | undefined): Format {
-  return PRESETS.find((format) => format.id === id) ?? SOLO_PVE;
+/** A format as the app holds it: `put` stamps the time and version when it saves (FS-2). */
+export type FormatItem = NewItem<Format & StoredItem>;
+
+/** A format by id: the presets, then the saved ones; an unknown or missing id means Solo PvE (FS-1). */
+export function formatById(saved: readonly Format[], id: string | undefined): Format {
+  return PRESETS.find((format) => format.id === id) ?? saved.find((format) => format.id === id) ?? SOLO_PVE;
 }
