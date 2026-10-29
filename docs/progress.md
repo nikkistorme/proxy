@@ -16,7 +16,20 @@ Field errors no longer rely on colour (#42, A11Y-13, outside the phases): every 
 
 Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122. 6a (#116) is done: sessions are built from a format with `createSession(format)`, the three presets are in `src/model/format.ts`, each seat's colour, shape and card back follow its place (first player, second player or environment), and the header shows the format name. The app still starts from Solo PvE until the setup screen (6c). 6b (#117) is done: each seat in the seat bar is a button that makes it the active seat, which swaps the hand tray, and S and Shift+S step to the next and previous seat. Switching isn't an undo step; undo and redo show the hand of the seat that took the action. 6c (#118) is done: **New session…** in the This session menu opens a setup dialog with the three presets (seats and piles shown), asks first when the session has cards, and starts a session from the chosen format. The choice is saved as the `defaultFormat` option, and on reload an untouched session switches to it.
 
+The design now has a UI placement guide (`design/ui-placement.md`, rules UI-1 to UI-8, with `FuturePlacement.dc.html`), and the plan follows it (2026-10-29). V1 keeps today's shell: V1 issues add no header or toolbar control (UI-3) and put new controls at the guide's address, or in the This session menu until the Session menu exists. So 6d's Formats screen opens from the setup dialog, and 6e's format editor is full screen. After V1, the shell moves to the guide in its own issues, #130 to #135 (action registry, workspace with Home, Library and Settings, header slots and Session menu, side panel, seat dock, command palette), before the card set library (#67). Smaller moves ride along with the feature that touches them. Each issue now has a Placement section.
+
 ## Done
+
+### Planning: UI placement guide in the plan (2026-10-29)
+
+- **Source:** `design/ui-placement.md` and `design/mockups/FuturePlacement.dc.html` (#129). Issues cite its rules as UI-1 to UI-8.
+- **When (owner decision):** after V1, mixed. V1 phases only stop adding header controls (UI-3) and use the guide's addresses. After V1, the foundations get their own issues; smaller moves happen inside the feature that touches them (the guide's Change column).
+- **Phase 6 (owner decision):** 6d (#119) opens the Formats screen from the setup dialog (Edit formats…, Edit a copy), not a toolbar button. 6e (#120) is a full-screen editor with Back, like the layout editor (UI-8). 6f and 6g follow; 6g checks Phase 6 added no header control. #115 says so too.
+- **New issues:** #130 action registry (UI-2), #131 workspace with rail, Home, Library and Settings (UI-8), #132 header slots, Session menu and table tools on the table (UI-3), #133 side panel with Log, Piles and Details (UI-5), #134 seat dock, #135 command palette (UI-7), and #136 editing card sets in Proxy (the guide's "card sets without CSV", owner decision: its own issue after #67, which keeps editing out of scope).
+- **Existing issues:** #29, #30, #45, #53, #57, #59, #63, #65, #67, #71, #102, #106 and #107 have a Placement section with their address and new prerequisites.
+- **Issue template:** the feature template has a Placement field (the guide's checklist).
+- **`CLAUDE.md`:** the Design section lists `design/ui-placement.md`.
+- **Changed requirements:** none. Out of scope now lists the placement restructure, and the decision log has the plan.
 
 ### Workflow: plan in Opus, build in Sonnet (2026-10-29)
 
@@ -826,21 +839,40 @@ Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122. 6a (#11
 
 ## Next
 
+Every issue fills in its Placement section (`design/ui-placement.md`). No issue adds a header or toolbar control (UI-3).
+
 - **Phase 6 (Formats, #115):** split into 6a to 6g, sub-issues #116 to #122. 6a (#116), 6b (#117) and 6c (#118) are done. Each of the rest starts only with the owner's go-ahead, 6d next.
-  - 6d (#119): saved formats as their own items, and a Formats screen with duplicate, rename and delete.
-  - 6e (#120): format editor for seats, piles and Uses dice.
+  - 6d (#119): saved formats as their own items, and a Formats screen with duplicate, rename and delete, opened from the setup dialog (not the toolbar).
+  - 6e (#120): full-screen format editor for seats, piles and Uses dice, with Back to the Formats screen.
   - 6f (#121): format editor for seat counters.
-  - 6g (#122): close-out, a 1v1 PvP session set up and played by mouse and keyboard.
-- **After V1, in this order:** the demo on its own path (#63), the card set library (#67), games (#65), then accounts and sync (#45). #45's docs-only step 1 (confirming Supabase, writing the accounts requirements) can happen any time.
-- **After V1, as feature issues:** shared setups (#106), after accounts (#45), and rewinding from the session log (#107), which isn't tied to a phase.
-- **#71: keys act on the hovered card or pile when nothing on the table has focus**, an owner request from the #70 review. Single-letter keys without focus need an off switch (WCAG 2.1.4), so it goes with #53.
-- **#68: no text-field focus on touch screens in the other dialogs** (Move to…, pile viewer, Draw/Mill/Peek count, pile name). It isn't tied to a phase, and the owner chooses when.
-- **After V1, as feature issues:** selection and group actions (#29), stacks (#30), and control settings with shortcut remapping (#53).
-- **Multi-select in the pile viewer (#57)**, a feature issue outside the phases, when the owner chooses. Open problems that belong to later issues:
+  - 6g (#122): close-out, a 1v1 PvP session set up and played by mouse and keyboard, and no new header control.
+- **Phase 7 (Session saves and Sheets), placement to carry into its split:**
+  - Snapshots (PS-3): Save snapshot… and Snapshots ▸ in the This session menu (the Session menu's third group, #132).
+  - JSON bundle (PS-4): Export session… and the bundle import in the This session menu for V1; the whole-bundle export and import move to Settings › Data with #131.
+  - Reload all (CD-12): in the This session menu, shown only when a card set is URL-backed (UI-4).
+  - Resume: reopening the app restores the last session (PS-2), which is the guide's "the app keeps opening on the last session". A start screen isn't built in V1; Home comes with #131. Confirm when Phase 7 is planned.
+  - Sheet URLs (CD-7) stay where a pile is loaded: the setup dialog and the pile menu.
+- **Phase 8 (Polish), placement to carry into its split:** Load demo (DM-5) has no start screen in V1, so it goes in the setup dialog until Home exists (#131). The manual theme choice waits for Settings › Appearance (#131).
+- **After V1, in this order:**
+  1. The demo on its own path (#63).
+  2. The placement foundations: action registry (#130); workspace with rail, Home, Library and Settings (#131, in three parts); header slots, Session menu and table tools on the table (#132); side panel with Log, Piles and Details (#133); seat dock (#134); command palette (#135).
+  3. The card set library (#67), in Library › Card sets, then editing card sets in Proxy (#136).
+  4. Games (#65), in the rail and Home.
+  5. Accounts and sync (#45): rail footer, header Account slot, Settings › Account. #45's docs-only step 1 (confirming Supabase, writing the accounts requirements) can happen any time.
+  6. Shared setups (#106), after #45: header Share slot, Library › Shared setups, testers' locks through the registry's `can()`.
+- **After V1, as feature issues, once their prerequisites are in:**
+  - Rewinding from the session log (#107), after the side panel (#133).
+  - Control settings with shortcut remapping (#53), after #130, #131 and #135, with #71 (keys act on the hovered card or pile, which needs #53's off switch for WCAG 2.1.4).
+  - Selection and group actions (#29) with the selection bar, after #130; then stacks (#30). Multi-select in the pile viewer (#57) uses the same selection bar, built in whichever of #29 and #57 comes first. #43 looks like an earlier, empty copy of #57.
+  - PWA support (#59): Settings › App once #131 exists, no in-app install banner.
+  - Layout editor undo (#102) and #68 (no text-field focus on touch screens in the other dialogs) aren't tied to anything, and the owner chooses when.
+- Open problems that belong to later issues:
   - #29 (after V1): move the Actions button to the selected card
 
 ## Open problems
 
+- The placement guide's open questions are still open: context menus plus a selection bar (4a + 4b, recommended) or a full inspector; whether the side panel opens by default (HANDOFF decision 2 is open again, for #133); whether Home becomes the landing page once games exist (#65, #131); and whether a Sheet-linked card set stays read-only (#136).
+- Until #132, the header is one flat row of 13 controls. V1 adds none, and new session-wide actions go in the This session menu.
 - Saved layouts load a moment after the page starts, so cards may first draw with the built-in layout and then switch.
 - Keyboard E2E tests that check focus (counters, Move to…, the solo turn) sometimes fail when the whole suite runs locally at full load. They fail on `main` too and pass on a rerun, so they're timing-related, not from a change.
 - A layout save or delete that fails is silent: the layout stays as it is in the app for the visit. The layout screen could say so, perhaps with the storage notice.
@@ -1088,3 +1120,7 @@ Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122. 6a (#11
 | 2026-10-29 | Undo and redo make the seat that took the action active (FS-3, owner) | Keeping whichever seat is active | The tray then shows the hand the undo changed. Revisit if it feels odd in play. |
 | 2026-10-29 | Starting a new session clears undo history and isn't undoable; on reload the saved default format applies only while the session is untouched (#118, owner) | Making a new session an undo step; always switching to the default format on load | The confirm step is the guard, and a reload must never replace a session being played |
 | 2026-10-29 | Each issue is planned in an Opus session and built in a fresh Sonnet session from the approved plan (owner) | Planning and building in one session | Saves the owner's Claude usage. Tried on #118, where it worked well. |
+| 2026-10-29 | The shell moves to the placement guide after V1, in issues #130 to #135, before #67; V1 adds no header control and uses the guide's addresses (owner) | Restructuring in Phase 8; only moving things as features are touched | Keeps V1's scope, while the foundations (registry, workspace, header, panel) land before the features that need them |
+| 2026-10-29 | 6d opens the Formats screen from the setup dialog, and 6e's format editor is full screen (UI-3, UI-8, owner) | A toolbar button and a dialog editor | No new header control, and the format screens drop straight into Library › Formats later |
+| 2026-10-29 | Editing card sets in Proxy is its own issue (#136) after #67 (owner) | Folding it into #67; parking it | #67 keeps the CSV or sheet as the source of truth, and editing adds its own rules (Sheet-linked sets read-only) |
+| 2026-10-29 | V1 has no start screen: reopening restores the last session, and Home comes with #131 | A start screen in Phase 7 | The guide keeps the app opening on the last session, and Home belongs to the workspace. Confirm when Phase 7 is planned |

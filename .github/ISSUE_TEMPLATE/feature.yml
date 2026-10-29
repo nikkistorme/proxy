@@ -50,6 +50,20 @@ body:
       required: true
 
   - type: textarea
+    id: placement
+    attributes:
+      label: Placement (UI-1 to UI-8)
+      description: From `design/ui-placement.md`. Write "None" for non-UI work.
+      value: |
+        - Acts on: card / pile / stack / selection / seat / session / view / library item / person
+        - Address: place key + name
+        - Registry entry: action id, label, default shortcut (or none), applies to, can() capability
+        - Header impact: none (if not none, say which slot and why — UI-3)
+        - Shown when: always / condition (UI-4)
+        - Phone: how it shows (sheet, menu, ⋯)
+        - Testers (#106): visible / hidden
+
+  - type: textarea
     id: acceptance
     attributes:
       label: Acceptance criteria

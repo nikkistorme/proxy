@@ -59,6 +59,7 @@ The owner tests UI previews on a phone, including iOS, so phone-size layout matt
 
 UI follows the Claude Design export in `design/`. Before building or changing any UI, read `design/HANDOFF.md`, then only the parts the issue needs:
 
+- `design/ui-placement.md` before adding or moving any control: where each feature lives, and the UI-1 to UI-8 rules issues cite. Fill in the issue's Placement section from it. No new header controls (UI-3).
 - `design/tokens.css` for every colour, type, spacing, radius and shadow value. Don't hard-code values the tokens cover.
 - `design/brief.md` for screen scope and interaction rules.
 - `design/mockups/*.dc.html` for exact sizes, copy and structure. The HANDOFF table says which board covers what. These are reference designs, so don't copy their templating.
