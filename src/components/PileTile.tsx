@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState, type DragEvent, type KeyboardEvent } from 'react';
 import type { CardFace as CardFaceData } from '../model/card';
-import type { Pile } from '../model/session';
+import type { Pile, SeatPlace } from '../model/session';
 import { CardFace } from './CardFace';
 import './PileTile.css';
 import { seatIdentity } from './seatIdentity';
@@ -10,6 +10,8 @@ interface PileTileProps {
   pile: Pile;
   /** Owning seat's name, or undefined for a shared pile. */
   ownerName: string | undefined;
+  /** The owning seat's place, for its colour and shape. Undefined for a shared pile. */
+  ownerPlace?: SeatPlace;
   /** The top card's front, when it has been revealed. */
   revealedTop: CardFaceData | undefined;
   menuOpen: boolean;
@@ -49,6 +51,7 @@ export const PILE_HINT = 'Click draws the top card. Enter, right-click, or a tou
 export function PileTile({
   pile,
   ownerName,
+  ownerPlace,
   revealedTop,
   menuOpen,
   onOpenMenu,
@@ -93,7 +96,7 @@ export function PileTile({
       if (file) onDropFile(pile.id, file);
     },
   };
-  const identity = seatIdentity(pile.ownerSeatId);
+  const identity = seatIdentity(ownerPlace);
   const count = pile.cardIds.length;
   const label = [
     pile.name,

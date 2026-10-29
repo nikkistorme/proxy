@@ -29,7 +29,7 @@ import { SeatCounter } from './SeatCounter';
 import { SessionMenu } from './SessionMenu';
 import { inShortcutScope } from './shortcutScope';
 import { ShortcutsDialog } from './ShortcutsDialog';
-import { seatIdentity } from './seatIdentity';
+import { seatIdentity, seatPlace } from './seatIdentity';
 import { TableSurface, type PileSlot } from './TableSurface';
 import { TableTools } from './TableTools';
 import { Toast } from './Toast';
@@ -445,6 +445,7 @@ export function SessionScreen() {
         mergeTarget={slot.mergeTarget}
         pile={pile}
         ownerName={seatName(pile.ownerSeatId)}
+        ownerPlace={seatPlace(session.seats, pile.ownerSeatId)}
         revealedTop={revealedTop}
         menuOpen={menuPileId === pile.id}
         onOpenMenu={() => togglePileMenu(pile.id)}
@@ -463,7 +464,7 @@ export function SessionScreen() {
           <path d="M13.3 7.5h5.4M13.3 11h5.4M13.3 14.5h3.4" stroke="var(--accent-ink)" strokeWidth="1.6" strokeLinecap="round" />
         </svg>
         <h1 className="session__title">Proxy</h1>
-        <span className="session__format">Solo PvE</span>
+        <span className="session__format">{session.formatName}</span>
         <SessionMenu />
         <TableTools addPileRef={addPileRef} onShortcuts={openShortcuts} onLayouts={openLayouts} onAddPile={() => setNameRequest({ mode: 'add', defaultOwnerId: session.activeSeatId })} />
       </header>
@@ -472,7 +473,7 @@ export function SessionScreen() {
       <section className="seat-bar" aria-label="Seats">
         <ul className="seat-bar__list">
           {session.seats.map((seat) => {
-            const identity = seatIdentity(seat.id);
+            const identity = seatIdentity(seat.place);
             const active = seat.id === session.activeSeatId;
             return (
               <li key={seat.id} className="seat-bar__seat" style={active ? { boxShadow: `inset 0 -3px 0 ${identity.color}` } : undefined}>

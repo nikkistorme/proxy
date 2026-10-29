@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { SessionState } from '../model/session';
-import { createSoloSession } from '../model/session';
+import { SOLO_PVE } from '../model/format';
+import { createSession } from '../model/session';
 import { bringToFront, deleteCard, duplicate, flip, flipKind, rotate, sendToBack } from './cardActions';
 import { loadPile } from './loadPile';
 import { moveCard } from './moveCard';
@@ -10,7 +11,7 @@ const csv = 'name,id,back_of,qty\nTroll,,,2\nMoonrise Hunter,,hunter,\nDaylight 
 
 /** One Troll, then Daylight Hunter, on the table; the other Troll stays in the deck. */
 function tableSession(): SessionState {
-  let session = loadPile(createSoloSession(), { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
+  let session = loadPile(createSession(SOLO_PVE), { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
   for (const name of ['Troll', 'Daylight Hunter']) {
     const card = Object.values(session.cards).find((c) => session.definitions[c.definitionId]?.front.name === name && !tableIds(session).includes(c.id));
     if (!card) throw new Error(name);

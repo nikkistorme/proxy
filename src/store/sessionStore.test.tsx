@@ -4,7 +4,8 @@ import { loadPile } from '../actions/loadPile';
 import { draw, revealTop, shuffle } from '../actions/pileActions';
 import { cardsFrom, sessionWithDeck, namesOf, testContext } from '../actions/testing';
 import { LiveRegion } from '../components/LiveRegion';
-import { createSoloSession } from '../model/session';
+import { createSession } from '../model/session';
+import { SOLO_PVE } from '../model/format';
 import { createSessionStore, SessionStoreProvider, HISTORY_LIMIT, LOG_LIMIT, useSessionStore } from './sessionStore';
 
 describe('AR-2 store and live region', () => {
@@ -103,7 +104,7 @@ describe('TT-15 undo and redo', () => {
   });
 
   it('undoes a pile load, definitions included', () => {
-    const store = createSessionStore(createSoloSession(), testContext());
+    const store = createSessionStore(createSession(SOLO_PVE), testContext());
     store.getState().dispatch((g, context) =>
       loadPile(g, { pileId: p1, cardSetId: 'set-1', sourceName: 'deck.csv', cards: cardsFrom('name\nImp\n'), keepOrder: true }, context),
     );
@@ -171,7 +172,7 @@ describe('TT-15 undo and redo', () => {
 
 describe('TT-14 rolls in the session log', () => {
   it('logs and announces a roll, with the latest kept for Dice & coins', () => {
-    const store = createSessionStore(createSoloSession(), testContext());
+    const store = createSessionStore(createSession(SOLO_PVE), testContext());
     const first = store.getState().roll('d20');
     store.getState().roll('Coin');
     const { log, lastRoll, announcement } = store.getState();
@@ -192,7 +193,7 @@ describe('TT-14 rolls in the session log', () => {
   });
 
   it(`keeps the last ${LOG_LIMIT} entries`, () => {
-    const store = createSessionStore(createSoloSession(), testContext());
+    const store = createSessionStore(createSession(SOLO_PVE), testContext());
     for (let i = 0; i < LOG_LIMIT + 5; i++) store.getState().roll('d4');
     const { log } = store.getState();
     expect(log).toHaveLength(LOG_LIMIT);

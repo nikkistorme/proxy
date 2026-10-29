@@ -1,5 +1,6 @@
 import { locateCard, type Destination } from '../actions/moveCard';
-import type { SessionState } from '../model/session';
+import type { SeatPlace, SessionState } from '../model/session';
+import { seatPlace } from './seatIdentity';
 
 export type DestinationGroup = 'Table' | 'Hands' | 'Piles';
 
@@ -13,6 +14,8 @@ export interface MoveOption {
   meta: string;
   /** Seat that owns the hand or pile, for its shape and colour; undefined for shared piles and the table. */
   seatId?: string;
+  /** That seat's place, for its colour and shape. */
+  seatPlace?: SeatPlace;
   destination: Destination;
   /** A11Y-1: choose the spot on the table yourself, by keyboard or a tap, instead of moving at once. */
   chooseSpot?: true;
@@ -52,6 +55,7 @@ export function moveDestinations(state: SessionState, cardId: string, { exceptTo
       label: `${seat.name}'s hand`,
       meta: cardsWord(state.hands[seat.id]?.length ?? 0),
       seatId: seat.id,
+      seatPlace: seat.place,
       destination: { zone: 'hand', seatId: seat.id },
     });
   }
@@ -63,7 +67,7 @@ export function moveDestinations(state: SessionState, cardId: string, { exceptTo
         group: 'Piles',
         label: `${pile.name} — ${position}`,
         meta: cardsWord(pile.cardIds.length),
-        ...(pile.ownerSeatId !== undefined && { seatId: pile.ownerSeatId }),
+        ...(pile.ownerSeatId !== undefined && { seatId: pile.ownerSeatId, seatPlace: seatPlace(state.seats, pile.ownerSeatId) }),
         destination: { zone: 'pile', pileId: pile.id, position },
       });
     }

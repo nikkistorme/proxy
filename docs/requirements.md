@@ -38,8 +38,8 @@ A format is a preset that defines the seats at the table and the piles each one 
 | Format | Seats | Starting piles |
 | --- | --- | --- |
 | Solo PvE | Player 1, Environment | P1 main deck, Environment deck, Board cards |
-| Co-op PvE | Player 1, Player 2, Environment | P1 main, P2 main, Environment deck, Board cards |
-| 1v1 PvP | Player 1, Player 2 | P1 main, P2 main, Board cards |
+| Co-op PvE | Player 1, Player 2, Environment | P1 main deck, P2 main deck, Environment deck, Board cards |
+| 1v1 PvP | Player 1, Player 2 | P1 main deck, P2 main deck, Board cards |
 
 **Requirements**
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createSoloSession, type SessionState } from '../model/session';
+import { createSession, type SessionState } from '../model/session';
+import { SOLO_PVE } from '../model/format';
 import { loadPile } from './loadPile';
 import { draw, mill, revealTop, shuffle } from './pileActions';
 import { cardsFrom, testContext } from './testing';
@@ -9,7 +10,7 @@ const BOARD = 'pile-board';
 
 /** A session with Imp, Ogre, Troll (top to bottom) in P1 main deck. */
 function session(csv = 'name\nImp\nOgre\nTroll\n'): SessionState {
-  return loadPile(createSoloSession(), { pileId: MAIN, cardSetId: 'set-1', sourceName: 'deck.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
+  return loadPile(createSession(SOLO_PVE), { pileId: MAIN, cardSetId: 'set-1', sourceName: 'deck.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
 }
 
 function names(state: SessionState, ids: readonly string[] | undefined): string[] {
@@ -53,7 +54,7 @@ describe('SP-6 draw', () => {
   });
 
   it('says so when the pile is empty', () => {
-    const empty = createSoloSession();
+    const empty = createSession(SOLO_PVE);
     const { state, announcement } = draw(empty, { pileId: MAIN });
     expect(state).toBe(empty);
     expect(announcement).toBe('P1 main deck is empty. No cards drawn.');
@@ -80,7 +81,7 @@ describe('SP-6 reveal top card', () => {
   });
 
   it('says so when the pile is empty', () => {
-    expect(revealTop(createSoloSession(), { pileId: MAIN }).announcement).toBe('P1 main deck is empty. Nothing to reveal.');
+    expect(revealTop(createSession(SOLO_PVE), { pileId: MAIN }).announcement).toBe('P1 main deck is empty. Nothing to reveal.');
   });
 });
 
@@ -100,7 +101,7 @@ describe('SP-6 mill', () => {
   });
 
   it('says so when the pile is empty, and refuses bad targets and counts', () => {
-    expect(mill(createSoloSession(), { pileId: MAIN, count: 1, toPileId: BOARD }).announcement).toBe(
+    expect(mill(createSession(SOLO_PVE), { pileId: MAIN, count: 1, toPileId: BOARD }).announcement).toBe(
       'P1 main deck is empty. No cards moved.',
     );
     expect(() => mill(session(), { pileId: MAIN, count: 1, toPileId: MAIN })).toThrow('Cannot mill a pile onto itself');

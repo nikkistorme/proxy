@@ -1,10 +1,16 @@
 import type { CardDefinition } from './card';
 import type { CardSetSummary } from './cardSet';
+import type { Format } from './format';
 import type { RandomInt } from './random';
+
+/** A seat's place at the table, which sets its colour, shape and card back. */
+export type SeatPlace = 'player-1' | 'player-2' | 'environment';
 
 export interface Seat {
   id: string;
   name: string;
+  /** First player, second player or environment, from the format's seat order. */
+  place: SeatPlace;
   /** Player seats have a hand; the environment doesn't (FS-3). */
   hasHand: boolean;
   /** Seat counters like Life, always shown in the seat bar (TT-13, FS-4). */
@@ -65,6 +71,9 @@ export interface Pile {
 }
 
 export interface SessionState {
+  /** The format the session was set up from, and its name for the header. */
+  formatId: string;
+  formatName: string;
   seats: Seat[];
   activeSeatId: string;
   /** The session's own copy of every definition it loaded, so it plays without the card sets (AR-4). */
@@ -77,7 +86,7 @@ export interface SessionState {
   hands: Record<string, string[]>;
   /** Cards on the table, bottom of the stacking order first (TT-10). */
   table: TableEntry[];
-  /** Shows Dice & coins (TT-14). A format setting, fixed in the Solo preset until Phase 6. */
+  /** Shows Dice & coins (TT-14), from the format. */
   usesDice: boolean;
 }
 
@@ -95,35 +104,42 @@ export interface ActionResult {
   announcement: string;
 }
 
+/** Pile spacing along the top of the table: a card width plus a gap. */
+const PILE_STEP = 142;
+
 /**
- * The Solo PvE preset (FS-1), fixed in code until formats arrive in Phase 6.
+ * A new session built from a format (FS-1): its seats with their starting
+ * counters, an empty hand for each player seat, and its piles along the top of
+ * the table, so cards placed later go below them.
  */
-export function createSoloSession(): SessionState {
+export function createSession(format: Format): SessionState {
+  let players = 0;
+  const seats: Seat[] = format.seats.map((seat) => ({
+    id: seat.id,
+    name: seat.name,
+    place: seat.kind === 'environment' ? 'environment' : players++ === 0 ? 'player-1' : 'player-2',
+    hasHand: seat.kind === 'player',
+    counters: seat.counters.map((counter) => ({ ...counter })),
+  }));
   return {
-    seats: [
-      {
-        id: 'seat-p1',
-        name: 'Player 1',
-        hasHand: true,
-        counters: [
-          { id: 'p1-life', name: 'Life', value: 20 },
-          { id: 'p1-energy', name: 'Energy', value: 0 },
-        ],
-      },
-      { id: 'seat-env', name: 'Environment', hasHand: false, counters: [] },
-    ],
-    activeSeatId: 'seat-p1',
+    formatId: format.id,
+    formatName: format.name,
+    seats,
+    activeSeatId: (seats.find((seat) => seat.hasHand) ?? seats[0])?.id ?? '',
     definitions: {},
     cardSets: {},
     cards: {},
-    piles: [
-      // Along the top of the table, so cards placed later go below them.
-      { id: 'pile-p1-main', name: 'P1 main deck', ownerSeatId: 'seat-p1', cardIds: [], definitionIds: [], x: 16, y: 16 },
-      { id: 'pile-env', name: 'Environment deck', ownerSeatId: 'seat-env', cardIds: [], definitionIds: [], x: 158, y: 16 },
-      { id: 'pile-board', name: 'Board cards', cardIds: [], definitionIds: [], x: 300, y: 16 },
-    ],
-    hands: { 'seat-p1': [] },
+    piles: format.piles.map((pile, index) => ({
+      id: pile.id,
+      name: pile.name,
+      ...(pile.ownerSeatId ? { ownerSeatId: pile.ownerSeatId } : {}),
+      cardIds: [],
+      definitionIds: [],
+      x: 16 + index * PILE_STEP,
+      y: 16,
+    })),
+    hands: Object.fromEntries(seats.filter((seat) => seat.hasHand).map((seat) => [seat.id, []])),
     table: [],
-    usesDice: true,
+    usesDice: format.usesDice,
   };
 }

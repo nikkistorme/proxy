@@ -154,7 +154,7 @@ export function MoveDialog({ request, onConfirm, onChooseSpot, onClose }: MoveDi
               {rows.map((match) => {
                 const { option } = match;
                 const selected = match === active;
-                const identity = option.group === 'Table' ? undefined : seatIdentity(option.seatId);
+                const identity = option.group === 'Table' ? undefined : seatIdentity(option.seatPlace);
                 return (
                   // The search keeps keyboard focus and handles the keys (aria-activedescendant),
                   // so options take clicks only.

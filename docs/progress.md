@@ -14,9 +14,18 @@ Phase 5 (Layouts, #35) is split into 5a to 5j, sub-issues #88 to #96 and #111, w
 
 Field errors no longer rely on colour (#42, A11Y-13, outside the phases): every field error has an icon and starts with "Error:", an invalid field shows an icon inside its right end, focused or not, and errors use the new `--error` token. Later forms reuse `FieldError` and `FieldControl` from `src/components/FieldError.tsx`.
 
-Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122, and hasn't started. Sessions still start from the Solo PvE preset fixed in code.
+Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122. 6a (#116) is done: sessions are built from a format with `createSession(format)`, the three presets are in `src/model/format.ts`, each seat's colour, shape and card back follow its place (first player, second player or environment), and the header shows the format name. The app still starts from Solo PvE until the setup screen (6c).
 
 ## Done
+
+### Phase 6a: Format model and the three presets (#116, 2026-10-29)
+
+- `src/model/format.ts`: `Format` has seats (id, name, kind: player or environment, counters with starting values), starting piles (id, name, owning seat or shared) and Uses dice. `SOLO_PVE`, `COOP_PVE` and `PVP_1V1` are the presets (FS-1), with fixed ids `preset-solo-pve`, `preset-coop-pve` and `preset-1v1-pvp`. Player 2 starts with Life 20 and Energy 0, like Player 1.
+- `createSession(format)` in `src/model/session.ts` replaces `createSoloSession`. Session seats and piles keep the format's ids, so Solo PvE builds the same session as before. Piles go along the top of the table in format order, 142 px apart. Each player seat gets an empty hand; the first player seat starts active.
+- `Seat.place` is `player-1`, `player-2` or `environment`, from the seat's kind and its order among the format's player seats. `seatIdentity(place)` now takes the place, and `seatPlace(seats, seatId)` looks it up; table card views, Move to… options and pile tiles carry the place.
+- `SessionState` records `formatId` and `formatName`; the header shows the format name.
+- Pile names are "P1 main deck" and "P2 main deck" in every preset. The spec's format table said "P1 main" for Co-op and PvP, and now matches.
+- Tests: `src/model/format.test.ts` (FS-1 for all three presets, FS-4 starting counters, identity by place). Every existing test passes with only the factory call changed.
 
 ### Planning: Phase 6 split (#115, 2026-10-28)
 
@@ -790,8 +799,7 @@ Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122, and has
 
 ## Next
 
-- **Phase 6 (Formats, #115):** split into 6a to 6g, sub-issues #116 to #122. Each starts only with the owner's go-ahead, 6a first.
-  - 6a (#116): format model and the three presets; sessions are built from a format, seat identity comes from the seat's place.
+- **Phase 6 (Formats, #115):** split into 6a to 6g, sub-issues #116 to #122. 6a (#116) is done. Each of the rest starts only with the owner's go-ahead, 6b next.
   - 6b (#117): seat switcher in the seat bar, S and Shift+S.
   - 6c (#118): setup dialog from **New session…**; the last format chosen is the `defaultFormat` option.
   - 6d (#119): saved formats as their own items, and a Formats screen with duplicate, rename and delete.
@@ -1050,3 +1058,4 @@ Phase 6 (Formats, #115) is planned as 6a to 6g, sub-issues #116 to #122, and has
 | 2026-10-28 | An invalid field shows the error icon inside its right end, and "Error:" is visible (A11Y-13, #42) | A thicker border; "Error:" for screen readers only | The icon shows in greyscale, with focus and in forced colours, and the visible label helps without colour. Owner's choice |
 | 2026-10-28 | The new requirement is A11Y-13, not the A11Y-12 the issue proposed | — | #66 had already used A11Y-12 for the iOS field zoom rule |
 | 2026-10-28 | Phase 6 split into 6a to 6g (#115); seats renamed but not added or removed; the app opens on the table with the last format; switching seats isn't an undo step | Adding seats in V1; a start screen in Phase 6; switching as an undo step | Owner decisions while planning Phase 6 |
+| 2026-10-29 | Session seats and piles keep the format's own ids, and seat identity follows `Seat.place` (#116) | New ids for every session; identity by seat id | Solo PvE builds the same session as before, so saved ids and tests stay valid, and a renamed or re-id'd seat still gets its place's colour and shape |

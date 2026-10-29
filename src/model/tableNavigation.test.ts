@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createSoloSession } from './session';
+import { createSession } from './session';
+import { SOLO_PVE } from './format';
 import { nearestInDirection, readingOrder, tableItems, type TableItem } from './tableNavigation';
 
 const at = (id: string, x: number, y: number): TableItem => ({ id, x, y });
@@ -32,7 +33,7 @@ describe('A11Y-3 table navigation', () => {
   });
 
   it('moves between piles and cards alike', () => {
-    const session = { ...createSoloSession(), table: [{ cardId: 'imp', x: 16, y: 208, rotation: 0 as const }] };
+    const session = { ...createSession(SOLO_PVE), table: [{ cardId: 'imp', x: 16, y: 208, rotation: 0 as const }] };
     const items = tableItems(session);
     expect(readingOrder(items)).toEqual(['pile-p1-main', 'pile-env', 'pile-board', 'imp']);
     expect(nearestInDirection(items, 'pile-p1-main', 'down')).toBe('imp');

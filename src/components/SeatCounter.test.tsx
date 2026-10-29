@@ -2,13 +2,14 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { testContext } from '../actions/testing';
-import { createSoloSession } from '../model/session';
+import { createSession } from '../model/session';
+import { SOLO_PVE } from '../model/format';
 import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
 import { LiveRegion } from './LiveRegion';
 import { SessionScreen } from './SessionScreen';
 
 function renderScreen() {
-  const store = createSessionStore(createSoloSession(), testContext());
+  const store = createSessionStore(createSession(SOLO_PVE), testContext());
   render(
     <SessionStoreProvider store={store}>
       <SessionScreen />

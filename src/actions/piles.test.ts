@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createSoloSession } from '../model/session';
+import { createSession } from '../model/session';
+import { SOLO_PVE } from '../model/format';
 import { draw, mill } from './pileActions';
 import { addPile, deletePile, mergePiles, movePile, renamePile, validatePileName } from './piles';
 import { sessionWithDeck, namesOf, testContext } from './testing';
@@ -9,20 +10,20 @@ const BOARD = 'pile-board';
 
 describe('SP-4 add a pile', () => {
   it('adds an empty pile owned by a seat', () => {
-    const { state, announcement, pileId } = addPile(createSoloSession(), { name: '  Discard ', ownerSeatId: 'seat-p1' }, testContext());
+    const { state, announcement, pileId } = addPile(createSession(SOLO_PVE), { name: '  Discard ', ownerSeatId: 'seat-p1' }, testContext());
     // On the table, at the first spot after the three piles already there.
     expect(state.piles.at(-1)).toEqual({ id: pileId, name: 'Discard', ownerSeatId: 'seat-p1', cardIds: [], definitionIds: [], x: 442, y: 16 });
     expect(announcement).toBe('Added pile Discard (Player 1).');
   });
 
   it('adds a shared pile', () => {
-    const { state, announcement } = addPile(createSoloSession(), { name: 'Tokens' }, testContext());
+    const { state, announcement } = addPile(createSession(SOLO_PVE), { name: 'Tokens' }, testContext());
     expect(state.piles.at(-1)).not.toHaveProperty('ownerSeatId');
     expect(announcement).toBe('Added pile Tokens (shared).');
   });
 
   it('refuses a blank name, a name already used, and an unknown seat', () => {
-    const session = createSoloSession();
+    const session = createSession(SOLO_PVE);
     expect(() => addPile(session, { name: '   ' }, testContext())).toThrow('A pile needs a name');
     expect(() => addPile(session, { name: ' board CARDS ' }, testContext())).toThrow('There is already a pile called Board cards');
     expect(() => addPile(session, { name: 'Discard', ownerSeatId: 'ghost' }, testContext())).toThrow('Unknown seat: ghost');
@@ -31,13 +32,13 @@ describe('SP-4 add a pile', () => {
 
 describe('SP-4 rename a pile', () => {
   it('renames a pile', () => {
-    const { state, announcement } = renamePile(createSoloSession(), { pileId: BOARD, name: 'Shared board' });
+    const { state, announcement } = renamePile(createSession(SOLO_PVE), { pileId: BOARD, name: 'Shared board' });
     expect(state.piles.find((p) => p.id === BOARD)?.name).toBe('Shared board');
     expect(announcement).toBe('Renamed Board cards to Shared board.');
   });
 
   it('allows a change of case on its own name, and leaves an identical name alone', () => {
-    const session = createSoloSession();
+    const session = createSession(SOLO_PVE);
     expect(renamePile(session, { pileId: BOARD, name: 'Board Cards' }).state.piles.find((p) => p.id === BOARD)?.name).toBe('Board Cards');
     const same = renamePile(session, { pileId: BOARD, name: ' Board cards ' });
     expect(same.state).toBe(session);
@@ -45,7 +46,7 @@ describe('SP-4 rename a pile', () => {
   });
 
   it("refuses another pile's name", () => {
-    expect(() => renamePile(createSoloSession(), { pileId: BOARD, name: 'p1 main deck' })).toThrow(
+    expect(() => renamePile(createSession(SOLO_PVE), { pileId: BOARD, name: 'p1 main deck' })).toThrow(
       'There is already a pile called P1 main deck',
     );
   });
@@ -53,7 +54,7 @@ describe('SP-4 rename a pile', () => {
 
 describe('SP-4 delete a pile', () => {
   it('deletes an empty pile', () => {
-    const { state, announcement } = deletePile(createSoloSession(), { pileId: BOARD });
+    const { state, announcement } = deletePile(createSession(SOLO_PVE), { pileId: BOARD });
     expect(state.piles.map((p) => p.id)).toEqual([MAIN, 'pile-env']);
     expect(announcement).toBe('Deleted Board cards.');
   });
@@ -84,7 +85,7 @@ describe('SP-4 delete a pile', () => {
 
 describe('SP-4 pile names', () => {
   it('explains why a name cannot be used, and accepts a good one', () => {
-    const session = createSoloSession();
+    const session = createSession(SOLO_PVE);
     expect(validatePileName(session, '  ')).toBe('A pile needs a name');
     expect(validatePileName(session, 'board cards')).toBe('There is already a pile called Board cards');
     expect(validatePileName(session, 'Discard')).toBeUndefined();
