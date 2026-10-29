@@ -72,7 +72,7 @@ describe('TT-14 session log', () => {
     store.getState().roll('d6');
     store.getState().roll('Coin');
     await user.click(screen.getByRole('button', { name: 'This session' }));
-    await user.keyboard('{Enter}');
+    await user.keyboard('{ArrowDown}{Enter}');
     const items = within(log()).getAllByRole('listitem');
     expect(items).toHaveLength(2);
     expect(items[0]).toHaveTextContent(/^Flipped a coin: (heads|tails)just now$/);

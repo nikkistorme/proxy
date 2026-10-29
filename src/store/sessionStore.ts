@@ -5,7 +5,7 @@ import { roll, type Die, type Roll } from '../actions/dice';
 import type { Destination } from '../actions/moveCard';
 import { setActiveSeat } from '../actions/seats';
 import { createSession, type ActionContext, type ActionResult, type SessionState } from '../model/session';
-import { SOLO_PVE } from '../model/format';
+import { SOLO_PVE, type Format } from '../model/format';
 import { cryptoRandomInt } from '../model/random';
 import { PLACEMENT_COLUMNS } from '../model/tablePlacement';
 
@@ -90,6 +90,12 @@ export interface SessionStore {
    * list stays as it is.
    */
   switchSeat: (seatId: string) => void;
+  /**
+   * SP-1: replaces the session with a new one from a format, and clears the undo
+   * history, log and everything tied to the old session. Not an undo step; the
+   * setup dialog's confirm step is the guard. `silent` skips the announcement.
+   */
+  startSession: (format: Format, options?: { silent?: boolean }) => void;
   /**
    * TT-15: goes back one action, or announces that there is nothing to undo.
    * Undo and redo show the seat that took the action (FS-3).
@@ -181,6 +187,21 @@ export function createSessionStore(session: SessionState = createSession(SOLO_PV
         return result;
       },
       announce: (text) => set({ announcement: next(text) }),
+      startSession: (format, options) => {
+        const fresh = createSession(format);
+        const first = fresh.seats.find((seat) => seat.id === fresh.activeSeatId);
+        set({
+          session: fresh,
+          past: [],
+          future: [],
+          log: [],
+          lastRoll: undefined,
+          placing: undefined,
+          drag: undefined,
+          toast: undefined,
+          ...(options?.silent ? {} : { announcement: next(`New ${format.name} session started. ${first?.name ?? 'The first seat'} is the active seat.`) }),
+        });
+      },
       switchSeat: (seatId) => {
         const result = setActiveSeat(get().session, { seatId });
         set({ session: result.state, announcement: next(result.announcement) });
