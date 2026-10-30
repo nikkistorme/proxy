@@ -5,6 +5,8 @@ import { afterEach } from 'vitest';
 // Whole-screen tests can take several seconds on CI, so findBy and waitFor get longer than the 1 s default.
 configure({ asyncUtilTimeout: 5000 });
 
+configure({ asyncUtilTimeout: Number(process.env.ASYNC_T ?? 1000) });
+
 afterEach(() => {
   cleanup();
 });
