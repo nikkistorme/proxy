@@ -77,6 +77,9 @@ export interface RestoredSession {
   log: LogEntry[];
   zoom: number;
   snap: boolean;
+  /** The undo and redo steps; empty when not given. */
+  past?: HistoryEntry[];
+  future?: HistoryEntry[];
 }
 
 export interface SessionStore {
@@ -109,7 +112,7 @@ export interface SessionStore {
   startSession: (format: Format, options?: { silent?: boolean }) => void;
   /**
    * PS-2: loads a saved session at startup. Not an undo step and not announced;
-   * the undo history starts empty (it isn't saved yet).
+   * the undo and redo steps come back too when given (PS-2), else the history starts empty.
    */
   restoreSession: (saved: RestoredSession) => void;
   /**
@@ -224,8 +227,8 @@ export function createSessionStore(session: SessionState = createSession(SOLO_PV
         set({
           session: saved.session,
           sessionId: saved.id,
-          past: [],
-          future: [],
+          past: saved.past ?? [],
+          future: saved.future ?? [],
           log: saved.log,
           lastRoll: undefined,
           placing: undefined,

@@ -1,7 +1,10 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { loadPile } from '../actions/loadPile';
+import { moveCard } from '../actions/moveCard';
 import { draw } from '../actions/pileActions';
-import { sessionWithDeck, testContext } from '../actions/testing';
+import { changeSeatCounter } from '../actions/seatCounters';
+import { cardsFrom, sessionWithDeck, testContext } from '../actions/testing';
 import { FormatsProvider } from '../formats/FormatsProvider';
 import { PVP_1V1, SOLO_PVE } from '../model/format';
 import { createSession } from '../model/session';
@@ -9,7 +12,9 @@ import { memoryBackend } from '../storage/backends';
 import { itemKey, SAVE_VERSION, type StorageBackend } from '../storage/storage';
 import { StorageProvider, useCurrentSession, useSetOption } from '../storage/StorageProvider';
 import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
+import type { SessionItem } from '../store/sessionItem';
 import { SessionPersistence } from './SessionPersistence';
+
 
 const base = import.meta.env.BASE_URL;
 const sessionKey = (id: string) => itemKey(base, 'guest', 'session', id);
@@ -59,6 +64,160 @@ const loaded = () => waitFor(() => expect(screen.queryByText('Loading your sessi
 const savedIds = (backend: ReturnType<typeof memoryBackend>) => [...backend.data.keys()].filter((key) => key.includes('|session|'));
 
 afterEach(() => vi.useRealTimers());
+
+function lastSaved(backend: ReturnType<typeof memoryBackend>, id: string) {
+  act(() => void window.dispatchEvent(new Event('pagehide')));
+  return waitFor(() => expect(backend.data.get(sessionKey(id))).toBeDefined()).then(() => backend.data.get(sessionKey(id)) as SessionItem);
+}
+
+describe('PS-2 undo history in the save', () => {
+  it('brings back past, future and announcements, and steps through them as before', async () => {
+    const backend = memoryBackend();
+    const first = renderPersistence(backend, createSessionStore(sessionWithDeck(), testContext()));
+    await loaded();
+    const { store } = first;
+    act(() => {
+      store.getState().dispatch((g) => draw(g, { pileId: 'pile-p1-main' }));
+      store.getState().dispatch((g) => draw(g, { pileId: 'pile-p1-main' }));
+      store.getState().dispatch((g) => draw(g, { pileId: 'pile-p1-main' }));
+      store.getState().undo();
+    });
+    const { past, future, session } = store.getState();
+    expect([past.length, future.length]).toEqual([2, 1]);
+    const id = store.getState().sessionId;
+    await lastSaved(backend, id);
+    first.unmount();
+
+    const second = renderPersistence(backend);
+    await loaded();
+    const state = second.store.getState();
+    expect(state.session).toEqual(session);
+    expect(state.past).toEqual(past);
+    expect(state.future).toEqual(future);
+    expect(state.past.map((step) => step.announcement)).toEqual(past.map((step) => step.announcement));
+
+    act(() => state.redo());
+    expect(second.store.getState().announcement.text).toBe(`Redone: ${future[0]?.announcement}`);
+    expect(second.store.getState().session.hands['seat-p1']).toHaveLength(3);
+    act(() => second.store.getState().undo());
+    act(() => second.store.getState().undo());
+    act(() => second.store.getState().undo());
+    expect(second.store.getState().session.hands['seat-p1']).toHaveLength(0);
+    act(() => second.store.getState().undo());
+    expect(second.store.getState().announcement.text).toBe('Nothing to undo.');
+  });
+
+  it('FS-3 undo after a restore still makes the acting seat active', async () => {
+    const backend = memoryBackend();
+    const first = renderPersistence(backend);
+    await loaded();
+    const { store } = first;
+    act(() => store.getState().startSession(PVP_1V1));
+    act(() => {
+      store.getState().switchSeat('seat-p2');
+      store.getState().dispatch((g) => changeSeatCounter(g, { seatId: 'seat-p2', counterId: 'p2-life', delta: -1 }));
+    });
+    act(() => store.getState().switchSeat('seat-p1'));
+    await lastSaved(backend, store.getState().sessionId);
+    first.unmount();
+
+    const second = renderPersistence(backend);
+    await loaded();
+    expect(second.store.getState().session.activeSeatId).toBe('seat-p1');
+    act(() => second.store.getState().undo());
+    expect(second.store.getState().session.activeSeatId).toBe('seat-p2');
+  });
+
+  it('undo after a CSV reload brings back the old card text across a restore', async () => {
+    const backend = memoryBackend();
+    const context = testContext();
+    const first = renderPersistence(backend, createSessionStore(createSession(SOLO_PVE), context));
+    await loaded();
+    const { store } = first;
+    const load = (csv: string) =>
+      store.getState().dispatch((g) => loadPile(g, { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'deck.csv', cards: cardsFrom(csv), keepOrder: true }, context));
+    act(() => void load('name,rules\nImp,Old\nOgre,Big\n'));
+    act(() => void load('name,rules\nImp,New\nOgre,Big\n'));
+    await lastSaved(backend, store.getState().sessionId);
+    first.unmount();
+
+    const second = renderPersistence(backend);
+    await loaded();
+    const rules = () => Object.values(second.store.getState().session.definitions).find((d) => d.front.name === 'Imp')?.front.fields.rules;
+    expect(rules()).toBe('New');
+    act(() => second.store.getState().undo());
+    expect(rules()).toBe('Old');
+  });
+
+  it('keeps shared parts shared after a restore, so the next save stays compact', async () => {
+    const backend = memoryBackend();
+    const first = renderPersistence(backend, createSessionStore(sessionWithDeck(), testContext()));
+    await loaded();
+    const { store } = first;
+    act(() => void store.getState().dispatch((g) => draw(g, { pileId: 'pile-p1-main' })));
+    const before = await lastSaved(backend, store.getState().sessionId);
+    first.unmount();
+
+    const second = renderPersistence(backend);
+    await loaded();
+    const { past, session } = second.store.getState();
+    expect(past[0]?.session.definitions).toBe(session.definitions);
+    act(() => void second.store.getState().dispatch((g) => draw(g, { pileId: 'pile-p1-main' })));
+    const after = await lastSaved(backend, second.store.getState().sessionId);
+    expect(after.history?.nodes.length).toBeLessThan((before.history?.nodes.length ?? 0) + 40);
+  });
+
+  it('restores the session with empty history when the history can’t be decoded', async () => {
+    const backend = memoryBackend({
+      [sessionKey('s')]: savedSession('s', { history: { nodes: [[[7]]], root: [0] } }),
+      [settingsKey]: { id: 'account', options: {}, currentSessionId: 's', updatedAt: '', version: SAVE_VERSION },
+    });
+    const { store } = renderPersistence(backend);
+    await loaded();
+    expect(store.getState().sessionId).toBe('s');
+    expect(store.getState().session.formatId).toBe(PVP_1V1.id);
+    expect([store.getState().past, store.getState().future]).toEqual([[], []]);
+  });
+
+  it('restores the session with empty history when the history has the wrong shape', async () => {
+    const backend = memoryBackend({
+      [sessionKey('s')]: savedSession('s', { history: { nodes: [], root: 5 } }),
+      [settingsKey]: { id: 'account', options: {}, currentSessionId: 's', updatedAt: '', version: SAVE_VERSION },
+    });
+    const { store } = renderPersistence(backend);
+    await loaded();
+    expect([store.getState().sessionId, store.getState().past]).toEqual(['s', []]);
+  });
+
+  it('loads an item saved without history', async () => {
+    const backend = memoryBackend({
+      [sessionKey('s')]: savedSession('s'),
+      [settingsKey]: { id: 'account', options: {}, currentSessionId: 's', updatedAt: '', version: SAVE_VERSION },
+    });
+    const { store } = renderPersistence(backend);
+    await loaded();
+    expect([store.getState().sessionId, store.getState().past, store.getState().future]).toEqual(['s', [], []]);
+  });
+
+  it('stays within the size budget for a 60-card session and 200 table moves', async () => {
+    const backend = memoryBackend();
+    const deck = `name,qty,rules\n${Array.from({ length: 60 }, (_, i) => `Card ${i},1,Does thing number ${i} to a target creature`).join('\n')}\n`;
+    const context = testContext();
+    const start = loadPile(createSession(SOLO_PVE), { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'deck.csv', cards: cardsFrom(deck), keepOrder: true }, context).state;
+    const { store } = renderPersistence(backend, createSessionStore(start, context));
+    await loaded();
+    act(() => void store.getState().dispatch((g) => draw(g, { pileId: 'pile-p1-main', count: 60 })));
+    const ids = store.getState().session.hands['seat-p1'] ?? [];
+    for (let i = 0; i < 200; i++) {
+      act(() => void store.getState().dispatch((g) => moveCard(g, { cardId: ids[i % ids.length] as string, to: Math.floor(i / ids.length) % 2 === 0 ? { zone: 'table' } : { zone: 'hand', seatId: 'seat-p1' } }, context)));
+    }
+    expect(store.getState().past).toHaveLength(200);
+    const saved = await lastSaved(backend, store.getState().sessionId);
+    const size = JSON.stringify(saved).length;
+    // Measured: 244,659 characters (60 cards, 200 steps), well under plain JSON, which repeats the card list in every step. The budget is about twice that.
+    expect(size).toBeLessThanOrEqual(500_000);
+  });
+});
 
 describe('PS-2 loading overlay', () => {
   it('covers the app and makes it inert until the session is read', async () => {
@@ -116,7 +275,7 @@ describe('PS-2 restore and save through the storage interface (AR-6)', () => {
     expect(state.sessionId).toBe(id);
     expect(state.session.hands['seat-p1']).toHaveLength(1);
     expect([state.view.zoom, state.view.snap, state.log]).toEqual([1.25, true, [expect.objectContaining({ id: 1 })]]);
-    expect([state.past, state.future]).toEqual([[], []]);
+    expect(state.past).toHaveLength(1);
     expect(state.announcement.text).toBe('');
   });
 
@@ -127,7 +286,7 @@ describe('PS-2 restore and save through the storage interface (AR-6)', () => {
     store.getState().roll('d6');
     act(() => void window.dispatchEvent(new Event('pagehide')));
     await waitFor(() => expect(backend.data.get(sessionKey(store.getState().sessionId))).toBeDefined());
-    expect(Object.keys(backend.data.get(sessionKey(store.getState().sessionId)) as object).sort()).toEqual(['id', 'log', 'snap', 'state', 'updatedAt', 'version', 'zoom']);
+    expect(Object.keys(backend.data.get(sessionKey(store.getState().sessionId)) as object).sort()).toEqual(['history', 'id', 'log', 'snap', 'state', 'updatedAt', 'version', 'zoom']);
   });
 
   it('keeps the session in memory when it was touched before storage was ready, and saves it as current', async () => {
