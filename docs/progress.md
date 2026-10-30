@@ -31,15 +31,21 @@ The design now has a UI placement guide (`design/ui-placement.md`, rules UI-1 to
 - **Tests:** `bundle.test.ts` (fixtures, item checks, summary, file name, round trip); `BundleDialogs.test.tsx`; `StorageProvider.test.tsx` (items written, same id replaced, others kept, saves stopped, failed write); `SessionPersistence.test.tsx` (the announcement, once, and the old session removed); `e2e/bundle.spec.ts` (keyboard export, new context, import with axe and every kind checked; cancel; each broken fixture; storage unavailable; 375 × 667). The E2E helpers are in `e2e/bundleSetup.ts`.
 - **Changed requirements:** PS-4, PS-5, QA-4.
 
+### Focus after a dialog without a timer (#159, 2026-10-30)
+
+- **App:** `focusAfterDialog` in `TableSurface.tsx` and `HandTray.tsx` now moves focus in the dialog's `onClose`, with no `setTimeout`. A dialog's `close` event is a task queued after the click or key that confirmed, so the move has rendered and the browser has already put focus back on the opener. The placement outline also takes focus straight away when placing starts. The hand-to-table drag timer is unchanged.
+- **Tests:** unit tests in `TableSurface.test.tsx` and `HandTray.test.tsx` (focus right after the dialog closes: next card after a move, same card on cancel). The jsdom `<dialog>` stand-in in `src/test-setup.ts` now fires `close` from a task, as browsers do. `settle` is gone from `e2e/keyboard.ts` and its callers; `solo-turn` presses `?` straight after the move.
+- **Changed requirements:** none.
+
 ### CI flakes (#157, 2026-10-30)
 
 - **Unit tests:** `testTimeout` is 15 s in `vitest.config.ts`, and Testing Library's `asyncUtilTimeout` is 5 s in `src/test-setup.ts` (the 1 s default failed a `findByRole` in `FormatsScreen.test.tsx` on CI); whole-screen tests take 3 to 5 s on CI against the 5 s default.
-- **E2E:** `closeWith` and `settle` in `e2e/keyboard.ts` press a closing key, wait for the dialog to be gone and for focus to land, then wait for the app's own timers to run. Used in `resume`, `counters`, `move-dialog`, `solo-turn`, `import` and `layoutBuild`.
-- **Cause of the `solo-turn`, `counters` and `move-dialog` keyboard flakes:** after a dialog closes, the browser puts focus back on the opener, then `focusAfterDialog` (`TableSurface.tsx`) moves it again from a `setTimeout`. A test's focus check could pass before that timer ran, and the next key (`?`, `c`, `m`) went to an element outside the shortcut scope. A person can't press a key within that tick, so no app change. Before: 31 failures in 120 runs of those three specs at 4 workers. After: 0 in 400 runs (those three plus `resume`).
+- **E2E:** `closeWith` and `settle` in `e2e/keyboard.ts` press a closing key, check the dialog is gone and, when asked, where focus went (#159 removed `settle`). Used in `resume`, `counters`, `move-dialog`, `solo-turn`, `import` and `layoutBuild`.
+- **Cause of the `solo-turn`, `counters` and `move-dialog` keyboard flakes:** after a dialog closes, the browser puts focus back on the opener, then `focusAfterDialog` (`TableSurface.tsx`) moves it again from a `setTimeout`. A test's focus check could pass before that timer ran, and the next key (`?`, `c`, `m`) went to an element outside the shortcut scope. #159 fixed it in the app (the focus now moves in the dialog's `onClose`, not from a timer). Before: 31 failures in 120 runs of those three specs at 4 workers. After: 0 in 400 runs (those three plus `resume`).
 - **`resume`:** Escape closed the Dice dialog and the test focused Zoom before focus returned to the Dice button, so Enter reopened the dialog.
 - **`layoutBuild` in Firefox:** unproven. The keyboard test now Tabs out of the Column field before Escape, since Firefox may spend Escape closing the field's suggestion list. It did not reproduce locally, so check PR #156's Firefox run.
 - **`cardDrag.ts`:** `swallowNextClick`'s 1 s timer could fire after a test's jsdom was gone (`window is not defined`, an unhandled error that failed `npm test` on CI although every test passed); it now checks first.
-- **`snapshots`:** the mouse test focused the pile right after the Save dialog closed (same race); it now calls `settle`.
+- **`snapshots`:** the mouse test focused the pile right after the Save dialog closed (same race); #159 removed the wait.
 - Final sweeps (local): Chromium `--repeat-each=4`, 652 of 652 passed (before: 6 failures in 652 on `main`, and 1 in 652 on the first pass of this fix, from `snapshots`). Firefox `--repeat-each=3 --retries=0`, 471 passed, 18 skipped, 0 failed.
 
 ### Phase 7c: Snapshots (#144, 2026-10-29)
@@ -115,7 +121,7 @@ The design now has a UI placement guide (`design/ui-placement.md`, rules UI-1 to
 - **Model:** `src/model/formatEdit.ts` has `renameSeat`, `addPile`, `removePile`, `renamePile`, `setPileOwner`, `setUsesDice`, `validateSeatName` and `validatePileName`.
 - **Tests:** `formatEdit.test.ts`, `FormatEditor.test.tsx`, updated `FormatsScreen.test.tsx` and `SetupDialog.test.tsx`, new `e2e/format-editor.spec.ts` (keyboard path with a reload and a session from the copy; mouse path with axe; 375 × 667), and `e2e/formats.spec.ts` follows the new Edit a copy flow.
 - **Changed requirements:** FS-2, SP-1.
-- **Open:** `e2e/solo-turn.spec.ts` "keyboard only" (the `?` shortcut step) fails on `main` too; see the timing-related open problem below.
+- **Open:** `e2e/solo-turn.spec.ts` "keyboard only" (the `?` shortcut step) failed on `main` too; fixed by #159.
 
 ### Phase 6d: Saved formats and the Formats screen (#119, 2026-10-29)
 
@@ -1248,3 +1254,4 @@ Every issue fills in its Placement section (`design/ui-placement.md`). No issue 
 | 2026-10-29 | Saved undo history stores each card definition once, with steps referring to it, capped at 200 steps (#141) | Plain JSON of every step; diffs between steps | Avoids repeating the card list in every step while keeping restore simple |
 |  2026-10-29 | Loading a snapshot replaces the log with the snapshot's, and undoing the load leaves the log alone | Putting the log in undo; keeping the current log and appending | The log sits outside undo (TT-14), so undo never rewinds it. The log should describe the state on the table, and a snapshot's log is the one that matches its state. |
 |  2026-10-30 | Vitest `testTimeout` is 15 s, and new or changed E2E specs run 5 times in Chromium and Firefox before the PR opens | Raising Playwright retries above 1; sleeps | Whole-screen unit tests take 3 to 5 s on CI. Retries and sleeps hide timing races; repeat runs and waiting for focus to settle (`closeWith`) find and remove them (#157). |
+| 2026-10-30 | Focus after a dialog is moved in its `onClose`, never from a timer (#159) | A `setTimeout` after the close | The close event is a task after the confirming handler, so the move has rendered and focus is back on the opener. A timer left a gap where a key missed its shortcut scope. |

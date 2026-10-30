@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
-import { closeWith, settle, tabTo } from './keyboard';
+import { closeWith, tabTo } from './keyboard';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../tests/fixtures/csv/${name}`, import.meta.url));
 const axeTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -131,10 +131,8 @@ test.describe('Phase 3 solo turn', () => {
     await page.keyboard.press('Enter');
     await expect(move).toBeHidden();
     await expect(status(page)).toHaveText(/^Moved Daylight Hunter from Player 1's hand to .*Board cards\.$/);
-    // ? only works with focus in the hand, so wait for the app to put it back there.
-    await expect(hand(page).locator('button:focus')).toHaveCount(1);
-    await settle(page);
-
+    // ? only works with focus in the hand, and it's pressed straight away: the app puts focus back
+    // as the dialog closes, not from a timer (A11Y-3).
     // ? from the hand shows the shortcuts, and Esc comes back.
     await page.keyboard.press('?');
     await expect(page.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeVisible();

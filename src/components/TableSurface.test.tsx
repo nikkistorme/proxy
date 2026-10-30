@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { moveCard } from '../actions/moveCard';
@@ -26,6 +26,9 @@ function setup() {
 }
 
 const card = (name: string) => screen.getByRole('button', { name });
+
+/** Waits for every dialog to have closed. Focus is checked right after, with no further waiting. */
+const closed = () => waitFor(() => expect(document.querySelector('dialog[open]')).toBeNull());
 
 describe('A11Y-3 table focus', () => {
   it('is one Tab stop, with the cards in a named group', async () => {
@@ -87,6 +90,29 @@ describe('A11Y-3 table focus', () => {
       ['158px', '16px', '2'],
       ['300px', '16px', '3'],
     ]);
+  });
+});
+
+describe('A11Y-3 and A11Y-4 focus after a dialog', () => {
+  it('puts focus back on the card at once when a dialog is cancelled', async () => {
+    setup();
+    card('Ogre').focus();
+    await userEvent.keyboard('m');
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    await closed();
+    expect(card('Ogre')).toHaveFocus();
+  });
+
+  it('focuses the next card at once after Move to… takes the card away', async () => {
+    setup();
+    card('Ogre').focus();
+    await userEvent.keyboard('m');
+    const dialog = screen.getByRole('dialog');
+    await userEvent.click(within(dialog).getByRole('option', { name: /^Player 1's hand/ }));
+    await userEvent.click(within(dialog).getByRole('button', { name: /^Move to/ }));
+    await closed();
+    expect(screen.queryByRole('button', { name: 'Ogre' })).toBeNull();
+    expect(card('Troll')).toHaveFocus();
   });
 });
 
