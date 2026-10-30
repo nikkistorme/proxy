@@ -22,6 +22,12 @@ The design now has a UI placement guide (`design/ui-placement.md`, rules UI-1 to
 
 ## Done
 
+### Tests: flaky loading overlay E2E in WebKit (#153, 2026-10-29)
+
+- **Cause:** the PS-2 phone test (`e2e/resume.spec.ts`) held storage back by replacing `open` on `window.indexedDB`. WebKit sometimes gives the app a different `IDBFactory` object than the one the init script patched, so the stand-in was skipped, real storage loaded and the overlay was gone before the test looked (the failing runs never called the stand-in).
+- **Fix:** the init script replaces `IDBFactory.prototype.open` with a stand-in request that never fires an event. The no-op `page.route` line is removed. The checks are unchanged. WebKit passed 30 of 30 repeats (was failing about 3 in 10); Chromium and Firefox pass. Test only.
+- **Changed requirements:** none.
+
 ### Phase 7a: Session autosave and Resume (#142, 2026-10-29)
 
 - **Session item (PS-1, PS-2):** kind `session`, UUID id (`SessionItem`, `src/store/sessionItem.ts`): the session state, the log, zoom and snap. Not the scroll position, `columns` or the last roll. `useSavedItems('session', 1000)` handles the debounce, the `pagehide` flush and delete. The store has a `sessionId` (new for `createSessionStore` and each `startSession`) and a `restoreSession` action (no undo step, no announcement, empty history).
