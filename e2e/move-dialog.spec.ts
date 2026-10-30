@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
+import { closeWith } from './keyboard';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../tests/fixtures/csv/${name}`, import.meta.url));
 const axeTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -64,10 +65,8 @@ test.describe('SP-8 Move to… dialog', () => {
     const search = move.getByRole('combobox', { name: 'Find a destination' });
     await expect(search).toBeFocused();
     // Esc cancels the Move dialog and leaves the viewer open on the same card.
-    await page.keyboard.press('Escape');
-    await expect(move).toBeHidden();
+    await closeWith(page, move, { focusOn: sheet.getByRole('button', { name: card('Card 37') }) });
     await expect(sheet).toBeVisible();
-    await expect(sheet.getByRole('button', { name: card('Card 37') })).toBeFocused();
 
     await page.keyboard.press('m');
     await page.keyboard.type('env');

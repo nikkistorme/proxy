@@ -11,3 +11,22 @@ export async function tabTo(page: Page, target: Locator, { backwards = false, ma
   }
   await expect(target).toBeFocused();
 }
+
+/**
+ * Presses a key that closes something (Escape by default), then waits for `closed` to be gone
+ * and, when given, for `focusOn` to have focus, so the next key doesn't land while focus is
+ * still moving back. A native dialog hands focus back as it closes, then the app moves it again
+ * from a timeout (`focusAfterDialog`), so a focus check can pass before focus has settled. Timers
+ * run in order, so one queued here runs after the app's.
+ */
+export async function closeWith(page: Page, closed: Locator, { key = 'Escape', focusOn }: { key?: string; focusOn?: Locator } = {}) {
+  await page.keyboard.press(key);
+  await expect(closed).toHaveCount(0);
+  if (focusOn) await expect(focusOn).toBeFocused();
+  await settle(page);
+}
+
+/** Waits for timers the app queued before now (like moving focus after a dialog closes) to run. */
+export async function settle(page: Page) {
+  await page.evaluate(() => new Promise<void>((resolve) => setTimeout(resolve)));
+}
