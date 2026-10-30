@@ -1,0 +1,22 @@
+{
+  "app": "proxy",
+  "version": 1,
+  "exportedAt": "2026-10-30T03:23:36.531Z",
+  "session": {
+    "id": "s1",
+    "state": {
+      "formatId": "f"
+    },
+    "log": [],
+    "zoom": 1,
+    "snap": false
+  },
+  "snapshots": [],
+  "cardSets": [],
+  "layouts": [],
+  "formats": [],
+  "settings": {
+    "id": "account",
+    "options": {}
+  }
+}

@@ -35,6 +35,8 @@ test.describe('TT-14 dice, coin and session log', () => {
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowDown');
     await expect(page.getByRole('menuitem', { name: 'Session log' })).toBeFocused();
     await page.keyboard.press('Enter');
     const items = log(page).getByRole('listitem');

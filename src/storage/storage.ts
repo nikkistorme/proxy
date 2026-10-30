@@ -100,3 +100,29 @@ export function createStorage(backend: StorageBackend, options: StorageOptions =
     },
   };
 }
+
+/** The key of the one-visit note an import leaves for the page that reloads after it (PS-4). Built here with the other keys (PS-7). */
+function importNoteKey(): string {
+  return `${import.meta.env.BASE_URL}|${GUEST_PROFILE}|import-note`;
+}
+
+/** Leaves the imported file's name for the next page load to announce. Session storage, so it lasts one visit. */
+export function setImportNote(fileName: string): void {
+  try {
+    sessionStorage.setItem(importNoteKey(), fileName);
+  } catch {
+    // The import still worked; it just isn't announced.
+  }
+}
+
+/** The file name left by an import, once: reading it removes it. */
+export function takeImportNote(): string | undefined {
+  try {
+    const key = importNoteKey();
+    const note = sessionStorage.getItem(key) ?? undefined;
+    sessionStorage.removeItem(key);
+    return note;
+  } catch {
+    return undefined;
+  }
+}

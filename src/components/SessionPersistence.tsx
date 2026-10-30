@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useFormats } from '../formats/FormatsProvider';
 import { formatById } from '../model/format';
+import { takeImportNote } from '../storage/storage';
 import { useCurrentSession, useOption, useStorage } from '../storage/StorageProvider';
 import { useSavedItems } from '../storage/useSavedItems';
 import { decodeShared, encodeShared } from '../model/sharedEncoding';
@@ -107,6 +108,9 @@ export function SessionPersistence({ children }: { children: ReactNode }) {
     } else {
       startFromDefault();
     }
+    // An import reloaded the page: say so once the session it brought is back (PS-4).
+    const imported = takeImportNote();
+    if (imported) state.announce(`Imported ${imported}.`);
     const current = store.getState();
     if (!restored) save(toItem(current));
     if (currentSessionId !== current.sessionId) setCurrentSessionId(current.sessionId);

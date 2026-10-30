@@ -85,8 +85,13 @@ export function readLayoutFile(text: string): LayoutFileResult {
   if (typeof data.version !== 'number' || data.version > LAYOUT_FILE_VERSION) {
     return { error: 'This layouts file is from a newer version of Proxy.' };
   }
+  return readLayouts(data.layouts);
+}
+
+/** Reads a list of layouts, refusing the whole list if any of it is wrong. Used by layout files and bundles (LY-9, PS-4). */
+export function readLayouts(list: readonly unknown[]): LayoutFileResult {
   const layouts: FileLayout[] = [];
-  for (const [index, value] of data.layouts.entries()) {
+  for (const [index, value] of list.entries()) {
     const which = isObject(value) && isText(value.name) && value.name.trim() ? value.name.trim() : `number ${index + 1}`;
     if (!isObject(value) || !isText(value.id) || value.id === '' || !isText(value.name) || !oneOf('portrait', 'landscape')(value.orientation)) {
       return { error: `Layout ${which} in this file isn't valid.` };

@@ -1,0 +1,413 @@
+{
+  "app": "proxy",
+  "version": 0,
+  "exportedAt": "2026-10-30T03:23:36.531Z",
+  "session": {
+    "id": "dbd4ab31-bfb6-4582-a072-66ec7f2f6c12",
+    "state": {
+      "formatId": "preset-solo-pve",
+      "formatName": "Solo PvE",
+      "seats": [
+        {
+          "id": "seat-p1",
+          "name": "Player 1",
+          "place": "player-1",
+          "hasHand": true,
+          "counters": [
+            {
+              "id": "p1-life",
+              "name": "Life",
+              "value": 20
+            },
+            {
+              "id": "p1-energy",
+              "name": "Energy",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "id": "seat-env",
+          "name": "Environment",
+          "place": "environment",
+          "hasHand": false,
+          "counters": []
+        }
+      ],
+      "activeSeatId": "seat-p1",
+      "definitions": {
+        "e77e26dd-ddf5-4e28-8ab7-feccb6df5a9b": {
+          "row": 2,
+          "qty": 2,
+          "front": {
+            "name": "Goblin",
+            "fields": {},
+            "type": "Creature"
+          },
+          "id": "e77e26dd-ddf5-4e28-8ab7-feccb6df5a9b"
+        },
+        "3bab451c-15a7-4f78-b258-d371109eeeb9": {
+          "row": 3,
+          "qty": 1,
+          "front": {
+            "name": "Fireball",
+            "fields": {},
+            "type": "Spell"
+          },
+          "id": "3bab451c-15a7-4f78-b258-d371109eeeb9"
+        },
+        "6b93baaa-1a45-4086-aed8-0e485c2addb1": {
+          "row": 4,
+          "qty": 1,
+          "front": {
+            "name": "Forest",
+            "fields": {},
+            "type": "Land"
+          },
+          "id": "6b93baaa-1a45-4086-aed8-0e485c2addb1"
+        }
+      },
+      "cardSets": {
+        "4c31ace4-56fd-4806-b8af-0ed2cd5405ac": {
+          "id": "4c31ace4-56fd-4806-b8af-0ed2cd5405ac",
+          "name": "basic.csv",
+          "source": {
+            "kind": "file",
+            "name": "basic.csv"
+          }
+        }
+      },
+      "cards": {
+        "5c4d6cdd-1664-4c24-bd03-fc0663e7d3bc": {
+          "id": "5c4d6cdd-1664-4c24-bd03-fc0663e7d3bc",
+          "definitionId": "e77e26dd-ddf5-4e28-8ab7-feccb6df5a9b",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "858e790e-5536-4171-8577-e0fd6517e72b": {
+          "id": "858e790e-5536-4171-8577-e0fd6517e72b",
+          "definitionId": "e77e26dd-ddf5-4e28-8ab7-feccb6df5a9b",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "ed126942-c816-4b72-bc56-72c7bab84c59": {
+          "id": "ed126942-c816-4b72-bc56-72c7bab84c59",
+          "definitionId": "3bab451c-15a7-4f78-b258-d371109eeeb9",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "d59d95dd-2d3b-4050-94e4-eb0fbdb7f5b6": {
+          "id": "d59d95dd-2d3b-4050-94e4-eb0fbdb7f5b6",
+          "definitionId": "6b93baaa-1a45-4086-aed8-0e485c2addb1",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        }
+      },
+      "piles": [
+        {
+          "id": "pile-p1-main",
+          "name": "P1 main deck",
+          "ownerSeatId": "seat-p1",
+          "cardIds": [
+            "858e790e-5536-4171-8577-e0fd6517e72b",
+            "d59d95dd-2d3b-4050-94e4-eb0fbdb7f5b6",
+            "5c4d6cdd-1664-4c24-bd03-fc0663e7d3bc"
+          ],
+          "definitionIds": [
+            "e77e26dd-ddf5-4e28-8ab7-feccb6df5a9b",
+            "3bab451c-15a7-4f78-b258-d371109eeeb9",
+            "6b93baaa-1a45-4086-aed8-0e485c2addb1"
+          ],
+          "x": 16,
+          "y": 16,
+          "cardSetId": "4c31ace4-56fd-4806-b8af-0ed2cd5405ac"
+        },
+        {
+          "id": "pile-env",
+          "name": "Environment deck",
+          "ownerSeatId": "seat-env",
+          "cardIds": [],
+          "definitionIds": [],
+          "x": 158,
+          "y": 16
+        },
+        {
+          "id": "pile-board",
+          "name": "Board cards",
+          "cardIds": [],
+          "definitionIds": [],
+          "x": 300,
+          "y": 16
+        }
+      ],
+      "hands": {
+        "seat-p1": [
+          "ed126942-c816-4b72-bc56-72c7bab84c59"
+        ]
+      },
+      "table": [],
+      "usesDice": true
+    },
+    "log": [],
+    "zoom": 1,
+    "snap": false
+  },
+  "snapshots": [
+    {
+      "id": "ca41dc3e-9c72-44c9-8891-d5b853e3d3cc",
+      "name": "Snapshot 1",
+      "state": {
+        "formatId": "preset-solo-pve",
+        "formatName": "Solo PvE",
+        "seats": [
+          {
+            "id": "seat-p1",
+            "name": "Player 1",
+            "place": "player-1",
+            "hasHand": true,
+            "counters": [
+              {
+                "id": "p1-life",
+                "name": "Life",
+                "value": 20
+              },
+              {
+                "id": "p1-energy",
+                "name": "Energy",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "id": "seat-env",
+            "name": "Environment",
+            "place": "environment",
+            "hasHand": false,
+            "counters": []
+          }
+        ],
+        "activeSeatId": "seat-p1",
+        "definitions": {
+          "e77e26dd-ddf5-4e28-8ab7-feccb6df5a9b": {
+            "row": 2,
+            "qty": 2,
+            "front": {
+              "name": "Goblin",
+              "fields": {},
+              "type": "Creature"
+            },
+            "id": "e77e26dd-ddf5-4e28-8ab7-feccb6df5a9b"
+          },
+          "3bab451c-15a7-4f78-b258-d371109eeeb9": {
+            "row": 3,
+            "qty": 1,
+            "front": {
+              "name": "Fireball",
+              "fields": {},
+              "type": "Spell"
+            },
+            "id": "3bab451c-15a7-4f78-b258-d371109eeeb9"
+          },
+          "6b93baaa-1a45-4086-aed8-0e485c2addb1": {
+            "row": 4,
+            "qty": 1,
+            "front": {
+              "name": "Forest",
+              "fields": {},
+              "type": "Land"
+            },
+            "id": "6b93baaa-1a45-4086-aed8-0e485c2addb1"
+          }
+        },
+        "cardSets": {
+          "4c31ace4-56fd-4806-b8af-0ed2cd5405ac": {
+            "id": "4c31ace4-56fd-4806-b8af-0ed2cd5405ac",
+            "name": "basic.csv",
+            "source": {
+              "kind": "file",
+              "name": "basic.csv"
+            }
+          }
+        },
+        "cards": {
+          "5c4d6cdd-1664-4c24-bd03-fc0663e7d3bc": {
+            "id": "5c4d6cdd-1664-4c24-bd03-fc0663e7d3bc",
+            "definitionId": "e77e26dd-ddf5-4e28-8ab7-feccb6df5a9b",
+            "side": "down",
+            "ownerSeatId": "seat-p1"
+          },
+          "858e790e-5536-4171-8577-e0fd6517e72b": {
+            "id": "858e790e-5536-4171-8577-e0fd6517e72b",
+            "definitionId": "e77e26dd-ddf5-4e28-8ab7-feccb6df5a9b",
+            "side": "down",
+            "ownerSeatId": "seat-p1"
+          },
+          "ed126942-c816-4b72-bc56-72c7bab84c59": {
+            "id": "ed126942-c816-4b72-bc56-72c7bab84c59",
+            "definitionId": "3bab451c-15a7-4f78-b258-d371109eeeb9",
+            "side": "down",
+            "ownerSeatId": "seat-p1"
+          },
+          "d59d95dd-2d3b-4050-94e4-eb0fbdb7f5b6": {
+            "id": "d59d95dd-2d3b-4050-94e4-eb0fbdb7f5b6",
+            "definitionId": "6b93baaa-1a45-4086-aed8-0e485c2addb1",
+            "side": "down",
+            "ownerSeatId": "seat-p1"
+          }
+        },
+        "piles": [
+          {
+            "id": "pile-p1-main",
+            "name": "P1 main deck",
+            "ownerSeatId": "seat-p1",
+            "cardIds": [
+              "858e790e-5536-4171-8577-e0fd6517e72b",
+              "d59d95dd-2d3b-4050-94e4-eb0fbdb7f5b6",
+              "5c4d6cdd-1664-4c24-bd03-fc0663e7d3bc"
+            ],
+            "definitionIds": [
+              "e77e26dd-ddf5-4e28-8ab7-feccb6df5a9b",
+              "3bab451c-15a7-4f78-b258-d371109eeeb9",
+              "6b93baaa-1a45-4086-aed8-0e485c2addb1"
+            ],
+            "x": 16,
+            "y": 16,
+            "cardSetId": "4c31ace4-56fd-4806-b8af-0ed2cd5405ac"
+          },
+          {
+            "id": "pile-env",
+            "name": "Environment deck",
+            "ownerSeatId": "seat-env",
+            "cardIds": [],
+            "definitionIds": [],
+            "x": 158,
+            "y": 16
+          },
+          {
+            "id": "pile-board",
+            "name": "Board cards",
+            "cardIds": [],
+            "definitionIds": [],
+            "x": 300,
+            "y": 16
+          }
+        ],
+        "hands": {
+          "seat-p1": [
+            "ed126942-c816-4b72-bc56-72c7bab84c59"
+          ]
+        },
+        "table": [],
+        "usesDice": true
+      },
+      "log": [],
+      "savedAt": 1793330616507
+    }
+  ],
+  "cardSets": [
+    {
+      "id": "4c31ace4-56fd-4806-b8af-0ed2cd5405ac",
+      "name": "basic.csv",
+      "source": {
+        "kind": "file",
+        "name": "basic.csv"
+      },
+      "definitions": [
+        {
+          "row": 2,
+          "qty": 2,
+          "front": {
+            "name": "Goblin",
+            "fields": {},
+            "type": "Creature"
+          },
+          "id": "e77e26dd-ddf5-4e28-8ab7-feccb6df5a9b"
+        },
+        {
+          "row": 3,
+          "qty": 1,
+          "front": {
+            "name": "Fireball",
+            "fields": {},
+            "type": "Spell"
+          },
+          "id": "3bab451c-15a7-4f78-b258-d371109eeeb9"
+        },
+        {
+          "row": 4,
+          "qty": 1,
+          "front": {
+            "name": "Forest",
+            "fields": {},
+            "type": "Land"
+          },
+          "id": "6b93baaa-1a45-4086-aed8-0e485c2addb1"
+        }
+      ]
+    }
+  ],
+  "layouts": [
+    {
+      "id": "l-hero",
+      "name": "Hero",
+      "orientation": "portrait",
+      "boxes": [
+        {
+          "id": "title",
+          "x": 0,
+          "y": 0,
+          "width": 100,
+          "height": 20,
+          "content": {
+            "kind": "text",
+            "text": "Hero frame"
+          },
+          "style": {
+            "size": 10,
+            "weight": 700,
+            "align": "left",
+            "valign": "top",
+            "font": "sans",
+            "color": "#1e1c1a",
+            "background": "#e3e7ee"
+          }
+        }
+      ]
+    }
+  ],
+  "formats": [
+    {
+      "id": "f-duel",
+      "name": "Duel night",
+      "seats": [
+        {
+          "id": "seat-a",
+          "name": "Alice",
+          "kind": "player",
+          "counters": []
+        },
+        {
+          "id": "seat-b",
+          "name": "Bruno",
+          "kind": "player",
+          "counters": []
+        }
+      ],
+      "piles": [
+        {
+          "id": "pile-a",
+          "name": "Alice deck",
+          "ownerSeatId": "seat-a"
+        }
+      ],
+      "usesDice": false
+    }
+  ],
+  "settings": {
+    "id": "account",
+    "options": {
+      "theme": "dark",
+      "defaultLayout": "l-hero"
+    }
+  }
+}
