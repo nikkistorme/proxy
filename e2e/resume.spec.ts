@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
-import { tabTo } from './keyboard';
+import { closeWith, tabTo } from './keyboard';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../tests/fixtures/csv/${name}`, import.meta.url));
 const axeTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -57,7 +57,7 @@ test.describe('PS-2 Resume', () => {
     await page.keyboard.press('Enter');
     await page.keyboard.press('Enter'); // Roll d20
     await expect(status(page)).toHaveText(/^Rolled d20: \d+\.$/);
-    await page.keyboard.press('Escape');
+    await closeWith(page, page.getByRole('dialog', { name: 'Dice & coins' }), { focusOn: dice });
 
     const zoomIn = page.getByRole('button', { name: 'Zoom in (+)' });
     await zoomIn.focus();

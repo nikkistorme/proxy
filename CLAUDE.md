@@ -74,6 +74,8 @@ Non-UI issues (parsing, model, actions) don't need the design files.
 - Before opening a PR: run `npm test` and `npm run test:e2e` once.
 - Every bug fix gets a regression test in the same PR.
 - E2E tests mock Google Sheets responses; never call Google from tests.
+- After a key that closes something, wait for it to be gone and for focus to settle before the next step (`closeWith` in `e2e/keyboard.ts`).
+- New or changed E2E specs run 5 times in Chromium and Firefox (`--repeat-each=5`) before the PR opens.
 
 ## Pull requests
 

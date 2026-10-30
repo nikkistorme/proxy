@@ -218,6 +218,8 @@ function onContextMenu(event: Event) {
  */
 function swallowNextClick() {
   const stop = () => {
+    // The timer can outlive a test's jsdom, which is gone by then.
+    if (typeof window === 'undefined') return;
     window.removeEventListener('click', swallow, true);
     window.removeEventListener('pointerdown', stop, true);
   };

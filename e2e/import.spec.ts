@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
-import { tabTo } from './keyboard';
+import { closeWith, tabTo } from './keyboard';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../tests/fixtures/csv/${name}`, import.meta.url));
 const axeTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -111,7 +111,7 @@ test.describe('CD-6 card art placeholder', () => {
   test('a drawn card whose art fails to load keeps its layout', async ({ page }) => {
     await loadMain(page, 'sixty-rows-two-dfc.csv', true);
     await expect(page.getByRole('dialog')).toContainText('58 cards imported');
-    await page.keyboard.press('Escape');
+    await closeWith(page, page.getByRole('dialog', { name: 'Import results' }));
     await page.keyboard.press('d');
 
     // Card 01's art URL is aborted, so its art box shows the placeholder.
