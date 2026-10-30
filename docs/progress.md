@@ -24,7 +24,7 @@ The design now has a UI placement guide (`design/ui-placement.md`, rules UI-1 to
 
 ### CI flakes (#157, 2026-10-30)
 
-- **Unit tests:** `testTimeout` is 15 s in `vitest.config.ts`; whole-screen tests take 3 to 5 s on CI against the 5 s default.
+- **Unit tests:** `testTimeout` is 15 s in `vitest.config.ts`, and Testing Library's `asyncUtilTimeout` is 5 s in `src/test-setup.ts` (the 1 s default failed a `findByRole` in `FormatsScreen.test.tsx` on CI); whole-screen tests take 3 to 5 s on CI against the 5 s default.
 - **E2E:** `closeWith` and `settle` in `e2e/keyboard.ts` press a closing key, wait for the dialog to be gone and for focus to land, then wait for the app's own timers to run. Used in `resume`, `counters`, `move-dialog`, `solo-turn`, `import` and `layoutBuild`.
 - **Cause of the `solo-turn`, `counters` and `move-dialog` keyboard flakes:** after a dialog closes, the browser puts focus back on the opener, then `focusAfterDialog` (`TableSurface.tsx`) moves it again from a `setTimeout`. A test's focus check could pass before that timer ran, and the next key (`?`, `c`, `m`) went to an element outside the shortcut scope. A person can't press a key within that tick, so no app change. Before: 31 failures in 120 runs of those three specs at 4 workers. After: 0 in 400 runs (those three plus `resume`).
 - **`resume`:** Escape closed the Dice dialog and the test focused Zoom before focus returned to the Dice button, so Enter reopened the dialog.
