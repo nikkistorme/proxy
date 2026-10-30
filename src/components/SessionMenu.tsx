@@ -3,11 +3,13 @@ import { newItemId } from '../storage/storage';
 import { useSavedItems } from '../storage/useSavedItems';
 import { useSessionStoreApi } from '../store/sessionStore';
 import type { SnapshotItem } from '../store/snapshotItem';
+import { ImportDialogs } from './BundleDialogs';
 import { Menu } from './Menu';
 import { NameDialog } from './NameDialog';
 import { SessionLog } from './SessionLog';
 import { SetupDialog } from './SetupDialog';
 import { SnapshotsDialog, validateSnapshotName } from './SnapshotsDialog';
+import { useSessionBundle } from './useSessionBundle';
 import './SessionMenu.css';
 
 const FormatsScreen = lazy(() => import('../formats/FormatsScreen'));
@@ -15,12 +17,14 @@ const FormatsScreen = lazy(() => import('../formats/FormatsScreen'));
 const NEW_ICON = 'M12 5v14M5 12h14';
 const SAVE_ICON = 'M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6';
 const SNAPSHOTS_ICON = 'M12 7v5l3 2M4 12a8 8 0 1 0 2.5-5.8M4 4v4h4';
+const EXPORT_ICON = 'M12 15V4M8 8l4-4 4 4M5 14v6h14v-6';
+const IMPORT_ICON = 'M12 4v11M8 11l4 4 4-4M5 14v6h14v-6';
 const LOG_ICON = 'M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01';
 
 /**
  * The session's own menu in the header. It says "This session" until sessions
- * have names. It starts a new session, saves and loads snapshots (PS-3) and
- * opens the session log (TT-14).
+ * have names. It starts a new session, saves and loads snapshots (PS-3), exports
+ * and imports a bundle (PS-4) and opens the session log (TT-14).
  */
 export function SessionMenu() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -41,6 +45,8 @@ export function SessionMenu() {
   const store = useSessionStoreApi();
   const { items: snapshots, save: saveSnapshot, remove: removeSnapshot } = useSavedItems<SnapshotItem>('snapshot', 0);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const bundle = useSessionBundle(snapshots);
 
   const closeMenu = useCallback(() => {
     setMenuOpen(false);
@@ -88,6 +94,17 @@ export function SessionMenu() {
             },
             { kind: 'item', id: 'save-snapshot', label: 'Save snapshot…', icon: SAVE_ICON, onSelect: () => setSavingAt(Date.now()) },
             { kind: 'item', id: 'snapshots', label: 'Snapshots…', icon: SNAPSHOTS_ICON, onSelect: () => setSnapshotsOpenedAt(Date.now()) },
+            { kind: 'item', id: 'export', label: 'Export session…', icon: EXPORT_ICON, onSelect: () => void bundle.exportSession() },
+            {
+              kind: 'item',
+              id: 'import',
+              label: 'Import bundle…',
+              icon: IMPORT_ICON,
+              onSelect: () => {
+                if (bundle.canSave) fileRef.current?.click();
+                else bundle.showError("Couldn't import a bundle. This browser can't save, so the bundle can't be imported.");
+              },
+            },
             { kind: 'item', id: 'log', label: 'Session log', icon: LOG_ICON, onSelect: () => setLogOpenedAt(Date.now()) },
           ]}
           onClose={closeMenu}
@@ -138,6 +155,16 @@ export function SessionMenu() {
           setSnapshotsOpenedAt(undefined);
           if (loaded) document.querySelector<HTMLElement>('.table-surface')?.focus();
           else buttonRef.current?.focus();
+        }}
+      />
+      <input ref={fileRef} type="file" accept=".json,application/json" hidden data-testid="bundle-file" onChange={(event) => void bundle.chooseFile(event)} />
+      <ImportDialogs
+        pending={bundle.pending}
+        error={bundle.error}
+        onConfirm={bundle.confirm}
+        onClose={() => {
+          bundle.close();
+          buttonRef.current?.focus();
         }}
       />
       <SessionLog

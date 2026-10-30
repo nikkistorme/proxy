@@ -1,0 +1,10 @@
+/* PS-4: the import confirm and error dialogs, in the pattern of the other dialogs. */
+.bundle-dialog__text {
+  margin: 0 0 var(--space-3);
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
+.bundle-dialog__text:last-child {
+  margin-bottom: 0;
+}

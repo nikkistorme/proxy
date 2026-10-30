@@ -9,7 +9,7 @@ import { FormatsProvider } from '../formats/FormatsProvider';
 import { PVP_1V1, SOLO_PVE } from '../model/format';
 import { createSession } from '../model/session';
 import { memoryBackend } from '../storage/backends';
-import { itemKey, SAVE_VERSION, type StorageBackend } from '../storage/storage';
+import { itemKey, SAVE_VERSION, setImportNote, type StorageBackend } from '../storage/storage';
 import { StorageProvider, useCurrentSession, useSetOption } from '../storage/StorageProvider';
 import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
 import type { SessionItem } from '../store/sessionItem';
@@ -426,5 +426,37 @@ describe('PS-2 restore and save through the storage interface (AR-6)', () => {
     await loaded();
     expect(screen.getByText('the app')).toBeInTheDocument();
     expect(store.getState().session.formatId).toBe(SOLO_PVE.id);
+  });
+});
+
+describe('PS-4 after an import', () => {
+  afterEach(() => sessionStorage.clear());
+
+  it('announces the import once the session is back, and only once', async () => {
+    const backend = memoryBackend({ [sessionKey('s1')]: savedSession('s1'), [settingsKey]: { id: 'account', options: {}, currentSessionId: 's1', updatedAt: '', version: SAVE_VERSION } });
+    setImportNote('basic.json');
+    const { store } = renderPersistence(backend);
+    await loaded();
+    expect(store.getState().session.formatId).toBe(PVP_1V1.id);
+    expect(store.getState().announcement.text).toBe('Imported basic.json.');
+    expect(sessionStorage.length).toBe(0);
+  });
+
+  it('announces nothing without the note', async () => {
+    const backend = memoryBackend({ [sessionKey('s1')]: savedSession('s1'), [settingsKey]: { id: 'account', options: {}, currentSessionId: 's1', updatedAt: '', version: SAVE_VERSION } });
+    const { store } = renderPersistence(backend);
+    await loaded();
+    expect(store.getState().announcement.text).not.toMatch(/^Imported/);
+  });
+
+  it('removes the session it replaced at the next start', async () => {
+    const backend = memoryBackend({
+      [sessionKey('old')]: savedSession('old'),
+      [sessionKey('imported')]: savedSession('imported'),
+      [settingsKey]: { id: 'account', options: {}, currentSessionId: 'imported', updatedAt: '', version: SAVE_VERSION },
+    });
+    renderPersistence(backend);
+    await loaded();
+    await waitFor(() => expect(savedIds(backend)).toEqual([sessionKey('imported')]));
   });
 });
