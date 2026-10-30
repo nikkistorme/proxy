@@ -183,15 +183,10 @@ test.describe('PS-2 Resume on a phone', () => {
   });
 
   test('the loading overlay fits the screen and blocks the app', async ({ page }) => {
-    await page.route('**/*', (route) => route.continue());
     await page.addInitScript(() => {
-      const open = indexedDB.open.bind(indexedDB);
-      indexedDB.open = (...args) => {
-        const request = open(...args);
-        // Hold the storage check back so the overlay stays up.
-        Object.defineProperty(request, 'result', { get: () => new Promise(() => {}) });
-        return request;
-      };
+      // Hold the storage check back so the overlay stays up. The stand-in request never fires an
+      // event, so the open stays pending whether or not the database exists yet.
+      IDBFactory.prototype.open = () => ({}) as IDBOpenDBRequest;
     });
     await page.reload();
     const overlay = page.getByRole('status').filter({ hasText: 'Loading your session…' });
