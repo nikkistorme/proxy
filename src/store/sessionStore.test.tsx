@@ -257,3 +257,47 @@ describe('PS-2 restore a saved session', () => {
     expect(store.getState().session).toBe(saved);
   });
 });
+
+describe('PS-3 snapshots', () => {
+  function playedStore() {
+    const store = createSessionStore(sessionWithDeck(), testContext());
+    store.getState().dispatch((g) => draw(g, { pileId: 'pile-p1-main' }));
+    store.getState().roll('d6');
+    const snapshot = { name: 'Turn 4', state: store.getState().session, log: store.getState().log };
+    store.getState().dispatch((g) => draw(g, { pileId: 'pile-p1-main' }));
+    store.getState().roll('d6');
+    return { store, snapshot };
+  }
+
+  it('loads the snapshot as an undo step and announces it', () => {
+    const { store, snapshot } = playedStore();
+    const before = store.getState().session;
+    store.getState().loadSnapshot(snapshot);
+    expect(store.getState().session).toBe(snapshot.state);
+    expect(store.getState().announcement.text).toBe('Loaded snapshot Turn 4.');
+    store.getState().undo();
+    expect(store.getState().session).toBe(before);
+    store.getState().redo();
+    expect(store.getState().session).toBe(snapshot.state);
+  });
+
+  it("replaces the log with the snapshot's, and undo leaves it alone", () => {
+    const { store, snapshot } = playedStore();
+    expect(store.getState().log).toHaveLength(2);
+    store.getState().loadSnapshot(snapshot);
+    expect(store.getState().log).toBe(snapshot.log);
+    expect(store.getState().log).toHaveLength(1);
+    store.getState().undo();
+    expect(store.getState().log).toBe(snapshot.log);
+  });
+
+  it('keeps the session id and clears the pending placement, drag, toast and last roll', () => {
+    const { store, snapshot } = playedStore();
+    const id = store.getState().sessionId;
+    store.getState().showToast('Hello');
+    store.getState().loadSnapshot(snapshot);
+    const state = store.getState();
+    expect(state.sessionId).toBe(id);
+    expect([state.placing, state.drag, state.toast, state.lastRoll]).toEqual([undefined, undefined, undefined, undefined]);
+  });
+});

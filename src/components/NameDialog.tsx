@@ -11,10 +11,16 @@ interface NameDialogProps {
   validateName: (name: string, exceptId: string) => string | undefined;
   onConfirm: (name: string) => void;
   onClose: () => void;
+  /** Heading, when it isn't "Rename <name>" (PS-3: "Save snapshot"). */
+  title?: string;
+  /** Main button label; "Rename" by default. */
+  primaryLabel?: string;
+  /** Footer keyboard hint; "Enter rename · Esc cancel" by default. */
+  hint?: string;
 }
 
-/** LY-1, FS-2: rename a layout or a format. Names are unique, so the `layout` column can pick a layout (LY-8). */
-export function NameDialog({ item, validateName, onConfirm, onClose }: NameDialogProps) {
+/** LY-1, FS-2, PS-3: rename a layout, a format or a snapshot, or name a new snapshot. Layout names are unique, so the `layout` column can pick a layout (LY-8). */
+export function NameDialog({ item, validateName, onConfirm, onClose, title, primaryLabel = 'Rename', hint = 'Enter rename · Esc cancel' }: NameDialogProps) {
   const nameId = useId();
   const errorId = useId();
   const [name, setName] = useState(item?.name ?? '');
@@ -36,9 +42,9 @@ export function NameDialog({ item, validateName, onConfirm, onClose }: NameDialo
   return (
     <Dialog
       open={item !== undefined}
-      title={item ? `Rename ${item.name}` : ''}
-      hint="Enter rename · Esc cancel"
-      primaryLabel="Rename"
+      title={item ? (title ?? `Rename ${item.name}`) : ''}
+      hint={hint}
+      primaryLabel={primaryLabel}
       cancelLabel="Cancel"
       width="narrow"
       onClose={onClose}
