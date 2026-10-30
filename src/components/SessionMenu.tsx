@@ -1,17 +1,26 @@
 import { lazy, Suspense, useCallback, useRef, useState } from 'react';
+import { newItemId } from '../storage/storage';
+import { useSavedItems } from '../storage/useSavedItems';
+import { useSessionStoreApi } from '../store/sessionStore';
+import type { SnapshotItem } from '../store/snapshotItem';
 import { Menu } from './Menu';
+import { NameDialog } from './NameDialog';
 import { SessionLog } from './SessionLog';
 import { SetupDialog } from './SetupDialog';
+import { SnapshotsDialog, validateSnapshotName } from './SnapshotsDialog';
 import './SessionMenu.css';
 
 const FormatsScreen = lazy(() => import('../formats/FormatsScreen'));
 
 const NEW_ICON = 'M12 5v14M5 12h14';
+const SAVE_ICON = 'M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6';
+const SNAPSHOTS_ICON = 'M12 7v5l3 2M4 12a8 8 0 1 0 2.5-5.8M4 4v4h4';
 const LOG_ICON = 'M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01';
 
 /**
  * The session's own menu in the header. It says "This session" until sessions
- * have names. For now it opens the session log (TT-14).
+ * have names. It starts a new session, saves and loads snapshots (PS-3) and
+ * opens the session log (TT-14).
  */
 export function SessionMenu() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -25,6 +34,12 @@ export function SessionMenu() {
   const handingOver = useRef(false);
   /** The format the reopened setup dialog starts on. */
   const [initialId, setInitialId] = useState<string>();
+  /** PS-3: set while the Save snapshot dialog is open. Its `key` is when it opened. */
+  const [savingAt, setSavingAt] = useState<number>();
+  /** When the Snapshots dialog opened, or undefined while it's closed. */
+  const [snapshotsOpenedAt, setSnapshotsOpenedAt] = useState<number>();
+  const store = useSessionStoreApi();
+  const { items: snapshots, save: saveSnapshot, remove: removeSnapshot } = useSavedItems<SnapshotItem>('snapshot', 0);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const closeMenu = useCallback(() => {
@@ -71,6 +86,8 @@ export function SessionMenu() {
                 setSetupOpenedAt(Date.now());
               },
             },
+            { kind: 'item', id: 'save-snapshot', label: 'Save snapshot…', icon: SAVE_ICON, onSelect: () => setSavingAt(Date.now()) },
+            { kind: 'item', id: 'snapshots', label: 'Snapshots…', icon: SNAPSHOTS_ICON, onSelect: () => setSnapshotsOpenedAt(Date.now()) },
             { kind: 'item', id: 'log', label: 'Session log', icon: LOG_ICON, onSelect: () => setLogOpenedAt(Date.now()) },
           ]}
           onClose={closeMenu}
@@ -94,6 +111,35 @@ export function SessionMenu() {
           <FormatsScreen onClose={closeFormats} backLabel="Back to New session" editId={formatsScreen.editId} announcement={formatsScreen.message} />
         </Suspense>
       )}
+      <NameDialog
+        key={savingAt}
+        item={savingAt === undefined ? undefined : { id: 'new', name: `Snapshot ${snapshots.length + 1}` }}
+        title="Save snapshot"
+        primaryLabel="Save"
+        hint="Enter save · Esc cancel"
+        validateName={validateSnapshotName}
+        onConfirm={(name) => {
+          const { session, log } = store.getState();
+          saveSnapshot({ id: newItemId(), name, state: session, log, savedAt: Date.now() });
+          store.getState().announce(`Saved snapshot ${name}.`);
+        }}
+        onClose={() => {
+          setSavingAt(undefined);
+          buttonRef.current?.focus();
+        }}
+      />
+      <SnapshotsDialog
+        open={snapshotsOpenedAt !== undefined}
+        snapshots={snapshots}
+        onLoaded={() => setSnapshotsOpenedAt(undefined)}
+        onRename={saveSnapshot}
+        onDelete={removeSnapshot}
+        onClose={(loaded) => {
+          setSnapshotsOpenedAt(undefined);
+          if (loaded) document.querySelector<HTMLElement>('.table-surface')?.focus();
+          else buttonRef.current?.focus();
+        }}
+      />
       <SessionLog
         openedAt={logOpenedAt}
         onClose={() => {

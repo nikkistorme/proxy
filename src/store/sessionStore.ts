@@ -116,6 +116,12 @@ export interface SessionStore {
    */
   restoreSession: (saved: RestoredSession) => void;
   /**
+   * PS-3: loads a snapshot's session as an undo step, announced. The snapshot's
+   * log replaces the current one and undo leaves it alone (the log sits outside
+   * undo). The session keeps its id, so autosave saves the loaded state into it.
+   */
+  loadSnapshot: (snapshot: { name: string; state: SessionState; log: LogEntry[] }) => void;
+  /**
    * TT-15: goes back one action, or announces that there is nothing to undo.
    * Undo and redo show the seat that took the action (FS-3).
    */
@@ -236,6 +242,10 @@ export function createSessionStore(session: SessionState = createSession(SOLO_PV
           toast: undefined,
           view: { ...get().view, zoom: saved.zoom, snap: saved.snap },
         }),
+      loadSnapshot: (snapshot) => {
+        get().dispatch((): ActionResult => ({ state: snapshot.state, announcement: `Loaded snapshot ${snapshot.name}.` }));
+        set({ log: snapshot.log, lastRoll: undefined, placing: undefined, drag: undefined, toast: undefined });
+      },
       switchSeat: (seatId) => {
         const result = setActiveSeat(get().session, { seatId });
         set({ session: result.state, announcement: next(result.announcement) });
