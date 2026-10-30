@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
+import { closeWith } from './keyboard';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../tests/fixtures/csv/${name}`, import.meta.url));
 const axeTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -53,14 +54,12 @@ test.describe('TT-8 card counters', () => {
     await expect(status).toHaveText('Damage on Ember Shard: 3.');
     await page.keyboard.press('-');
     await expect(status).toHaveText('Damage on Ember Shard: 2.');
-    await page.keyboard.press('Escape');
-    await expect(counters(page)).toBeHidden();
-    await expect(
-      table(page).getByRole('button', {
+    await closeWith(page, counters(page), {
+      focusOn: table(page).getByRole('button', {
         name: 'Ember Shard, counters: Damage 2',
         exact: true,
       }),
-    ).toBeFocused();
+    });
 
     // Opening again starts on the counter. Rename it from its name field.
     await page.keyboard.press('c');
@@ -81,8 +80,7 @@ test.describe('TT-8 card counters', () => {
     await counters(page).getByRole('button', { name: 'Remove counter' }).focus();
     await page.keyboard.press('Enter');
     await expect(status).toHaveText('Removed Wounds from Ember Shard.');
-    await page.keyboard.press('Escape');
-    await expect(table(page).getByRole('button', { name: 'Ember Shard', exact: true })).toBeFocused();
+    await closeWith(page, counters(page), { focusOn: table(page).getByRole('button', { name: 'Ember Shard', exact: true }) });
     await page.keyboard.press('ControlOrMeta+z');
     await expect(
       table(page).getByRole('button', {

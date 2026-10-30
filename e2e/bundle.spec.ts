@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { bundleFixture, chooseByKeyboard, exportByKeyboard, mainPile, prepareData, sessionButton, storedKinds } from './bundleSetup';
-import { tabTo } from './keyboard';
+import { closeWith, tabTo } from './keyboard';
 
 const axeTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 /** The live region. The loading overlay is a status too, so it is picked out by its class. */
@@ -50,11 +50,12 @@ test.describe('PS-4 JSON bundle', () => {
     // Only the imported session is kept, and every kind is stored.
     await expect.poll(async () => storedKinds(fresh)).toMatchObject({ session: 1, snapshot: 1, cardSet: 1, layout: 1, format: 1, settings: 1 });
     await chooseByKeyboard(fresh, 'Snapshots…');
-    await expect(fresh.getByRole('dialog', { name: 'Snapshots' }).getByRole('listitem')).toHaveCount(1);
-    await fresh.keyboard.press('Escape');
+    const snapshots = fresh.getByRole('dialog', { name: 'Snapshots' });
+    await expect(snapshots.getByRole('listitem')).toHaveCount(1);
+    await closeWith(fresh, snapshots, { focusOn: sessionButton(fresh) });
     await chooseByKeyboard(fresh, 'New session…');
     await expect(fresh.getByRole('radio', { name: /^Duel night/ })).toBeVisible();
-    await fresh.keyboard.press('Escape');
+    await closeWith(fresh, fresh.getByRole('dialog', { name: 'New session' }), { focusOn: sessionButton(fresh) });
     // Undo history is cleared by an import.
     await expect(fresh.getByRole('button', { name: /^Undo \(Ctrl\+Z\)/ })).toHaveAccessibleName(/nothing to undo/);
     await context.close();

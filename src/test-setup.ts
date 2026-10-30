@@ -1,6 +1,9 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach } from 'vitest';
+
+// Whole-screen tests can take several seconds on CI, so findBy and waitFor get longer than the 1 s default.
+configure({ asyncUtilTimeout: 5000 });
 
 afterEach(() => {
   cleanup();

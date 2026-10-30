@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { tabTo } from './keyboard';
+import { closeWith, tabTo } from './keyboard';
 
 const axeTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
@@ -162,9 +162,10 @@ test.describe('QA-5 build a layout', () => {
     // The canvas previews Troll, the loaded card.
     await expect(editor(page).locator('.layout-canvas__card').getByText('Regenerates at night.')).toBeVisible();
 
-    // Back to the list, and make it the default layout so the table uses it.
-    await page.keyboard.press('Escape');
-    await expect(page.getByRole('button', { name: 'Edit Layout 1' })).toBeFocused();
+    // Back to the list, and make it the default layout so the table uses it. Tab leaves the Column
+    // field first: with its suggestion list open, Firefox spends Escape closing the list instead.
+    await page.keyboard.press('Tab');
+    await closeWith(page, editor(page).locator('.layout-canvas'), { focusOn: page.getByRole('button', { name: 'Edit Layout 1' }) });
     const picker = choices(page).getByRole('combobox', { name: 'Default layout' });
     await tabTo(page, picker);
     await page.keyboard.type('L');

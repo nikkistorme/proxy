@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { settle } from './keyboard';
 import { fileURLToPath } from 'node:url';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../tests/fixtures/csv/${name}`, import.meta.url));
@@ -86,6 +87,7 @@ test.describe('PS-3 snapshots', () => {
     await page.getByRole('button', { name: 'Save' }).click();
     await expect(status(page)).toHaveText('Saved snapshot Turn 4, before combat.');
 
+    await settle(page); // the app moves focus back after the dialog closes
     await mainPile(page).focus();
     await page.keyboard.press('d');
     await handCount(page, 2);
