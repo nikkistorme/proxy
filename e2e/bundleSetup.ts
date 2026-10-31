@@ -88,8 +88,14 @@ export const mainPile = (page: Page) => page.getByRole('button', { name: /^P1 ma
 
 /** Opens a This session item with the keyboard. */
 export async function chooseByKeyboard(page: Page, name: string) {
-  await sessionButton(page).focus();
-  await page.keyboard.press('Enter');
+  // A late focus return from a closed dialog can take the focus back, so try until the menu is open.
+  await expect(async () => {
+    await page.keyboard.press('Escape');
+    await sessionButton(page).focus();
+    await expect(sessionButton(page)).toBeFocused({ timeout: 500 });
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('menuitem', { name })).toBeVisible({ timeout: 1000 });
+  }).toPass();
   await page.getByRole('menuitem', { name }).focus();
   await page.keyboard.press('Enter');
 }

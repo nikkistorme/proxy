@@ -62,6 +62,71 @@ test.describe('PS-4 JSON bundle', () => {
     await context.close();
   });
 
+  test('mouse: export, import into empty storage, and everything is back, including a URL card set', async ({ browser, baseURL, page }) => {
+    const sheet = 'https://docs.google.com/spreadsheets/d/e/2PACX-invented-bundle/pub?gid=0&single=true&output=csv';
+    const mock = (target: Page) =>
+      target.route('https://docs.google.com/spreadsheets/**', (route) =>
+        route.fulfill({ status: 200, headers: { 'content-type': 'text/csv', 'access-control-allow-origin': '*' }, body: 'name,qty,type\nBog Rat,2,Creature\n' }),
+      );
+    await mock(page);
+    await prepareData(page);
+    const envPile = (target: Page) => target.getByRole('button', { name: /^Environment deck,/ });
+    await envPile(page).click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Load from URL…' }).click();
+    await page.getByRole('textbox', { name: 'Published CSV address' }).fill(sheet);
+    await page.getByRole('button', { name: 'Load', exact: true }).click();
+    await page.getByRole('dialog', { name: 'Import results' }).getByRole('button', { name: 'Done' }).click();
+    await expect.poll(async () => (await storedKinds(page)).cardSet).toBe(2);
+    // The saved session has the sheet's address before it is exported.
+    await expect
+      .poll(async () => String(JSON.stringify(await storedSession(page))).includes(sheet))
+      .toBe(true);
+
+    const download = page.waitForEvent('download');
+    await sessionButton(page).click();
+    await page.getByRole('menuitem', { name: 'Export session…' }).click();
+    const file = await download;
+    const name = file.suggestedFilename();
+    const path = test.info().outputPath(name);
+    await file.saveAs(path);
+
+    const context = await browser.newContext({ baseURL });
+    const fresh = await context.newPage();
+    await mock(fresh);
+    await ready(fresh);
+    await sessionButton(fresh).click();
+    const chooser = fresh.waitForEvent('filechooser');
+    await fresh.getByRole('menuitem', { name: 'Import bundle…' }).click();
+    await (await chooser).setFiles(path);
+    const confirm = fresh.getByRole('dialog', { name: `Import ${name}?` });
+    await expect(confirm).toContainText('1 session, 1 snapshot, 2 card sets, 1 layout, 1 format and your settings');
+    await confirm.getByRole('button', { name: 'Import', exact: true }).click();
+
+    await expect(status(fresh)).toHaveText(`Imported ${name}.`);
+    await expect(fresh.getByText('Loading your session…')).toHaveCount(0);
+    await expect(mainPile(fresh)).toHaveAccessibleName(/3 cards/);
+    await expect(envPile(fresh)).toHaveAccessibleName(/^Environment deck, 2 cards,/);
+    await expect(fresh.getByRole('list', { name: /^Player 1's hand, 1 card\./ })).toBeVisible();
+    await expect(fresh.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect.poll(async () => storedKinds(fresh)).toMatchObject({ session: 1, snapshot: 1, cardSet: 2, layout: 1, format: 1, settings: 1 });
+    await sessionButton(fresh).click();
+    await fresh.getByRole('menuitem', { name: 'Snapshots…' }).click();
+    const snapshots = fresh.getByRole('dialog', { name: 'Snapshots' });
+    await expect(snapshots.getByRole('listitem')).toHaveCount(1);
+    await fresh.keyboard.press('Escape');
+    await sessionButton(fresh).click();
+    await fresh.getByRole('menuitem', { name: 'New session…' }).click();
+    await expect(fresh.getByRole('radio', { name: /^Duel night/ })).toBeVisible();
+    await fresh.keyboard.press('Escape');
+
+    // The URL source survived: Reload from URL is offered, and works.
+    await envPile(fresh).click({ button: 'right' });
+    await fresh.getByRole('menuitem', { name: 'Reload from URL' }).click();
+    await expect(fresh.getByRole('dialog', { name: 'Import results' })).toContainText('Fetched');
+    expect((await new AxeBuilder({ page: fresh }).withTags(axeTags).analyze()).violations).toEqual([]);
+    await context.close();
+  });
+
   test('a good file can be cancelled, which changes nothing and returns focus to the menu', async ({ page }) => {
     await ready(page);
     await chooseBundle(page, bundleFixture('basic.json'));
