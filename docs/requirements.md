@@ -320,7 +320,7 @@ Pointer, keyboard and import all call the same actions, which is what keeps the 
 
 The public demo ships with an original, generic sample game so the designer's own game stays private until they choose to share it.
 
-- DM-1: Include two player decks (about 30 cards each), one environment deck and about 6 board cards, each as its own CSV.
+- DM-1: Include two player decks (about 30 cards each), one environment deck (about 20 cards) and about 6 board cards, each as its own CSV.
 - DM-2: Include three layouts: a portrait creature-style card, a portrait action card and a landscape location card.
 - DM-3: Include at least one double-faced card.
 - DM-4: Art is original or openly licensed (for example CC0), bundled with the app, with credits listed in the repo.

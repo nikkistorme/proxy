@@ -1,0 +1,12 @@
+name,id,back_of,qty,type,layout,image,cost,rules,stats
+Tide Scout,,,3,Creature,Demo creature,demo/art/tide-scout.svg,1,"When played, draw a card.",1/1
+Net Mender,,,3,Creature,Demo creature,demo/art/net-mender.svg,2,Heal 1 damage from a card each round.,1/2
+Reef Guard,,,3,Creature,Demo creature,demo/art/reef-guard.svg,2,Blocks first each round.,1/3
+Salt Sentinel,,,3,Creature,Demo creature,demo/art/salt-sentinel.svg,3,Cannot be damaged by Fog events.,2/3
+Wave Rider,,,3,Creature,Demo creature,demo/art/wave-rider.svg,3,Fast. Can move to any place.,3/1
+Tide Caller,tide-caller,,2,Creature,Demo creature,demo/art/tide-caller.svg,4,Flip at round end. Rising: draw two cards.,2/4
+Ebb Caller,,tide-caller,,Creature,Demo creature,demo/art/ebb-caller.svg,4,Flip at round end. Ebbing: put a card from hand on the deck.,2/4
+Mend,,,4,Action,Demo action,demo/art/mend.svg,1,Heal 2 damage from a card.,
+Undertow,,,3,Action,Demo action,demo/art/undertow.svg,2,Return a Fog creature to the Fog deck.,
+Current Step,,,3,Action,Demo action,demo/art/current-step.svg,2,Move a keeper to any place.,
+Pearl Ward,,,3,Action,Demo action,demo/art/pearl-ward.svg,3,A keeper takes no damage until your next turn.,

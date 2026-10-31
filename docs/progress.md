@@ -20,7 +20,26 @@ Phase 7 (Session saves and Sheets, #141) is planned as 7a to 7g, sub-issues #142
 
 The design now has a UI placement guide (`design/ui-placement.md`, rules UI-1 to UI-8, with `FuturePlacement.dc.html`), and the plan follows it (2026-10-29). V1 keeps today's shell: V1 issues add no header or toolbar control (UI-3) and put new controls at the guide's address, or in the This session menu until the Session menu exists. So 6d's Formats screen opens from the setup dialog, and 6e's format editor is full screen. After V1, the shell moves to the guide in its own issues, #130 to #135 (action registry, workspace with Home, Library and Settings, header slots and Session menu, side panel, seat dock, command palette), before the card set library (#67). Smaller moves ride along with the feature that touches them. Each issue now has a Placement section.
 
+Phase 8 (Polish, #167) is split into 8a to 8f, sub-issues #168 to #173. 8a (#168) is done: the demo game's data is in the repo as plain files, `src/demo/` (four CSVs, three layouts and credits) and `public/demo/art/` (36 original SVG emblems), with no UI yet. `private/` is git-ignored. The Load demo button is 8b (#169).
+
 ## Done
+
+### Phase 8a: Demo content (#168, 2026-10-31)
+
+- **Game:** two keepers defend a harbour town from a rising fog. All names, text and art are original.
+- **CSVs in `src/demo/`:** `emberguard.csv` (P1, 30 cards from 10), `tidewardens.csv` (P2, 30 from 10, with the double-faced Tide Caller / Ebb Caller), `the-fog.csv` (environment, 20 from 8, with the double-faced Rolling Bank / Clearing Bank) and `harbour-board.csv` (6 location cards). Columns: `name`, `id`, `back_of`, `qty`, `type`, `layout`, `image`, `cost`, `rules`, `stats`.
+- **`layouts.json`:** three layouts in `proxy-layouts` format, "Demo creature" and "Demo action" (portrait) and "Demo location" (landscape), with fixed ids `demo-creature`, `demo-action` and `demo-location` so 8b can keep repeat loads from adding copies. Cards pick them through the CSV `layout` column.
+- **Art:** 36 hand-written SVG emblems in `public/demo/art/`, each under 500 bytes, no external references. CSV paths are relative (`demo/art/ember-scout.svg`) so they resolve under `/proxy/` and PR previews; adjusting them for `/demo/` is #63's job. `src/demo/CREDITS.md` lists them as original work (DM-4).
+- **Tests:** `src/demo/demoContent.test.ts`, named DM-1 to DM-4, reads the files from disk: each CSV imports with no problems and has the DM-1 counts, `readLayoutFile` accepts the layouts, every face's `layout` names a demo layout, the double-faced cards have backs, every `image` exists under `public/` and `CREDITS.md` covers every art file.
+- **`.gitignore`:** `private/` (DM-6).
+- **App code:** none changed, and nothing imports `src/demo/` yet, so initial JavaScript is unchanged.
+- **Requirements changed:** DM-1 now says the environment deck is about 20 cards.
+
+### Planning: Phase 8 split (#167, 2026-10-31)
+
+- Split into 8a #168 (demo content), 8b #169 (Load demo), 8c #170 (art loading and pile viewer code split), 8d #171 (stress table performance), 8e #172 (Lighthouse CI budgets) and 8f #173 (accessibility audit and close-out).
+- Owner decisions: art is original SVG with a credits file; Load demo goes in the setup dialog until Home (#131); demo cards choose layouts through the CSV `layout` column, so options don't change, and an existing demo layout is kept; Lighthouse runs on the main page until #63; the drag budget becomes one card on the stress table, with the stack version moving to #30; LCP, CLS, score and JS size fail the build, while INP and drag frame rate are recorded in `docs/performance.md`; #68 stays out of Phase 8; screen-reader runs and the conformance report stay manual.
+- Changed requirements: none. Each sub-issue updates its own.
 
 ### Phase 7g: Phase 7 close-out (#148, 2026-10-31)
 
@@ -992,7 +1011,7 @@ The design now has a UI placement guide (`design/ui-placement.md`, rules UI-1 to
 
 Every issue fills in its Placement section (`design/ui-placement.md`). No issue adds a header or toolbar control (UI-3).
 
-- **Phase 8 (Polish):** next, starting only with the owner's go-ahead. Phase 7 is done. The owner still has one manual check from 7g: with a real published sheet, edit a card's text, wait for Google to update, **Reload from URL**, and the card changes without moving (the last unticked CD criterion).
+- **Phase 8b (Load demo, #169):** next, starting only with the owner's go-ahead. 8a (#168) is done. The owner still has one manual check from 7g: with a real published sheet, edit a card's text, wait for Google to update, **Reload from URL**, and the card changes without moving (the last unticked CD criterion).
 - **Phase 8 (Polish), placement to carry into its split:** Load demo (DM-5) has no start screen in V1, so it goes in the setup dialog until Home exists (#131). The manual theme choice waits for Settings › Appearance (#131).
 - **After V1, in this order:**
   1. The demo on its own path (#63).
