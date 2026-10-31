@@ -1,3 +1,4 @@
+import { flushSync } from 'react-dom';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
 import { cardBox, CARD_H, CARD_W, clampToTable, columnsFor, describeSpot, freeSpot, overlaps, pileBox, pileUnder, TABLE_GAP } from '../model/tablePlacement';
 import { nearestInDirection, readingOrder, tableItems, type Direction } from '../model/tableNavigation';
@@ -488,7 +489,8 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
     if (!moveRequest) return;
     const { cardId } = moveRequest;
     afterMove.current = neighbourOf(cardId) ?? '';
-    dispatch((g, context) => moveCard(g, { cardId, to }, context));
+    // Rendered before the dialog reports closing, so focus can go to the card that's left.
+    flushSync(() => dispatch((g, context) => moveCard(g, { cardId, to }, context)));
   }
 
   /** Puts focus back after a dialog: on the card if it's still here, else where the move left it. */

@@ -1,3 +1,4 @@
+import { flushSync } from 'react-dom';
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { reorderHand } from '../actions/handActions';
 import { cardName } from '../actions/helpers';
@@ -114,7 +115,8 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
   function confirmMove(to: Destination) {
     if (!moveRequest) return;
     afterDialog.current = afterLeaving(moveRequest.cardId);
-    dispatch((g, context) => moveCard(g, { cardId: moveRequest.cardId, to }, context));
+    // Rendered before the dialog reports closing, so focus can go to the card that's left.
+    flushSync(() => dispatch((g, context) => moveCard(g, { cardId: moveRequest.cardId, to }, context)));
   }
 
   /** After a dialog closes: back to the card if it's still in the hand, else where a move sent focus. */
