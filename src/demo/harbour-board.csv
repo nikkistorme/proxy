@@ -1,0 +1,7 @@
+name,id,back_of,qty,type,layout,image,cost,rules,stats
+Harbour Wall,,,1,Location,Demo location,demo/art/harbour-wall.svg,,Blocks the first Fog creature each round.,
+Lighthouse,,,1,Location,Demo location,demo/art/lighthouse.svg,,"Once per round, reveal the next Fog card.",
+Fish Market,,,1,Location,Demo location,demo/art/fish-market.svg,,Keepers here heal 1 damage each round.,
+Old Pier,,,1,Location,Demo location,demo/art/old-pier.svg,,Keepers here can move to any place.,
+Boathouse,,,1,Location,Demo location,demo/art/boathouse.svg,,"Store up to two cards here, face down.",
+Chapel Bell,,,1,Location,Demo location,demo/art/chapel-bell.svg,,Ring it to clear one fog from the town.,
