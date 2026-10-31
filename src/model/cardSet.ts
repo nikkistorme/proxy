@@ -1,12 +1,21 @@
 import type { NewItem, StoredItem } from '../storage/storage';
 import type { CardDefinition } from './card';
 
-/** Where a card set's cards come from. Sheet URLs arrive in Phase 7. */
-export interface CardSetSource {
-  kind: 'file';
-  /** The file name, offered for reload (SP-2). */
-  name: string;
-}
+/** Where a card set's cards come from: a file (SP-2) or a URL (CD-7). */
+export type CardSetSource =
+  | {
+      kind: 'file';
+      /** The file name, offered for reload (SP-2). */
+      name: string;
+    }
+  | {
+      kind: 'url';
+      /** The set name: the file name Google or the server reports, refreshed on each fetch (CD-9). */
+      name: string;
+      url: string;
+      /** When the cards were last fetched, in ms (CD-9). */
+      fetchedAt: number;
+    };
 
 /** What a session keeps of each card set it loaded. Its definitions are the session's own copy (AR-4). */
 export interface CardSetSummary {
@@ -24,9 +33,9 @@ export interface CardSet extends StoredItem {
   definitions: CardDefinition[];
 }
 
-/** A summary for a set loaded from a file, named after the file. */
-export function fileCardSet(id: string, fileName: string): CardSetSummary {
-  return { id, name: fileName, source: { kind: 'file', name: fileName } };
+/** A summary for a set loaded from a source, named after it. */
+export function cardSetSummary(id: string, source: CardSetSource): CardSetSummary {
+  return { id, name: source.name, source };
 }
 
 /**

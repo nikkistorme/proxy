@@ -1,5 +1,5 @@
 import type { ImportedCard } from '../model/card';
-import { fileCardSet } from '../model/cardSet';
+import { cardSetSummary, type CardSetSource } from '../model/cardSet';
 import type { ActionContext, ActionResult, CardInstance, SessionState } from '../model/session';
 import { mergeImport, type MergeResult } from '../model/mergeImport';
 import { shuffled } from '../model/shuffle';
@@ -9,8 +9,8 @@ export interface LoadPileArgs {
   pileId: string;
   /** The card set to record on the pile: its current one on a reload, else a new UUID (AR-4). */
   cardSetId: string;
-  /** File name, offered for reload (SP-2). */
-  sourceName: string;
+  /** Where the cards came from: a file offered for reload (SP-2), or a URL (CD-7). */
+  source: CardSetSource;
   cards: readonly ImportedCard[];
   /** SP-3: keep CSV order instead of shuffling. */
   keepOrder?: boolean;
@@ -95,15 +95,15 @@ export function loadPile(state: SessionState, args: LoadPileArgs, context: Actio
     Object.entries({ ...state.cards, ...newCards }).filter(([id]) => !removedIds.has(id)),
   );
   const next = withPile(
-    { ...state, definitions, cardSets: { ...state.cardSets, [args.cardSetId]: fileCardSet(args.cardSetId, args.sourceName) }, cards },
+    { ...state, definitions, cardSets: { ...state.cardSets, [args.cardSetId]: cardSetSummary(args.cardSetId, args.source) }, cards },
     { ...pile, cardIds, cardSetId: args.cardSetId, definitionIds: merge.definitions.map((d) => d.id) },
   );
 
   const isReload = pile.definitionIds.length > 0;
   const order = args.keepOrder ? 'in CSV order' : 'shuffled';
   const announcement = isReload
-    ? `Reloaded ${args.sourceName} into ${pile.name}: ${plural(added.length, 'copy', 'copies')} added, ${removedIds.size} removed. ${plural(cardIds.length, 'card')} in the pile.`
-    : `Loaded ${args.sourceName} into ${pile.name}: ${plural(cardIds.length, 'card')}, ${order}.`;
+    ? `Reloaded ${args.source.name} into ${pile.name}: ${plural(added.length, 'copy', 'copies')} added, ${removedIds.size} removed. ${plural(cardIds.length, 'card')} in the pile.`
+    : `Loaded ${args.source.name} into ${pile.name}: ${plural(cardIds.length, 'card')}, ${order}.`;
 
   return { state: next, announcement, merge, shortfalls };
 }

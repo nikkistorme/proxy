@@ -11,7 +11,7 @@ const csv = 'name,id,back_of\nTroll,,\nMoonrise Hunter,,hunter\nDaylight Hunter,
 
 /** One card on the table, with its side, rotation and definition changed as given. */
 function viewOf(name: string, side: CardSide, rotation: Rotation = 0, change: (g: SessionState, definitionId: string) => SessionState = (g) => g) {
-  let session = loadPile(createSession(SOLO_PVE), { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
+  let session = loadPile(createSession(SOLO_PVE), { pileId: 'pile-p1-main', cardSetId: 'set-1', source: { kind: 'file', name: 'd.csv' }, cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
   const card = Object.values(session.cards).find((c) => session.definitions[c.definitionId]?.front.name === name);
   if (!card) throw new Error(name);
   session = moveCard(session, { cardId: card.id, to: { zone: 'table' } }).state;

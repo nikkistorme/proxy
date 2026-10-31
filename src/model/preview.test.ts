@@ -29,7 +29,7 @@ describe('LY-7 preview card sets', () => {
     const first = sessionWithDeck('name\nImp\nOgre\n');
     const reloaded = loadPile(
       first,
-      { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'deck.csv', cards: cardsFrom('name\nOgre\n'), keepOrder: true },
+      { pileId: 'pile-p1-main', cardSetId: 'set-1', source: { kind: 'file', name: 'deck.csv' }, cards: cardsFrom('name\nOgre\n'), keepOrder: true },
       testContext(7),
     ).state;
     expect(previewCardSets(reloaded).map(labels)).toEqual([['Ogre']]);
@@ -41,7 +41,7 @@ describe('LY-7 preview card sets', () => {
     if (!pile) throw new Error('no second pile');
     const two = loadPile(
       one,
-      { pileId: pile.id, cardSetId: 'set-2', sourceName: 'deck.csv', cards: cardsFrom('name\nStorm\n'), keepOrder: true },
+      { pileId: pile.id, cardSetId: 'set-2', source: { kind: 'file', name: 'deck.csv' }, cards: cardsFrom('name\nStorm\n'), keepOrder: true },
       // Its own ids, so the second deck's definitions don't replace the first's.
       { ...testContext(3), newId: envIds() },
     ).state;

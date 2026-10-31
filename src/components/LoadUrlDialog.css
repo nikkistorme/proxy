@@ -1,0 +1,19 @@
+/* Load from URL… content. The dialog frame is Dialog.css, the fields are Form.css. */
+.load-url__input {
+  /* A long URL scrolls inside the field, never the page. */
+  min-width: 0;
+  text-overflow: ellipsis;
+}
+
+.load-url__note {
+  margin: var(--space-2) 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.load-url__steps {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
+  font-size: 14px;
+}

@@ -135,7 +135,7 @@ describe('PS-2 undo history in the save', () => {
     await loaded();
     const { store } = first;
     const load = (csv: string) =>
-      store.getState().dispatch((g) => loadPile(g, { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'deck.csv', cards: cardsFrom(csv), keepOrder: true }, context));
+      store.getState().dispatch((g) => loadPile(g, { pileId: 'pile-p1-main', cardSetId: 'set-1', source: { kind: 'file', name: 'deck.csv' }, cards: cardsFrom(csv), keepOrder: true }, context));
     act(() => void load('name,rules\nImp,Old\nOgre,Big\n'));
     act(() => void load('name,rules\nImp,New\nOgre,Big\n'));
     await lastSaved(backend, store.getState().sessionId);
@@ -203,7 +203,7 @@ describe('PS-2 undo history in the save', () => {
     const backend = memoryBackend();
     const deck = `name,qty,rules\n${Array.from({ length: 60 }, (_, i) => `Card ${i},1,Does thing number ${i} to a target creature`).join('\n')}\n`;
     const context = testContext();
-    const start = loadPile(createSession(SOLO_PVE), { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'deck.csv', cards: cardsFrom(deck), keepOrder: true }, context).state;
+    const start = loadPile(createSession(SOLO_PVE), { pileId: 'pile-p1-main', cardSetId: 'set-1', source: { kind: 'file', name: 'deck.csv' }, cards: cardsFrom(deck), keepOrder: true }, context).state;
     const { store } = renderPersistence(backend, createSessionStore(start, context));
     await loaded();
     act(() => void store.getState().dispatch((g) => draw(g, { pileId: 'pile-p1-main', count: 60 })));

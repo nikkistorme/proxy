@@ -18,7 +18,7 @@ const HAND_TOP = 600;
 
 /** Troll and Ogre on the table at (16, 16) and (158, 16), Imp in Player 1's hand, and a stand-in pile to drop on. */
 function setup() {
-  let session: SessionState = pilesOutOfTheWay(loadPile(createSession(SOLO_PVE), { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state);
+  let session: SessionState = pilesOutOfTheWay(loadPile(createSession(SOLO_PVE), { pileId: 'pile-p1-main', cardSetId: 'set-1', source: { kind: 'file', name: 'd.csv' }, cards: cardsFrom(csv), keepOrder: true }, testContext()).state);
   for (const name of ['Troll', 'Ogre']) session = moveCard(session, { cardId: idOf(session, name), to: { zone: 'table' } }).state;
   session = draw(session, { pileId: 'pile-p1-main' }).state;
   const store = createSessionStore(session, testContext());
@@ -218,7 +218,7 @@ describe('TT-4 drag and drop', () => {
 describe('TT-12 dragging to reorder the hand', () => {
   /** Troll, Ogre and Imp in Player 1's hand, each 104px wide with a 10px gap, from x = 0. */
   function handSetup() {
-    const session = draw(loadPile(createSession(SOLO_PVE), { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state, { pileId: 'pile-p1-main', count: 3 }).state;
+    const session = draw(loadPile(createSession(SOLO_PVE), { pileId: 'pile-p1-main', cardSetId: 'set-1', source: { kind: 'file', name: 'd.csv' }, cards: cardsFrom(csv), keepOrder: true }, testContext()).state, { pileId: 'pile-p1-main', count: 3 }).state;
     const store = createSessionStore(session, testContext());
     render(
       <SessionStoreProvider store={store}>

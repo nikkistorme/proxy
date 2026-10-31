@@ -10,7 +10,7 @@ const BOARD = 'pile-board';
 
 /** A session with Imp, Ogre, Troll (top to bottom) in P1 main deck. */
 function session(csv = 'name\nImp\nOgre\nTroll\n'): SessionState {
-  return loadPile(createSession(SOLO_PVE), { pileId: MAIN, cardSetId: 'set-1', sourceName: 'deck.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
+  return loadPile(createSession(SOLO_PVE), { pileId: MAIN, cardSetId: 'set-1', source: { kind: 'file', name: 'deck.csv' }, cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
 }
 
 function names(state: SessionState, ids: readonly string[] | undefined): string[] {

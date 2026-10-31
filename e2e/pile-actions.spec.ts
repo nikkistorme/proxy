@@ -85,6 +85,7 @@ test.describe('SP-6 pile actions', () => {
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowDown');
     await expect(page.getByRole('menuitem', { name: 'Draw cards…' })).toBeFocused();
     await page.keyboard.press('Enter');
 

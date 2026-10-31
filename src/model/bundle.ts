@@ -69,6 +69,14 @@ function isTableEntry(value: unknown): boolean {
   return isObject(value) && isText(value.cardId) && isNumber(value.x) && isNumber(value.y) && [0, 90, 180, 270].includes(value.rotation as number) && (value.counters === undefined || (Array.isArray(value.counters) && value.counters.every(isCounter)));
 }
 
+/** A card set's source, rebuilt from known fields (CD-7). */
+function readSource(value: unknown): CardSet['source'] | undefined {
+  if (!isObject(value) || !isText(value.name)) return undefined;
+  if (value.kind === 'file') return { kind: 'file', name: value.name };
+  if (value.kind !== 'url' || !isText(value.url) || !/^https?:\/\//i.test(value.url) || !isNumber(value.fetchedAt)) return undefined;
+  return { kind: 'url', name: value.name, url: value.url, fetchedAt: value.fetchedAt };
+}
+
 /**
  * Whether a session state is complete enough to restore without crashing:
  * every part is the right shape and every id it points to exists.
@@ -79,7 +87,7 @@ function isSessionState(value: unknown): value is SessionState {
   if (!isText(formatId) || !isText(formatName) || !isText(activeSeatId) || typeof usesDice !== 'boolean') return false;
   if (!Array.isArray(seats) || !seats.every(isSeat) || !Array.isArray(piles) || !piles.every(isPile) || !Array.isArray(table) || !table.every(isTableEntry)) return false;
   if (!isRecordOf(definitions, isDefinition) || !isRecordOf(cards, isCard) || !isRecordOf(hands, isTexts)) return false;
-  if (!isRecordOf(cardSets, (set) => isObject(set) && isId(set.id) && isText(set.name) && isObject(set.source) && set.source.kind === 'file' && isText(set.source.name))) return false;
+  if (!isRecordOf(cardSets, (set) => isObject(set) && isId(set.id) && isText(set.name) && readSource(set.source) !== undefined)) return false;
   const seatIds = new Set((seats as { id: string }[]).map((seat) => seat.id));
   const cardIds = new Set(Object.keys(cards));
   const known = (ids: readonly string[]) => ids.every((id) => cardIds.has(id));
@@ -106,9 +114,9 @@ function readSnapshot(value: unknown): NewItem<SnapshotItem> | undefined {
 }
 
 function readCardSet(value: unknown): NewItem<CardSet> | undefined {
-  if (!isObject(value) || !isId(value.id) || !isText(value.name) || !isObject(value.source) || value.source.kind !== 'file' || !isText(value.source.name)) return undefined;
+  if (!isObject(value) || !isId(value.id) || !isText(value.name) || readSource(value.source) === undefined) return undefined;
   if (!Array.isArray(value.definitions) || !value.definitions.every(isDefinition)) return undefined;
-  return { id: value.id, name: value.name, source: { kind: 'file', name: value.source.name }, definitions: value.definitions as CardSet['definitions'] };
+  return { id: value.id, name: value.name, source: readSource(value.source) as CardSet['source'], definitions: value.definitions as CardSet['definitions'] };
 }
 
 function readFormat(value: unknown): NewItem<Format & StoredItem> | undefined {

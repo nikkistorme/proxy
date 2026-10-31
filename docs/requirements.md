@@ -87,11 +87,11 @@ Each deck is its own CSV file. The file is loaded into a pile, so no column says
 
 A pile can read its CSV from a Google Sheet published to the web, so card edits in the sheet reach the table with one click. Each sheet tab is published separately, so one tab is still one deck.
 
-- CD-7: A card set's source can be a URL instead of a file. Accept Google Sheets' published-CSV link (File → Share → Publish to web, format CSV), which looks like `docs.google.com/spreadsheets/d/e/…/pub?gid=…&output=csv`. Any other public URL that returns CSV also works.
-- CD-8: If the user pastes a normal edit or share link, don't try to read it. Show a short how-to for publishing the tab as CSV instead.
-- CD-9: Fetch on load and on "Reload". Show when the data was last fetched, and note that Google can take a few minutes to update published data after an edit.
-- CD-10: Reloading from a URL follows the same update rules as re-importing a file (CD-5).
-- CD-11: If a fetch fails (offline, unpublished, blocked), show what went wrong and keep the last good data. The URL and last fetched data save with the card set, so a saved session opens offline.
+- CD-7: A card set's source can be a URL instead of a file. **Load from URL…** in the pile menu (under Load CSV…) opens a dialog with a URL field. Accept Google Sheets' published-CSV link (File → Share → Publish to web, format CSV), which looks like `docs.google.com/spreadsheets/d/e/…/pub?gid=…&output=csv`. Any other public http(s) URL that returns CSV also works. On a Google Sheets address a link is usable only if it asks for CSV (`output=csv` or `format=csv`). The set is named from the response's `Content-Disposition` file name (`filename*` over `filename`), refreshed on each fetch, else "Google Sheet" for Google, else the URL's last path segment or host.
+- CD-8: If the user pastes a normal edit or share link (or any other Google Sheets address that isn't the published CSV), don't try to read it and make no request. The dialog shows an error and a short how-to: File → Share → Publish to web; choose the tab and Comma-separated values (.csv); Publish; copy the link and paste it here.
+- CD-9: Fetch on load and on **Reload from URL**, which a pile with a URL source shows in place of `Reload <file>…`. It has no ellipsis and fetches at once, announcing it, and is disabled while that pile is fetching. Fetches ignore the browser cache, send no credentials or referrer and stop after 15 seconds; Escape or Cancel in the dialog stops one. The dialog shows when the data was last fetched, and so do the import results, both with a note that Google can take a few minutes to update published data after an edit. A response that arrives after its pile was deleted or a new session started is dropped.
+- CD-10: Reloading from a URL follows the same update rules as re-importing a file (CD-5), through the same import and results (CD-4). A pile can move between a file and a URL, or to a different URL, and keeps its card set.
+- CD-11: If a fetch fails (offline, unpublished or unreachable, blocked, a bad status, a timeout, a page or empty body instead of a CSV, or a CSV with no cards), show what went wrong and keep the last good data: the pile and session don't change and there is no undo step. A failed Reload reopens the Load from URL dialog with the URL filled in, the error and a line saying the pile keeps its last good data. The URL and last fetched data save with the card set, so a saved session opens offline.
 - CD-12: A format can store a default source URL per pile, and a "Reload all" control refreshes every URL-backed card set in the session at once.
 
 **Acceptance criteria**
@@ -131,7 +131,7 @@ Setup only fills piles; nothing is placed on the table automatically. The user p
 **Setup**
 
 - SP-1: Pick a format through **New session…** in the This session menu, which opens a setup dialog listing the presets and then the saved formats (FS-2) with their seats and piles (the current one selected, or Solo PvE if it was deleted), with Edit formats… and Edit a copy buttons below the list (FS-2; Edit a copy opens the copy in the format editor), then load a CSV into each of its piles by file picker, by dropping the file on the pile, or from a published Google Sheet URL (CD-7). Starting a session replaces the current one and clears undo history, so it isn't undoable; when the current session has cards, Start session first asks "Start a new <format> session? The cards in this session will be cleared." with Start new session and Back. The choice is saved as the `defaultFormat` option, and on reload the saved session comes back (PS-2); only when no session is saved does a new session start from it, silently. The app still opens on the table.
-- SP-2: Remember the last file name per pile, through the card set the pile records (AR-4), and offer "Reload" for a quick re-import.
+- SP-2: Remember the last source per pile, through the card set the pile records (AR-4): a file name, offered as "Reload <file>…" for a quick re-import, or a URL, offered as "Reload from URL" (CD-9).
 - SP-3: Shuffle each pile on load, with an option to keep CSV order.
 
 **Piles**
