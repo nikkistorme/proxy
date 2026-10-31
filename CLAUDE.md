@@ -75,6 +75,7 @@ Non-UI issues (parsing, model, actions) don't need the design files.
 - Every bug fix gets a regression test in the same PR.
 - E2E tests mock Google Sheets responses; never call Google from tests.
 - After a key that closes something, check it's gone and where focus went (`closeWith` in `e2e/keyboard.ts`).
+- Before a reload or a storage check, wait for the stored item (`e2e/storage.ts`), never a fixed time.
 - New or changed E2E specs run 5 times in Chromium and Firefox (`--repeat-each=5`) before the PR opens.
 
 ## Pull requests
