@@ -52,18 +52,32 @@ export function Dialog({
 }: DialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  const reported = useRef(false);
 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
     if (open && !dialog.open) {
+      reported.current = false;
       dialog.showModal();
       dialog.querySelector<HTMLElement>('[data-autofocus]')?.focus();
     }
     if (!open && dialog.open) dialog.close();
   }, [open]);
 
-  const close = () => dialogRef.current?.close();
+  /** Tells the parent once per opening, from whichever comes first: our own close or the close event. */
+  function reportClosed() {
+    if (reported.current) return;
+    reported.current = true;
+    onClose();
+  }
+
+  // The close event is a task queued after the click or key, and a key pressed in between
+  // would miss its shortcut scope, so a close we cause reports at once instead of waiting for it.
+  const close = () => {
+    dialogRef.current?.close();
+    reportClosed();
+  };
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -114,7 +128,7 @@ export function Dialog({
       className={`dialog dialog--${width}`}
       aria-labelledby={titleId}
       // React passes a nested dialog's close event up to this one too; only act on our own.
-      onClose={(event) => event.target === event.currentTarget && onClose()}
+      onClose={(event) => event.target === event.currentTarget && reportClosed()}
     >
       {open && (
         <>

@@ -29,6 +29,9 @@ function setup(drawn = 3) {
 const hand = () => screen.getByRole('region', { name: "Player 1's hand" });
 const card = (name: string) => within(hand()).getByRole('button', { name });
 
+/** Waits for every dialog to have closed. Focus is checked right after, with no further waiting. */
+const closed = () => waitFor(() => expect(document.querySelector('dialog[open]')).toBeNull());
+
 describe('FS-3 hand tray', () => {
   it("shows the seat's cards by name, and the count", () => {
     setup();
@@ -108,7 +111,17 @@ describe('TT-4 and SP-8 hand card menu', () => {
     await userEvent.click(within(dialog).getByRole('option', { name: /^Board cards — top/ }));
     await userEvent.click(within(dialog).getByRole('button', { name: 'Move to Board cards — top' }));
     expect(store.getState().session.piles.find((p) => p.id === 'pile-board')?.cardIds).toHaveLength(1);
-    await waitFor(() => expect(card('Ogre')).toHaveFocus());
+    // A11Y-3: focus is already there once the dialog has closed, with no timer to wait for.
+    expect(card('Ogre')).toHaveFocus();
+  });
+
+  it('A11Y-3 puts focus back on the card when Move to… is cancelled', async () => {
+    setup();
+    card('Daylight Hunter, double-faced').focus();
+    await userEvent.keyboard('m');
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    await closed();
+    expect(card('Daylight Hunter, double-faced')).toHaveFocus();
   });
 
   it("shows a hand card's details, even though it was drawn face down", async () => {

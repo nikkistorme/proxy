@@ -1,3 +1,4 @@
+import { flushSync } from 'react-dom';
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { reorderHand } from '../actions/handActions';
 import { cardName } from '../actions/helpers';
@@ -114,18 +115,17 @@ export function HandTray({ seatId, seatName, onDraw }: HandTrayProps) {
   function confirmMove(to: Destination) {
     if (!moveRequest) return;
     afterDialog.current = afterLeaving(moveRequest.cardId);
-    dispatch((g, context) => moveCard(g, { cardId: moveRequest.cardId, to }, context));
+    // Rendered before the dialog reports closing, so focus can go to the card that's left.
+    flushSync(() => dispatch((g, context) => moveCard(g, { cardId: moveRequest.cardId, to }, context)));
   }
 
   /** After a dialog closes: back to the card if it's still in the hand, else where a move sent focus. */
   function focusAfterDialog(cardId: string | undefined) {
-    // The dialog closes before a move re-renders, and puts focus back itself, so wait for both.
-    window.setTimeout(() => {
-      const target = afterDialog.current ?? cardId;
-      afterDialog.current = undefined;
-      const element = target === 'draw' ? drawRef.current : target ? buttons.current[target] : undefined;
-      (element?.isConnected ? element : drawRef.current)?.focus();
-    });
+    // Called from the dialog's close event, after the move has rendered and focus went back to the opener.
+    const target = afterDialog.current ?? cardId;
+    afterDialog.current = undefined;
+    const element = target === 'draw' ? drawRef.current : target ? buttons.current[target] : undefined;
+    (element?.isConnected ? element : drawRef.current)?.focus();
   }
 
   // TT-4: dragging a hand card to the table or a pile, through the same action as Move to….

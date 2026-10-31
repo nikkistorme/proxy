@@ -1,3 +1,4 @@
+import { flushSync } from 'react-dom';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
 import { cardBox, CARD_H, CARD_W, clampToTable, columnsFor, describeSpot, freeSpot, overlaps, pileBox, pileUnder, TABLE_GAP } from '../model/tablePlacement';
 import { nearestInDirection, readingOrder, tableItems, type Direction } from '../model/tableNavigation';
@@ -488,20 +489,19 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
     if (!moveRequest) return;
     const { cardId } = moveRequest;
     afterMove.current = neighbourOf(cardId) ?? '';
-    dispatch((g, context) => moveCard(g, { cardId, to }, context));
+    // Rendered before the dialog reports closing, so focus can go to the card that's left.
+    flushSync(() => dispatch((g, context) => moveCard(g, { cardId, to }, context)));
   }
 
   /** Puts focus back after a dialog: on the card if it's still here, else where the move left it. */
   function focusAfterDialog(cardId: string | undefined) {
-    // The dialog closes before a move has re-rendered, and its close puts focus back
-    // where it was first, so decide once both are done.
-    window.setTimeout(() => {
-      const next = afterMove.current;
-      afterMove.current = undefined;
-      const stayed = cardId ? buttons.current[cardId] : undefined;
-      const element = stayed?.isConnected ? stayed : next ? buttons.current[next] : undefined;
-      (element?.isConnected ? element : surfaceRef.current)?.focus();
-    });
+    // Called from the dialog's close event, a task after the click or key that confirmed, so
+    // the move has rendered, and the browser has already put focus back on the opener.
+    const next = afterMove.current;
+    afterMove.current = undefined;
+    const stayed = cardId ? buttons.current[cardId] : undefined;
+    const element = stayed?.isConnected ? stayed : next ? buttons.current[next] : undefined;
+    (element?.isConnected ? element : surfaceRef.current)?.focus();
   }
 
   function closeMove() {
@@ -545,8 +545,8 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
     const spot = latest.current.placement;
     dismissToast();
     if (spot) announce(`Picked up ${placementName(current, spot)}. ${describeSpot(spot)}. Arrow keys move it, Enter places it, Escape cancels.`);
-    // After any dialog that started it has closed and put focus back.
-    window.setTimeout(() => placementRef.current?.focus());
+    // Any dialog that started it has closed and put focus back by now.
+    placementRef.current?.focus();
   }, [startedId, dismissToast, announce]);
 
   // Keep the outline in view as it moves.
