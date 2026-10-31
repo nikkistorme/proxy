@@ -33,12 +33,14 @@ import { PILE_HINT, PILE_HINT_ID, PileTile } from './PileTile';
 import { PileViewer } from './PileViewer';
 import { SeatCounter } from './SeatCounter';
 import { SessionMenu } from './SessionMenu';
+import { SheetResults } from './SheetResults';
 import { inShortcutScope } from './shortcutScope';
 import { ShortcutsDialog } from './ShortcutsDialog';
 import { seatIdentity, seatPlace } from './seatIdentity';
 import { TableSurface, type PileSlot } from './TableSurface';
 import { TableTools } from './TableTools';
 import { Toast } from './Toast';
+import { useSheetLoads } from './useSheetLoads';
 
 function faceOf(session: SessionState, cardId: string) {
   const card = session.cards[cardId];
@@ -75,8 +77,8 @@ export function SessionScreen() {
   const [keepOrder, setKeepOrder] = useState<Record<string, boolean>>({});
   const [summary, setSummary] = useState<ImportSummary>();
   const [urlRequest, setUrlRequest] = useState<LoadUrlRequest>();
-  /** Piles with a Reload from URL in flight (CD-9). */
-  const [fetching, setFetching] = useState<ReadonlySet<string>>(new Set());
+  /** CD-9, CD-12: which piles are fetching, their errors, Reload all and its results. */
+  const sheets = useSheetLoads(keepOrder);
   const [countRequest, setCountRequest] = useState<CountRequest>();
   const [nameRequest, setNameRequest] = useState<PileNameRequest>();
   const [deleteRequest, setDeleteRequest] = useState<DeletePileRequest | MergePilesRequest>();
@@ -278,16 +280,17 @@ export function SessionScreen() {
     const checked = classifySheetUrl(rawUrl);
     if (checked.kind !== 'ok') return checked.error;
     const sessionId = store.getState().sessionId;
-    setFetching((set) => new Set(set).add(pileId));
+    sheets.markFetching(pileId, true, sessionId);
     const fetched = await fetchCards(checked.url, checked.fallbackName, signal);
-    setFetching((set) => {
-      const next = new Set(set);
-      next.delete(pileId);
-      return next;
-    });
+    sheets.markFetching(pileId, false, sessionId);
     const live = store.getState();
     if (signal.aborted || live.sessionId !== sessionId || !live.session.piles.some((p) => p.id === pileId)) return undefined;
-    if (!fetched.ok) return fetched.error;
+    if (!fetched.ok) {
+      // A pile already flagged as unable to load keeps its badge, with the latest error.
+      sheets.setPileError(pileId, fetched.error, true);
+      return fetched.error;
+    }
+    sheets.setPileError(pileId, undefined);
     setUrlRequest(undefined);
     applyImport(pileId, { kind: 'url', name: fetched.fileName, url: checked.url, fetchedAt: Date.now() }, fetched.cards, fetched.problems);
     return undefined;
@@ -299,9 +302,19 @@ export function SessionScreen() {
       if (!pile) return;
       returnFocusRef.current = pileId;
       const source = pile.cardSetId ? session.cardSets[pile.cardSetId]?.source : undefined;
-      setUrlRequest({ pile, keepsData: pile.definitionIds.length > 0, ...(source?.kind === 'url' && { url: source.url, fetchedAt: source.fetchedAt }) });
+      // A pile with no card set starts from its format's default URL, and shows why it couldn't load (CD-12).
+      const defaultUrl = sheets.defaultUrlFor(pileId);
+      const error = pile.definitionIds.length === 0 ? sheets.errorFor(pileId) : undefined;
+      setUrlRequest({
+        pile,
+        keepsData: pile.definitionIds.length > 0,
+        ...(source?.kind === 'url' && { url: source.url, fetchedAt: source.fetchedAt }),
+        ...(source === undefined && defaultUrl !== undefined && { url: defaultUrl }),
+        ...(error !== undefined && { error }),
+      });
     },
-    [session],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [session, sheets.defaultUrlFor, sheets.errorFor],
   );
 
   /** CD-9: Reload from URL fetches at once. A failure opens the dialog with the error and keeps the data (CD-11). */
@@ -333,6 +346,13 @@ export function SessionScreen() {
     // Lost means on the page body or inside a dialog that has closed, not in one that has just opened.
     const focusWasLost = !active || active === document.body || active.closest('dialog:not([open])') !== null;
     if (pileId && focusWasLost) tileRefs.current[pileId]?.focus();
+  }
+
+  /** Focus goes back to the menu that ran Reload all, or to the table after a start load. */
+  function closeSheetResults() {
+    const kind = sheets.results?.kind;
+    sheets.closeResults();
+    document.querySelector<HTMLElement>(kind === 'reload' ? '.session-menu__button' : '.table-surface')?.focus();
   }
 
   function closeResults() {
@@ -526,6 +546,8 @@ export function SessionScreen() {
         onKeyUp={slot.onKeyUp}
         onDraw={() => drawFrom(pile.id)}
         onDropFile={(id, file) => void loadFile(id, file)}
+        loading={sheets.isFetching(pile.id)}
+        loadError={pile.definitionIds.length === 0 ? sheets.errorFor(pile.id) : undefined}
         cardOver={drag?.cardId !== undefined && drag.over?.zone === 'pile' && drag.over.pileId === pile.id}
         mergeTarget={slot.mergeTarget}
         pile={pile}
@@ -550,7 +572,12 @@ export function SessionScreen() {
         </svg>
         <h1 className="session__title">Proxy</h1>
         <span className="session__format">{session.formatName}</span>
-        <SessionMenu />
+        <SessionMenu
+          canReloadAll={sheets.canReloadAll}
+          reloading={sheets.reloadingAll}
+          reloadBusy={sheets.anyFetching}
+          onReloadAll={sheets.reloadAll}
+        />
         <TableTools addPileRef={addPileRef} onShortcuts={openShortcuts} onLayouts={openLayouts} onAddPile={() => setNameRequest({ mode: 'add', defaultOwnerId: session.activeSeatId })} />
       </header>
       <StorageNotice />
@@ -630,7 +657,7 @@ export function SessionScreen() {
           <PileMenu
             pile={menuPile}
             source={menuPile.cardSetId ? session.cardSets[menuPile.cardSetId]?.source : undefined}
-            fetching={fetching.has(menuPile.id)}
+            fetching={sheets.isFetching(menuPile.id)}
             ownerName={seatName(menuPile.ownerSeatId)}
             keepOrder={keepOrder[menuPile.id] ?? false}
             onView={setViewerPileId}
@@ -655,6 +682,7 @@ export function SessionScreen() {
       )}
       <input ref={fileRef} type="file" accept=".csv,text/csv" hidden data-testid="csv-file" onChange={(e) => void handleFile(e)} />
       <ImportResults summary={summary} onClose={closeResults} />
+      <SheetResults results={sheets.results} onClose={closeSheetResults} />
       <LoadUrlDialog
         key={urlRequest ? `url-${urlRequest.pile.id}-${urlRequest.error ?? ''}` : 'url-closed'}
         request={urlRequest}

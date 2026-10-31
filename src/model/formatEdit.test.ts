@@ -11,6 +11,7 @@ import {
   renameSeat,
   setCounterValue,
   setPileOwner,
+  setPileSheetUrl,
   setUsesDice,
   validateCounterName,
   validateCounterValue,
@@ -135,5 +136,28 @@ describe('FS-4 seat counters', () => {
     expect(validateCounterValue('')).toBe('A starting value is needed');
     for (const bad of ['1.5', 'abc', '-', '+3', '1e2', '1 2']) expect(validateCounterValue(bad), bad).toBe('The starting value must be a whole number');
     for (const bad of ['1000', '-1000']) expect(validateCounterValue(bad), bad).toBe('The starting value must be from -999 to 999');
+  });
+});
+
+describe('CD-12 pile sheet URL', () => {
+  const URL_ = 'https://example.com/a.csv';
+
+  it('sets a trimmed address on one pile and leaves the rest', () => {
+    const edited = setPileSheetUrl(PVP_1V1, 'pile-p1-main', `  ${URL_} `);
+    expect(edited.piles.map((p) => p.sheetUrl)).toEqual([URL_, ...PVP_1V1.piles.slice(1).map(() => undefined)]);
+    expect(PVP_1V1.piles[0]?.sheetUrl).toBeUndefined();
+  });
+
+  it('removes the key when blank', () => {
+    const cleared = setPileSheetUrl(setPileSheetUrl(PVP_1V1, 'pile-p1-main', URL_), 'pile-p1-main', '  ');
+    expect(cleared.piles[0]).toEqual(PVP_1V1.piles[0]);
+    expect('sheetUrl' in (cleared.piles[0] ?? {})).toBe(false);
+  });
+
+  it('is kept when the pile is renamed or its owner changes, including to shared', () => {
+    const withUrl = setPileSheetUrl(PVP_1V1, 'pile-p1-main', URL_);
+    expect(renamePile(withUrl, 'pile-p1-main', 'Deck').piles[0]?.sheetUrl).toBe(URL_);
+    expect(setPileOwner(withUrl, 'pile-p1-main', undefined).piles[0]?.sheetUrl).toBe(URL_);
+    expect(setPileOwner(withUrl, 'pile-p1-main', 'seat-p2').piles[0]?.sheetUrl).toBe(URL_);
   });
 });

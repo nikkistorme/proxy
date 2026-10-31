@@ -48,13 +48,26 @@ export function renamePile<T extends Format>(format: T, pileId: string, name: st
   return { ...format, piles: format.piles.map((pile) => (pile.id === pileId ? { ...pile, name: name.trim() } : pile)) };
 }
 
+/** Sets a pile's default sheet URL (CD-12). A blank value removes it. The caller checks it first. */
+export function setPileSheetUrl<T extends Format>(format: T, pileId: string, sheetUrl: string): T {
+  const url = sheetUrl.trim();
+  return {
+    ...format,
+    piles: format.piles.map((pile) => {
+      if (pile.id !== pileId) return pile;
+      const rest = Object.fromEntries(Object.entries(pile).filter(([name]) => name !== 'sheetUrl')) as unknown as FormatPile;
+      return url === '' ? rest : { ...rest, sheetUrl: url };
+    }),
+  };
+}
+
 /** An owner of undefined makes the pile shared. */
 export function setPileOwner<T extends Format>(format: T, pileId: string, ownerSeatId: string | undefined): T {
   return {
     ...format,
     piles: format.piles.map((pile) => {
       if (pile.id !== pileId) return pile;
-      const shared: FormatPile = { id: pile.id, name: pile.name };
+      const shared: FormatPile = { id: pile.id, name: pile.name, ...(pile.sheetUrl !== undefined && { sheetUrl: pile.sheetUrl }) };
       return ownerSeatId === undefined ? shared : { ...shared, ownerSeatId };
     }),
   };

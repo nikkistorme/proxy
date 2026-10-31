@@ -158,3 +158,20 @@
   z-index: 1;
   transform: translate(-50%, -50%);
 }
+
+/* CD-12: a warning badge for a sheet that couldn't load, a dark pill with a white edge like the layout canvas warning. */
+.pile-tile__warning {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #fff;
+  border-radius: 10px;
+  background: #1c1e1b;
+  color: #fff;
+  pointer-events: none;
+}

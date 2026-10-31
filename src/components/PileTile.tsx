@@ -27,6 +27,10 @@ interface PileTileProps {
   cardOver?: boolean;
   /** TT-4: a pile being dragged or placed is over this pile, and would merge with it. */
   mergeTarget?: boolean;
+  /** CD-12: a sheet is being fetched for this pile. */
+  loading?: boolean;
+  /** CD-12: why this pile's sheet couldn't load, shown as a warning badge on an empty pile. */
+  loadError?: string;
   /** A11Y-3: on the table, only the current card or pile is in the Tab order. */
   tabbable?: boolean;
   onFocus?: () => void;
@@ -60,6 +64,8 @@ export function PileTile({
   onDropFile,
   cardOver = false,
   mergeTarget = false,
+  loading = false,
+  loadError,
   tabbable = true,
   onFocus,
   onKeyDown,
@@ -100,7 +106,8 @@ export function PileTile({
   const count = pile.cardIds.length;
   const label = [
     pile.name,
-    count === 0 ? 'empty' : undefined,
+    count === 0 ? (loading ? 'Loading…' : 'empty') : undefined,
+    count === 0 && !loading && loadError ? `couldn't load: ${loadError}` : undefined,
     `${count} ${count === 1 ? 'card' : 'cards'}`,
     ownerName ?? 'shared',
     revealedTop ? `top card face up: ${revealedTop.name}` : undefined,
@@ -180,7 +187,13 @@ export function PileTile({
             <span className="pile-tile__empty-name">{pile.name}</span>{' '}
             {/* The dot is drawn in CSS so the text matches the label: "empty, 0". */}
             <span className="pile-tile__empty-count">
-              Empty <span className="pile-tile__empty-zero">0</span>
+              {loading ? (
+                'Loading…'
+              ) : (
+                <>
+                  Empty <span className="pile-tile__empty-zero">0</span>
+                </>
+              )}
             </span>
           </span>
         ) : (
@@ -191,6 +204,14 @@ export function PileTile({
           </span>
         )}
       </button>
+      {count === 0 && !loading && loadError && (
+        // Shape and an icon, never colour alone. The tile's label carries the error.
+        <span className="pile-tile__warning" aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 3 2.5 20h19zM12 10v4.5M12 17.5v.01" />
+          </svg>
+        </span>
+      )}
       {(dropTarget || cardOver || mergeTarget) && (
         // A dragged card covers the middle, so its label sits above the pile, as on CardStates.
         <span className={dropTarget ? 'pile-tile__drop-label' : 'pile-tile__drop-label pile-tile__drop-label--above'} aria-hidden="true">

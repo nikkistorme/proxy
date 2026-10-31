@@ -1,0 +1,25 @@
+/* Sheet results content. The dialog frame is Dialog.css; the per-pile summary is ImportResults.css. */
+.sheet-results__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sheet-results__item + .sheet-results__item {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--divider);
+}
+
+.sheet-results__pile {
+  margin: 0 0 var(--space-2);
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.sheet-results__source {
+  color: var(--muted);
+  font-weight: 400;
+}

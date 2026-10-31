@@ -30,15 +30,71 @@ function plural(count: number, one: string, many: string): string {
   return `${count} ${count === 1 ? one : many}`;
 }
 
-/** Import results dialog (CD-4): what imported, and every problem by row and column. */
-export function ImportResults({ summary, onClose }: ImportResultsProps) {
+interface ImportSummaryBodyProps {
+  summary: ImportSummary;
+  /** The "No problems found" / problem count heading's level, one below the title it sits under. */
+  subtitleAs?: 'h3' | 'h4';
+}
+
+/** What an import did: counts, fetch time, missing cards, shortfalls and every problem by row. Shared with the sheet results (CD-12). */
+export function ImportSummaryBody({ summary, subtitleAs: Subtitle = 'h3' }: ImportSummaryBodyProps) {
   const problemsId = useId();
 
-  const parts = summary
-    ? [plural(summary.cardCount, 'card', 'cards') + ' imported', `${summary.added} new`, `${summary.updated} updated`]
-    : [];
-  if (summary?.missingNames.length) parts.push(`${summary.missingNames.length} missing`);
+  const parts = [plural(summary.cardCount, 'card', 'cards') + ' imported', `${summary.added} new`, `${summary.updated} updated`];
+  if (summary.missingNames.length) parts.push(`${summary.missingNames.length} missing`);
 
+  return (
+    <>
+      <p className="import-results__summary">{parts.join(' · ')}</p>
+      {summary.fetchedAt !== undefined && (
+        <p className="import-results__missing">
+          Fetched {formatFetchTime(summary.fetchedAt)}. {GOOGLE_NOTE}
+        </p>
+      )}
+      {summary.missingNames.length > 0 && (
+        <p className="import-results__missing">
+          No longer in the CSV, kept in the deck: {summary.missingNames.join(', ')}
+        </p>
+      )}
+
+      {summary.shortfalls && summary.shortfalls.length > 0 && (
+        <p className="import-results__missing">
+          More copies in play than the new qty, so these stay:{' '}
+          {summary.shortfalls.map((s) => `${s.name} (${plural(s.extra, 'extra copy', 'extra copies')})`).join(', ')}
+        </p>
+      )}
+
+      <Subtitle id={problemsId} className="import-results__subtitle">
+        {summary.problems.length === 0 ? 'No problems found' : plural(summary.problems.length, 'problem', 'problems')}
+      </Subtitle>
+      {summary.problems.length > 0 && (
+        <div className="import-results__table-wrap">
+          <table className="import-results__table" aria-labelledby={problemsId}>
+            <thead>
+              <tr>
+                <th scope="col">Row</th>
+                <th scope="col">Column</th>
+                <th scope="col">Problem</th>
+              </tr>
+            </thead>
+            <tbody>
+              {summary.problems.map((problem, index) => (
+                <tr key={index}>
+                  <td className="import-results__num">{problem.row}</td>
+                  <td>{problem.column ?? '—'}</td>
+                  <td>{problem.message}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
+  );
+}
+
+/** Import results dialog (CD-4): what imported, and every problem by row and column. */
+export function ImportResults({ summary, onClose }: ImportResultsProps) {
   return (
     <Dialog
       open={summary !== undefined}
@@ -48,54 +104,7 @@ export function ImportResults({ summary, onClose }: ImportResultsProps) {
       onClose={onClose}
       primaryLabel="Done"
     >
-      {summary && (
-        <>
-          <p className="import-results__summary">{parts.join(' · ')}</p>
-          {summary.fetchedAt !== undefined && (
-            <p className="import-results__missing">
-              Fetched {formatFetchTime(summary.fetchedAt)}. {GOOGLE_NOTE}
-            </p>
-          )}
-          {summary.missingNames.length > 0 && (
-            <p className="import-results__missing">
-              No longer in the CSV, kept in the deck: {summary.missingNames.join(', ')}
-            </p>
-          )}
-
-          {summary.shortfalls && summary.shortfalls.length > 0 && (
-            <p className="import-results__missing">
-              More copies in play than the new qty, so these stay:{' '}
-              {summary.shortfalls.map((s) => `${s.name} (${plural(s.extra, 'extra copy', 'extra copies')})`).join(', ')}
-            </p>
-          )}
-
-          <h3 id={problemsId} className="import-results__subtitle">
-            {summary.problems.length === 0 ? 'No problems found' : plural(summary.problems.length, 'problem', 'problems')}
-          </h3>
-          {summary.problems.length > 0 && (
-            <div className="import-results__table-wrap">
-              <table className="import-results__table" aria-labelledby={problemsId}>
-                <thead>
-                  <tr>
-                    <th scope="col">Row</th>
-                    <th scope="col">Column</th>
-                    <th scope="col">Problem</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {summary.problems.map((problem, index) => (
-                    <tr key={index}>
-                      <td className="import-results__num">{problem.row}</td>
-                      <td>{problem.column ?? '—'}</td>
-                      <td>{problem.message}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
-      )}
+      {summary && <ImportSummaryBody summary={summary} />}
     </Dialog>
   );
 }

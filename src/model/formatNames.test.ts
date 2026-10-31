@@ -39,6 +39,12 @@ describe('FS-2 format names', () => {
     expect(copy.usesDice).toBe(PVP_1V1.usesDice);
   });
 
+  it('CD-12 keeps each pile’s sheet URL in a copy', () => {
+    const url = 'https://example.com/a.csv';
+    const source: Format = { ...PVP_1V1, piles: PVP_1V1.piles.map((p, i) => (i === 0 ? { ...p, sheetUrl: url } : p)) };
+    expect(duplicateFormat([], source).piles[0]?.sheetUrl).toBe(url);
+  });
+
   it('copies deeply, so changing the copy leaves the source alone', () => {
     const copy = duplicateFormat([], COOP_PVE);
     const seat = copy.seats[0];

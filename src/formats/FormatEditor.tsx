@@ -2,9 +2,10 @@ import { useEffect, useId, useRef } from 'react';
 import { touchScreen } from '../components/touchScreen';
 import '../components/Form.css';
 import type { FormatItem } from '../model/format';
-import { addCounter, addPile, removeCounter, removePile, renamePile, renameSeat, setPileOwner, setUsesDice, validatePileName, validateSeatName } from '../model/formatEdit';
+import { addCounter, addPile, removeCounter, removePile, renamePile, renameSeat, setPileOwner, setPileSheetUrl, setUsesDice, validatePileName, validateSeatName } from '../model/formatEdit';
 import { CounterRows } from './CounterRows';
 import { NameField } from './NameField';
+import { SheetUrlField } from './SheetUrlField';
 import './FormatEditor.css';
 
 const SHARED = '';
@@ -143,6 +144,11 @@ export function FormatEditor({ format, onChange, announce }: FormatEditorProps) 
                 <option value={SHARED}>Shared</option>
               </select>
             </div>
+            <SheetUrlField
+              label={`Pile ${i + 1} sheet URL`}
+              value={pile.sheetUrl ?? ''}
+              onValid={(url) => onChange(setPileSheetUrl(format, pile.id, url))}
+            />
             <button type="button" className="button" data-field="remove" aria-label={`Remove ${pile.name}`} onClick={() => remove(pile.id)}>
               Remove
             </button>
