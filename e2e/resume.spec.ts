@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
 import { closeWith, tabTo } from './keyboard';
+import { storedSession, type StoredSession } from './storage';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../tests/fixtures/csv/${name}`, import.meta.url));
 const axeTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -29,9 +30,12 @@ async function loadDeck(page: Page) {
   await page.getByRole('dialog', { name: 'Import results' }).getByRole('button', { name: 'Done' }).click();
 }
 
-/** Autosave waits up to a second after a change; leave time for it before a reload. */
-async function reload(page: Page) {
-  await page.waitForTimeout(1200);
+/** Autosave waits up to a second after a change; wait until the stored session has what the test changed last, then reload. */
+async function reload(page: Page, saved: (item: StoredSession) => boolean) {
+  await expect.poll(async () => {
+    const item = await storedSession(page);
+    return item !== undefined && saved(item);
+  }).toBe(true);
   await page.reload();
   await expect(page.getByText('Loading your session…')).toHaveCount(0);
 }
@@ -72,7 +76,7 @@ test.describe('PS-2 Resume', () => {
     await page.keyboard.press('Enter');
     await expect(seat(page, 'Environment')).toHaveAccessibleName('Environment, active seat');
 
-    await reload(page);
+    await reload(page, (item) => item.state.activeSeatId === 'seat-env');
 
     await expect(seat(page, 'Environment')).toHaveAccessibleName('Environment, active seat');
     await seat(page, 'Player 1').click();
@@ -97,7 +101,7 @@ test.describe('PS-2 Resume', () => {
       await page.keyboard.press('d');
       await expect(status(page)).toHaveText(new RegExp(`^Player 1 drew .+ from P1 main deck\\. ${left} left\\.$`));
     }
-    await reload(page);
+    await reload(page, (item) => item.state.hands['seat-p1']?.length === 3);
     await expect(hand(page).getByRole('list')).toHaveAccessibleName(/^Player 1's hand, 3 cards\./);
 
     await mainPile(page).focus();
@@ -119,7 +123,7 @@ test.describe('PS-2 Resume', () => {
   test('mouse: the Undo and Redo buttons step through the same moves after a reload', async ({ page }) => {
     await loadDeck(page);
     for (let i = 0; i < 3; i++) await hand(page).getByRole('button', { name: 'Draw' }).click();
-    await reload(page);
+    await reload(page, (item) => item.state.hands['seat-p1']?.length === 3);
     await expect(hand(page).getByRole('list')).toHaveAccessibleName(/^Player 1's hand, 3 cards\./);
 
     const undo = page.getByRole('button', { name: /^Undo \(Ctrl\+Z\)/ });
@@ -142,7 +146,7 @@ test.describe('PS-2 Resume', () => {
     await page.getByRole('button', { name: 'Start session' }).click();
     await page.getByRole('button', { name: 'Start new session' }).click();
     await expect(page.getByRole('banner')).toContainText('1v1 PvP');
-    await reload(page);
+    await reload(page, (item) => item.state.seats.some((seat) => seat.id === 'seat-p2'));
     await expect(page.getByRole('banner')).toContainText('1v1 PvP');
     await expect(mainPile(page)).toHaveAccessibleName(/0 cards|empty/);
     // The old session item is gone: exactly one session is saved.
@@ -177,7 +181,7 @@ test.describe('PS-2 Resume on a phone', () => {
   test('a reload restores the session with no sideways scrolling', async ({ page }) => {
     await loadDeck(page);
     await hand(page).getByRole('button', { name: 'Draw' }).click();
-    await reload(page);
+    await reload(page, (item) => item.state.hands['seat-p1']?.length === 1);
     await expect(hand(page).getByRole('list')).toHaveAccessibleName(/^Player 1's hand, 1 card\./);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   });
