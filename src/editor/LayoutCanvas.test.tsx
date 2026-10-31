@@ -440,7 +440,7 @@ describe('LY-7 preview with real cards', () => {
     if (!pile) throw new Error('no second pile');
     const two = loadPile(
       one,
-      { pileId: pile.id, cardSetId: 'set-2', sourceName: 'env.csv', cards: cardsFrom('name\nStorm\nFlood\n'), keepOrder: true },
+      { pileId: pile.id, cardSetId: 'set-2', source: { kind: 'file', name: 'env.csv' }, cards: cardsFrom('name\nStorm\nFlood\n'), keepOrder: true },
       // Its own ids, so the second deck's definitions don't replace the first's.
       { ...testContext(3), newId: envIds() },
     ).state;

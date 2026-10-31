@@ -1,3 +1,4 @@
+import type { CardSetSource } from '../model/cardSet';
 import type { Pile } from '../model/session';
 import { Menu, type MenuEntry } from './Menu';
 
@@ -5,6 +6,7 @@ const ICONS = {
   view: 'M4 5h7v14H4zM13 5h7v14h-7z',
   peek: 'M8 3h11v15H8zM5 6v15h11',
   load: 'M12 16V4M7 9l5-5 5 5M5 20h14',
+  link: 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1',
   reload: 'M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5',
   draw: 'M12 4v12M7 11l5 5 5-5M5 20h14',
   drawMany: 'M8 4v10M4 10l4 4 4-4M16 4v10M12 10l4 4 4-4M4 20h16',
@@ -18,14 +20,18 @@ const ICONS = {
 
 interface PileMenuProps {
   pile: Pile;
-  /** The file the pile was last loaded from, offered for reload (SP-2). */
-  sourceName?: string;
+  /** Where the pile was last loaded from: a file offered for reload (SP-2), or a URL (CD-9). */
+  source?: CardSetSource;
+  /** A Reload from URL is in flight for this pile. */
+  fetching?: boolean;
   ownerName: string | undefined;
   keepOrder: boolean;
   onView: (pileId: string) => void;
   /** A11Y-1: starts placing the pile somewhere else on the table. */
   onMoveOnTable: (pileId: string) => void;
   onLoad: (pileId: string) => void;
+  onLoadUrl: (pileId: string) => void;
+  onReloadUrl: (pileId: string) => void;
   onToggleKeepOrder: (pileId: string) => void;
   onDraw: (pileId: string) => void;
   onDrawMany: (pileId: string) => void;
@@ -44,13 +50,16 @@ interface PileMenuProps {
 
 /** Actions for one pile (SP-1, SP-2, SP-3, SP-4, SP-6, SP-7, SP-9). */
 export function PileMenu(props: PileMenuProps) {
-  const { pile, sourceName, ownerName, keepOrder, onView, onLoad, onToggleKeepOrder, onDraw, onDrawMany, onShuffle, onReveal, onMill, canMill } = props;
+  const { pile, source, fetching, onLoadUrl, onReloadUrl, ownerName, keepOrder, onView, onLoad, onToggleKeepOrder, onDraw, onDrawMany, onShuffle, onReveal, onMill, canMill } = props;
   const { onPeek, onMoveOnTable } = props;
   const { onRename, onDelete, canDelete, onClose } = props;
   const empty = pile.cardIds.length === 0;
   const entries: MenuEntry[] = [{ kind: 'item', id: 'load', label: 'Load CSV…', icon: ICONS.load, onSelect: () => onLoad(pile.id) }];
-  if (sourceName) {
-    entries.push({ kind: 'item', id: 'reload', label: `Reload ${sourceName}…`, icon: ICONS.reload, onSelect: () => onLoad(pile.id) });
+  entries.push({ kind: 'item', id: 'load-url', label: 'Load from URL…', icon: ICONS.link, onSelect: () => onLoadUrl(pile.id) });
+  if (source?.kind === 'url') {
+    entries.push({ kind: 'item', id: 'reload', label: 'Reload from URL', icon: ICONS.reload, disabled: fetching, onSelect: () => onReloadUrl(pile.id) });
+  } else if (source) {
+    entries.push({ kind: 'item', id: 'reload', label: `Reload ${source.name}…`, icon: ICONS.reload, onSelect: () => onLoad(pile.id) });
   }
   entries.push(
     { kind: 'checkbox', id: 'keep-order', label: 'Keep CSV order', checked: keepOrder, onToggle: () => onToggleKeepOrder(pile.id) },

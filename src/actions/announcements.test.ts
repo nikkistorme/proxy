@@ -30,7 +30,7 @@ const deck = (state: SessionState) => state.piles[0]?.cardIds ?? [];
 
 // Every action that changes the session, as the UI calls it.
 const ACTIONS: Record<string, (state: SessionState, context: ActionContext) => ActionResult> = {
-  'load a pile': (s, c) => loadPile(s, { pileId: 'pile-env', cardSetId: 'set-1', sourceName: 'env.csv', cards: cardsFrom('name\nStorm\n'), keepOrder: false }, c),
+  'load a pile': (s, c) => loadPile(s, { pileId: 'pile-env', cardSetId: 'set-1', source: { kind: 'file', name: 'env.csv' }, cards: cardsFrom('name\nStorm\n'), keepOrder: false }, c),
   shuffle: (s, c) => shuffle(s, { pileId: 'pile-p1-main' }, c),
   draw: (s) => draw(s, { pileId: 'pile-p1-main' }),
   'reveal the top card': (s) => revealTop(s, { pileId: 'pile-p1-main' }),

@@ -49,7 +49,7 @@ function SaveButton({ layout }: { layout: LayoutItem }) {
 
 /** Every card of the CSV on the table, over memory storage seeded with `items`. */
 async function setup(csv: string, items: Record<string, unknown>, extra?: React.ReactNode) {
-  let session: SessionState = loadPile(createSession(SOLO_PVE), { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
+  let session: SessionState = loadPile(createSession(SOLO_PVE), { pileId: 'pile-p1-main', cardSetId: 'set-1', source: { kind: 'file', name: 'd.csv' }, cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
   for (const card of Object.values(session.cards)) session = moveCard(session, { cardId: card.id, to: { zone: 'table' } }).state;
   const backend = memoryBackend(items);
   const list = vi.spyOn(backend, 'keys');

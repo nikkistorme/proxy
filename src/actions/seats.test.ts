@@ -13,7 +13,7 @@ function pvpWithDecks() {
   const context = testContext();
   let state = createSession(PVP_1V1);
   for (const pileId of ['pile-p1-main', 'pile-p2-main']) {
-    state = loadPile(state, { pileId, cardSetId: `set-${pileId}`, sourceName: 'deck.csv', cards, keepOrder: true }, context).state;
+    state = loadPile(state, { pileId, cardSetId: `set-${pileId}`, source: { kind: 'file', name: 'deck.csv' }, cards, keepOrder: true }, context).state;
   }
   return state;
 }

@@ -43,6 +43,26 @@ describe('PS-4 bundle', () => {
     expect(readBundle(bundleToText(bundle))).toEqual({ bundle });
   });
 
+  it('CD-7 keeps a URL source on the card set and in the session', () => {
+    const source = { kind: 'url', name: 'Cards.csv', url: 'https://example.com/a.csv', fetchedAt: 1234 };
+    const read = changed((data) => {
+      data.cardSets[0].source = source;
+      for (const set of Object.values<{ source: unknown }>(data.session.state.cardSets)) set.source = source;
+    });
+    if ('error' in read) throw new Error(read.error);
+    expect(first(read.bundle.cardSets).source).toEqual(source);
+    expect(Object.values(read.bundle.session.state.cardSets).map((set) => set.source)).toEqual([source]);
+    expect(readBundle(bundleToText(read.bundle))).toEqual(read);
+  });
+
+  it.each([
+    ['a URL source without a fetch time', { kind: 'url', name: 'a', url: 'https://example.com/a.csv' }],
+    ['a URL source that is not http(s)', { kind: 'url', name: 'a', url: 'javascript:alert(1)', fetchedAt: 1 }],
+    ['an unknown source kind', { kind: 'ftp', name: 'a' }],
+  ])('refuses %s', (_label, source) => {
+    expect(changed((data) => (data.cardSets[0].source = source))).toHaveProperty('error');
+  });
+
   it('refuses a file that is not JSON, says why, and reads nothing', () => {
     expect(readBundle(notJson)).toEqual({ error: "This file isn't a Proxy bundle: it isn't JSON." });
   });

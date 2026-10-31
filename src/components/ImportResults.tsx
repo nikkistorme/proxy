@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import type { ImportProblem } from '../csv/types';
 import { Dialog } from './Dialog';
+import { formatFetchTime, GOOGLE_NOTE } from './fetchTime';
 import './ImportResults.css';
 
 export interface ImportSummary {
@@ -16,6 +17,8 @@ export interface ImportSummary {
   problems: ImportProblem[];
   /** Cards with more copies in play than their new qty, because the extras aren't in the pile. */
   shortfalls?: { name: string; extra: number }[];
+  /** When a URL's cards were fetched, in ms (CD-9). */
+  fetchedAt?: number;
 }
 
 interface ImportResultsProps {
@@ -48,6 +51,11 @@ export function ImportResults({ summary, onClose }: ImportResultsProps) {
       {summary && (
         <>
           <p className="import-results__summary">{parts.join(' · ')}</p>
+          {summary.fetchedAt !== undefined && (
+            <p className="import-results__missing">
+              Fetched {formatFetchTime(summary.fetchedAt)}. {GOOGLE_NOTE}
+            </p>
+          )}
           {summary.missingNames.length > 0 && (
             <p className="import-results__missing">
               No longer in the CSV, kept in the deck: {summary.missingNames.join(', ')}

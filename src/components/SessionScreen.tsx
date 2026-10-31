@@ -4,9 +4,13 @@ import { peekTop } from '../actions/peek';
 import { draw, mill, revealTop, shuffle } from '../actions/pileActions';
 import { addPile, deletePile, mergePiles, renamePile, validatePileName } from '../actions/piles';
 import { neighbourSeatId } from '../actions/seats';
+import { fetchCards } from '../csv/fetchCards';
 import { importCards } from '../csv/importCards';
+import { classifySheetUrl } from '../csv/sheetUrl';
+import type { ImportedCard } from '../model/card';
+import type { ImportProblem } from '../csv/types';
 import { cardColumns, cardTypes } from '../model/card';
-import { cardSetItem } from '../model/cardSet';
+import { cardSetItem, type CardSetSource } from '../model/cardSet';
 import { previewCardSets } from '../model/preview';
 import type { SessionState, Pile } from '../model/session';
 import { readingOrder, tableItems } from '../model/tableNavigation';
@@ -20,6 +24,7 @@ import './SessionScreen.css';
 import { HandTray } from './HandTray';
 import { ImportResults, type ImportSummary } from './ImportResults';
 import { LiveRegion } from './LiveRegion';
+import { LoadUrlDialog, type LoadUrlRequest } from './LoadUrlDialog';
 import { PeekDialog, type PeekRequest } from './PeekDialog';
 import { PileCountDialog, type CountRequest } from './PileCountDialog';
 import { PileMenu } from './PileMenu';
@@ -69,6 +74,9 @@ export function SessionScreen() {
   const menuPileId = pileMenu?.pileId;
   const [keepOrder, setKeepOrder] = useState<Record<string, boolean>>({});
   const [summary, setSummary] = useState<ImportSummary>();
+  const [urlRequest, setUrlRequest] = useState<LoadUrlRequest>();
+  /** Piles with a Reload from URL in flight (CD-9). */
+  const [fetching, setFetching] = useState<ReadonlySet<string>>(new Set());
   const [countRequest, setCountRequest] = useState<CountRequest>();
   const [nameRequest, setNameRequest] = useState<PileNameRequest>();
   const [deleteRequest, setDeleteRequest] = useState<DeletePileRequest | MergePilesRequest>();
@@ -233,17 +241,23 @@ export function SessionScreen() {
     }
 
     const { cards, problems } = importCards(await file.text());
+    applyImport(pileId, { kind: 'file', name: file.name }, cards, problems);
+  }
+
+  /** Loads imported cards into a pile and shows the results (CD-4, CD-5, CD-10). Shared by files and URLs. */
+  function applyImport(pileId: string, source: CardSetSource, cards: readonly ImportedCard[], problems: ImportProblem[]) {
+    returnFocusRef.current = pileId;
     // A reload updates the pile's card set; a first load makes a new one (AR-4).
     const result = dispatch((g, context) => {
       const cardSetId = g.piles.find((p) => p.id === pileId)?.cardSetId ?? newItemId();
-      return loadPile(g, { pileId, cardSetId, sourceName: file.name, cards, keepOrder: keepOrder[pileId] ?? false }, context);
+      return loadPile(g, { pileId, cardSetId, source, cards, keepOrder: keepOrder[pileId] ?? false }, context);
     });
     const cardSetId = result.state.piles.find((p) => p.id === pileId)?.cardSetId;
     const cardSet = cardSetId === undefined ? undefined : result.state.cardSets[cardSetId];
     // The session has its own copy of the cards, so play goes on if the save fails (AR-4, PS-6).
     if (storage && cardSet) void storage.put('cardSet', cardSetItem(cardSet, result.merge.definitions)).catch(() => undefined);
     setSummary({
-      fileName: file.name,
+      fileName: source.name,
       pileName: result.state.piles.find((p) => p.id === pileId)?.name ?? '',
       cardCount: cards.length,
       added: result.merge.added.length,
@@ -251,7 +265,62 @@ export function SessionScreen() {
       missingNames: result.merge.definitions.filter((d) => d.missing).map((d) => d.front.name),
       problems,
       shortfalls: result.shortfalls.map(({ name, extra }) => ({ name, extra })),
+      ...(source.kind === 'url' && { fetchedAt: source.fetchedAt }),
     });
+  }
+
+  /**
+   * Fetches a pile's cards from a URL and loads them (CD-7, CD-9). Resolves to
+   * an error, or undefined once loaded. A late answer is dropped if the pile or
+   * the session is gone, since preset pile ids repeat between sessions.
+   */
+  async function loadUrl(pileId: string, rawUrl: string, signal: AbortSignal): Promise<string | undefined> {
+    const checked = classifySheetUrl(rawUrl);
+    if (checked.kind !== 'ok') return checked.error;
+    const sessionId = store.getState().sessionId;
+    setFetching((set) => new Set(set).add(pileId));
+    const fetched = await fetchCards(checked.url, checked.fallbackName, signal);
+    setFetching((set) => {
+      const next = new Set(set);
+      next.delete(pileId);
+      return next;
+    });
+    const live = store.getState();
+    if (signal.aborted || live.sessionId !== sessionId || !live.session.piles.some((p) => p.id === pileId)) return undefined;
+    if (!fetched.ok) return fetched.error;
+    setUrlRequest(undefined);
+    applyImport(pileId, { kind: 'url', name: fetched.fileName, url: checked.url, fetchedAt: Date.now() }, fetched.cards, fetched.problems);
+    return undefined;
+  }
+
+  const openLoadUrl = useCallback(
+    (pileId: string) => {
+      const pile = session.piles.find((p) => p.id === pileId);
+      if (!pile) return;
+      returnFocusRef.current = pileId;
+      const source = pile.cardSetId ? session.cardSets[pile.cardSetId]?.source : undefined;
+      setUrlRequest({ pile, keepsData: pile.definitionIds.length > 0, ...(source?.kind === 'url' && { url: source.url, fetchedAt: source.fetchedAt }) });
+    },
+    [session],
+  );
+
+  /** CD-9: Reload from URL fetches at once. A failure opens the dialog with the error and keeps the data (CD-11). */
+  async function reloadUrl(pileId: string) {
+    const pile = session.piles.find((p) => p.id === pileId);
+    const source = pile?.cardSetId ? session.cardSets[pile.cardSetId]?.source : undefined;
+    if (!pile || source?.kind !== 'url') return;
+    returnFocusRef.current = pileId;
+    announce(`Fetching ${source.name} into ${pile.name}.`);
+    const error = await loadUrl(pileId, source.url, new AbortController().signal);
+    if (error) {
+      announce(`Couldn't reload ${source.name}. ${error}`);
+      setUrlRequest({ pile, url: source.url, fetchedAt: source.fetchedAt, error, keepsData: true });
+    }
+  }
+
+  function closeUrl() {
+    setUrlRequest(undefined);
+    returnFocusToPile(returnFocusRef.current);
   }
 
   /**
@@ -560,12 +629,15 @@ export function SessionScreen() {
         <div className="pile-menu-anchor" style={{ left: pileMenu.rect.left, top: pileMenu.rect.top, width: pileMenu.rect.width, height: pileMenu.rect.height }}>
           <PileMenu
             pile={menuPile}
-            sourceName={menuPile.cardSetId && session.cardSets[menuPile.cardSetId]?.source.name}
+            source={menuPile.cardSetId ? session.cardSets[menuPile.cardSetId]?.source : undefined}
+            fetching={fetching.has(menuPile.id)}
             ownerName={seatName(menuPile.ownerSeatId)}
             keepOrder={keepOrder[menuPile.id] ?? false}
             onView={setViewerPileId}
             onMoveOnTable={(pileId) => setPlacing({ pileId })}
             onLoad={chooseFile}
+            onLoadUrl={openLoadUrl}
+            onReloadUrl={(pileId) => void reloadUrl(pileId)}
             onToggleKeepOrder={toggleKeepOrder}
             onDraw={drawFrom}
             onDrawMany={openDrawMany}
@@ -583,6 +655,12 @@ export function SessionScreen() {
       )}
       <input ref={fileRef} type="file" accept=".csv,text/csv" hidden data-testid="csv-file" onChange={(e) => void handleFile(e)} />
       <ImportResults summary={summary} onClose={closeResults} />
+      <LoadUrlDialog
+        key={urlRequest ? `url-${urlRequest.pile.id}-${urlRequest.error ?? ''}` : 'url-closed'}
+        request={urlRequest}
+        onLoad={loadUrl}
+        onClose={closeUrl}
+      />
       <PileNameDialog
         key={nameRequest ? (nameRequest.mode === 'rename' ? `rename-${nameRequest.pile.id}` : 'add') : 'closed'}
         request={nameRequest}

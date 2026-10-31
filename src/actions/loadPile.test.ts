@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import sixtyRows from '../../tests/fixtures/csv/sixty-rows-two-dfc.csv?raw';
 import { importCards } from '../csv/importCards';
-import { fileCardSet } from '../model/cardSet';
+import { cardSetSummary } from '../model/cardSet';
 import { createSession, type SessionState } from '../model/session';
 import { SOLO_PVE } from '../model/format';
 import { loadPile } from './loadPile';
@@ -18,16 +18,16 @@ function pileNames(state: SessionState, pileId = MAIN): string[] {
 function load(state: SessionState, csv: string, options: { keepOrder?: boolean; context?: ReturnType<typeof testContext> } = {}) {
   return loadPile(
     state,
-    { pileId: MAIN, cardSetId: 'set-1', sourceName: 'deck.csv', cards: cardsFrom(csv), keepOrder: options.keepOrder ?? false },
+    { pileId: MAIN, cardSetId: 'set-1', source: { kind: 'file', name: 'deck.csv' }, cards: cardsFrom(csv), keepOrder: options.keepOrder ?? false },
     options.context ?? testContext(),
   );
 }
 
 describe('SP-3 load a pile', () => {
   it("gives each copy its pile's seat as owner, for its card back", () => {
-    const owned = loadPile(createSession(SOLO_PVE), { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'a.csv', cards: cardsFrom('name\nImp\n'), keepOrder: true }, testContext()).state;
+    const owned = loadPile(createSession(SOLO_PVE), { pileId: 'pile-p1-main', cardSetId: 'set-1', source: { kind: 'file', name: 'a.csv' }, cards: cardsFrom('name\nImp\n'), keepOrder: true }, testContext()).state;
     expect(Object.values(owned.cards).map((c) => c.ownerSeatId)).toEqual(['seat-p1']);
-    const shared = loadPile(createSession(SOLO_PVE), { pileId: 'pile-board', cardSetId: 'set-1', sourceName: 'a.csv', cards: cardsFrom('name\nImp\n'), keepOrder: true }, testContext()).state;
+    const shared = loadPile(createSession(SOLO_PVE), { pileId: 'pile-board', cardSetId: 'set-1', source: { kind: 'file', name: 'a.csv' }, cards: cardsFrom('name\nImp\n'), keepOrder: true }, testContext()).state;
     expect(Object.values(shared.cards)[0]).not.toHaveProperty('ownerSeatId');
   });
 
@@ -57,7 +57,7 @@ describe('SP-3 load a pile', () => {
   });
 
   it('loads the 60-row acceptance deck as 58 cards', () => {
-    const { state } = loadPile(createSession(SOLO_PVE), { pileId: MAIN, cardSetId: 'set-1', sourceName: 'sixty.csv', cards: importCards(sixtyRows).cards }, testContext());
+    const { state } = loadPile(createSession(SOLO_PVE), { pileId: MAIN, cardSetId: 'set-1', source: { kind: 'file', name: 'sixty.csv' }, cards: importCards(sixtyRows).cards }, testContext());
     expect(state.piles.find((p) => p.id === MAIN)?.cardIds).toHaveLength(58);
   });
 
@@ -69,7 +69,7 @@ describe('SP-3 load a pile', () => {
   });
 
   it('throws for an unknown pile', () => {
-    expect(() => loadPile(createSession(SOLO_PVE), { pileId: 'nope', cardSetId: 'set-1', sourceName: 'x', cards: [] }, testContext())).toThrow('Unknown pile: nope');
+    expect(() => loadPile(createSession(SOLO_PVE), { pileId: 'nope', cardSetId: 'set-1', source: { kind: 'file', name: 'x' }, cards: [] }, testContext())).toThrow('Unknown pile: nope');
   });
 });
 
@@ -77,16 +77,16 @@ describe('AR-4 a pile records its card set', () => {
   it('records the card set on the pile and keeps a copy of it in the session', () => {
     const { state } = load(createSession(SOLO_PVE), 'name\nImp\n');
     expect(state.piles.find((p) => p.id === MAIN)?.cardSetId).toBe('set-1');
-    expect(state.cardSets).toEqual({ 'set-1': fileCardSet('set-1', 'deck.csv') });
+    expect(state.cardSets).toEqual({ 'set-1': cardSetSummary('set-1', { kind: 'file', name: 'deck.csv' }) });
     expect(Object.values(state.definitions).map((d) => d.front.name)).toEqual(['Imp']);
   });
 
   it('keeps the same card set on a reload and takes the new file name', () => {
     const context = testContext();
     const first = load(createSession(SOLO_PVE), 'name\nImp\n', { context }).state;
-    const { state } = loadPile(first, { pileId: MAIN, cardSetId: 'set-1', sourceName: 'deck-v2.csv', cards: cardsFrom('name\nImp\n') }, context);
+    const { state } = loadPile(first, { pileId: MAIN, cardSetId: 'set-1', source: { kind: 'file', name: 'deck-v2.csv' }, cards: cardsFrom('name\nImp\n') }, context);
     expect(state.piles.find((p) => p.id === MAIN)?.cardSetId).toBe('set-1');
-    expect(state.cardSets).toEqual({ 'set-1': fileCardSet('set-1', 'deck-v2.csv') });
+    expect(state.cardSets).toEqual({ 'set-1': cardSetSummary('set-1', { kind: 'file', name: 'deck-v2.csv' }) });
   });
 });
 
@@ -162,5 +162,33 @@ describe('CD-5 reload into a pile in play', () => {
     expect(pileNames(state)).toEqual(['Wisp']);
     expect(state.hands['seat-p1']).toEqual(drawn.hands['seat-p1']);
     expect(merge.missing).toHaveLength(2);
+  });
+});
+
+describe('CD-10 loading from a URL', () => {
+  const source = (fetchedAt: number) => ({ kind: 'url' as const, name: 'Cards.csv', url: 'https://example.com/a.csv', fetchedAt });
+
+  it('records the URL and fetch time on the card set and announces the set name', () => {
+    const { state, announcement } = loadPile(createSession(SOLO_PVE), { pileId: MAIN, cardSetId: 'set-1', source: source(1000), cards: cardsFrom('name\nImp\n') }, testContext());
+    expect(state.cardSets['set-1']).toEqual(cardSetSummary('set-1', source(1000)));
+    expect(announcement).toContain('Loaded Cards.csv into');
+  });
+
+  it('reloads with the same update rules: same card set, new fetch time, copies in play kept', () => {
+    const context = testContext();
+    let state = loadPile(createSession(SOLO_PVE), { pileId: MAIN, cardSetId: 'set-1', source: source(1000), cards: cardsFrom('id,name,rules\na,Imp,Old\n'), keepOrder: true }, context).state;
+    state = draw(state, { pileId: MAIN }).state;
+    const reload = loadPile(state, { pileId: MAIN, cardSetId: 'set-1', source: source(2000), cards: cardsFrom('id,name,rules\na,Imp,New\n') }, context);
+    expect(reload.state.cardSets['set-1']?.source).toEqual(source(2000));
+    expect(Object.values(reload.state.definitions).map((d) => d.front.fields.rules)).toEqual(['New']);
+    expect(reload.state.cards).toEqual(state.cards);
+  });
+
+  it('can switch a pile from a file to a URL and keeps its card set id', () => {
+    const context = testContext();
+    const file = load(createSession(SOLO_PVE), 'name\nImp\n', { context }).state;
+    const { state } = loadPile(file, { pileId: MAIN, cardSetId: 'set-1', source: source(5), cards: cardsFrom('name\nImp\n') }, context);
+    expect(state.piles.find((p) => p.id === MAIN)?.cardSetId).toBe('set-1');
+    expect(state.cardSets['set-1']?.source.kind).toBe('url');
   });
 });

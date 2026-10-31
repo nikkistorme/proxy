@@ -13,7 +13,7 @@ const csv = 'name,id,back_of,text\nImp,,,Small.\nMoonrise Hunter,,hunter,Night s
 
 /** Imp, Daylight Hunter and Ogre drawn into Player 1's hand, in that order. */
 function setup(drawn = 3) {
-  let session = loadPile(createSession(SOLO_PVE), { pileId: 'pile-p1-main', cardSetId: 'set-1', sourceName: 'd.csv', cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
+  let session = loadPile(createSession(SOLO_PVE), { pileId: 'pile-p1-main', cardSetId: 'set-1', source: { kind: 'file', name: 'd.csv' }, cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
   if (drawn > 0) session = draw(session, { pileId: 'pile-p1-main', count: drawn }).state;
   const store = createSessionStore(session, testContext());
   const onDraw = vi.fn();
