@@ -80,8 +80,8 @@ Each deck is its own CSV file. The file is loaded into a pile, so no column says
 
 **Acceptance criteria**
 
-- [ ] A 60-row CSV with two double-faced pairs imports as 58 cards, two of them with a back face.
-- [ ] Changing a card's rules text in the CSV and re-importing updates the card on the table without moving it.
+- [x] A 60-row CSV with two double-faced pairs imports as 58 cards, two of them with a back face. (`src/csv/importCards.test.ts`, `e2e/import.spec.ts`)
+- [x] Changing a card's rules text in the CSV and re-importing updates the card on the table without moving it. (`src/actions/loadPile.test.ts`, `src/model/mergeImport.test.ts`)
 
 **Loading from a published Google Sheet**
 
@@ -96,9 +96,9 @@ A pile can read its CSV from a Google Sheet published to the web, so card edits 
 
 **Acceptance criteria**
 
-- [ ] Editing a card's text in the sheet, then clicking Reload once the published data updates, changes the card on the table without moving it.
-- [ ] Pasting an edit link shows the publishing how-to and makes no request.
-- [ ] E2E tests mock the sheet responses; CI never calls Google.
+- [ ] Editing a card's text in a real published sheet, then choosing **Reload from URL** once Google has updated the published data, changes the card on the table without moving it. (Mocked in `e2e/sheet-url.spec.ts` and `e2e/phase7.spec.ts`; still to be checked by the owner against a real sheet.)
+- [x] Pasting an edit link shows the publishing how-to and makes no request. (`e2e/sheet-url.spec.ts`, `src/components/LoadUrlDialog.test.tsx`)
+- [x] E2E tests mock the sheet responses; CI never calls Google. (`e2e/sheet-url.spec.ts`, `e2e/format-sheets.spec.ts`, `e2e/phase7.spec.ts`, `e2e/bundle.spec.ts`)
 
 ## Layouts
 
@@ -195,10 +195,10 @@ All data stays in the user's browser, with file export as the durable backup.
 
 **Acceptance criteria**
 
-- [ ] Closing the tab mid-session and reopening it restores every card position, rotation, counter and pile order.
-- [ ] A bundle exported from version N loads in version N+1.
-- [ ] Changing one layout saves only that layout's item, and the session item is unchanged.
-- [ ] Saves made on the live site and on a PR preview, in the same browser, don't overwrite each other.
+- [x] Closing the tab mid-session and reopening it restores every card position, rotation, counter and pile order. (`e2e/phase7.spec.ts`, `e2e/resume.spec.ts`)
+- [ ] After V1 ships, a bundle exported from version N loads in version N+1. (Until then older bundles are refused with a message, PS-5; the check starts with the first migration.)
+- [x] Changing one layout saves only that layout's item, and the session item is unchanged. (`e2e/layouts.spec.ts`, PS-1 separate items)
+- [x] Saves made on the live site and on a PR preview, in the same browser, don't overwrite each other. (`src/storage/storage.test.ts`, PS-7 profile keys)
 
 ## Accessibility
 

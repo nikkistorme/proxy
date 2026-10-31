@@ -77,6 +77,55 @@ test.describe('LY-8 and PS-1 stored layouts', () => {
   });
 });
 
+/** The `updatedAt` of a saved layout item (PS-7 keys). */
+async function layoutStamp(page: Page, id: string) {
+  return page.evaluate(
+    (key) =>
+      new Promise<string | undefined>((resolve, reject) => {
+        const open = indexedDB.open('keyval-store');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const request = open.result.transaction('keyval').objectStore('keyval').get(key);
+          request.onsuccess = () => {
+            open.result.close();
+            resolve((request.result as { updatedAt?: string } | undefined)?.updatedAt);
+          };
+          request.onerror = () => reject(request.error);
+        };
+      }),
+    `/proxy/|guest|layout|${id}`,
+  );
+}
+
+test.describe('PS-1 separate items', () => {
+  test('changing one layout saves only that layout, and the session and other layouts are unchanged', async ({ page }) => {
+    await page.goto('./');
+    await expect(page.getByText('Loading your session…')).toHaveCount(0);
+    await seedLayout(page);
+    await seedLayout(page, location);
+    await page.reload();
+    await expect(page.getByText('Loading your session…')).toHaveCount(0);
+    await expect.poll(async () => (await storedSession(page))?.updatedAt).toBeDefined();
+    const session = (await storedSession(page))?.updatedAt;
+    const other = await layoutStamp(page, 'l-location');
+    const heroBefore = await layoutStamp(page, 'l-hero');
+    expect(other).toBe(location.updatedAt);
+
+    await page.getByRole('button', { name: 'Card layouts (L)' }).click();
+    const editor = page.getByRole('dialog', { name: 'Card layouts' });
+    await editor.getByRole('button', { name: 'Rename Hero' }).click();
+    const field = page.getByRole('dialog', { name: 'Rename Hero' }).getByRole('textbox', { name: 'Name' });
+    await field.fill('Hero renamed');
+    await page.keyboard.press('Enter');
+    await expect(editor.getByRole('button', { name: 'Rename Hero renamed' })).toBeVisible();
+
+    // Wait for the edited layout's new stamp first; the others are checked after it.
+    await expect.poll(async () => await layoutStamp(page, 'l-hero')).not.toBe(heroBefore);
+    expect(await layoutStamp(page, 'l-location')).toBe(other);
+    expect((await storedSession(page))?.updatedAt).toBe(session);
+  });
+});
+
 test.describe('LY-8 stored layouts on a phone', () => {
   test.use({ viewport: { width: 375, height: 667 } });
 
