@@ -33,17 +33,24 @@ async function openMenu(page: Page, target: Locator) {
   await target.click({ button: 'right' });
 }
 
-/** Loads double-faced.csv in CSV order and checks the import results dialog on the way. */
-async function loadDeck(page: Page) {
+/** Loads double-faced.csv in CSV order; with `scan`, checks the pile menu and the import results dialog on the way. */
+async function loadDeck(page: Page, scan = false) {
   await mainPile(page).click({ button: 'right' });
-  await noViolations(page);
+  if (scan) await noViolations(page);
   await page.getByRole('menuitemcheckbox', { name: 'Keep CSV order' }).click();
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('menuitem', { name: 'Load CSV…' }).click();
   await (await chooser).setFiles(fixture('double-faced.csv'));
   await expect(page.getByRole('dialog', { name: 'Import results' })).toBeVisible();
-  await noViolations(page);
+  if (scan) await noViolations(page);
   await page.getByRole('button', { name: 'Done' }).click();
+}
+
+/** Opens the pile viewer from the pile menu. */
+async function openViewer(page: Page) {
+  await mainPile(page).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'View cards…' }).click();
+  await expect(viewer(page)).toBeVisible();
 }
 
 test.describe('A11Y-9 dark theme', () => {
@@ -58,15 +65,16 @@ test.describe('A11Y-9 dark theme', () => {
     await expect.poll(() => theme(page)).toBe('dark');
   });
 
-  test('mouse: every screen has no axe violations in dark', async ({ page }) => {
+  test('mouse: the game screen, import results and pile viewer have no axe violations in dark', async ({ page }) => {
     await noViolations(page);
-    await loadDeck(page);
+    await loadDeck(page, true);
+    await openViewer(page);
+    await noViolations(page);
+  });
 
-    // Pile viewer, then cards to the table.
-    await mainPile(page).click({ button: 'right' });
-    await page.getByRole('menuitem', { name: 'View cards…' }).click();
-    await expect(viewer(page)).toBeVisible();
-    await noViolations(page);
+  test('mouse: table cards, their menu and dialogs have no axe violations in dark', async ({ page }) => {
+    await loadDeck(page);
+    await openViewer(page);
     for (let i = 0; i < 3; i++)
       await viewer(page)
         .getByRole('button', { name: /^To table/ })
@@ -108,6 +116,10 @@ test.describe('A11Y-9 dark theme', () => {
     await page.getByRole('menuitem', { name: 'Delete' }).click();
     await expect(page.locator('.toast')).toBeVisible();
     await noViolations(page, '.toast');
+  });
+
+  test('mouse: peek, the hand and adding a pile have no axe violations in dark', async ({ page }) => {
+    await loadDeck(page);
 
     // Peek and the count dialogs.
     await openMenu(page, mainPile(page));
@@ -128,9 +140,9 @@ test.describe('A11Y-9 dark theme', () => {
     // Add a pile.
     await page.getByRole('button', { name: 'Add pile' }).click();
     await noViolations(page, 'dialog[open]');
-    await page.keyboard.press('Escape');
+  });
 
-    // Dice and the session log.
+  test('mouse: dice, the session log and the shortcut reference have no axe violations in dark', async ({ page }) => {
     await page.getByRole('button', { name: 'Dice & coins' }).click();
     await page.getByRole('button', { name: 'Roll d6' }).click();
     await noViolations(page, 'dialog[open]');

@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { storedSession } from './storage';
 
 const style = { size: 10, weight: 700, align: 'left', valign: 'top', font: 'sans', color: '#1e1c1a', background: '#e3e7ee' };
 const hero = {
@@ -67,10 +68,12 @@ test.describe('LY-8 and PS-1 stored layouts', () => {
     await expect(face(page, 'Hero frame. Troll')).toBeVisible();
     await expect(face(page, 'Goblin')).toBeVisible();
 
-    // Sessions aren't saved until Phase 7, so load the deck again; the layout is saved.
+    // Autosave waits up to a second; reload once both cards are in the saved session (PS-1).
+    await expect.poll(async () => (await storedSession(page))?.state.table.length).toBe(2);
     await page.reload();
-    await bothOnTable(page);
+    await expect(page.getByText('Loading your session…')).toHaveCount(0);
     await expect(face(page, 'Hero frame. Troll')).toBeVisible();
+    await expect(face(page, 'Goblin')).toBeVisible();
   });
 });
 

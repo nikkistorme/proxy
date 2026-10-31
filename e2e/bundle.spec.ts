@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { bundleFixture, chooseByKeyboard, exportByKeyboard, mainPile, prepareData, sessionButton, storedKinds } from './bundleSetup';
 import { closeWith, tabTo } from './keyboard';
+import { storedSession } from './storage';
 
 const axeTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 /** The live region. The loading overlay is a status too, so it is picked out by its class. */
@@ -80,6 +81,8 @@ test.describe('PS-4 JSON bundle', () => {
   ] as const) {
     test(`${file}: says why and changes nothing`, async ({ page }) => {
       await ready(page);
+      // The first autosave may still be coming; count the stored items only after it.
+      await expect.poll(async () => await storedSession(page)).toBeDefined();
       const before = await storedKinds(page);
       await chooseBundle(page, bundleFixture(file));
       const dialog = page.getByRole('dialog', { name: "Can't import" });

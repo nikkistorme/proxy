@@ -31,6 +31,12 @@ The design now has a UI placement guide (`design/ui-placement.md`, rules UI-1 to
 - **Tests:** `bundle.test.ts` (fixtures, item checks, summary, file name, round trip); `BundleDialogs.test.tsx`; `StorageProvider.test.tsx` (items written, same id replaced, others kept, saves stopped, failed write); `SessionPersistence.test.tsx` (the announcement, once, and the old session removed); `e2e/bundle.spec.ts` (keyboard export, new context, import with axe and every kind checked; cancel; each broken fixture; storage unavailable; 375 × 667). The E2E helpers are in `e2e/bundleSetup.ts`.
 - **Changed requirements:** PS-4, PS-5, QA-4.
 
+### Fix the remaining flaky E2E specs (#161, 2026-10-31)
+
+- **Cause:** tests reloaded or counted storage items before autosave (up to a second after a change) had written the session, or, for `dark-theme`, did too much in one test.
+- **E2E:** `e2e/storage.ts` has `storedSession(page)`, which reads the saved session item (or undefined). Tests `expect.poll` on it before a reload or a storage count. `layouts` "a stored layout draws table cards" waits for both cards in the stored session and checks the restored cards, without loading the deck again. `bundle` "says why and changes nothing" waits for a stored session before taking `before`. `resume`'s `reload(page, saved)` waits until the stored session satisfies what the test changed last, instead of `waitForTimeout(1200)`. `dark-theme` "every screen has no axe violations" is split into three tests by screen group, each setting up only what it needs; every scan is kept.
+- **Numbers (Chromium, 4 workers):** before, on the commit before this PR, `layouts` + `bundle` flaky tests: 15 failures in 350 runs. After: 0 in 1400 runs (`layouts`, `bundle`, `dark-theme`, `resume` at `--repeat-each=50`).
+
 ### Focus after a dialog without a timer (#159, 2026-10-30)
 
 - **App:** `focusAfterDialog` in `TableSurface.tsx` and `HandTray.tsx` now moves focus in the dialog's `onClose`, with no `setTimeout`. `Dialog` reports a close it caused itself (confirm, Cancel, Done) to its parent at once, once per opening, instead of waiting for the `close` event, which is a task queued after the click or key and left a gap a fast key could land in (4 failures in 1,900 runs of `solo-turn` before this). Esc and programmatic closes still report from the event. Move to… dispatches inside `flushSync` in both components, so the move has rendered before focus goes to the card that's left. The placement outline also takes focus straight away when placing starts. The hand-to-table drag timer is unchanged.
@@ -977,7 +983,6 @@ Every issue fills in its Placement section (`design/ui-placement.md`). No issue 
 
 ## Open problems
 
-- Flaky E2E specs that also fail on the commit before #159 (Chromium, found by the #159 runs, not fixed there): `bundle.spec.ts` "changes nothing" checks (an extra `session` item has been saved by the time the test looks); `dark-theme.spec.ts` "mouse: every screen has no axe violations in dark" (the axe check passes the 30 s test timeout when run with several workers); `layouts.spec.ts` "a stored layout draws table cards and is still there after a reload" (the pile viewer's To table button isn't found, about 1 run in 10).
 - An edit made in the last second before an import's reload is lost, not saved: autosave waits up to a second and the import stops saves. An export isn't affected, since it reads the session from the store.
 - Card sets are exported from storage, not from the app, so a card set loaded before the startup storage check finished (see below) isn't in the bundle.
 - Importing replaces by id and doesn't check names, so an imported layout or format can share a name with a different saved one.
@@ -1256,3 +1261,4 @@ Every issue fills in its Placement section (`design/ui-placement.md`). No issue 
 |  2026-10-29 | Loading a snapshot replaces the log with the snapshot's, and undoing the load leaves the log alone | Putting the log in undo; keeping the current log and appending | The log sits outside undo (TT-14), so undo never rewinds it. The log should describe the state on the table, and a snapshot's log is the one that matches its state. |
 |  2026-10-30 | Vitest `testTimeout` is 15 s, and new or changed E2E specs run 5 times in Chromium and Firefox before the PR opens | Raising Playwright retries above 1; sleeps | Whole-screen unit tests take 3 to 5 s on CI. Retries and sleeps hide timing races; repeat runs and waiting for focus to settle (`closeWith`) find and remove them (#157). |
 | 2026-10-30 | Focus after a dialog is moved in its `onClose`, never from a timer (#159) | A `setTimeout` after the close; waiting for the `close` event | A timer left a gap where a key missed its shortcut scope. `Dialog` reports its own close at once and the move is rendered with `flushSync` first, because even the `close` event's task left a rare gap. |
+| 2026-10-31 | E2E tests wait for the stored item before a reload or a storage count, never a fixed time (#161) | `waitForTimeout`; longer timeouts | A fixed wait is either too short (flake) or wastes time; the stored session is what the test depends on. |
