@@ -977,6 +977,7 @@ Every issue fills in its Placement section (`design/ui-placement.md`). No issue 
 
 ## Open problems
 
+- Flaky E2E specs that also fail on the commit before #159 (Chromium, found by the #159 runs, not fixed there): `bundle.spec.ts` "changes nothing" checks (an extra `session` item has been saved by the time the test looks); `dark-theme.spec.ts` "mouse: every screen has no axe violations in dark" (the axe check passes the 30 s test timeout when run with several workers); `layouts.spec.ts` "a stored layout draws table cards and is still there after a reload" (the pile viewer's To table button isn't found, about 1 run in 10).
 - An edit made in the last second before an import's reload is lost, not saved: autosave waits up to a second and the import stops saves. An export isn't affected, since it reads the session from the store.
 - Card sets are exported from storage, not from the app, so a card set loaded before the startup storage check finished (see below) isn't in the bundle.
 - Importing replaces by id and doesn't check names, so an imported layout or format can share a name with a different saved one.
