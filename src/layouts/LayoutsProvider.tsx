@@ -14,17 +14,19 @@ export const LAYOUT_SAVE_DELAY = 1000;
 
 interface LayoutsContextValue {
   layouts: LayoutItem[];
+  /** True once the saved layouts have been read, or storage can't be read. */
+  loaded: boolean;
   /** Adds or replaces a layout. Cards using it re-render at once (LY-10); its item autosaves (PS-1). */
   saveLayout: (layout: LayoutItem) => void;
   /** Removes a layout and its item (LY-1). Cards that used it fall through to their next choice (LY-8). */
   deleteLayout: (id: string) => void;
 }
 
-const LayoutsContext = createContext<LayoutsContextValue>({ layouts: [], saveLayout: () => {}, deleteLayout: () => {} });
+const LayoutsContext = createContext<LayoutsContextValue>({ layouts: [], loaded: true, saveLayout: () => {}, deleteLayout: () => {} });
 
 export function LayoutsProvider({ children }: { children: ReactNode }) {
-  const { items: layouts, save: saveLayout, remove: deleteLayout } = useSavedItems<Layout>('layout', LAYOUT_SAVE_DELAY);
-  const value = useMemo(() => ({ layouts, saveLayout, deleteLayout }), [layouts, saveLayout, deleteLayout]);
+  const { items: layouts, loaded, save: saveLayout, remove: deleteLayout } = useSavedItems<Layout>('layout', LAYOUT_SAVE_DELAY);
+  const value = useMemo(() => ({ layouts, loaded, saveLayout, deleteLayout }), [layouts, loaded, saveLayout, deleteLayout]);
   return <LayoutsContext.Provider value={value}>{children}</LayoutsContext.Provider>;
 }
 

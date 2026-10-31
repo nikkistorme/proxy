@@ -3,6 +3,7 @@ import type { ActionContext, ActionResult, SessionState } from '../model/session
 import { bringToFront, deleteCard, duplicate, flip, rotate, sendToBack } from './cardActions';
 import { addCounter, removeCounter, renameCounter, setCounter } from './counters';
 import { reorderHand } from './handActions';
+import { loadDemo } from './loadDemo';
 import { loadPile } from './loadPile';
 import { loadPiles } from './loadPiles';
 import { moveCard } from './moveCard';
@@ -34,6 +35,7 @@ const ACTIONS: Record<string, (state: SessionState, context: ActionContext) => A
   'load a pile': (s, c) => loadPile(s, { pileId: 'pile-env', cardSetId: 'set-1', source: { kind: 'file', name: 'env.csv' }, cards: cardsFrom('name\nStorm\n'), keepOrder: false }, c),
   'load several piles': (s, c) =>
     loadPiles(s, { loads: [{ pileId: 'pile-env', cardSetId: 'set-1', source: { kind: 'file', name: 'env.csv' }, cards: cardsFrom('name\nStorm\n') }], failed: [], verb: 'Loaded' }, c),
+  'load the demo': (s, c) => loadDemo(s, { piles: [{ pileId: 'pile-env', cardSetId: 'set-1', source: { kind: 'file', name: 'env.csv' }, cards: cardsFrom('name\nStorm\n'), keepOrder: false }] }, c),
   shuffle: (s, c) => shuffle(s, { pileId: 'pile-p1-main' }, c),
   draw: (s) => draw(s, { pileId: 'pile-p1-main' }),
   'reveal the top card': (s) => revealTop(s, { pileId: 'pile-p1-main' }),

@@ -324,7 +324,7 @@ The public demo ships with an original, generic sample game so the designer's ow
 - DM-2: Include three layouts: a portrait creature-style card, a portrait action card and a landscape location card.
 - DM-3: Include at least one double-faced card.
 - DM-4: Art is original or openly licensed (for example CC0), bundled with the app, with credits listed in the repo.
-- DM-5: A "Load demo" button on the start screen sets up a Co-op PvE session in one click.
+- DM-5: A "Load demo" button sets up a Co-op PvE session in one click: all four piles filled (the three decks shuffled, the board in file order), the demo layouts and card sets saved as normal items, and focus on the table. Until the start screen exists (#131) the button is in the New session dialog, which asks first when the session has cards. The demo data is its own lazy chunk, loaded on first click. Loading it changes no options; a demo layout already saved (by id or name) is kept, and fixed ids mean a second load adds no copies.
 - DM-6: The repo's `.gitignore` excludes a `private/` folder for the designer's real CSVs and layouts.
 
 ## Process and portfolio artifacts
