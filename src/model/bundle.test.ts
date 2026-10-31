@@ -63,6 +63,17 @@ describe('PS-4 bundle', () => {
     expect(changed((data) => (data.cardSets[0].source = source))).toHaveProperty('error');
   });
 
+  it('CD-12 keeps a format pile sheet URL and refuses one that is not http(s)', () => {
+    const url = 'https://example.com/a.csv';
+    const read = changed((data) => (data.formats[0].piles[0].sheetUrl = url));
+    if ('error' in read) throw new Error(read.error);
+    expect(read.bundle.formats[0]?.piles[0]?.sheetUrl).toBe(url);
+    expect(readBundle(bundleToText(read.bundle))).toEqual(read);
+    for (const bad of ['javascript:alert(1)', 'ftp://example.com/a.csv', '', 7]) {
+      expect(changed((data) => (data.formats[0].piles[0].sheetUrl = bad))).toEqual({ error: "Format 1 in this bundle isn't valid." });
+    }
+  });
+
   it('refuses a file that is not JSON, says why, and reads nothing', () => {
     expect(readBundle(notJson)).toEqual({ error: "This file isn't a Proxy bundle: it isn't JSON." });
   });

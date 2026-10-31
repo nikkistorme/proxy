@@ -7,6 +7,7 @@ import { setActiveSeat } from '../actions/seats';
 import { createSession, type ActionContext, type ActionResult, type SessionState } from '../model/session';
 import { SOLO_PVE, type Format } from '../model/format';
 import { cryptoRandomInt } from '../model/random';
+import { startTargets, type SheetTarget } from '../model/sheetTargets';
 import { PLACEMENT_COLUMNS } from '../model/tablePlacement';
 
 export interface Announcement {
@@ -82,6 +83,12 @@ export interface RestoredSession {
   future?: HistoryEntry[];
 }
 
+/** The sheets a new session fetches as it starts (CD-12), for the table to pick up once. */
+export interface PendingSheetLoad {
+  sessionId: string;
+  targets: SheetTarget[];
+}
+
 export interface SessionStore {
   session: SessionState;
   /** The id of this session's saved item (PS-1). New sessions get a new one. */
@@ -110,6 +117,13 @@ export interface SessionStore {
    * setup dialog's confirm step is the guard. `silent` skips the announcement.
    */
   startSession: (format: Format, options?: { silent?: boolean }) => void;
+  /**
+   * CD-12: the sheets the latest `startSession` wants fetched, set only when the format has
+   * default URLs. Transient: never saved, and a restored session has none.
+   */
+  pendingSheetLoad: PendingSheetLoad | undefined;
+  /** Hands the pending sheets to the table, once, and clears them. */
+  takeSheetLoad: () => PendingSheetLoad | undefined;
   /**
    * PS-2: loads a saved session at startup. Not an undo step and not announced;
    * the undo and redo steps come back too when given (PS-2), else the history starts empty.
@@ -213,12 +227,21 @@ export function createSessionStore(session: SessionState = createSession(SOLO_PV
         return result;
       },
       announce: (text) => set({ announcement: next(text) }),
+      pendingSheetLoad: undefined,
+      takeSheetLoad: () => {
+        const pending = get().pendingSheetLoad;
+        if (pending) set({ pendingSheetLoad: undefined });
+        return pending;
+      },
       startSession: (format, options) => {
         const fresh = createSession(format);
         const first = fresh.seats.find((seat) => seat.id === fresh.activeSeatId);
+        const sessionId = crypto.randomUUID();
+        const targets = startTargets(format);
         set({
           session: fresh,
-          sessionId: crypto.randomUUID(),
+          sessionId,
+          pendingSheetLoad: targets.length > 0 ? { sessionId, targets } : undefined,
           past: [],
           future: [],
           log: [],
@@ -233,6 +256,7 @@ export function createSessionStore(session: SessionState = createSession(SOLO_PV
         set({
           session: saved.session,
           sessionId: saved.id,
+          pendingSheetLoad: undefined,
           past: saved.past ?? [],
           future: saved.future ?? [],
           log: saved.log,

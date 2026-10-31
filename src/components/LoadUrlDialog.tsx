@@ -1,11 +1,12 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { classifySheetUrl, PUBLISH_STEPS } from '../csv/sheetUrl';
+import { classifySheetUrl } from '../csv/sheetUrl';
 import type { Pile } from '../model/session';
 import { Dialog } from './Dialog';
 import { FieldControl, FieldError } from './FieldError';
 import './Form.css';
 import { formatFetchTime, GOOGLE_NOTE } from './fetchTime';
 import './LoadUrlDialog.css';
+import { PublishHowTo } from './PublishHowTo';
 import { touchScreen } from './touchScreen';
 
 export interface LoadUrlRequest {
@@ -113,16 +114,7 @@ export function LoadUrlDialog({ request, onLoad, onClose }: LoadUrlDialogProps) 
             <p className="load-url__note">{request.pile.name} keeps its last good data.</p>
           )}
 
-          {showHowTo && (
-            <>
-              <p className="load-url__note">To load a Google Sheet, publish it as CSV:</p>
-              <ol className="load-url__steps">
-                {PUBLISH_STEPS.map((step) => (
-                  <li key={step}>{step}</li>
-                ))}
-              </ol>
-            </>
-          )}
+          {showHowTo && <PublishHowTo />}
 
           {request.fetchedAt !== undefined && (
             <p className="load-url__note">

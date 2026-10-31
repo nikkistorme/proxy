@@ -17,16 +17,27 @@ const FormatsScreen = lazy(() => import('../formats/FormatsScreen'));
 const NEW_ICON = 'M12 5v14M5 12h14';
 const SAVE_ICON = 'M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6';
 const SNAPSHOTS_ICON = 'M12 7v5l3 2M4 12a8 8 0 1 0 2.5-5.8M4 4v4h4';
+const RELOAD_ICON = 'M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5';
 const EXPORT_ICON = 'M12 15V4M8 8l4-4 4 4M5 14v6h14v-6';
 const IMPORT_ICON = 'M12 4v11M8 11l4 4 4-4M5 14v6h14v-6';
 const LOG_ICON = 'M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01';
+
+interface SessionMenuProps {
+  /** CD-12: some pile has a sheet to fetch, so Reload all is shown (UI-4). */
+  canReloadAll?: boolean;
+  /** Reload all is running. */
+  reloading?: boolean;
+  /** Some sheet is being fetched, so Reload all waits. */
+  reloadBusy?: boolean;
+  onReloadAll?: () => void;
+}
 
 /**
  * The session's own menu in the header. It says "This session" until sessions
  * have names. It starts a new session, saves and loads snapshots (PS-3), exports
  * and imports a bundle (PS-4) and opens the session log (TT-14).
  */
-export function SessionMenu() {
+export function SessionMenu({ canReloadAll = false, reloading = false, reloadBusy = false, onReloadAll }: SessionMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   /** When the log opened, or undefined while it's closed. */
   const [logOpenedAt, setLogOpenedAt] = useState<number>();
@@ -94,6 +105,18 @@ export function SessionMenu() {
             },
             { kind: 'item', id: 'save-snapshot', label: 'Save snapshot…', icon: SAVE_ICON, onSelect: () => setSavingAt(Date.now()) },
             { kind: 'item', id: 'snapshots', label: 'Snapshots…', icon: SNAPSHOTS_ICON, onSelect: () => setSnapshotsOpenedAt(Date.now()) },
+            ...(canReloadAll
+              ? [
+                  {
+                    kind: 'item' as const,
+                    id: 'reload-all',
+                    label: reloading ? 'Reloading…' : 'Reload all',
+                    icon: RELOAD_ICON,
+                    disabled: reloading || reloadBusy,
+                    onSelect: () => onReloadAll?.(),
+                  },
+                ]
+              : []),
             { kind: 'item', id: 'export', label: 'Export session…', icon: EXPORT_ICON, onSelect: () => void bundle.exportSession() },
             {
               kind: 'item',

@@ -88,3 +88,9 @@
 .format-editor__counter .button {
   align-self: flex-start;
 }
+
+/* A long sheet URL scrolls inside its field, never the page. */
+.format-editor__url {
+  min-width: 0;
+  text-overflow: ellipsis;
+}

@@ -70,10 +70,12 @@ function isTableEntry(value: unknown): boolean {
 }
 
 /** A card set's source, rebuilt from known fields (CD-7). */
+const isWebAddress = (value: unknown): value is string => isText(value) && /^https?:\/\//i.test(value);
+
 function readSource(value: unknown): CardSet['source'] | undefined {
   if (!isObject(value) || !isText(value.name)) return undefined;
   if (value.kind === 'file') return { kind: 'file', name: value.name };
-  if (value.kind !== 'url' || !isText(value.url) || !/^https?:\/\//i.test(value.url) || !isNumber(value.fetchedAt)) return undefined;
+  if (value.kind !== 'url' || !isWebAddress(value.url) || !isNumber(value.fetchedAt)) return undefined;
   return { kind: 'url', name: value.name, url: value.url, fetchedAt: value.fetchedAt };
 }
 
@@ -122,7 +124,8 @@ function readCardSet(value: unknown): NewItem<CardSet> | undefined {
 function readFormat(value: unknown): NewItem<Format & StoredItem> | undefined {
   if (!isObject(value) || !isId(value.id) || !isText(value.name) || typeof value.usesDice !== 'boolean') return undefined;
   const validSeat = (seat: unknown) => isObject(seat) && isId(seat.id) && isText(seat.name) && (seat.kind === 'player' || seat.kind === 'environment') && Array.isArray(seat.counters) && seat.counters.every(isCounter);
-  const validPile = (pile: unknown) => isObject(pile) && isId(pile.id) && isText(pile.name) && (pile.ownerSeatId === undefined || isText(pile.ownerSeatId));
+  const validPile = (pile: unknown) =>
+    isObject(pile) && isId(pile.id) && isText(pile.name) && (pile.ownerSeatId === undefined || isText(pile.ownerSeatId)) && (pile.sheetUrl === undefined || isWebAddress(pile.sheetUrl));
   if (!Array.isArray(value.seats) || !value.seats.every(validSeat) || !Array.isArray(value.piles) || !value.piles.every(validPile)) return undefined;
   return { id: value.id, name: value.name, seats: value.seats as Format['seats'], piles: value.piles as Format['piles'], usesDice: value.usesDice };
 }

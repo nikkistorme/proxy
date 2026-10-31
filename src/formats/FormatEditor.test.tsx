@@ -210,3 +210,56 @@ describe('FS-4 format editor counters', () => {
     expect(saves.at(-1)?.seats[2]?.counters).toHaveLength(1);
   });
 });
+
+describe('CD-12 pile sheet URL field', () => {
+  const URL_ = 'https://docs.google.com/spreadsheets/d/e/abc/pub?gid=0&single=true&output=csv';
+  const field = () => screen.getByRole('textbox', { name: 'Pile 1 sheet URL' });
+
+  it('is an optional field on every pile, labelled by position, and saves a valid address', async () => {
+    const { user, last } = setup();
+    expect(screen.getAllByRole('textbox', { name: /^Pile \d sheet URL$/ })).toHaveLength(PVP_1V1.piles.length);
+    await user.click(field());
+    await user.paste(URL_);
+    expect(last()?.piles[0]?.sheetUrl).toBe(URL_);
+    expect(field()).toBeValid();
+    expect(last()?.piles[0]?.name).toBe(PVP_1V1.piles[0]?.name);
+  });
+
+  it('clearing it removes the address', async () => {
+    const { user, last } = setup();
+    await user.click(field());
+    await user.paste(URL_);
+    await user.clear(field());
+    expect(Object.keys(last()?.piles[0] ?? {})).not.toContain('sheetUrl');
+    expect(field()).toBeValid();
+  });
+
+  it('shows the error for something that is not an address and does not save it', async () => {
+    const { user, saves } = setup();
+    await user.click(field());
+    await user.paste('not a url');
+    expect(field()).toBeInvalid();
+    expect(field()).toHaveAccessibleDescription(/^Error: That isn't a web address/);
+    expect(saves).toHaveLength(0);
+  });
+
+  it('shows the error and the publish steps for an edit link, and saves nothing', async () => {
+    const { user, saves } = setup();
+    await user.click(field());
+    await user.paste('https://docs.google.com/spreadsheets/d/abc/edit#gid=0');
+    expect(field()).toBeInvalid();
+    expect(screen.getByText('To load a Google Sheet, publish it as CSV:')).toBeInTheDocument();
+    expect(screen.getAllByRole('listitem').some((li) => li.textContent?.startsWith('In the sheet, choose File'))).toBe(true);
+    expect(saves).toHaveLength(0);
+  });
+
+  it('never fetches', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const { user } = setup();
+    await user.click(field());
+    await user.paste(URL_);
+    expect(fetchMock).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+});

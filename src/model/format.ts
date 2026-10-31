@@ -24,6 +24,8 @@ export interface FormatPile {
   name: string;
   /** Owning seat id, or undefined for a shared pile (SP-4). */
   ownerSeatId?: string;
+  /** A published CSV address the pile loads from when a session starts, and on Reload all (CD-12). */
+  sheetUrl?: string;
 }
 
 /** The seats at the table, the piles each starts with, and whether the session uses dice. */
