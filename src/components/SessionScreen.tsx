@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { lazy, useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { loadPile } from '../actions/loadPile';
 import { peekTop } from '../actions/peek';
 import { draw, mill, revealTop, shuffle } from '../actions/pileActions';
@@ -21,6 +21,7 @@ import { useSessionStore, useSessionStoreApi } from '../store/sessionStore';
 import { DiceDialog } from './DiceDialog';
 import { DeletePileDialog, type DeletePileRequest, type MergeChoice, type MergePilesRequest } from './DeletePileDialog';
 import './SessionScreen.css';
+import { ChunkBoundary } from './ChunkBoundary';
 import { HandTray } from './HandTray';
 import { ImportResults, type ImportSummary } from './ImportResults';
 import { LiveRegion } from './LiveRegion';
@@ -30,7 +31,6 @@ import { PileCountDialog, type CountRequest } from './PileCountDialog';
 import { PileMenu } from './PileMenu';
 import { PileNameDialog, type PileNameRequest } from './PileNameDialog';
 import { PILE_HINT, PILE_HINT_ID, PileTile } from './PileTile';
-import { PileViewer } from './PileViewer';
 import { SeatCounter } from './SeatCounter';
 import { SessionMenu } from './SessionMenu';
 import { SheetResults } from './SheetResults';
@@ -53,6 +53,7 @@ const HAND = 'hand';
 
 /** The layout screen loads the first time it opens (PF-3). */
 const LayoutEditor = lazy(() => import('../editor/LayoutEditor'));
+const PileViewer = lazy(() => import('./PileViewer').then((m) => ({ default: m.PileViewer })));
 
 /** The pile the active seat draws from: its first owned pile (its main deck). */
 function drawPileFor(session: SessionState): Pile | undefined {
@@ -719,17 +720,21 @@ export function SessionScreen() {
       />
       <ShortcutsDialog open={shortcutsOpen} onClose={closeShortcuts} />
       {layoutsOpen && (
-        <Suspense fallback={null}>
+        <ChunkBoundary screen="the layout editor" onClose={closeLayouts}>
           <LayoutEditor
             onClose={closeLayouts}
             columns={cardColumns(Object.values(session.definitions))}
             previewSets={previewCardSets(session)}
             types={cardTypes(Object.values(session.definitions))}
           />
-        </Suspense>
+        </ChunkBoundary>
       )}
       <PeekDialog key={peekRequest ? `peek-${peekRequest.pileId}` : 'closed'} request={peekRequest} onClose={closePeek} />
-      <PileViewer key={viewerPileId ?? 'closed'} pileId={viewerPileId} onClose={closeViewer} />
+      {viewerPileId !== undefined && (
+        <ChunkBoundary key={viewerPileId} screen="the pile viewer" onClose={closeViewer}>
+          <PileViewer pileId={viewerPileId} onClose={closeViewer} />
+        </ChunkBoundary>
+      )}
       <Toast />
       <LiveRegion />
     </div>

@@ -81,6 +81,8 @@ async function closeResults(page: Page, pile: Locator, by: By) {
 async function pileOrder(page: Page, pile: Locator, name: string, by: By) {
   await pileMenu(page, pile, 'View cards…', by);
   const viewer = page.getByRole('dialog', { name });
+  // The viewer is its own chunk, so it can open a moment after the menu item is chosen (PF-3).
+  await expect(viewer).toBeVisible();
   const labels = await viewer.getByRole('button', { name: /from top$/ }).evaluateAll((buttons) => buttons.map((b) => b.getAttribute('aria-label')));
   await closeWith(page, viewer, { focusOn: pile });
   return labels;
@@ -147,6 +149,8 @@ async function play(page: Page, by: By) {
   // To the table, through the pile viewer.
   await pileMenu(page, envPile(page), 'View cards…', by);
   const viewer = page.getByRole('dialog', { name: 'Environment deck' });
+  // Keys typed before the viewer has loaded would go nowhere (PF-3).
+  await expect(viewer.getByRole('searchbox').or(viewer.getByRole('textbox')).first()).toBeFocused();
   if (by === 'mouse') {
     await viewer.getByRole('button', { name: /^Marsh Imp\. / }).click();
     await viewer.getByRole('button', { name: 'To table: Marsh Imp' }).click();
