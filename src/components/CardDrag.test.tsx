@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadPile } from '../actions/loadPile';
 import { moveCard } from '../actions/moveCard';
@@ -8,7 +9,7 @@ import { createSession, type SessionState } from '../model/session';
 import { SOLO_PVE } from '../model/format';
 import { snapToGrid } from '../model/tableView';
 import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
-import { TOUCH_HOLD_MS } from './cardDrag';
+import { TOUCH_HOLD_MS, useCardDrag } from './cardDrag';
 import { HandTray } from './HandTray';
 import { TableSurface } from './TableSurface';
 
@@ -268,5 +269,25 @@ describe('TT-12 dragging to reorder the hand', () => {
     mouseDrag(handCard('Ogre'), [166, HAND_TOP + 10], [200, HAND_TOP + 30]);
     expect(order(store)).toEqual(['Troll', 'Ogre', 'Imp']);
     expect(status(store)).toBe('Put Ogre back.');
+  });
+});
+
+describe('TT-4 shared touch listener', () => {
+  it('stays registered while another component using the hook is still mounted', () => {
+    const store = createSessionStore(createSession(SOLO_PVE), testContext());
+    function User() {
+      useCardDrag();
+      return null;
+    }
+    const remove = vi.spyOn(document, 'removeEventListener');
+    const touchMoveRemovals = () => remove.mock.calls.filter(([type]) => type === 'touchmove').length;
+    const wrap = (children: ReactNode) => <SessionStoreProvider store={store}>{children}</SessionStoreProvider>;
+    const first = render(wrap(<User />));
+    const second = render(wrap(<User />));
+    first.unmount();
+    expect(touchMoveRemovals()).toBe(0);
+    second.unmount();
+    expect(touchMoveRemovals()).toBe(1);
+    remove.mockRestore();
   });
 });

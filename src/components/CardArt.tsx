@@ -34,5 +34,6 @@ export function CardArt({ name, image, decorative = false }: CardArtProps) {
     );
   }
 
-  return <img className="card-art" src={image} alt={decorative ? '' : name} onError={() => setFailedImage(image)} />;
+  // PF-1: `loading` comes before `src` because some browsers start loading as soon as they see `src`.
+  return <img className="card-art" loading="lazy" decoding="async" src={image} alt={decorative ? '' : name} onError={() => setFailedImage(image)} />;
 }
