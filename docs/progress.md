@@ -20,9 +20,23 @@ Phase 7 (Session saves and Sheets, #141) is planned as 7a to 7g, sub-issues #142
 
 The design now has a UI placement guide (`design/ui-placement.md`, rules UI-1 to UI-8, with `FuturePlacement.dc.html`), and the plan follows it (2026-10-29). V1 keeps today's shell: V1 issues add no header or toolbar control (UI-3) and put new controls at the guide's address, or in the This session menu until the Session menu exists. So 6d's Formats screen opens from the setup dialog, and 6e's format editor is full screen. After V1, the shell moves to the guide in its own issues, #130 to #135 (action registry, workspace with Home, Library and Settings, header slots and Session menu, side panel, seat dock, command palette), before the card set library (#67). Smaller moves ride along with the feature that touches them. Each issue now has a Placement section.
 
-Phase 8 (Polish, #167) is split into 8a to 8f, sub-issues #168 to #173. 8a (#168) is done: the demo game's data is in the repo as plain files, `src/demo/` (four CSVs, three layouts and credits) and `public/demo/art/` (36 original SVG emblems), with no UI yet. `private/` is git-ignored. The Load demo button is 8b (#169).
+Phase 8 (Polish, #167) is split into 8a to 8f, sub-issues #168 to #173. 8a (#168) is done: the demo game's data is in the repo as plain files, `src/demo/` (four CSVs, three layouts and credits) and `public/demo/art/` (36 original SVG emblems), with no UI yet. `private/` is git-ignored. 8b (#169) is done: **Load demo** in the New session dialog starts a Co-op PvE session with all four piles filled from the demo data, which loads as its own chunk on the first click, and focuses the table. 8c (#170) is next.
 
 ## Done
+
+### Phase 8b: Load demo (#169, 2026-10-31)
+
+- **Button:** the New session dialog (`SetupDialog`) has a "Try a sample Co-op PvE game" section with a **Load demo** button under Edit formats…, on the choose step only. One click starts Co-op PvE with the four piles filled (P1 main deck 30, P2 main deck 30, Environment deck 20, Board cards 6 = 86 cards) and focus on the table. The three decks are shuffled, the board keeps file order. No header or toolbar control (UI-3).
+- **Confirm step:** with cards in the session the same dialog asks "Load the demo?" (primary **Load demo**, **Back**). `confirming` is now `'start' | 'demo' | false`.
+- **Order:** the chunk downloads first (button says "Loading demo…", stays focusable, repeat clicks do nothing), then the confirm step or the start. A failed download changes nothing and shows `FieldError` "Couldn't load the demo. Check your connection, then reload the page." with no retry button. Closing the dialog while loading drops the late result; so does unmount.
+- **Code:** `src/demo/demoData.ts` (the lazy chunk: four CSVs via `?raw`, `layouts.json` checked through `readLayoutFile`, fixed pile, card set ids and `keepOrder`), `src/demo/loadDemoData.ts` (the single `import()`, mocked in tests), `src/actions/loadDemo.ts` (one action over `loadPile` for each pile: one undo step, one log entry, announcement "Demo loaded: Co-op PvE session with 86 cards in 4 piles. Player 1 is the active seat." worked out from the state; in the announcement audit), `src/components/useLoadDemo.ts` (`fetchDemo` waits for saved layouts to be read via the new `loaded` on `useLayouts()`, then `startDemo` saves layouts, starts the session silently, dispatches, saves card sets, ignoring save failures like `useSheetLoads`). `loadPiles` is unchanged.
+- **Start path:** after the download, the button calls `requestSubmit()` on the dialog's form so the shared `Dialog` runs its own submit and close. Calling `onClose` directly let the native `<dialog>` return focus to the button after `SessionMenu` had focused the table.
+- **Options:** Load demo doesn't call `setOption`, so `defaultFormat` and the layout options are untouched; resume comes from the saved session.
+- **Layouts and card sets:** a demo layout is saved only if neither its id nor its name (`layoutNameKey`) exists, so an edited one is kept and a deleted one returns on the next load. Card set ids are fixed (`demo-emberguard`, `demo-tidewardens`, `demo-the-fog`, `demo-harbour-board`), so a repeat load replaces them.
+- **Undo:** leaves an empty Co-op PvE session, with no results dialog.
+- **Tests:** `src/actions/loadDemo.test.ts`, additions to `SetupDialog.test.tsx` (component level) and `announcements.test.ts`, `e2e/demo.spec.ts` (mouse with axe and art `naturalWidth`, keyboard, confirm step, undo, chunk not requested at page load, blocked chunk, two loads and an edited layout, reload, 375 × 667). The spec passed 5 times in Chromium and Firefox.
+- **Bundle:** a separate `demoData-*.js` chunk (15.38 kB, 2.37 kB gzip). Main `index-*.js` is 110.59 kB gzip against the 109.65 kB baseline (+0.94 kB, the button, hook and action).
+- **Requirements changed:** DM-5.
 
 ### Phase 8a: Demo content (#168, 2026-10-31)
 
@@ -1011,8 +1025,8 @@ Phase 8 (Polish, #167) is split into 8a to 8f, sub-issues #168 to #173. 8a (#168
 
 Every issue fills in its Placement section (`design/ui-placement.md`). No issue adds a header or toolbar control (UI-3).
 
-- **Phase 8b (Load demo, #169):** next, starting only with the owner's go-ahead. 8a (#168) is done. The owner still has one manual check from 7g: with a real published sheet, edit a card's text, wait for Google to update, **Reload from URL**, and the card changes without moving (the last unticked CD criterion).
-- **Phase 8 (Polish), placement to carry into its split:** Load demo (DM-5) has no start screen in V1, so it goes in the setup dialog until Home exists (#131). The manual theme choice waits for Settings › Appearance (#131).
+- **Phase 8c (art loading and pile viewer code split, #170):** next, starting only with the owner's go-ahead. 8a (#168) and 8b (#169) are done. The owner still has one manual check from 7g: with a real published sheet, edit a card's text, wait for Google to update, **Reload from URL**, and the card changes without moving (the last unticked CD criterion).
+- **Phase 8 (Polish), placement to carry into its split:** Load demo sits in the setup dialog until Home exists (#131), where it moves to Home › Load demo. The manual theme choice waits for Settings › Appearance (#131).
 - **After V1, in this order:**
   1. The demo on its own path (#63).
   2. The placement foundations: action registry (#130); workspace with rail, Home, Library and Settings (#131, in three parts); header slots, Session menu and table tools on the table (#132); side panel with Log, Piles and Details (#133); seat dock (#134); command palette (#135).
@@ -1031,6 +1045,7 @@ Every issue fills in its Placement section (`design/ui-placement.md`). No issue 
 
 ## Open problems
 
+- Renaming a demo layout makes the demo cards fall back to the default layout, because their `layout` column matches by name. Left as is in 8b; the next Load demo saves the demo layout under its own name again.
 - A real sheet's art column is often not named `image` and may hold bare file names rather than URLs, so its cards show the placeholder (CD-6). Left as is in 7e.
 - An edit made in the last second before an import's reload is lost, not saved: autosave waits up to a second and the import stops saves. An export isn't affected, since it reads the session from the store.
 - Card sets are exported from storage, not from the app, so a card set loaded before the startup storage check finished (see below) isn't in the bundle.

@@ -28,3 +28,20 @@
   gap: var(--space-2);
   margin-top: var(--space-3);
 }
+
+/* Load demo (DM-5), under the format buttons. */
+.setup-dialog__demo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.setup-dialog__demo .form-text {
+  margin: 0;
+}
+
+.setup-dialog__demo-error {
+  flex-basis: 100%;
+}

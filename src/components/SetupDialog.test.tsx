@@ -2,6 +2,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { sessionWithDeck, testContext } from '../actions/testing';
+import { loadDemoData } from '../demo/loadDemoData';
+import { LayoutsProvider } from '../layouts/LayoutsProvider';
 import { FormatsProvider, useFormats } from '../formats/FormatsProvider';
 import { PVP_1V1, SOLO_PVE, type Format } from '../model/format';
 import { createSession } from '../model/session';
@@ -13,6 +15,8 @@ import { LiveRegion } from './LiveRegion';
 import { SessionPersistence } from './SessionPersistence';
 import { SessionScreen } from './SessionScreen';
 import { SetupDialog } from './SetupDialog';
+
+vi.mock('../demo/loadDemoData', () => ({ loadDemoData: vi.fn() }));
 
 function Saved() {
   return <span data-testid="saved-format">{useOption('defaultFormat')}</span>;
@@ -190,5 +194,99 @@ describe('SP-1 default format with saved formats', () => {
       [settingsKey]: { id: 'account', options: { defaultFormat: 'f-gone' }, updatedAt: '', version: SAVE_VERSION },
     });
     await waitFor(() => expect(store.getState().session.formatId).toBe(SOLO_PVE.id));
+  });
+});
+
+describe('DM-5 Load demo in the setup dialog', () => {
+  const realChunk = () => vi.importActual<typeof import('../demo/demoData')>('../demo/demoData');
+
+  function renderDialog(session = createSession(SOLO_PVE)) {
+    const store = createSessionStore(session, testContext());
+    const onClose = vi.fn();
+    const items = {};
+    render(
+      <StorageProvider backend={memoryBackend(items)}>
+        <FormatsProvider>
+          <LayoutsProvider>
+            <SessionStoreProvider store={store}>
+              <SetupDialog open onClose={onClose} onEditFormats={() => {}} onEditCopy={() => {}} />
+              <LiveRegion />
+              <Saved />
+            </SessionStoreProvider>
+          </LayoutsProvider>
+        </FormatsProvider>
+      </StorageProvider>,
+    );
+    return { store, onClose, user: userEvent.setup() };
+  }
+
+  it('starts Co-op PvE with the piles filled, announces it, leaves options alone and closes as started', async () => {
+    vi.mocked(loadDemoData).mockImplementation(realChunk);
+    const { store, onClose, user } = renderDialog();
+    await user.click(screen.getByRole('button', { name: 'Load demo' }));
+    await waitFor(() => expect(onClose).toHaveBeenCalledWith(true));
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(store.getState().session.formatId).toBe('preset-coop-pve');
+    expect(store.getState().session.piles.map((p) => p.cardIds.length)).toEqual([30, 30, 20, 6]);
+    expect(screen.getAllByRole('status').map((el) => el.textContent)).toContain('Demo loaded: Co-op PvE session with 86 cards in 4 piles. Player 1 is the active seat.');
+    expect(screen.getByTestId('saved-format')).toHaveTextContent(SOLO_PVE.id);
+    expect(store.getState().past).toHaveLength(1);
+  });
+
+  it('asks first when the session has cards, and Back returns to the choices', async () => {
+    vi.mocked(loadDemoData).mockImplementation(realChunk);
+    const { store, onClose, user } = renderDialog(sessionWithDeck());
+    await user.click(screen.getByRole('button', { name: 'Load demo' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Load the demo?' });
+    expect(dialog).toHaveTextContent('Load the demo? The cards in this session will be cleared.');
+    expect(store.getState().session.formatId).toBe(SOLO_PVE.id);
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByRole('button', { name: 'Load demo' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Load demo' }));
+    await user.click(await screen.findByRole('button', { name: 'Load demo', description: '' }));
+    expect(store.getState().session.formatId).toBe('preset-coop-pve');
+    expect(Object.keys(store.getState().session.cards)).toHaveLength(86);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledWith(true);
+  });
+
+  it('shows an error and changes nothing when the download fails', async () => {
+    vi.mocked(loadDemoData).mockRejectedValue(new Error('offline'));
+    const { store, onClose, user } = renderDialog(sessionWithDeck());
+    const before = store.getState().session;
+    await user.click(screen.getByRole('button', { name: 'Load demo' }));
+    expect(await screen.findByText(/Couldn't load the demo\. Check your connection, then reload the page\./)).toBeInTheDocument();
+    expect(store.getState().session).toBe(before);
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Load demo' })).toBeEnabled();
+    expect(screen.queryByRole('dialog', { name: 'Load the demo?' })).not.toBeInTheDocument();
+  });
+
+  it('says Loading demo… while it downloads, keeps focus, and ignores repeat clicks', async () => {
+    let finish: (chunk: Awaited<ReturnType<typeof realChunk>>) => void = () => {};
+    vi.mocked(loadDemoData).mockReturnValue(new Promise((resolve) => (finish = resolve)));
+    const { store, user } = renderDialog();
+    await user.click(screen.getByRole('button', { name: 'Load demo' }));
+    const button = screen.getByRole('button', { name: 'Loading demo…' });
+    expect(button).not.toBeDisabled();
+    await user.click(button);
+    expect(vi.mocked(loadDemoData)).toHaveBeenCalledTimes(1);
+    finish(await realChunk());
+    await waitFor(() => expect(store.getState().session.formatId).toBe('preset-coop-pve'));
+  });
+
+  it('starts nothing when the dialog is closed while it downloads', async () => {
+    let finish: (chunk: Awaited<ReturnType<typeof realChunk>>) => void = () => {};
+    vi.mocked(loadDemoData).mockReturnValue(new Promise((resolve) => (finish = resolve)));
+    const { store, onClose, user } = renderDialog(sessionWithDeck());
+    const before = store.getState().session;
+    await user.click(screen.getByRole('button', { name: 'Load demo' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(onClose).toHaveBeenCalledWith(false);
+    finish(await realChunk());
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(store.getState().session).toBe(before);
+    expect(screen.queryByRole('dialog', { name: 'Load the demo?' })).not.toBeInTheDocument();
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

@@ -5,7 +5,9 @@ import { duplicateFormat } from '../model/formatNames';
 import { useSetOption } from '../storage/StorageProvider';
 import { useSessionStore } from '../store/sessionStore';
 import { Dialog } from './Dialog';
+import { FieldError } from './FieldError';
 import { FormatSummary } from './FormatSummary';
+import { useLoadDemo, type DemoData } from './useLoadDemo';
 import './Form.css';
 import './SetupDialog.css';
 
@@ -26,6 +28,8 @@ interface SetupDialogProps {
 /**
  * SP-1: choose a format and start a new session. A session with cards asks
  * first, in the same dialog. The choice is saved as the `defaultFormat` option.
+ * DM-5: Load demo starts a Co-op PvE session with the demo piles filled, and
+ * asks the same way. It changes no options.
  */
 export function SetupDialog({ open, onClose, initialId, onEditFormats, onEditCopy }: SetupDialogProps) {
   const currentId = useSessionStore((s) => s.session.formatId);
@@ -36,8 +40,16 @@ export function SetupDialog({ open, onClose, initialId, onEditFormats, onEditCop
   const sorted = [...formats].sort(byName);
   // Starts on the session's format if it still exists, else Solo PvE.
   const [chosenId, setChosenId] = useState(() => formatById(formats, initialId ?? currentId).id);
-  const [confirming, setConfirming] = useState(false);
+  /** Which action the confirm step is asking about. */
+  const [confirming, setConfirming] = useState<'start' | 'demo' | false>(false);
+  const [demo, setDemo] = useState<{ status: 'idle' | 'loading' | 'failed' }>({ status: 'idle' });
+  const { fetchDemo, startDemo } = useLoadDemo();
   const started = useRef(false);
+  /** Set once the dialog has closed or unmounted, so a late demo download starts nothing. */
+  const gone = useRef(false);
+  /** The downloaded demo, once Load demo has it; the submit that follows starts it. */
+  const chunk = useRef<DemoData>(undefined);
+  const demoButton = useRef<HTMLButtonElement>(null);
   const question = useRef<HTMLParagraphElement>(null);
   const format = formatById(formats, chosenId);
   const isPreset = PRESETS.some((preset) => preset.id === format.id);
@@ -45,6 +57,13 @@ export function SetupDialog({ open, onClose, initialId, onEditFormats, onEditCop
   useEffect(() => {
     if (confirming) question.current?.focus();
   }, [confirming]);
+
+  useEffect(() => {
+    gone.current = false;
+    return () => {
+      gone.current = true;
+    };
+  }, []);
 
   function start() {
     setOption('defaultFormat', format.id);
@@ -59,29 +78,61 @@ export function SetupDialog({ open, onClose, initialId, onEditFormats, onEditCop
   }
 
   function submit(): boolean {
+    // The demo starts through the dialog's own submit, so the Dialog closes itself and focus lands on the table.
+    if (chunk.current && (confirming === 'demo' || !hasCards)) {
+      startDemo(chunk.current);
+      started.current = true;
+      return true;
+    }
     if (hasCards && !confirming) {
-      setConfirming(true);
+      setConfirming('start');
       return false;
     }
     start();
     return true;
   }
 
+  /** Downloads the demo first, so a failed download changes nothing; only then asks or starts. */
+  async function loadDemo() {
+    if (demo.status === 'loading') return;
+    setDemo({ status: 'loading' });
+    let data: DemoData;
+    try {
+      data = await fetchDemo();
+    } catch {
+      if (!gone.current) setDemo({ status: 'failed' });
+      return;
+    }
+    if (gone.current) return;
+    chunk.current = data;
+    setDemo({ status: 'idle' });
+    if (hasCards) setConfirming('demo');
+    else demoButton.current?.form?.requestSubmit();
+  }
+
+  function back() {
+    chunk.current = undefined;
+    setConfirming(false);
+  }
+
   return (
     <Dialog
       open={open}
-      title={confirming ? `Start a new ${format.name} session?` : 'New session'}
-      hint={confirming ? 'Enter start · Esc cancel' : 'Enter next · Esc cancel'}
-      primaryLabel={confirming ? 'Start new session' : 'Start session'}
+      title={confirming === 'demo' ? 'Load the demo?' : confirming ? `Start a new ${format.name} session?` : 'New session'}
+      hint={confirming === 'demo' ? 'Enter load · Esc cancel' : confirming ? 'Enter start · Esc cancel' : 'Enter next · Esc cancel'}
+      primaryLabel={confirming === 'demo' ? 'Load demo' : confirming ? 'Start new session' : 'Start session'}
       cancelLabel={confirming ? 'Back' : 'Cancel'}
-      onCancel={confirming ? () => setConfirming(false) : undefined}
+      onCancel={confirming ? back : undefined}
       width="narrow"
-      onClose={() => onClose(started.current)}
+      onClose={() => {
+        gone.current = true;
+        onClose(started.current);
+      }}
       onSubmit={submit}
     >
       {confirming ? (
         <p ref={question} tabIndex={-1} className="form-text setup-dialog__confirm">
-          Start a new {format.name} session? The cards in this session will be cleared.
+          {confirming === 'demo' ? 'Load the demo?' : `Start a new ${format.name} session?`} The cards in this session will be cleared.
         </p>
       ) : (
         <fieldset className="form-choices setup-dialog__choices">
@@ -113,6 +164,19 @@ export function SetupDialog({ open, onClose, initialId, onEditFormats, onEditCop
             <button type="button" className="button" aria-label={`Edit a copy of ${format.name}`} onClick={editCopy}>
               Edit a copy
             </button>
+          )}
+        </div>
+      )}
+      {!confirming && (
+        <div className="setup-dialog__demo">
+          <p className="form-text">Try a sample Co-op PvE game</p>
+          <button ref={demoButton} type="button" className="button" aria-describedby={demo.status === 'failed' ? 'setup-demo-error' : undefined} onClick={() => void loadDemo()}>
+            {demo.status === 'loading' ? 'Loading demo…' : 'Load demo'}
+          </button>
+          {demo.status === 'failed' && (
+            <div role="alert" className="setup-dialog__demo-error">
+              <FieldError id="setup-demo-error">Couldn't load the demo. Check your connection, then reload the page.</FieldError>
+            </div>
           )}
         </div>
       )}
