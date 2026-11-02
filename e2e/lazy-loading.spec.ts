@@ -1,6 +1,8 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { closeWith } from './keyboard';
 
+const axeTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const ART = /\/demo\/art\//;
 const VIEWER_CHUNK = /PileViewer-.*\.js/;
 
@@ -78,6 +80,23 @@ test.describe('PF-3 pile viewer chunk', () => {
     expect(await page.getByRole('button', { name: /cards?,|empty/ }).allTextContents()).toEqual(pilesBefore);
   });
 });
+
+for (const colorScheme of ['light', 'dark'] as const) {
+  test.describe(`PF-3 chunk-failed toast (${colorScheme})`, () => {
+    test.use({ colorScheme });
+
+    test('has no axe violations', async ({ page }) => {
+      await expect(page.locator('html')).toHaveAttribute('data-theme', colorScheme);
+      await loadDemo(page);
+      await page.route(VIEWER_CHUNK, (route) => route.abort());
+      await board(page).focus();
+      await page.keyboard.press('v');
+      await expect(toast(page)).toContainText("Couldn't open the pile viewer.");
+      await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running'));
+      expect((await new AxeBuilder({ page }).withTags(axeTags).analyze()).violations).toEqual([]);
+    });
+  });
+}
 
 test.describe('PF-1 card art', () => {
   test('late art does not move the card or its neighbours', async ({ page }) => {

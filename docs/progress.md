@@ -2,7 +2,7 @@
 
 ## Current state
 
-**Phase 8 is done and V1 is built** (2026-11-02). Phases 0 to 8 are all merged, so work is no longer organised in phases: the phase rule in `CLAUDE.md` no longer applies, and the next issues are the post-V1 list under Next. What's left of V1's acceptance is the owner's manual checks (under Next): the screen-reader runs, the manual WCAG audit, and the phone checks. The paragraphs below are the history of how each phase went.
+**Phase 8 is done and V1 is built** (2026-11-02). Phases 0 to 8 are all merged, so work is no longer organised in phases: the phase rule in `CLAUDE.md` no longer applies, and the next issues are the post-V1 list under Next. What's left of V1's acceptance is the owner's manual checks (under Next): the screen-reader runs, the manual WCAG audit, and the phone checks. Every screen and state now has an axe scan in light and dark with zero violations (#183). The paragraphs below are the history of how each phase went.
 
 Phase 3 (Table) is done: a solo turn works by mouse and by keyboard. It was split into 3a to 3o, all under #20. Selection (#29), stacks (#30) and shortcut remapping (#34, folded into #53) moved after V1. 3a to 3f-2, 3m-1 to 3m-3, 3i (#31) and 3j (#32) are merged: undo and redo; placed table cards and table focus; pan, zoom, fit all and grid snap; the table card menu; the hand card menu; keyboard and single-pointer placement; dragging table and hand cards; dragging cards out of the pile viewer; piles on the table; moving piles, with a click on a pile drawing its top card; merging piles by dropping one on another; card counters; enlarging a card, with the double-faced badge; reordering the hand; seat counters (3k-1); dice, a coin and the session log (3k-2, closing #33); the dark theme, which follows the system setting (3n, #39); and the close-out (3o, #61): the ? shortcut reference, single-key shortcuts limited to the table, hand and toolbar for WCAG 2.1.4, the announcement audit and the solo-turn E2E. Selecting several cards in the pile viewer is its own feature issue, #57, outside the phases. The app has a favicon and an iPhone home-screen icon (#44, outside the phases).
 
@@ -26,12 +26,18 @@ Phase 8 (Polish, #167) is split into 8a to 8f, sub-issues #168 to #173. 8a (#168
 
 ## Done
 
+### Axe scans for the last three states (#183, 2026-11-02)
+
+- **Scans:** a full WCAG 2.2 A and AA axe scan, in light and dark, of the bundle import error dialog (`e2e/bundle.spec.ts`, Import bundle… with `not-json.json`), the loading overlay (`e2e/resume.spec.ts`, with the storage check held back as in the phone overlay test) and the chunk-failed toast (`e2e/lazy-loading.spec.ts`, Load demo, then `v` on Board cards with the `PileViewer` chunk aborted). Each test also checks `data-theme` matches the colour scheme, and waits for running animations to end before scanning. No violations, so no app changes.
+- **Runs:** the three specs passed 5 times each in Chromium and Firefox.
+- **Requirements changed:** the Accessibility acceptance criterion "Automated axe checks pass with zero violations on every screen" is ticked, naming the specs. No requirement's behaviour changed.
+
 ### Phase 8f-2: Phase 8 and V1 close-out (#180, 2026-11-02)
 
 - **Ticked (with the test or measurement beside each in `docs/requirements.md`):** the DM and PF sections now have acceptance lists, all ticked: Load demo in one click (`e2e/demo.spec.ts`, `src/actions/loadDemo.test.ts`); the demo's counts, three layouts, double-faced cards and art credits (`src/demo/demoContent.test.ts`); `private/` ignored (`git check-ignore`); size check in CI (`npm run check:size`, `scripts/bundle-size.test.mjs`, 107.77 kB); PF-2 render test; art and pile viewer (`CardArt.test.tsx`, `e2e/lazy-loading.spec.ts`); stress table and Lighthouse numbers in `docs/performance.md`. In Testing and CI/CD: failing checks block merge (the `main` ruleset requires the four checks; `gh api repos/nikkistorme/proxy/rules/branches/main`), and `npm test` and `npm run test:e2e` are exactly what CI runs.
 - **Not ticked, and why:**
   - Solo turn in NVDA + Firefox and VoiceOver + Safari: manual (owner), plan written. The keyboard-only turn is `e2e/solo-turn.spec.ts`.
-  - "Axe passes on every screen": every menu and dialog off the main screen is scanned (`e2e/a11y.spec.ts` `SCREENS`) and the layout, Formats, format editor, import results, snapshots, bundle import and sheet dialogs are in their own specs, but nothing scans the bundle import error dialog, the loading overlay or the chunk-failed toast. A small follow-up, not done here (no test changes in a close-out).
+  - "Axe passes on every screen": every menu and dialog off the main screen is scanned (`e2e/a11y.spec.ts` `SCREENS`) and the layout, Formats, format editor, import results, snapshots, bundle import and sheet dialogs are in their own specs, but nothing scans the bundle import error dialog, the loading overlay or the chunk-failed toast. A small follow-up, not done here (no test changes in a close-out). Done since in #183.
   - Manual WCAG 2.2 AA audit and a conformance report with no failing criteria: manual (owner), draft written.
   - Pipeline under 10 minutes: not met. Recent passing PR runs took 6 to 13 minutes; the E2E jobs run in parallel and the slowest sets the time (12 minutes on #171, 11 on #178).
   - Still open from earlier phases: the real-sheet reload (CD) and "a bundle from version N loads in N+1" (after V1 ships).
@@ -1103,7 +1109,6 @@ Every issue fills in its Placement section (`design/ui-placement.md`). No issue 
 
 ## Open problems
 
-- Axe doesn't scan the bundle import error dialog, the loading overlay or the chunk-failed toast (found in 8f-2), so "axe passes on every screen" stays unticked. A few lines in `e2e/bundle.spec.ts` and `e2e/lazy-loading.spec.ts` would close it.
 - The pipeline takes 6 to 13 minutes on a PR, over the 10-minute criterion. The three E2E jobs run in parallel, so the slowest browser sets the time; splitting the E2E suite into shards would be the way down.
 - 8f-1's A11Y-7 test runs the double ring against surfaces by computed colour, not pixels: a card's art or a layout box behind the ring isn't sampled, only the nearest opaque ancestor. The ring's two colours are fixed, so a dark art edge next to the dark outer ring is still held up by the white inner ring.
 

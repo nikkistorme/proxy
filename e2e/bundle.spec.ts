@@ -159,6 +159,21 @@ test.describe('PS-4 JSON bundle', () => {
     });
   }
 
+  for (const colorScheme of ['light', 'dark'] as const) {
+    test.describe(`${colorScheme} theme`, () => {
+      test.use({ colorScheme });
+
+      test('the error dialog has no axe violations', async ({ page }) => {
+        await ready(page);
+        await expect(page.locator('html')).toHaveAttribute('data-theme', colorScheme);
+        await chooseBundle(page, bundleFixture('not-json.json'));
+        await expect(page.getByRole('dialog', { name: "Can't import" })).toBeVisible();
+        await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running'));
+        expect((await new AxeBuilder({ page }).withTags(axeTags).analyze()).violations).toEqual([]);
+      });
+    });
+  }
+
   test('storage unavailable: Import bundle… says the browser can’t save and changes nothing', async ({ page }) => {
     await page.addInitScript(() => {
       IDBFactory.prototype.open = () => {
