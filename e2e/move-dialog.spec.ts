@@ -29,6 +29,8 @@ async function openViewer(page: Page) {
   await page.getByRole('button', { name: 'Done' }).click();
   await mainPile(page).focus();
   await page.keyboard.press('v');
+  // The viewer loads on first use (PF-3): wait until it has focus, or typed keys would reach the table.
+  await expect(viewer(page).locator(':focus')).toHaveCount(1);
   return viewer(page);
 }
 

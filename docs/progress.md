@@ -20,9 +20,18 @@ Phase 7 (Session saves and Sheets, #141) is planned as 7a to 7g, sub-issues #142
 
 The design now has a UI placement guide (`design/ui-placement.md`, rules UI-1 to UI-8, with `FuturePlacement.dc.html`), and the plan follows it (2026-10-29). V1 keeps today's shell: V1 issues add no header or toolbar control (UI-3) and put new controls at the guide's address, or in the This session menu until the Session menu exists. So 6d's Formats screen opens from the setup dialog, and 6e's format editor is full screen. After V1, the shell moves to the guide in its own issues, #130 to #135 (action registry, workspace with Home, Library and Settings, header slots and Session menu, side panel, seat dock, command palette), before the card set library (#67). Smaller moves ride along with the feature that touches them. Each issue now has a Placement section.
 
-Phase 8 (Polish, #167) is split into 8a to 8f, sub-issues #168 to #173. 8a (#168) is done: the demo game's data is in the repo as plain files, `src/demo/` (four CSVs, three layouts and credits) and `public/demo/art/` (36 original SVG emblems), with no UI yet. `private/` is git-ignored. 8b (#169) is done: **Load demo** in the New session dialog starts a Co-op PvE session with all four piles filled from the demo data, which loads as its own chunk on the first click, and focuses the table. 8c (#170) is done: card art is lazy-loaded and decoded asynchronously, the pile viewer is its own chunk loaded on first open, and a failed chunk download shows a message instead of blanking the app. 8d (#171) is next, on the owner's go-ahead.
+Phase 8 (Polish, #167) is split into 8a to 8f, sub-issues #168 to #173. 8a (#168) is done: the demo game's data is in the repo as plain files, `src/demo/` (four CSVs, three layouts and credits) and `public/demo/art/` (36 original SVG emblems), with no UI yet. `private/` is git-ignored. 8b (#169) is done: **Load demo** in the New session dialog starts a Co-op PvE session with all four piles filled from the demo data, which loads as its own chunk on the first click, and focuses the table. 8c (#170) is done: card art is lazy-loaded and decoded asynchronously, the pile viewer is its own chunk loaded on first open, and a failed chunk download shows a message instead of blanking the app. 8d (#171) is done: the stress table (`tests/fixtures/bundles/stress.json`) is measured by `npm run test:perf`, outside CI, and every budget passes at 2× CPU slowdown with a wide margin (INP 16 to 24 ms, 60 fps dragging one card, 27 ms for a 200-row CSV). Table cards are memoised, so a drag or an action on one card no longer re-renders the others (PF-2). The numbers are in `docs/performance.md`. 8e (#172) is next, on the owner's go-ahead.
 
 ## Done
+
+### Phase 8d: Stress table performance (#171, 2026-11-02)
+
+- **Fixtures:** `tests/fixtures/bundles/stress.json` (Co-op PvE, 60/60/40 cards in piles, 80 in play with demo art and layouts) and `tests/fixtures/csv/two-hundred-rows.csv`, built by `src/demo/stressBundle.ts`. `npm run perf:fixture` (`scripts/make-stress-bundle.mjs`, which loads the builder through Vite's `ssrLoadModule`, so no new runner) rewrites them; `stressBundle.test.ts` fails if they drift and checks the bundle loads through `readBundle`.
+- **Measurement:** `npm run test:perf` (`playwright.perf.config.ts`, `e2e/perf/stress.perf.ts`): production build, Chromium only, 1×, 2× and 4× CPU slowdown through CDP. INP from Event Timing for draw, rotate, flip, a keyboard move, opening the card menu and changing a counter; frames and script time while dragging one card for 2 s; time from choosing the 200-row CSV to the pile's count. Not in `test:e2e` or CI.
+- **Numbers at 2× (mid-range laptop), before → after:** worst INP 24 → 16 ms; drag 60 → 60 fps with no frame over 20 ms; script per drag move 2.3 → 1.2 ms; 200-row CSV 27 → 27 ms. Every budget passed before the fix. Full table in `docs/performance.md`.
+- **Fix (PF-2):** a drag re-rendered all 80 cards on every pointer move (the drop outline follows the pointer through the store), and any action did too. `TableCard` is `memo`; `createTableCardViews` keeps each card's view while its entry, card, definition and owner are unchanged; the card handlers keep one identity through a ref. `TableRenders.test.tsx` checks a drag over empty table, a change of drop target and an action on another card re-render no other card.
+- **E2E flake:** `move-dialog.spec.ts` typed into the pile viewer before the lazily loaded viewer (8c) had focus, so the keys reached the table (1 in 15 on `main`). `openViewer` now waits for focus inside the viewer. Passed 15 times in Chromium and 5 in Firefox.
+- **Requirements changed:** the Performance section (stress table fixture, mid-range laptop = 2× CPU slowdown in Chromium, drag row is now one card on the stress table with the stack version on #30) and the `docs/performance.md` line under docs. PF-2 unchanged.
 
 ### Phase 8c: Art loading and pile viewer code split (#170, 2026-11-01)
 
@@ -1035,7 +1044,7 @@ Phase 8 (Polish, #167) is split into 8a to 8f, sub-issues #168 to #173. 8a (#168
 
 Every issue fills in its Placement section (`design/ui-placement.md`). No issue adds a header or toolbar control (UI-3).
 
-- **Phase 8d (stress table performance, #171):** next, starting only with the owner's go-ahead. 8a (#168), 8b (#169) and 8c (#170) are done. The owner still has one manual check from 7g: with a real published sheet, edit a card's text, wait for Google to update, **Reload from URL**, and the card changes without moving (the last unticked CD criterion).
+- **Phase 8e (Lighthouse CI budgets, #172):** next, starting only with the owner's go-ahead. 8a to 8d (#168 to #171) are done. The owner still has one manual check from 7g: with a real published sheet, edit a card's text, wait for Google to update, **Reload from URL**, and the card changes without moving (the last unticked CD criterion).
 - **Phase 8 (Polish), placement to carry into its split:** Load demo sits in the setup dialog until Home exists (#131), where it moves to Home › Load demo. The manual theme choice waits for Settings › Appearance (#131).
 - **After V1, in this order:**
   1. The demo on its own path (#63).
@@ -1055,6 +1064,7 @@ Every issue fills in its Placement section (`design/ui-placement.md`). No issue 
 
 ## Open problems
 
+- `counters.spec.ts`'s keyboard test failed once in a full E2E run in 8d (the Damage field wasn't found after adding it) and passed 40 times alone and in the next full run. Watch for it in CI.
 - Renaming a demo layout makes the demo cards fall back to the default layout, because their `layout` column matches by name. Left as is in 8b; the next Load demo saves the demo layout under its own name again.
 - A real sheet's art column is often not named `image` and may hold bare file names rather than URLs, so its cards show the placeholder (CD-6). Left as is in 7e.
 - An edit made in the last second before an import's reload is lost, not saved: autosave waits up to a second and the import stops saves. An export isn't affected, since it reads the session from the store.

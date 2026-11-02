@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
+import { flip, rotate } from '../actions/cardActions';
 import { moveCard } from '../actions/moveCard';
 import { cardsFrom, testContext } from '../actions/testing';
 import { loadPile } from '../actions/loadPile';
 import type { CardSide, SessionState, Rotation } from '../model/session';
 import { SOLO_PVE } from '../model/format';
 import { createSession } from '../model/session';
-import { tableCardView } from './tableCardView';
+import { createTableCardViews, tableCardView } from './tableCardView';
 
 const csv = 'name,id,back_of\nTroll,,\nMoonrise Hunter,,hunter\nDaylight Hunter,hunter,\n';
 
@@ -60,5 +61,43 @@ describe('A11Y-6 table card names', () => {
     });
     expect(view.missing).toBe(true);
     expect(view.label).toBe('Troll, not in the CSV any more');
+  });
+});
+
+describe('PF-2 table card views keep their identity', () => {
+  function twoOnTable() {
+    let session = loadPile(createSession(SOLO_PVE), { pileId: 'pile-p1-main', cardSetId: 'set-1', source: { kind: 'file', name: 'd.csv' }, cards: cardsFrom(csv), keepOrder: true }, testContext()).state;
+    for (const card of Object.values(session.cards).slice(0, 2)) session = moveCard(session, { cardId: card.id, to: { zone: 'table' } }).state;
+    return session;
+  }
+
+  it('returns the same view until its card changes, and a new one when it does', () => {
+    const viewOf = createTableCardViews();
+    const session = twoOnTable();
+    const at = (g: SessionState, index: number) => {
+      const entry = g.table[index];
+      if (!entry) throw new Error('Nothing there');
+      return viewOf(g, entry);
+    };
+    const [a, b] = [at(session, 0), at(session, 1)];
+    const rotated = rotate(session, { cardId: session.table[0]?.cardId ?? '', direction: 'clockwise' }).state;
+    expect(at(rotated, 1)).toBe(b);
+    expect(at(rotated, 0)).not.toBe(a);
+    expect(at(rotated, 0).label).toMatch(/rotated 90°/);
+
+    const flipped = flip(rotated, { cardId: rotated.table[1]?.cardId ?? '' }).state;
+    expect(at(flipped, 1)).not.toBe(b);
+  });
+
+  it("keeps views when a seat counter changes, and refreshes them when the owner's name does", () => {
+    const viewOf = createTableCardViews();
+    const session = twoOnTable();
+    const entry = session.table[0];
+    if (!entry) throw new Error('Nothing on the table');
+    const view = viewOf(session, entry);
+    const counted = { ...session, seats: session.seats.map((seat) => ({ ...seat, counters: seat.counters.map((c) => ({ ...c, value: c.value + 1 })) })) };
+    expect(viewOf(counted, entry)).toBe(view);
+    const renamed = { ...session, seats: session.seats.map((seat) => ({ ...seat, name: `${seat.name}!` })) };
+    expect(viewOf(renamed, entry)).not.toBe(view);
   });
 });

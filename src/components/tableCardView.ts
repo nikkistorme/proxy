@@ -41,3 +41,24 @@ export function tableCardView(state: SessionState, entry: TableEntry): TableCard
   const gone = missing ? ', not in the CSV any more' : '';
   return { entry, face, ownerSeatId, ownerPlace, missing, doubleFaced: definition.back !== undefined, label: `${face.name}${side}${rotated}${gone}${counters}` };
 }
+
+/**
+ * PF-2: `tableCardView` with a memory. A card's view keeps its identity while its table
+ * entry, card, definition and owner are the same objects and values, so a memoised
+ * `TableCard` skips the renders an action on another card, or a drag, would cause.
+ */
+export function createTableCardViews(): (state: SessionState, entry: TableEntry) => TableCardView {
+  const cache = new WeakMap<TableEntry, { card: unknown; definition: unknown; owner: unknown; view: TableCardView }>();
+  return (state, entry) => {
+    const card = state.cards[entry.cardId];
+    const definition = card && state.definitions[card.definitionId];
+    // A seat counter changes the seats list, but only the owner's place and name show on a card.
+    const ownerSeat = card && state.seats.find((s) => s.id === card.ownerSeatId);
+    const owner = ownerSeat ? `${ownerSeat.place} ${ownerSeat.name}` : undefined;
+    const hit = cache.get(entry);
+    if (hit && hit.card === card && hit.definition === definition && hit.owner === owner) return hit.view;
+    const view = tableCardView(state, entry);
+    cache.set(entry, { card, definition, owner, view });
+    return view;
+  };
+}
