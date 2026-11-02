@@ -75,8 +75,8 @@ One row per run. Copy the table to add runs. Status is Pass or Fail for the whol
 
 | Date | Screen reader and version | Browser and version | OS | Status | Notes |
 | --- | --- | --- | --- | --- | --- |
-| | NVDA | Firefox | Windows | | |
-| | VoiceOver | Safari | macOS | | |
-| | VoiceOver (iPhone, hardware keyboard, Full Keyboard Access) | Safari | iOS | | |
+| 2026-11-02 | NVDA (version not recorded) | Firefox | Windows | Pass | Run by the owner |
+| 2026-11-02 | VoiceOver (version not recorded) | Safari | macOS | Pass | Run by the owner |
+| 2026-11-02 | VoiceOver (iPhone, hardware keyboard, Full Keyboard Access) | Safari | iOS | Pass | Run by the owner |
 
 When both desktop runs pass, tick the first Accessibility acceptance criterion in `docs/requirements.md` and update the Remarks column in `docs/accessibility/acr.md` for the criteria these runs settle (1.3.1, 2.1.1, 2.4.3, 3.3.2, 4.1.2, 4.1.3).

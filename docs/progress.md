@@ -26,6 +26,13 @@ Phase 8 (Polish, #167) is split into 8a to 8f, sub-issues #168 to #173. 8a (#168
 
 ## Done
 
+### V1 manual checks (2026-11-02)
+
+- **Done by the owner:** the real published sheet reload (a card's text changed in place, without moving; CD), the 8c art flash check on a real screen (art appears in place; PF-1), the iPhone touch checks (the iOS field zoom fix, touch drags on the table, in the hand, merging piles and out of the pile viewer, touch holds, Space with Full Keyboard Access, layout boxes by touch, the native colour picker, VoiceOver activating a pile), and the screen-reader solo turn in NVDA + Firefox, VoiceOver + Safari and VoiceOver on iPhone (`docs/testing/screen-reader-plan.md`).
+- **Ticked:** the real-sheet criterion in Card data and the screen-reader solo turn in Accessibility. The iPhone lines in Open problems are removed.
+- **Still open:** the manual WCAG 2.2 A and AA audit, so `docs/accessibility/acr.md` stays a draft and its criterion stays unticked. Versions weren't recorded for the screen-reader runs.
+- **Changed requirements:** none; two acceptance criteria ticked.
+
 ### Phase 8f-2: Phase 8 and V1 close-out (#180, 2026-11-02)
 
 - **Ticked (with the test or measurement beside each in `docs/requirements.md`):** the DM and PF sections now have acceptance lists, all ticked: Load demo in one click (`e2e/demo.spec.ts`, `src/actions/loadDemo.test.ts`); the demo's counts, three layouts, double-faced cards and art credits (`src/demo/demoContent.test.ts`); `private/` ignored (`git check-ignore`); size check in CI (`npm run check:size`, `scripts/bundle-size.test.mjs`, 107.77 kB); PF-2 render test; art and pile viewer (`CardArt.test.tsx`, `e2e/lazy-loading.spec.ts`); stress table and Lighthouse numbers in `docs/performance.md`. In Testing and CI/CD: failing checks block merge (the `main` ruleset requires the four checks; `gh api repos/nikkistorme/proxy/rules/branches/main`), and `npm test` and `npm run test:e2e` are exactly what CI runs.
@@ -1079,11 +1086,7 @@ Phase 8 (Polish, #167) is split into 8a to 8f, sub-issues #168 to #173. 8a (#168
 
 Every issue fills in its Placement section (`design/ui-placement.md`). No issue adds a header or toolbar control (UI-3).
 
-- **Owner's manual checks (V1 is built; these finish its acceptance):**
-  1. **Real sheet reload (from 7g).** With a real published Google Sheet, edit a card's text, wait for Google to update, choose **Reload from URL**, and the card changes without moving. This ticks the last CD criterion. The sheet check on a phone from 7g stays here too.
-  2. **Art flash (from 8c).** On a real screen, run Load demo and watch the art come in on the table, in the pile viewer and after a reload: it should appear in place with no jump or flicker (PF-1).
-  3. **iPhone touch checks** (the lists in Open problems): the iOS field zoom fix (A11Y-12), touch drags on the table, in the hand, merging piles and out of the pile viewer, touch holds opening a card's or pile's menu, Space with Full Keyboard Access, drawing and moving layout boxes by touch, the native colour picker, and what VoiceOver does when it activates a pile.
-  4. **Screen-reader runs** in `docs/testing/screen-reader-plan.md` (NVDA + Firefox, VoiceOver + Safari, VoiceOver on iPhone). They tick the first Accessibility acceptance criterion and settle the "Not yet evaluated by hand" rows in `docs/accessibility/acr.md`, which the owner's manual WCAG 2.2 A and AA walk-through also fills in before the report is final (and ticks the third Accessibility criterion).
+- **Owner's manual WCAG 2.2 A and AA audit:** the one manual step left. It settles the "Not yet evaluated by hand" rows in `docs/accessibility/acr.md`, finishes the report and ticks the third Accessibility criterion.
 - **Placement to carry:** Load demo sits in the New session dialog until Home exists (#131), where it moves to Home › Load demo; the manual theme choice waits for Settings › Appearance (#131).
 - **After V1, in this order:**
   1. The demo on its own path (#63).
@@ -1141,9 +1144,7 @@ Every issue fills in its Placement section (`design/ui-placement.md`). No issue 
 - The session log's times are worked out when it opens, so they don't tick while it stays open.
 - Seat counters step one at a time. Typing an exact value (for example Life 20 to 5) could reuse the card counters' value field, as a follow-up.
 - A card dragged from the table or a pile into a hand always goes to the end of the hand. Only a drag within the hand chooses a place.
-- Dragging to reorder the hand by touch needs a check on an iPhone, like the other touch drags.
 
-- The iOS field zoom fix (#66, A11Y-12) needs a check on an iPhone: the E2E checks font sizes, not Safari's zoom itself.
 - A card's menu opened by a touch hold doesn't take focus, the same as a pile's: the browser's own mousedown after a touch moves focus back to the card.
 - The enlarge preview is sized in CSS px, so it shrinks with browser zoom like the rest of the page. The table's own zoom doesn't change it, as TT-9 asks (checked with the owner).
 - The enlarge preview's hover runs on a mouse only. The preview closes when the table scrolls or zooms, rather than following the card.
@@ -1153,31 +1154,27 @@ Every issue fills in its Placement section (`design/ui-placement.md`). No issue 
 - axe's target-size check fails when two box buttons on the canvas overlap, which layouts often need (a plate under a name). The E2E draws its boxes apart. Arrow keys and the box list in Tab order reach every box.
 - The contrast warning treats an empty card as white, and only counts a box below as the backdrop when it covers the text box whole. Text over two part-covering boxes is checked against the next box that covers it whole, or white.
 - The Size field saves each valid size as it's typed, so typing 90 saves 9 before showing the error for 90.
-- The native colour picker needs a check on an iPhone. The hex field always works.
 - A type can only be mapped to a saved layout, not to the built-in Default. Mapping to Default while the default option is another layout would need the built-in layout to have an id.
 - Mappings for types no longer in any CSV stay listed until set to Use default layout. There's no remove button.
 - Dragging a box snaps its top-left corner only, so a box with an off-grid size keeps its right and bottom edges off the grid until it's resized.
 - The preview row's card name truncates on narrow screens. Its full text is in the step announcement and a tooltip.
 - The preview shows only cards loaded in this session. Saved card sets from earlier visits aren't listed until the card library (#67) reads them back.
 - Box number chips sit over the top-left of each box, so on small boxes or a phone they can cover the first letters of the box's text.
-- Drawing, moving and resizing boxes by touch needs a check on an iPhone. The E2E uses a mouse.
 - In the counters dialog, typing a minus in the value field steps it down rather than typing a negative number. Values below zero are reached with − or the arrow keys.
 - Counter pills scale with the table's zoom like the Actions button, so below 100% they're under 24px tall. C and the card menu always work.
-- Merging piles by touch needs a check on an iPhone, like the other touch drags.
 - A pile's menu opened by a touch hold doesn't take focus, because the browser's own mousedown after a touch moves focus back to the pile. A tap outside closes it. Enter on the pile, or a right-click, opens it with focus in the menu.
-- A screen reader's "activate" sends a click, so it draws rather than opening a pile's menu. The pile's description says Enter opens actions, and every draw is announced and can be undone. Check this with VoiceOver on a phone.
-- Touch holds on piles, and Space with iOS Full Keyboard Access, need a check on an iPhone. The touch E2E runs in Chromium only.
+- A screen reader's "activate" sends a click, so it draws rather than opening a pile's menu. The pile's description says Enter opens actions, and every draw is announced and can be undone.
+- The touch E2E runs in Chromium only; touch holds on piles and Space with iOS Full Keyboard Access were checked by hand on an iPhone (2026-11-02).
 - In E2E, axe skips the faded, dashed placeholder a dragged pile leaves behind (`.card-drag-origin`), because its name text is faded on purpose until the drop.
 - The toolbar's "Fit all cards (0)" also fits piles now. Its label could say so if that confuses.
 - Unit tests that draw only the table move the Solo piles out of the way (`pilesOutOfTheWay` in `actions/testing.ts`), so cards still auto-place from the top-left there.
 - Dragging doesn't scroll the table when the pointer nears its edge. To drop beyond the visible table, pan or zoom out first.
-- The touch drag E2E test runs in Chromium only, because Playwright sends multi-step touches through Chromium's DevTools protocol. Unit tests cover the touch rules, and iOS needs a check on a phone.
+- The touch drag E2E test runs in Chromium only, because Playwright sends multi-step touches through Chromium's DevTools protocol. Unit tests cover the touch rules, and iOS was checked by hand (2026-11-02).
 - The hand's "Drop: Player 1's hand" label sits mid-tray, so the dragged card can cover it. The ring and tint still show.
 - The Actions button and card overlays scale with the table's zoom, so below 100% the button is smaller than 24 × 24px (A11Y-8 counts default zoom only). Enter and right-click always work. Revisit if it's a problem in play.
 - A card turned a quarter at the table's left or top edge reaches up to 25px past the mat edge, because it turns around its centre. Placing keeps cards inside the edge (`clampToTable`), but turning a card in place doesn't move it.
 - Pile viewer cards can be dragged to a spot on the table, but the keyboard can't choose a spot straight from the viewer or peek, because those dialogs would have to close first. Send the card to the table, then press Space on it.
 - A card dragged out of the pile viewer keeps the viewer's 150px size under the pointer, not the table card's size at the current zoom.
-- Dragging from the pile viewer by touch needs a check on an iPhone, like the other touch drags.
 - In jsdom, the search in a Move to… dialog opened from the hand card menu doesn't always get focus before typing, so unit tests type into it directly. Browsers focus it, and the E2E covers that.
 - `axe` scrolls the table while it checks contrast, so E2E tests that click cards after an axe check scroll the table back first.
 - Local WebKit on macOS skips buttons when tabbing, unlike CI's Linux WebKit, so the keyboard-only E2E tests that press Tab fail locally in WebKit only. Use Chromium locally, as BP-4 says, and trust CI for WebKit.
