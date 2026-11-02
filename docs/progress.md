@@ -1087,20 +1087,22 @@ Phase 8 (Polish, #167) is split into 8a to 8f, sub-issues #168 to #173. 8a (#168
 Every issue fills in its Placement section (`design/ui-placement.md`). No issue adds a header or toolbar control (UI-3).
 
 - **Owner's manual WCAG 2.2 A and AA audit:** the one manual step left. It settles the "Not yet evaluated by hand" rows in `docs/accessibility/acr.md`, finishes the report and ticks the third Accessibility criterion.
-- **Placement to carry:** Load demo sits in the New session dialog until Home exists (#131), where it moves to Home › Load demo; the manual theme choice waits for Settings › Appearance (#131).
-- **After V1, in this order:**
-  1. The demo on its own path (#63).
-  2. The placement foundations: action registry (#130); workspace with rail, Home, Library and Settings (#131, in three parts); header slots, Session menu and table tools on the table (#132); side panel with Log, Piles and Details (#133); seat dock (#134); command palette (#135).
-  3. The card set library (#67), in Library › Card sets, then editing card sets in Proxy (#136).
-  4. Games (#65), in the rail and Home.
-  5. Accounts and sync (#45): rail footer, header Account slot, Settings › Account. #45's docs-only step 1 (confirming Supabase, writing the accounts requirements) can happen any time.
-  6. Shared setups (#106), after #45: header Share slot, Library › Shared setups, testers' locks through the registry's `can()`.
+- **Placement to carry:** Load demo sits in the New session dialog until Home exists (#189), where it moves to Home › Load demo; the manual theme choice waits for Settings › Appearance (#191).
+- **After V1, in this order** (agreed 2026-11-02; one issue at a time, each planned in Opus and built in Sonnet):
+  1. Axe scans for the remaining states (#183), then no text-field focus on touch screens (#68).
+  2. Hosting moves to Cloudflare Pages (#186): any path loads the app, base path `/`, a preview link on every PR, and the old GitHub Pages site says where Proxy moved.
+  3. The placement foundations (#187): action registry (#130); workspace (#131) as routing foundation (#188), rail and Home (#189), Library with Layouts and Formats (#190) and Settings with Appearance and Data (#191); header slots, Session menu and table tools (#132, may split in planning); side panel (#133); seat dock (#134); command palette (#135). The demo on its own path (#63) can follow #188 as an ordinary route.
+  4. Control settings (#53, five parts), with #71 as its sub-issue in the keyboard part. Shared setups' part 1 (#106, the `?setup=` loader, no backend) can follow it.
+  5. The card set library (#67, three parts) at `/library/card-sets`, then editing card sets in Proxy (#136), which settles the card set's saved shape before sync.
+  6. Games (#65, four parts) with its own page at `/games`: it now also links card sets to games (from #67) and tags each option as a game option or a personal preference (from #106).
+  7. Accounts and sync (#45, steps 2 to 5). Step 1 (decision record and accounts requirements, docs only) can happen any time.
+  8. Shared setups (#106, parts 2 and 3), after #45.
+- **Pages, not modals (owner, 2026-11-02):** every workspace area is a page with its own path, for example `/home`, `/games/:id`, `/library/card-sets`, `/library/layouts/:id/edit` and `/settings/controls`. Session actions that act on the table (Move to…, counters, Rename session) stay dialogs.
 - **After V1, as feature issues, once their prerequisites are in:**
   - Rewinding from the session log (#107), after the side panel (#133).
-  - Control settings with shortcut remapping (#53), after #130, #131 and #135, with #71 (keys act on the hovered card or pile, which needs #53's off switch for WCAG 2.1.4).
   - Selection and group actions (#29) with the selection bar, after #130; then stacks (#30). Multi-select in the pile viewer (#57) uses the same selection bar, built in whichever of #29 and #57 comes first. #43 looks like an earlier, empty copy of #57.
   - PWA support (#59): Settings › App once #131 exists, no in-app install banner.
-  - Layout editor undo (#102) and #68 (no text-field focus on touch screens in the other dialogs) aren't tied to anything, and the owner chooses when.
+  - Layout editor undo (#102) isn't tied to anything, and the owner chooses when.
 - Open problems that belong to later issues:
   - #29 (after V1): move the Actions button to the selected card
 
@@ -1196,6 +1198,9 @@ Every issue fills in its Placement section (`design/ui-placement.md`). No issue 
 
 | Date | Decision | Rejected | Why |
 | --- | --- | --- | --- |
+| 2026-11-02 | Host on Cloudflare Pages instead of GitHub Pages (#186) (owner) | GitHub Pages with a folder per page and `?id=`, or a `404.html` redirect; Netlify | Workspace pages need real paths. Cloudflare serves the app for any path with a 200, still gives every PR a preview link, and gives each preview its own origin. Netlify was close (previews named by PR number) |
+| 2026-11-02 | Workspace areas (Home, Games, Library tabs, Settings sections, editors) are pages with their own paths, not modals; Games gets its own page in the rail (owner) | Library and Settings as full-screen dialogs; a game only as a filter in Home | Links, bookmarks, reloads and Back all work, and each page has its own title and focus target |
+| 2026-11-02 | Post-V1 order and structure: #187 is the parent of #130 to #135; #131 splits into #188 to #191; #71 is a sub-issue of #53; card set game links move from #67 to #65, and option tagging from #106 to #65; #136 lands before #45 (owner) | The order in the placement guide alone | Each piece fits one session, and every change to saved data's shape lands before sync |
 | 2026-11-02 | CI enforces only the initial JavaScript size (≤ 150 kB gzipped); Lighthouse (LCP, CLS, score) is run by hand and recorded in `docs/performance.md`, and #63 repeats it on `/demo/` (owner) | A Lighthouse CI gate (`@lhci/cli`) | Proxy is used in long laptop sessions, where responsiveness matters more than first load on a simulated slow phone. Scores are noisy, and a gate adds minutes to every PR. JS size and the PF-2 render test are the CI guards. |
 |  2026-10-25 | Phase 0 covers QA-6 and CI/CD steps 1, 2 and 5, not the "QA-2, CI/CD 1–4" in the requirements phase table | — | Coverage thresholds wait until Phase 1, when there's code to measure. Lighthouse CI is in Phase 7. PR previews (step 3) are still undecided. Branch protection (step 4) is an owner step.  |
 |  2026-10-25 | ESLint 9 and TypeScript 6 rather than the latest majors | — | `eslint-plugin-jsx-a11y` and `typescript-eslint` don't support ESLint 10 or TypeScript 7 yet. Revisit when they do.  |
