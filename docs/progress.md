@@ -1095,7 +1095,7 @@ Every issue fills in its Placement section (`design/ui-placement.md`). No issue 
 - **Owner's manual WCAG 2.2 A and AA audit:** the one manual step left. It settles the "Not yet evaluated by hand" rows in `docs/accessibility/acr.md`, finishes the report and ticks the third Accessibility criterion.
 - **Placement to carry:** Load demo sits in the New session dialog until Home exists (#189), where it moves to Home › Load demo; the manual theme choice waits for Settings › Appearance (#191).
 - **After V1, in this order** (agreed 2026-11-02; one issue at a time, each planned in Opus and built in Sonnet):
-  1. Axe scans for the remaining states (#183), then no text-field focus on touch screens (#68).
+  1. No text-field focus on touch screens (#68).
   2. Hosting moves to Cloudflare Pages (#186): any path loads the app, base path `/`, a preview link on every PR, and the old GitHub Pages site says where Proxy moved.
   3. The placement foundations (#187): action registry (#130); workspace (#131) as routing foundation (#188), rail and Home (#189), Library with Layouts and Formats (#190) and Settings with Appearance and Data (#191); header slots, Session menu and table tools (#132, may split in planning); side panel (#133); seat dock (#134); command palette (#135). The demo on its own path (#63) follows #189 as an ordinary route, so Home › Load demo links to `/demo`.
   4. Rewinding from the session log (#107), after the side panel. Stable undo step ids change the saved session, so this lands before sync.
