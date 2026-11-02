@@ -1,4 +1,4 @@
-import{c as e}from"./index-6LWqHwyZ.js";var t=`name,id,back_of,qty,type,layout,image,cost,rules,stats
+import{c as e}from"./index-4Ynw3sd4.js";var t=`name,id,back_of,qty,type,layout,image,cost,rules,stats
 Ember Scout,,,3,Creature,Demo creature,demo/art/ember-scout.svg,1,"When played, look at the top card of the Fog.",1/1
 Hearth Guard,,,3,Creature,Demo creature,demo/art/hearth-guard.svg,2,Blocks first each round.,1/3
 Lantern Bearer,,,3,Creature,Demo creature,demo/art/lantern-bearer.svg,2,Your other keepers get +1 while this is in play.,1/2
