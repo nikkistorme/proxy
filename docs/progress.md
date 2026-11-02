@@ -26,6 +26,13 @@ Phase 8 (Polish, #167) is split into 8a to 8f, sub-issues #168 to #173. 8a (#168
 
 ## Done
 
+### No text-field focus on touch screens (#68, 2026-11-02)
+
+- **Rule:** on a touch screen (`pointer: coarse`), opening a dialog never focuses a text field. `Dialog` skips a text-field `data-autofocus` (`isTextField` in `touchScreen.ts`), so focus stays on the Close button; a button marked `data-autofocus` is still focused. `PileViewer` sends every search focus (opening, after a move empties the list, Clear search, Clear all) through one helper that focuses the current card, else Close, on touch. ArrowUp from the cards still goes to the search field, as an explicit keyboard request.
+- **Cleanup:** `NameDialog` and `LoadUrlDialog` lost their own touch checks, since `Dialog` now enforces the rule. `CountersDialog` (focuses the + button) and `FormatEditor` (focus after Add) keep theirs.
+- **Tests:** `Dialog.test.tsx`, `PileViewer.test.tsx` and `isTextField` unit cases; `e2e/touch-focus.spec.ts` (375 × 667, Chromium) covers the pile viewer, Move to…, Draw cards… and Rename….
+- **Requirements changed:** A11Y-12.
+
 ### Axe scans for the last three states (#183, 2026-11-02)
 
 - **Scans:** a full WCAG 2.2 A and AA axe scan, in light and dark, of the bundle import error dialog (`e2e/bundle.spec.ts`, Import bundle… with `not-json.json`), the loading overlay (`e2e/resume.spec.ts`, with the storage check held back as in the phone overlay test) and the chunk-failed toast (`e2e/lazy-loading.spec.ts`, Load demo, then `v` on Board cards with the `PileViewer` chunk aborted). Each test also checks `data-theme` matches the colour scheme, and waits for running animations to end before scanning. No violations, so no app changes.
@@ -1095,16 +1102,15 @@ Every issue fills in its Placement section (`design/ui-placement.md`). No issue 
 - **Owner's manual WCAG 2.2 A and AA audit:** the one manual step left. It settles the "Not yet evaluated by hand" rows in `docs/accessibility/acr.md`, finishes the report and ticks the third Accessibility criterion.
 - **Placement to carry:** Load demo sits in the New session dialog until Home exists (#189), where it moves to Home › Load demo; the manual theme choice waits for Settings › Appearance (#191).
 - **After V1, in this order** (agreed 2026-11-02; one issue at a time, each planned in Opus and built in Sonnet):
-  1. No text-field focus on touch screens (#68).
-  2. Hosting moves to Cloudflare Pages (#186): any path loads the app, base path `/`, a preview link on every PR, and the old GitHub Pages site says where Proxy moved.
-  3. The placement foundations (#187): action registry (#130); workspace (#131) as routing foundation (#188), rail and Home (#189), Library with Layouts and Formats (#190) and Settings with Appearance and Data (#191); header slots, Session menu and table tools (#132, may split in planning); side panel (#133); seat dock (#134); command palette (#135). The demo on its own path (#63) follows #189 as an ordinary route, so Home › Load demo links to `/demo`.
-  4. Rewinding from the session log (#107), after the side panel. Stable undo step ids change the saved session, so this lands before sync.
-  5. Selection and group actions (#29, two parts) with the selection bar, then multi-select in the pile viewer (#57, a sub-issue of #29), then stacks (#30). Selection comes before #53 so its click settings know how a card is selected, and stacks change the saved session before sync.
-  6. Control settings (#53, five parts), with #71 as its sub-issue in the keyboard part. Shared setups' part 1 (#106, the `?setup=` loader, no backend) can follow it.
-  7. The card set library (#67, three parts) at `/library/card-sets`, then editing card sets in Proxy (#136), which settles the card set's saved shape before sync.
-  8. Games (#65, four parts) with its own page at `/games`: it now also links card sets to games (from #67) and tags each option as a game option or a personal preference (from #106).
-  9. Accounts and sync (#45, steps 2 to 5). Step 1 (decision record and accounts requirements, docs only) can happen any time.
-  10. Shared setups (#106, parts 2 and 3), after #45.
+  1. Hosting moves to Cloudflare Pages (#186): any path loads the app, base path `/`, a preview link on every PR, and the old GitHub Pages site says where Proxy moved.
+  2. The placement foundations (#187): action registry (#130); workspace (#131) as routing foundation (#188), rail and Home (#189), Library with Layouts and Formats (#190) and Settings with Appearance and Data (#191); header slots, Session menu and table tools (#132, may split in planning); side panel (#133); seat dock (#134); command palette (#135). The demo on its own path (#63) follows #189 as an ordinary route, so Home › Load demo links to `/demo`.
+  3. Rewinding from the session log (#107), after the side panel. Stable undo step ids change the saved session, so this lands before sync.
+  4. Selection and group actions (#29, two parts) with the selection bar, then multi-select in the pile viewer (#57, a sub-issue of #29), then stacks (#30). Selection comes before #53 so its click settings know how a card is selected, and stacks change the saved session before sync.
+  5. Control settings (#53, five parts), with #71 as its sub-issue in the keyboard part. Shared setups' part 1 (#106, the `?setup=` loader, no backend) can follow it.
+  6. The card set library (#67, three parts) at `/library/card-sets`, then editing card sets in Proxy (#136), which settles the card set's saved shape before sync.
+  7. Games (#65, four parts) with its own page at `/games`: it now also links card sets to games (from #67) and tags each option as a game option or a personal preference (from #106).
+  8. Accounts and sync (#45, steps 2 to 5). Step 1 (decision record and accounts requirements, docs only) can happen any time.
+  9. Shared setups (#106, parts 2 and 3), after #45.
 - **Pages, not modals (owner, 2026-11-02):** every workspace area is a page with its own path, for example `/home`, `/games/:id`, `/library/card-sets`, `/library/layouts/:id/edit` and `/settings/controls`. Session actions that act on the table (Move to…, counters, Rename session) stay dialogs.
 - **Backlog, outside the order:**
   - Layout editor undo (#102): self-contained, no saved data. A good time is right after #190.
@@ -1326,7 +1332,7 @@ Every issue fills in its Placement section (`design/ui-placement.md`). No issue 
 | 2026-10-27 | Escape on a focused card or pile moves focus to the table | Leaving focus on the card | Owner decision. Focus stays in the table region, so the keyboard isn't lost. |
 | 2026-10-27 | Hover-plus-key actions are their own issue (#71) | Building them in #70 | Single-letter keys without focus need an off switch under WCAG 2.1.4 (#61, #53). Owner approved. |
 | 2026-10-27 | A hover preview stays open while the pointer is over it, and Escape closes it | Closing as soon as the pointer leaves the card | WCAG 1.4.13: hover content must be hoverable and dismissible, and the flip button must be reachable by mouse. |
-| 2026-10-27 | On touch screens, a dialog's focus goes to a button, never straight to a text field | Autofocusing the first field everywhere | Owner rule: the keyboard sliding up is jarring. Done in the counters dialog; the other dialogs follow in #68. |
+| 2026-10-27 | On touch screens, a dialog's focus goes to a button, never straight to a text field | Autofocusing the first field everywhere | Owner rule: the keyboard sliding up is jarring. Done in the counters dialog; `Dialog` now enforces it for every dialog (#68). |
 | 2026-10-27 | Fix iOS field zoom with 16px text on touch screens only (#66) | `maximum-scale=1` in the viewport tag; 16px on every screen | `maximum-scale` also blocks pinch zoom, which fails WCAG 1.4.4. Keeping desktop at the design's 15px and 14px leaves the boards matched where they were drawn. |
 | 2026-10-27 | Make the V1 data model ready for games, card sets and accounts, with no backend in V1 ([decision record](decisions/0001-v1-data-model-ready-for-accounts.md), #69) | Accounts in V1; leaving the model and migrating later | Avoids save migrations and a storage rewrite after V1, while V1 stays complete on its own. |
 | 2026-10-27 | A play session is a "session" | "Playtest", as #45, #65, #67 and #69 proposed | Owner decision: clearer and more flexible. "Game" means the card game being designed. |

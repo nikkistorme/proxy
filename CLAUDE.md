@@ -52,6 +52,7 @@ The owner tests UI previews on a phone, including iOS, so phone-size layout matt
 
 - Every screen works from 320 CSS px wide with no sideways page scrolling. Rows wrap; long rows scroll inside their own region.
 - Dialogs and sheets fit the phone screen: their content scrolls and the footer buttons stay visible. Use `100dvh` for height limits, and don't rely on a `flex: 1` (0%) basis inside auto-height containers, which some mobile Safari versions collapse.
+- On touch screens (`pointer: coarse`) a dialog or sheet never focuses a text field on open (A11Y-12). `Dialog` enforces it for `data-autofocus`; a sheet that sets focus itself must pick a button or card when `touchScreen()` is true.
 - New screens or dialogs get a phone-size E2E check (for example a 375 × 667 viewport), like the import results test in `e2e/import.spec.ts`.
 - For keyboard testing on iOS, the owner uses a hardware keyboard with Full Keyboard Access turned on.
 

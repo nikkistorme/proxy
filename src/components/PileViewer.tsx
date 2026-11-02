@@ -13,6 +13,7 @@ import { filterColumns, filterEntries, pileEntries, type PileEntry } from './pil
 import './Form.css';
 import './PileViewer.css';
 import { seatIdentity, seatPlace } from './seatIdentity';
+import { touchScreen } from './touchScreen';
 
 const ICONS = {
   shuffle: 'M4 7h3l10 10h3M4 17h3l3-3M14 10l3-3h3M18 4l2 3-2 3M18 14l2 3-2 3',
@@ -75,13 +76,15 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
   const matches = useMemo(() => filterEntries(entries, { search, filters }), [entries, search, filters]);
   // The card that holds the tab stop and shows its actions; the first match until one is chosen.
   const current = matches.find((m) => m.cardId === currentId) ?? matches[0];
+  const currentRef = useRef<string>(undefined);
+  currentRef.current = current?.cardId;
 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
     if (open && !dialog.open) {
       dialog.showModal();
-      searchRef.current?.focus();
+      focusEntry();
     }
     if (!open && dialog.open) dialog.close();
   }, [open]);
@@ -92,11 +95,21 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
     const pending = pendingFocusRef.current;
     if (!pending || moveRequest) return;
     pendingFocusRef.current = undefined;
-    if (pending === 'search') searchRef.current?.focus();
+    if (pending === 'search') focusEntry();
     else listRef.current?.querySelector<HTMLElement>(`[data-card-id="${pending}"]`)?.focus();
   });
 
   const close = () => dialogRef.current?.close();
+
+  /** The search field, or on a touch screen (no keyboard sliding up, A11Y-12) the current card, else Close. */
+  function focusEntry() {
+    if (!touchScreen()) {
+      searchRef.current?.focus();
+      return;
+    }
+    const card = currentRef.current ? listRef.current?.querySelector<HTMLElement>(`[data-card-id="${currentRef.current}"]`) : undefined;
+    (card ?? dialogRef.current?.querySelector<HTMLElement>('.pile-viewer__close'))?.focus();
+  }
 
   /** Back after a drag, as it was. */
   function reopen() {
@@ -224,13 +237,13 @@ export function PileViewer({ pileId, onClose }: PileViewerProps) {
 
   function clearSearch() {
     setSearch('');
-    searchRef.current?.focus();
+    focusEntry();
   }
 
   function clearAll() {
     setSearch('');
     setFilters({});
-    searchRef.current?.focus();
+    focusEntry();
   }
 
   const count = entries.length;

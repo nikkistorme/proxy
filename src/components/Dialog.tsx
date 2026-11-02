@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type FormEvent, type ReactNode } from 'react';
+import { isTextField, touchScreen } from './touchScreen';
 import './Dialog.css';
 
 interface DialogProps {
@@ -33,7 +34,8 @@ interface DialogProps {
 /**
  * A modal dialog following the MoveDialog board, on the native <dialog>: focus
  * moves in and stays there, Escape closes it. Put `data-autofocus` on the
- * element that should get focus first; otherwise the close button gets it.
+ * element that should get focus first; otherwise the close button gets it. On a touch
+ * screen a text field there is skipped, so the close button gets focus and no keyboard opens.
  */
 export function Dialog({
   open,
@@ -60,7 +62,9 @@ export function Dialog({
     if (open && !dialog.open) {
       reported.current = false;
       dialog.showModal();
-      dialog.querySelector<HTMLElement>('[data-autofocus]')?.focus();
+      const first = dialog.querySelector<HTMLElement>('[data-autofocus]');
+      // On a touch screen a text field would slide the keyboard up, so showModal()'s own focus stays (A11Y-12).
+      if (first && !(touchScreen() && isTextField(first))) first.focus();
     }
     if (!open && dialog.open) dialog.close();
   }, [open]);
