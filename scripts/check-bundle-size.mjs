@@ -3,7 +3,7 @@
 import { readFile } from 'node:fs/promises';
 import { findStartScripts, formatKb, gzipBytes, resolveInDist, sumBytes } from './bundle-size.mjs';
 
-const LIMIT_BYTES = 150_000;
+const LIMIT_BYTES = 50_000;
 const base = process.env.VITE_BASE ?? '/proxy/';
 
 let html;
