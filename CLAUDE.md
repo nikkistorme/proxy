@@ -29,7 +29,7 @@ This project runs on the owner's personal Claude usage. Be economical.
 - Vite, React 18, TypeScript (strict)
 - Zustand store with an action log (undo/redo/autosave)
 - Papa Parse for CSV; `idb-keyval` for IndexedDB
-- Vitest + Testing Library; Playwright + @axe-core/playwright; Lighthouse CI
+- Vitest + Testing Library; Playwright + @axe-core/playwright
 - GitHub Actions; deploy to GitHub Pages (Vite `base: '/proxy/'`)
 
 ## Architecture rules

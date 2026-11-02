@@ -232,20 +232,22 @@ The stress case is a full 1v1 table: 2 × 60-card decks, a 40-card environment o
 
 | Metric | Budget | Measured on |
 | --- | --- | --- |
-| Largest Contentful Paint | ≤ 2.5 s | Demo page, Lighthouse mobile profile |
-| Interaction to Next Paint | ≤ 200 ms | Any action on the stress table |
-| Cumulative Layout Shift | ≤ 0.1 | Load and CSV import |
-| Drag frame rate | 60 fps sustained | Dragging one card on the stress table, mid-range laptop (the 10-card stack version is with stacks, #30) |
-| JavaScript, initial load | ≤ 150 KB gzipped | Production build |
-| CSV import of 200 rows | ≤ 300 ms to cards in pile | Excluding image downloads |
-| Lighthouse Performance score | ≥ 90 | Demo page, mobile |
+| Largest Contentful Paint | ≤ 2.5 s | Main page (the demo page once #63 exists), Lighthouse mobile profile. Recorded |
+| Interaction to Next Paint | ≤ 200 ms | Any action on the stress table. Recorded |
+| Cumulative Layout Shift | ≤ 0.1 | Load (Lighthouse, main page until #63) and CSV import. Recorded |
+| Drag frame rate | 60 fps sustained | Dragging one card on the stress table, mid-range laptop (the 10-card stack version is with stacks, #30). Recorded |
+| JavaScript, initial load | ≤ 150 KB gzipped | Production build. **Enforced in CI** (`npm run check:size`) |
+| CSV import of 200 rows | ≤ 300 ms to cards in pile | Excluding image downloads. Recorded |
+| Lighthouse Performance score | ≥ 90 | Main page (the demo page once #63 exists), mobile. Recorded |
+
+Only the JavaScript size is enforced in CI; the PF-2 render test also runs there and guards responsiveness. Every other row is measured by hand and recorded in `docs/performance.md`. The Lighthouse rows are measured on the main page until `/demo/` exists (#63), which repeats them there.
 
 **Requirements**
 
 - PF-1: Card art is lazy-loaded (`loading="lazy"`, set before `src`), decoded off the main thread (`decoding="async"`), and reused from the browser's own HTTP cache after first load. The art frame holds its size, so art arriving late shifts nothing. Offline art through a service worker is #59.
 - PF-2: Dragging uses CSS transforms only and doesn't re-render cards that aren't moving.
 - PF-3: The layout editor, pile viewer and Formats screen are code-split and load on first use. The pile viewer opens with the same focus behaviour as before and closing returns focus to the pile. If a chunk fails to download, a toast and the live region say "Couldn't open <screen>. Check your connection, then reload the page.", the screen closes with focus where it was, and the session and table stay as they were.
-- PF-4: A performance check runs in CI against the demo build and fails the build when a budget is exceeded.
+- PF-4: CI enforces the initial JavaScript size: `npm run check:size` adds up the gzipped size of every script the built `index.html` loads at start and fails the build above 150 KB (150,000 bytes). The PF-2 render test, which runs with the unit tests, guards responsiveness. LCP, CLS, the Lighthouse score, INP, drag frame rate and CSV import time are measured and recorded in `docs/performance.md`, not gated, because Lighthouse scores vary run to run and a gate would slow every pull request.
 
 ## Testing and CI/CD
 
@@ -259,7 +261,7 @@ The app ships with a full automated test suite that runs on every pull request; 
 | Component | Vitest + Testing Library | Pile viewer, hand tray, layout editor controls, dialogs; queried by role and accessible name |
 | End-to-end | Playwright (Chromium, Firefox, WebKit) | Full user flows against the production build |
 | Accessibility | @axe-core/playwright | Automated WCAG checks on every screen and open dialog in the E2E suite |
-| Performance | Lighthouse CI | Budgets from the Performance section |
+| Performance | Size check script, Vitest, Playwright, Lighthouse by hand | JavaScript size in CI (`npm run check:size`); the PF-2 render test; INP, drag, CSV import (`npm run test:perf`) and Lighthouse recorded in `docs/performance.md` |
 
 **Requirements**
 
@@ -273,8 +275,8 @@ The app ships with a full automated test suite that runs on every pull request; 
 
 **CI/CD pipeline (GitHub Actions)**
 
-1. On every pull request: install with a locked lockfile, then type-check, lint, unit and component tests with coverage, production build.
-2. Same pull request: run E2E and axe tests in all three browsers against the built app, then Lighthouse CI against budgets.
+1. On every pull request: install with a locked lockfile, then type-check, lint, unit and component tests with coverage, production build, then the initial JavaScript size check (PF-4).
+2. Same pull request: run E2E and axe tests in all three browsers against the built app.
 3. Deploy a preview of the PR build and post its link on the PR.
 4. Branch protection on `main` requires every check above to pass before merge.
 5. On merge to `main`: rebuild, run the full suite again, and deploy to production (GitHub Pages or Netlify).
