@@ -38,7 +38,7 @@
   text-align: center;
 }
 
-/* A brief highlight on change. It's a colour fade, not motion, so it stays under reduced motion. */
+/* A brief highlight on change (A11Y-10); under reduced motion the value just changes. */
 .seat-counter__value--changed {
   animation: seat-counter-changed 900ms ease-out;
 }
@@ -49,5 +49,11 @@
   }
   to {
     background: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seat-counter__value--changed {
+    animation: none;
   }
 }
