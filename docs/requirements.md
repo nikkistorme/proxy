@@ -96,7 +96,7 @@ A pile can read its CSV from a Google Sheet published to the web, so card edits 
 
 **Acceptance criteria**
 
-- [ ] Editing a card's text in a real published sheet, then choosing **Reload from URL** once Google has updated the published data, changes the card on the table without moving it. (Mocked in `e2e/sheet-url.spec.ts` and `e2e/phase7.spec.ts`; still to be checked by the owner against a real sheet.)
+- [x] Editing a card's text in a real published sheet, then choosing **Reload from URL** once Google has updated the published data, changes the card on the table without moving it. (Mocked in `e2e/sheet-url.spec.ts` and `e2e/phase7.spec.ts`; checked by the owner against a real sheet, 2026-11-02.)
 - [x] Pasting an edit link shows the publishing how-to and makes no request. (`e2e/sheet-url.spec.ts`, `src/components/LoadUrlDialog.test.tsx`)
 - [x] E2E tests mock the sheet responses; CI never calls Google. (`e2e/sheet-url.spec.ts`, `e2e/format-sheets.spec.ts`, `e2e/phase7.spec.ts`, `e2e/bundle.spec.ts`)
 
@@ -222,9 +222,9 @@ Target: WCAG 2.2 Level AA across the whole app, including the layout editor. Dra
 
 **Acceptance criteria**
 
-- [ ] A complete solo turn (draw, play a card to a location, rotate it, add a counter, undo) can be done with keyboard and screen reader alone in NVDA + Firefox and VoiceOver + Safari. (The keyboard-only turn is `e2e/solo-turn.spec.ts`. The screen-reader runs are the owner's manual check, by `docs/testing/screen-reader-plan.md`, with results in its table.)
+- [x] A complete solo turn (draw, play a card to a location, rotate it, add a counter, undo) can be done with keyboard and screen reader alone in NVDA + Firefox and VoiceOver + Safari. (The keyboard-only turn is `e2e/solo-turn.spec.ts`. The owner ran it by `docs/testing/screen-reader-plan.md` on 2026-11-02; results are in its table.)
 - [x] Automated axe checks pass with zero violations on every screen. (Passing on the main screen and every menu and dialog off it, `e2e/a11y.spec.ts` `SCREENS`, and on the layout, Formats and format editor screens, import results, snapshots, session bundle import and sheet dialogs in their own specs. The bundle import error dialog (`e2e/bundle.spec.ts`), the loading overlay (`e2e/resume.spec.ts`) and the chunk-failed toast (`e2e/lazy-loading.spec.ts`) are scanned in light and dark, #183.)
-- [ ] A manual audit against WCAG 2.2 AA produces an accessibility conformance report (VPAT format) with no failing criteria. (A draft built from the automated results is `docs/accessibility/acr.md`; the manual audit and the screen-reader runs finish it.)
+- [ ] A manual audit against WCAG 2.2 AA produces an accessibility conformance report (VPAT format) with no failing criteria. (A draft built from the automated results is `docs/accessibility/acr.md`; the screen-reader runs are done (2026-11-02), and the manual audit finishes it.)
 
 ## Performance
 
