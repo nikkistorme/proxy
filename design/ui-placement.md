@@ -20,7 +20,7 @@ Visual reference: `design/mockups/FuturePlacement.dc.html` (low-fidelity, uses `
 ## Two modes
 
 - **Play mode (the table):** full-screen table. Header, table tools, selection bar, one side panel and the seat dock sit around it.
-- **Workspace mode (everything else):** a side rail (Home, Library, Settings, games list, account) with pages and full-screen editors. Home is organised by game; a game is a filter over sessions and Library items, not a separate area.
+- **Workspace mode (everything else):** a side rail (Home, Games, Library, Settings, account) with pages and full-screen editors. Every page, Library tab, Settings section and editor has its own path, so links, reloads and Back work (owner decision, 2026-11-02). Games has its own page; a game also filters sessions on Home and items in the Library.
 - The app keeps opening on the last session. Back on the table goes to Home.
 
 ## The places
@@ -33,9 +33,9 @@ Visual reference: `design/mockups/FuturePlacement.dc.html` (low-fidelity, uses `
 | D | Selection bar | 2+ selected things | Floats above the selection. Five actions + More. The same component is used in the pile viewer. |
 | E | Side panel | Needs room while playing | Tabs: Log (with rewind and snapshots), Piles (the pile viewer), Details (the focused card's fields, counters, layout). |
 | F | Seat dock | Belongs to a seat | Seat switcher, that seat's counters, its hand. Future seat-private things go here. |
-| G | Rail | Getting around the workspace | Home, Library, Settings; the games list; account status in the footer. |
-| H | Pages | Lists of things | Home (games and sessions), Library (card sets, layouts, formats, shared setups as tabs), Settings. |
-| I | Editors | Making things | Card set grid, layout editor, format editor, game options. Full screen, one at a time, with Back to the page they came from. |
+| G | Rail | Getting around the workspace | Home, Games, Library, Settings; account status in the footer. |
+| H | Pages | Lists of things | Home (`/home`: sessions, by game), Games (`/games`, `/games/:id`), Library (`/library/card-sets`, `/layouts`, `/formats`, `/shared` as tabs), Settings (`/settings/:section`). |
+| I | Editors | Making things | Card set grid, layout editor, format editor, game options. Full screen, one at a time, at their own paths (for example `/library/layouts/:id/edit`), with Back to the page they came from. |
 
 ## Header
 
