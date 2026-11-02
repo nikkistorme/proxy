@@ -1,7 +1,6 @@
 import { useId, useState } from 'react';
 import { Dialog } from './Dialog';
 import { FieldControl, FieldError } from './FieldError';
-import { touchScreen } from './touchScreen';
 import './Form.css';
 
 interface NameDialogProps {
@@ -25,8 +24,6 @@ export function NameDialog({ item, validateName, onConfirm, onClose, title, prim
   const errorId = useId();
   const [name, setName] = useState(item?.name ?? '');
   const [showError, setShowError] = useState(false);
-  /** On a touch screen, focus goes to a button, never straight to a text field. */
-  const [touch] = useState(touchScreen);
 
   const error = item ? validateName(name, item.id) : undefined;
 
@@ -65,7 +62,7 @@ export function NameDialog({ item, validateName, onConfirm, onClose, title, prim
               aria-invalid={showError && error !== undefined}
               aria-describedby={showError && error ? errorId : undefined}
               className="form-input"
-              {...(touch ? {} : { 'data-autofocus': true })}
+              data-autofocus
               onFocus={(event) => event.currentTarget.select()}
               onChange={(event) => setName(event.currentTarget.value)}
               onBlur={() => setShowError(name !== '')}

@@ -1,6 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sessionWithDeck, namesOf, tableIds, testContext } from '../actions/testing';
 import type { SessionState } from '../model/session';
 import { createSessionStore, SessionStoreProvider } from '../store/sessionStore';
@@ -196,5 +196,23 @@ describe('SP-6 pile viewer footer', () => {
       await user.click(button);
     }
     expect(state().hands['seat-p1']).toEqual([]);
+  });
+});
+
+describe('A11Y-12 pile viewer focus on a touch screen', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const touch = () => vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === '(pointer: coarse)', media: query }));
+
+  it('focuses the first card, not the search', () => {
+    touch();
+    renderViewer();
+    expect(screen.getByRole('button', { name: /^Ember Scout/ })).toHaveFocus();
+    expect(screen.getByRole('textbox', { name: 'Search name or text' })).not.toHaveFocus();
+  });
+
+  it('focuses Close when the pile is empty', () => {
+    touch();
+    renderViewer(sessionWithDeck('name\n'));
+    expect(screen.getByRole('button', { name: 'Close pile viewer (Esc)' })).toHaveFocus();
   });
 });

@@ -7,7 +7,6 @@ import './Form.css';
 import { formatFetchTime, GOOGLE_NOTE } from './fetchTime';
 import './LoadUrlDialog.css';
 import { PublishHowTo } from './PublishHowTo';
-import { touchScreen } from './touchScreen';
 
 export interface LoadUrlRequest {
   pile: Pile;
@@ -37,8 +36,6 @@ export function LoadUrlDialog({ request, onLoad, onClose }: LoadUrlDialogProps) 
   const [error, setError] = useState(request?.error);
   const [howTo, setHowTo] = useState(false);
   const [busy, setBusy] = useState(false);
-  /** On a touch screen, focus goes to a button, never straight to a text field. */
-  const [touch] = useState(touchScreen);
   const abortRef = useRef<AbortController>(undefined);
 
   // Leaving mid-fetch (Escape, Cancel) stops it.
@@ -103,7 +100,7 @@ export function LoadUrlDialog({ request, onLoad, onClose }: LoadUrlDialogProps) 
                 aria-invalid={error !== undefined}
                 aria-describedby={error ? errorId : undefined}
                 className="form-input load-url__input"
-                {...(touch ? {} : { 'data-autofocus': true })}
+                data-autofocus
                 onChange={(event) => setUrl(event.currentTarget.value)}
               />
             </FieldControl>

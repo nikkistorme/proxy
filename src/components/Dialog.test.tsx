@@ -1,7 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import type { ReactNode } from 'react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Dialog } from './Dialog';
+import { isTextField } from './touchScreen';
 
 describe('Dialog', () => {
   it('shows its title, eyebrow and body only while open', () => {
@@ -80,4 +82,50 @@ describe('Dialog', () => {
     // Regression: React passed the inner close event up, which also closed the outer dialog.
     expect(onOuterClose).not.toHaveBeenCalled();
   });
+});
+
+describe('A11Y-12 touch focus', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const touch = () => vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === '(pointer: coarse)', media: query }));
+  const view = (field: ReactNode) => (
+    <Dialog open title="T" primaryLabel="Done" onClose={() => {}}>
+      {field}
+    </Dialog>
+  );
+
+  // jsdom's showModal() doesn't move focus itself; the e2e spec checks the browser lands on Close.
+  it('skips a text field marked data-autofocus', () => {
+    touch();
+    render(view(<input aria-label="Count" data-autofocus />));
+    expect(screen.getByRole('textbox', { name: 'Count' })).not.toHaveFocus();
+  });
+
+  it('still focuses a button marked data-autofocus', () => {
+    touch();
+    render(view(<button type="button" data-autofocus>Go</button>));
+    expect(screen.getByRole('button', { name: 'Go' })).toHaveFocus();
+  });
+
+  it('focuses the text field on a desktop', () => {
+    render(view(<input aria-label="Count" data-autofocus />));
+    expect(screen.getByRole('textbox', { name: 'Count' })).toHaveFocus();
+  });
+});
+
+describe('A11Y-12 isTextField', () => {
+  const make = (html: string) => {
+    const host = document.createElement('div');
+    host.innerHTML = html;
+    return host.firstElementChild as Element;
+  };
+
+  it.each(['<input>', '<input type="text">', '<input type="search">', '<input type="number">', '<input type="url">', '<input type="email">', '<input type="tel">', '<input type="password">', '<textarea></textarea>'])(
+    'is true for %s',
+    (html) => expect(isTextField(make(html))).toBe(true),
+  );
+
+  it.each(['<input type="radio">', '<input type="checkbox">', '<input type="range">', '<input type="color">', '<input type="file">', '<input type="button">', '<button></button>', '<select></select>'])(
+    'is false for %s',
+    (html) => expect(isTextField(make(html))).toBe(false),
+  );
 });
