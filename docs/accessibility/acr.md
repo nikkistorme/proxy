@@ -1,6 +1,6 @@
 # Accessibility Conformance Report (draft)
 
-**Draft: manual evaluation pending.** This report is built from what the app does and what the automated tests check. No criterion has been evaluated with a screen reader or in a manual audit yet, and none is marked "Supports" on automated results alone where a person's judgement is needed. It is not a final conformance claim.
+**Draft: manual evaluation pending.** This report is built from what the app does and what the automated tests check. The screen-reader solo turn passed in NVDA, VoiceOver on macOS and VoiceOver on iPhone (2026-11-02), but no criterion has been evaluated in a manual audit yet, and none is marked "Supports" on automated results alone where a person's judgement is needed. It is not a final conformance claim.
 
 Format: based on the VPAT 2.x layout (Accessibility Conformance Report, WCAG edition). Conformance Levels: Supports, Partially Supports, Does Not Support, Not Applicable. A fifth value, Not yet evaluated, is used in this draft where no check exists at all.
 
@@ -103,6 +103,6 @@ These are in `docs/progress.md` under Open problems and carried here so the fina
 ## What finishes this report
 
 1. The owner's manual WCAG 2.2 A and AA audit, filling in each "Not yet evaluated by hand".
-2. The screen-reader runs in `docs/testing/screen-reader-plan.md` (NVDA + Firefox, VoiceOver + Safari, VoiceOver on iPhone).
+2. ~~The screen-reader runs in `docs/testing/screen-reader-plan.md`~~ Done 2026-11-02: the solo turn passed in NVDA + Firefox, VoiceOver + Safari and VoiceOver on iPhone.
 3. A text-spacing check (1.4.12) and a 320 px check of the layout and format editors (1.4.10).
 4. Remove "Draft: manual evaluation pending" and fill in the date, versions and evaluator once the rows are settled. The last acceptance criterion in `docs/requirements.md` ("no failing criteria") is ticked then.
