@@ -1,0 +1,4005 @@
+{
+  "app": "proxy",
+  "version": 1,
+  "exportedAt": "2026-11-02T00:00:00.000Z",
+  "session": {
+    "id": "stress-session",
+    "state": {
+      "formatId": "preset-coop-pve",
+      "formatName": "Co-op PvE",
+      "seats": [
+        {
+          "id": "seat-p1",
+          "name": "Player 1",
+          "place": "player-1",
+          "hasHand": true,
+          "counters": [
+            {
+              "id": "p1-life",
+              "name": "Life",
+              "value": 20
+            },
+            {
+              "id": "p1-energy",
+              "name": "Energy",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "id": "seat-p2",
+          "name": "Player 2",
+          "place": "player-2",
+          "hasHand": true,
+          "counters": [
+            {
+              "id": "p2-life",
+              "name": "Life",
+              "value": 20
+            },
+            {
+              "id": "p2-energy",
+              "name": "Energy",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "id": "seat-env",
+          "name": "Environment",
+          "place": "environment",
+          "hasHand": false,
+          "counters": []
+        }
+      ],
+      "activeSeatId": "seat-p1",
+      "definitions": {
+        "stress-0001": {
+          "row": 2,
+          "qty": 9,
+          "front": {
+            "name": "Ember Scout",
+            "fields": {
+              "cost": "1",
+              "rules": "When played, look at the top card of the Fog.",
+              "stats": "1/1"
+            },
+            "image": "demo/art/ember-scout.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0001"
+        },
+        "stress-0002": {
+          "row": 3,
+          "qty": 9,
+          "front": {
+            "name": "Hearth Guard",
+            "fields": {
+              "cost": "2",
+              "rules": "Blocks first each round.",
+              "stats": "1/3"
+            },
+            "image": "demo/art/hearth-guard.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0002"
+        },
+        "stress-0003": {
+          "row": 4,
+          "qty": 9,
+          "front": {
+            "name": "Lantern Bearer",
+            "fields": {
+              "cost": "2",
+              "rules": "Your other keepers get +1 while this is in play.",
+              "stats": "1/2"
+            },
+            "image": "demo/art/lantern-bearer.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0003"
+        },
+        "stress-0004": {
+          "row": 5,
+          "qty": 9,
+          "front": {
+            "name": "Ash Warden",
+            "fields": {
+              "cost": "3",
+              "rules": "When this leaves play, add 1 ember to any keeper.",
+              "stats": "2/3"
+            },
+            "image": "demo/art/ash-warden.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0004"
+        },
+        "stress-0005": {
+          "row": 6,
+          "qty": 9,
+          "front": {
+            "name": "Cinder Hound",
+            "fields": {
+              "cost": "3",
+              "rules": "Fast. Can act the round it is played.",
+              "stats": "3/1"
+            },
+            "image": "demo/art/cinder-hound.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0005"
+        },
+        "stress-0006": {
+          "row": 7,
+          "qty": 9,
+          "front": {
+            "name": "Beacon Keeper",
+            "fields": {
+              "cost": "4",
+              "rules": "At round start, remove 1 fog from the town.",
+              "stats": "2/4"
+            },
+            "image": "demo/art/beacon-keeper.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0006"
+        },
+        "stress-0007": {
+          "row": 8,
+          "qty": 9,
+          "front": {
+            "name": "Kindle",
+            "fields": {
+              "cost": "1",
+              "rules": "Add 2 embers to a keeper.",
+              "stats": ""
+            },
+            "image": "demo/art/kindle.svg",
+            "layout": "Demo action",
+            "type": "Action"
+          },
+          "id": "stress-0007"
+        },
+        "stress-0008": {
+          "row": 9,
+          "qty": 9,
+          "front": {
+            "name": "Smoke Screen",
+            "fields": {
+              "cost": "2",
+              "rules": "Ignore the next Fog card this round.",
+              "stats": ""
+            },
+            "image": "demo/art/smoke-screen.svg",
+            "layout": "Demo action",
+            "type": "Action"
+          },
+          "id": "stress-0008"
+        },
+        "stress-0009": {
+          "row": 10,
+          "qty": 9,
+          "front": {
+            "name": "Flare Shot",
+            "fields": {
+              "cost": "2",
+              "rules": "Deal 2 damage to a Fog creature.",
+              "stats": ""
+            },
+            "image": "demo/art/flare-shot.svg",
+            "layout": "Demo action",
+            "type": "Action"
+          },
+          "id": "stress-0009"
+        },
+        "stress-0010": {
+          "row": 11,
+          "qty": 9,
+          "front": {
+            "name": "Hearthstone Ward",
+            "fields": {
+              "cost": "3",
+              "rules": "Prevent all damage to your keeper this round.",
+              "stats": ""
+            },
+            "image": "demo/art/hearthstone-ward.svg",
+            "layout": "Demo action",
+            "type": "Action"
+          },
+          "id": "stress-0010"
+        },
+        "stress-0101": {
+          "row": 2,
+          "qty": 9,
+          "front": {
+            "name": "Tide Scout",
+            "fields": {
+              "cost": "1",
+              "rules": "When played, draw a card.",
+              "stats": "1/1"
+            },
+            "image": "demo/art/tide-scout.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0101"
+        },
+        "stress-0102": {
+          "row": 3,
+          "qty": 9,
+          "front": {
+            "name": "Net Mender",
+            "fields": {
+              "cost": "2",
+              "rules": "Heal 1 damage from a card each round.",
+              "stats": "1/2"
+            },
+            "image": "demo/art/net-mender.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0102"
+        },
+        "stress-0103": {
+          "row": 4,
+          "qty": 9,
+          "front": {
+            "name": "Reef Guard",
+            "fields": {
+              "cost": "2",
+              "rules": "Blocks first each round.",
+              "stats": "1/3"
+            },
+            "image": "demo/art/reef-guard.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0103"
+        },
+        "stress-0104": {
+          "row": 5,
+          "qty": 9,
+          "front": {
+            "name": "Salt Sentinel",
+            "fields": {
+              "cost": "3",
+              "rules": "Cannot be damaged by Fog events.",
+              "stats": "2/3"
+            },
+            "image": "demo/art/salt-sentinel.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0104"
+        },
+        "stress-0105": {
+          "row": 6,
+          "qty": 9,
+          "front": {
+            "name": "Wave Rider",
+            "fields": {
+              "cost": "3",
+              "rules": "Fast. Can move to any place.",
+              "stats": "3/1"
+            },
+            "image": "demo/art/wave-rider.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0105"
+        },
+        "stress-0106": {
+          "row": 7,
+          "qty": 9,
+          "front": {
+            "name": "Tide Caller",
+            "fields": {
+              "cost": "4",
+              "rules": "Flip at round end. Rising: draw two cards.",
+              "stats": "2/4"
+            },
+            "image": "demo/art/tide-caller.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "sourceId": "tide-caller",
+          "back": {
+            "name": "Ebb Caller",
+            "fields": {
+              "cost": "4",
+              "rules": "Flip at round end. Ebbing: put a card from hand on the deck.",
+              "stats": "2/4"
+            },
+            "image": "demo/art/ebb-caller.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0106"
+        },
+        "stress-0107": {
+          "row": 9,
+          "qty": 9,
+          "front": {
+            "name": "Mend",
+            "fields": {
+              "cost": "1",
+              "rules": "Heal 2 damage from a card.",
+              "stats": ""
+            },
+            "image": "demo/art/mend.svg",
+            "layout": "Demo action",
+            "type": "Action"
+          },
+          "id": "stress-0107"
+        },
+        "stress-0108": {
+          "row": 10,
+          "qty": 9,
+          "front": {
+            "name": "Undertow",
+            "fields": {
+              "cost": "2",
+              "rules": "Return a Fog creature to the Fog deck.",
+              "stats": ""
+            },
+            "image": "demo/art/undertow.svg",
+            "layout": "Demo action",
+            "type": "Action"
+          },
+          "id": "stress-0108"
+        },
+        "stress-0109": {
+          "row": 11,
+          "qty": 9,
+          "front": {
+            "name": "Current Step",
+            "fields": {
+              "cost": "2",
+              "rules": "Move a keeper to any place.",
+              "stats": ""
+            },
+            "image": "demo/art/current-step.svg",
+            "layout": "Demo action",
+            "type": "Action"
+          },
+          "id": "stress-0109"
+        },
+        "stress-0110": {
+          "row": 12,
+          "qty": 9,
+          "front": {
+            "name": "Pearl Ward",
+            "fields": {
+              "cost": "3",
+              "rules": "A keeper takes no damage until your next turn.",
+              "stats": ""
+            },
+            "image": "demo/art/pearl-ward.svg",
+            "layout": "Demo action",
+            "type": "Action"
+          },
+          "id": "stress-0110"
+        },
+        "stress-0201": {
+          "row": 2,
+          "qty": 7,
+          "front": {
+            "name": "Drifting Mist",
+            "fields": {
+              "cost": "1",
+              "rules": "Creeps in at round start.",
+              "stats": "1/1"
+            },
+            "image": "demo/art/drifting-mist.svg",
+            "layout": "Demo creature",
+            "type": "Fog"
+          },
+          "id": "stress-0201"
+        },
+        "stress-0202": {
+          "row": 3,
+          "qty": 7,
+          "front": {
+            "name": "Thick Murk",
+            "fields": {
+              "cost": "2",
+              "rules": "Hides the card below it.",
+              "stats": "1/3"
+            },
+            "image": "demo/art/thick-murk.svg",
+            "layout": "Demo creature",
+            "type": "Fog"
+          },
+          "id": "stress-0202"
+        },
+        "stress-0203": {
+          "row": 4,
+          "qty": 7,
+          "front": {
+            "name": "Cold Damp",
+            "fields": {
+              "cost": "2",
+              "rules": "Keepers here cannot gain embers.",
+              "stats": "2/2"
+            },
+            "image": "demo/art/cold-damp.svg",
+            "layout": "Demo creature",
+            "type": "Fog"
+          },
+          "id": "stress-0203"
+        },
+        "stress-0204": {
+          "row": 5,
+          "qty": 7,
+          "front": {
+            "name": "Creeping Gloom",
+            "fields": {
+              "cost": "3",
+              "rules": "Grows +1/+1 each round.",
+              "stats": "2/2"
+            },
+            "image": "demo/art/creeping-gloom.svg",
+            "layout": "Demo creature",
+            "type": "Fog"
+          },
+          "id": "stress-0204"
+        },
+        "stress-0205": {
+          "row": 6,
+          "qty": 7,
+          "front": {
+            "name": "Foghorn Echo",
+            "fields": {
+              "cost": "2",
+              "rules": "Every keeper discards a card.",
+              "stats": ""
+            },
+            "image": "demo/art/foghorn-echo.svg",
+            "layout": "Demo action",
+            "type": "Event"
+          },
+          "id": "stress-0205"
+        },
+        "stress-0206": {
+          "row": 7,
+          "qty": 7,
+          "front": {
+            "name": "Lost Lantern",
+            "fields": {
+              "cost": "1",
+              "rules": "Remove a lantern from play.",
+              "stats": ""
+            },
+            "image": "demo/art/lost-lantern.svg",
+            "layout": "Demo action",
+            "type": "Event"
+          },
+          "id": "stress-0206"
+        },
+        "stress-0207": {
+          "row": 8,
+          "qty": 6,
+          "front": {
+            "name": "Rolling Bank",
+            "fields": {
+              "cost": "4",
+              "rules": "Flip when damaged. Rolling: 3/5.",
+              "stats": "3/5"
+            },
+            "image": "demo/art/rolling-bank.svg",
+            "layout": "Demo creature",
+            "type": "Fog"
+          },
+          "sourceId": "rolling-bank",
+          "back": {
+            "name": "Clearing Bank",
+            "fields": {
+              "cost": "0",
+              "rules": "Discard at round end. The town breathes again.",
+              "stats": "0/1"
+            },
+            "image": "demo/art/clearing-bank.svg",
+            "layout": "Demo creature",
+            "type": "Fog"
+          },
+          "id": "stress-0207"
+        },
+        "stress-0208": {
+          "row": 10,
+          "qty": 6,
+          "front": {
+            "name": "Salt Gale",
+            "fields": {
+              "cost": "3",
+              "rules": "Deal 1 damage to every keeper.",
+              "stats": ""
+            },
+            "image": "demo/art/salt-gale.svg",
+            "layout": "Demo action",
+            "type": "Event"
+          },
+          "id": "stress-0208"
+        },
+        "stress-0263": {
+          "row": 2,
+          "qty": 1,
+          "front": {
+            "name": "Harbour Wall",
+            "fields": {
+              "cost": "",
+              "rules": "Blocks the first Fog creature each round.",
+              "stats": ""
+            },
+            "image": "demo/art/harbour-wall.svg",
+            "layout": "Demo location",
+            "type": "Location"
+          },
+          "id": "stress-0263"
+        },
+        "stress-0264": {
+          "row": 3,
+          "qty": 1,
+          "front": {
+            "name": "Lighthouse",
+            "fields": {
+              "cost": "",
+              "rules": "Once per round, reveal the next Fog card.",
+              "stats": ""
+            },
+            "image": "demo/art/lighthouse.svg",
+            "layout": "Demo location",
+            "type": "Location"
+          },
+          "id": "stress-0264"
+        },
+        "stress-0265": {
+          "row": 4,
+          "qty": 1,
+          "front": {
+            "name": "Fish Market",
+            "fields": {
+              "cost": "",
+              "rules": "Keepers here heal 1 damage each round.",
+              "stats": ""
+            },
+            "image": "demo/art/fish-market.svg",
+            "layout": "Demo location",
+            "type": "Location"
+          },
+          "id": "stress-0265"
+        },
+        "stress-0266": {
+          "row": 5,
+          "qty": 1,
+          "front": {
+            "name": "Old Pier",
+            "fields": {
+              "cost": "",
+              "rules": "Keepers here can move to any place.",
+              "stats": ""
+            },
+            "image": "demo/art/old-pier.svg",
+            "layout": "Demo location",
+            "type": "Location"
+          },
+          "id": "stress-0266"
+        },
+        "stress-0267": {
+          "row": 6,
+          "qty": 1,
+          "front": {
+            "name": "Boathouse",
+            "fields": {
+              "cost": "",
+              "rules": "Store up to two cards here, face down.",
+              "stats": ""
+            },
+            "image": "demo/art/boathouse.svg",
+            "layout": "Demo location",
+            "type": "Location"
+          },
+          "id": "stress-0267"
+        },
+        "stress-0268": {
+          "row": 7,
+          "qty": 1,
+          "front": {
+            "name": "Chapel Bell",
+            "fields": {
+              "cost": "",
+              "rules": "Ring it to clear one fog from the town.",
+              "stats": ""
+            },
+            "image": "demo/art/chapel-bell.svg",
+            "layout": "Demo location",
+            "type": "Location"
+          },
+          "id": "stress-0268"
+        }
+      },
+      "cardSets": {
+        "demo-emberguard": {
+          "id": "demo-emberguard",
+          "name": "emberguard.csv",
+          "source": {
+            "kind": "file",
+            "name": "emberguard.csv"
+          }
+        },
+        "demo-tidewardens": {
+          "id": "demo-tidewardens",
+          "name": "tidewardens.csv",
+          "source": {
+            "kind": "file",
+            "name": "tidewardens.csv"
+          }
+        },
+        "demo-the-fog": {
+          "id": "demo-the-fog",
+          "name": "the-fog.csv",
+          "source": {
+            "kind": "file",
+            "name": "the-fog.csv"
+          }
+        },
+        "demo-harbour-board": {
+          "id": "demo-harbour-board",
+          "name": "harbour-board.csv",
+          "source": {
+            "kind": "file",
+            "name": "harbour-board.csv"
+          }
+        }
+      },
+      "cards": {
+        "stress-0011": {
+          "id": "stress-0011",
+          "definitionId": "stress-0001",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0012": {
+          "id": "stress-0012",
+          "definitionId": "stress-0001",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0013": {
+          "id": "stress-0013",
+          "definitionId": "stress-0001",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0014": {
+          "id": "stress-0014",
+          "definitionId": "stress-0001",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0015": {
+          "id": "stress-0015",
+          "definitionId": "stress-0001",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0016": {
+          "id": "stress-0016",
+          "definitionId": "stress-0001",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0017": {
+          "id": "stress-0017",
+          "definitionId": "stress-0001",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0018": {
+          "id": "stress-0018",
+          "definitionId": "stress-0001",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0019": {
+          "id": "stress-0019",
+          "definitionId": "stress-0001",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0020": {
+          "id": "stress-0020",
+          "definitionId": "stress-0002",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0021": {
+          "id": "stress-0021",
+          "definitionId": "stress-0002",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0022": {
+          "id": "stress-0022",
+          "definitionId": "stress-0002",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0023": {
+          "id": "stress-0023",
+          "definitionId": "stress-0002",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0024": {
+          "id": "stress-0024",
+          "definitionId": "stress-0002",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0025": {
+          "id": "stress-0025",
+          "definitionId": "stress-0002",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0026": {
+          "id": "stress-0026",
+          "definitionId": "stress-0002",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0027": {
+          "id": "stress-0027",
+          "definitionId": "stress-0002",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0028": {
+          "id": "stress-0028",
+          "definitionId": "stress-0002",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0029": {
+          "id": "stress-0029",
+          "definitionId": "stress-0003",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0030": {
+          "id": "stress-0030",
+          "definitionId": "stress-0003",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0031": {
+          "id": "stress-0031",
+          "definitionId": "stress-0003",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0032": {
+          "id": "stress-0032",
+          "definitionId": "stress-0003",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0033": {
+          "id": "stress-0033",
+          "definitionId": "stress-0003",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0034": {
+          "id": "stress-0034",
+          "definitionId": "stress-0003",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0035": {
+          "id": "stress-0035",
+          "definitionId": "stress-0003",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0036": {
+          "id": "stress-0036",
+          "definitionId": "stress-0003",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0037": {
+          "id": "stress-0037",
+          "definitionId": "stress-0003",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0038": {
+          "id": "stress-0038",
+          "definitionId": "stress-0004",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0039": {
+          "id": "stress-0039",
+          "definitionId": "stress-0004",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0040": {
+          "id": "stress-0040",
+          "definitionId": "stress-0004",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0041": {
+          "id": "stress-0041",
+          "definitionId": "stress-0004",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0042": {
+          "id": "stress-0042",
+          "definitionId": "stress-0004",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0043": {
+          "id": "stress-0043",
+          "definitionId": "stress-0004",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0044": {
+          "id": "stress-0044",
+          "definitionId": "stress-0004",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0045": {
+          "id": "stress-0045",
+          "definitionId": "stress-0004",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0046": {
+          "id": "stress-0046",
+          "definitionId": "stress-0004",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0047": {
+          "id": "stress-0047",
+          "definitionId": "stress-0005",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0048": {
+          "id": "stress-0048",
+          "definitionId": "stress-0005",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0049": {
+          "id": "stress-0049",
+          "definitionId": "stress-0005",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0050": {
+          "id": "stress-0050",
+          "definitionId": "stress-0005",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0051": {
+          "id": "stress-0051",
+          "definitionId": "stress-0005",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0052": {
+          "id": "stress-0052",
+          "definitionId": "stress-0005",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0053": {
+          "id": "stress-0053",
+          "definitionId": "stress-0005",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0054": {
+          "id": "stress-0054",
+          "definitionId": "stress-0005",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0055": {
+          "id": "stress-0055",
+          "definitionId": "stress-0005",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0056": {
+          "id": "stress-0056",
+          "definitionId": "stress-0006",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0057": {
+          "id": "stress-0057",
+          "definitionId": "stress-0006",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0058": {
+          "id": "stress-0058",
+          "definitionId": "stress-0006",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0059": {
+          "id": "stress-0059",
+          "definitionId": "stress-0006",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0060": {
+          "id": "stress-0060",
+          "definitionId": "stress-0006",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0061": {
+          "id": "stress-0061",
+          "definitionId": "stress-0006",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0062": {
+          "id": "stress-0062",
+          "definitionId": "stress-0006",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0063": {
+          "id": "stress-0063",
+          "definitionId": "stress-0006",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0064": {
+          "id": "stress-0064",
+          "definitionId": "stress-0006",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0065": {
+          "id": "stress-0065",
+          "definitionId": "stress-0007",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0066": {
+          "id": "stress-0066",
+          "definitionId": "stress-0007",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0067": {
+          "id": "stress-0067",
+          "definitionId": "stress-0007",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0068": {
+          "id": "stress-0068",
+          "definitionId": "stress-0007",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0069": {
+          "id": "stress-0069",
+          "definitionId": "stress-0007",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0070": {
+          "id": "stress-0070",
+          "definitionId": "stress-0007",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0071": {
+          "id": "stress-0071",
+          "definitionId": "stress-0007",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0072": {
+          "id": "stress-0072",
+          "definitionId": "stress-0007",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0073": {
+          "id": "stress-0073",
+          "definitionId": "stress-0007",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0074": {
+          "id": "stress-0074",
+          "definitionId": "stress-0008",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0075": {
+          "id": "stress-0075",
+          "definitionId": "stress-0008",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0076": {
+          "id": "stress-0076",
+          "definitionId": "stress-0008",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0077": {
+          "id": "stress-0077",
+          "definitionId": "stress-0008",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0078": {
+          "id": "stress-0078",
+          "definitionId": "stress-0008",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0079": {
+          "id": "stress-0079",
+          "definitionId": "stress-0008",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0080": {
+          "id": "stress-0080",
+          "definitionId": "stress-0008",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0081": {
+          "id": "stress-0081",
+          "definitionId": "stress-0008",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0082": {
+          "id": "stress-0082",
+          "definitionId": "stress-0008",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0083": {
+          "id": "stress-0083",
+          "definitionId": "stress-0009",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0084": {
+          "id": "stress-0084",
+          "definitionId": "stress-0009",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0085": {
+          "id": "stress-0085",
+          "definitionId": "stress-0009",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0086": {
+          "id": "stress-0086",
+          "definitionId": "stress-0009",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0087": {
+          "id": "stress-0087",
+          "definitionId": "stress-0009",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0088": {
+          "id": "stress-0088",
+          "definitionId": "stress-0009",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0089": {
+          "id": "stress-0089",
+          "definitionId": "stress-0009",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0090": {
+          "id": "stress-0090",
+          "definitionId": "stress-0009",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0091": {
+          "id": "stress-0091",
+          "definitionId": "stress-0009",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0092": {
+          "id": "stress-0092",
+          "definitionId": "stress-0010",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0093": {
+          "id": "stress-0093",
+          "definitionId": "stress-0010",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0094": {
+          "id": "stress-0094",
+          "definitionId": "stress-0010",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0095": {
+          "id": "stress-0095",
+          "definitionId": "stress-0010",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0096": {
+          "id": "stress-0096",
+          "definitionId": "stress-0010",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0097": {
+          "id": "stress-0097",
+          "definitionId": "stress-0010",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0098": {
+          "id": "stress-0098",
+          "definitionId": "stress-0010",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0099": {
+          "id": "stress-0099",
+          "definitionId": "stress-0010",
+          "side": "front",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0100": {
+          "id": "stress-0100",
+          "definitionId": "stress-0010",
+          "side": "down",
+          "ownerSeatId": "seat-p1"
+        },
+        "stress-0111": {
+          "id": "stress-0111",
+          "definitionId": "stress-0101",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0112": {
+          "id": "stress-0112",
+          "definitionId": "stress-0101",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0113": {
+          "id": "stress-0113",
+          "definitionId": "stress-0101",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0114": {
+          "id": "stress-0114",
+          "definitionId": "stress-0101",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0115": {
+          "id": "stress-0115",
+          "definitionId": "stress-0101",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0116": {
+          "id": "stress-0116",
+          "definitionId": "stress-0101",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0117": {
+          "id": "stress-0117",
+          "definitionId": "stress-0101",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0118": {
+          "id": "stress-0118",
+          "definitionId": "stress-0101",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0119": {
+          "id": "stress-0119",
+          "definitionId": "stress-0101",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0120": {
+          "id": "stress-0120",
+          "definitionId": "stress-0102",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0121": {
+          "id": "stress-0121",
+          "definitionId": "stress-0102",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0122": {
+          "id": "stress-0122",
+          "definitionId": "stress-0102",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0123": {
+          "id": "stress-0123",
+          "definitionId": "stress-0102",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0124": {
+          "id": "stress-0124",
+          "definitionId": "stress-0102",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0125": {
+          "id": "stress-0125",
+          "definitionId": "stress-0102",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0126": {
+          "id": "stress-0126",
+          "definitionId": "stress-0102",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0127": {
+          "id": "stress-0127",
+          "definitionId": "stress-0102",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0128": {
+          "id": "stress-0128",
+          "definitionId": "stress-0102",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0129": {
+          "id": "stress-0129",
+          "definitionId": "stress-0103",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0130": {
+          "id": "stress-0130",
+          "definitionId": "stress-0103",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0131": {
+          "id": "stress-0131",
+          "definitionId": "stress-0103",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0132": {
+          "id": "stress-0132",
+          "definitionId": "stress-0103",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0133": {
+          "id": "stress-0133",
+          "definitionId": "stress-0103",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0134": {
+          "id": "stress-0134",
+          "definitionId": "stress-0103",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0135": {
+          "id": "stress-0135",
+          "definitionId": "stress-0103",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0136": {
+          "id": "stress-0136",
+          "definitionId": "stress-0103",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0137": {
+          "id": "stress-0137",
+          "definitionId": "stress-0103",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0138": {
+          "id": "stress-0138",
+          "definitionId": "stress-0104",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0139": {
+          "id": "stress-0139",
+          "definitionId": "stress-0104",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0140": {
+          "id": "stress-0140",
+          "definitionId": "stress-0104",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0141": {
+          "id": "stress-0141",
+          "definitionId": "stress-0104",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0142": {
+          "id": "stress-0142",
+          "definitionId": "stress-0104",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0143": {
+          "id": "stress-0143",
+          "definitionId": "stress-0104",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0144": {
+          "id": "stress-0144",
+          "definitionId": "stress-0104",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0145": {
+          "id": "stress-0145",
+          "definitionId": "stress-0104",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0146": {
+          "id": "stress-0146",
+          "definitionId": "stress-0104",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0147": {
+          "id": "stress-0147",
+          "definitionId": "stress-0105",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0148": {
+          "id": "stress-0148",
+          "definitionId": "stress-0105",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0149": {
+          "id": "stress-0149",
+          "definitionId": "stress-0105",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0150": {
+          "id": "stress-0150",
+          "definitionId": "stress-0105",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0151": {
+          "id": "stress-0151",
+          "definitionId": "stress-0105",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0152": {
+          "id": "stress-0152",
+          "definitionId": "stress-0105",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0153": {
+          "id": "stress-0153",
+          "definitionId": "stress-0105",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0154": {
+          "id": "stress-0154",
+          "definitionId": "stress-0105",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0155": {
+          "id": "stress-0155",
+          "definitionId": "stress-0105",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0156": {
+          "id": "stress-0156",
+          "definitionId": "stress-0106",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0157": {
+          "id": "stress-0157",
+          "definitionId": "stress-0106",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0158": {
+          "id": "stress-0158",
+          "definitionId": "stress-0106",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0159": {
+          "id": "stress-0159",
+          "definitionId": "stress-0106",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0160": {
+          "id": "stress-0160",
+          "definitionId": "stress-0106",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0161": {
+          "id": "stress-0161",
+          "definitionId": "stress-0106",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0162": {
+          "id": "stress-0162",
+          "definitionId": "stress-0106",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0163": {
+          "id": "stress-0163",
+          "definitionId": "stress-0106",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0164": {
+          "id": "stress-0164",
+          "definitionId": "stress-0106",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0165": {
+          "id": "stress-0165",
+          "definitionId": "stress-0107",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0166": {
+          "id": "stress-0166",
+          "definitionId": "stress-0107",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0167": {
+          "id": "stress-0167",
+          "definitionId": "stress-0107",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0168": {
+          "id": "stress-0168",
+          "definitionId": "stress-0107",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0169": {
+          "id": "stress-0169",
+          "definitionId": "stress-0107",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0170": {
+          "id": "stress-0170",
+          "definitionId": "stress-0107",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0171": {
+          "id": "stress-0171",
+          "definitionId": "stress-0107",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0172": {
+          "id": "stress-0172",
+          "definitionId": "stress-0107",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0173": {
+          "id": "stress-0173",
+          "definitionId": "stress-0107",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0174": {
+          "id": "stress-0174",
+          "definitionId": "stress-0108",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0175": {
+          "id": "stress-0175",
+          "definitionId": "stress-0108",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0176": {
+          "id": "stress-0176",
+          "definitionId": "stress-0108",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0177": {
+          "id": "stress-0177",
+          "definitionId": "stress-0108",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0178": {
+          "id": "stress-0178",
+          "definitionId": "stress-0108",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0179": {
+          "id": "stress-0179",
+          "definitionId": "stress-0108",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0180": {
+          "id": "stress-0180",
+          "definitionId": "stress-0108",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0181": {
+          "id": "stress-0181",
+          "definitionId": "stress-0108",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0182": {
+          "id": "stress-0182",
+          "definitionId": "stress-0108",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0183": {
+          "id": "stress-0183",
+          "definitionId": "stress-0109",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0184": {
+          "id": "stress-0184",
+          "definitionId": "stress-0109",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0185": {
+          "id": "stress-0185",
+          "definitionId": "stress-0109",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0186": {
+          "id": "stress-0186",
+          "definitionId": "stress-0109",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0187": {
+          "id": "stress-0187",
+          "definitionId": "stress-0109",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0188": {
+          "id": "stress-0188",
+          "definitionId": "stress-0109",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0189": {
+          "id": "stress-0189",
+          "definitionId": "stress-0109",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0190": {
+          "id": "stress-0190",
+          "definitionId": "stress-0109",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0191": {
+          "id": "stress-0191",
+          "definitionId": "stress-0109",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0192": {
+          "id": "stress-0192",
+          "definitionId": "stress-0110",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0193": {
+          "id": "stress-0193",
+          "definitionId": "stress-0110",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0194": {
+          "id": "stress-0194",
+          "definitionId": "stress-0110",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0195": {
+          "id": "stress-0195",
+          "definitionId": "stress-0110",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0196": {
+          "id": "stress-0196",
+          "definitionId": "stress-0110",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0197": {
+          "id": "stress-0197",
+          "definitionId": "stress-0110",
+          "side": "front",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0198": {
+          "id": "stress-0198",
+          "definitionId": "stress-0110",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0199": {
+          "id": "stress-0199",
+          "definitionId": "stress-0110",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0200": {
+          "id": "stress-0200",
+          "definitionId": "stress-0110",
+          "side": "down",
+          "ownerSeatId": "seat-p2"
+        },
+        "stress-0209": {
+          "id": "stress-0209",
+          "definitionId": "stress-0201",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0210": {
+          "id": "stress-0210",
+          "definitionId": "stress-0201",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0211": {
+          "id": "stress-0211",
+          "definitionId": "stress-0201",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0212": {
+          "id": "stress-0212",
+          "definitionId": "stress-0201",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0213": {
+          "id": "stress-0213",
+          "definitionId": "stress-0201",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0214": {
+          "id": "stress-0214",
+          "definitionId": "stress-0201",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0215": {
+          "id": "stress-0215",
+          "definitionId": "stress-0201",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0216": {
+          "id": "stress-0216",
+          "definitionId": "stress-0202",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0217": {
+          "id": "stress-0217",
+          "definitionId": "stress-0202",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0218": {
+          "id": "stress-0218",
+          "definitionId": "stress-0202",
+          "side": "front",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0219": {
+          "id": "stress-0219",
+          "definitionId": "stress-0202",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0220": {
+          "id": "stress-0220",
+          "definitionId": "stress-0202",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0221": {
+          "id": "stress-0221",
+          "definitionId": "stress-0202",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0222": {
+          "id": "stress-0222",
+          "definitionId": "stress-0202",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0223": {
+          "id": "stress-0223",
+          "definitionId": "stress-0203",
+          "side": "front",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0224": {
+          "id": "stress-0224",
+          "definitionId": "stress-0203",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0225": {
+          "id": "stress-0225",
+          "definitionId": "stress-0203",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0226": {
+          "id": "stress-0226",
+          "definitionId": "stress-0203",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0227": {
+          "id": "stress-0227",
+          "definitionId": "stress-0203",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0228": {
+          "id": "stress-0228",
+          "definitionId": "stress-0203",
+          "side": "front",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0229": {
+          "id": "stress-0229",
+          "definitionId": "stress-0203",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0230": {
+          "id": "stress-0230",
+          "definitionId": "stress-0204",
+          "side": "front",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0231": {
+          "id": "stress-0231",
+          "definitionId": "stress-0204",
+          "side": "front",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0232": {
+          "id": "stress-0232",
+          "definitionId": "stress-0204",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0233": {
+          "id": "stress-0233",
+          "definitionId": "stress-0204",
+          "side": "front",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0234": {
+          "id": "stress-0234",
+          "definitionId": "stress-0204",
+          "side": "front",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0235": {
+          "id": "stress-0235",
+          "definitionId": "stress-0204",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0236": {
+          "id": "stress-0236",
+          "definitionId": "stress-0204",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0237": {
+          "id": "stress-0237",
+          "definitionId": "stress-0205",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0238": {
+          "id": "stress-0238",
+          "definitionId": "stress-0205",
+          "side": "front",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0239": {
+          "id": "stress-0239",
+          "definitionId": "stress-0205",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0240": {
+          "id": "stress-0240",
+          "definitionId": "stress-0205",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0241": {
+          "id": "stress-0241",
+          "definitionId": "stress-0205",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0242": {
+          "id": "stress-0242",
+          "definitionId": "stress-0205",
+          "side": "front",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0243": {
+          "id": "stress-0243",
+          "definitionId": "stress-0205",
+          "side": "front",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0244": {
+          "id": "stress-0244",
+          "definitionId": "stress-0206",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0245": {
+          "id": "stress-0245",
+          "definitionId": "stress-0206",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0246": {
+          "id": "stress-0246",
+          "definitionId": "stress-0206",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0247": {
+          "id": "stress-0247",
+          "definitionId": "stress-0206",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0248": {
+          "id": "stress-0248",
+          "definitionId": "stress-0206",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0249": {
+          "id": "stress-0249",
+          "definitionId": "stress-0206",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0250": {
+          "id": "stress-0250",
+          "definitionId": "stress-0206",
+          "side": "front",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0251": {
+          "id": "stress-0251",
+          "definitionId": "stress-0207",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0252": {
+          "id": "stress-0252",
+          "definitionId": "stress-0207",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0253": {
+          "id": "stress-0253",
+          "definitionId": "stress-0207",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0254": {
+          "id": "stress-0254",
+          "definitionId": "stress-0207",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0255": {
+          "id": "stress-0255",
+          "definitionId": "stress-0207",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0256": {
+          "id": "stress-0256",
+          "definitionId": "stress-0207",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0257": {
+          "id": "stress-0257",
+          "definitionId": "stress-0208",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0258": {
+          "id": "stress-0258",
+          "definitionId": "stress-0208",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0259": {
+          "id": "stress-0259",
+          "definitionId": "stress-0208",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0260": {
+          "id": "stress-0260",
+          "definitionId": "stress-0208",
+          "side": "front",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0261": {
+          "id": "stress-0261",
+          "definitionId": "stress-0208",
+          "side": "front",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0262": {
+          "id": "stress-0262",
+          "definitionId": "stress-0208",
+          "side": "down",
+          "ownerSeatId": "seat-env"
+        },
+        "stress-0269": {
+          "id": "stress-0269",
+          "definitionId": "stress-0263",
+          "side": "front"
+        },
+        "stress-0270": {
+          "id": "stress-0270",
+          "definitionId": "stress-0264",
+          "side": "front"
+        },
+        "stress-0271": {
+          "id": "stress-0271",
+          "definitionId": "stress-0265",
+          "side": "down"
+        },
+        "stress-0272": {
+          "id": "stress-0272",
+          "definitionId": "stress-0266",
+          "side": "front"
+        },
+        "stress-0273": {
+          "id": "stress-0273",
+          "definitionId": "stress-0267",
+          "side": "front"
+        },
+        "stress-0274": {
+          "id": "stress-0274",
+          "definitionId": "stress-0268",
+          "side": "front"
+        }
+      },
+      "piles": [
+        {
+          "id": "pile-p1-main",
+          "name": "P1 main deck",
+          "ownerSeatId": "seat-p1",
+          "cardIds": [
+            "stress-0072",
+            "stress-0028",
+            "stress-0078",
+            "stress-0041",
+            "stress-0065",
+            "stress-0061",
+            "stress-0039",
+            "stress-0093",
+            "stress-0075",
+            "stress-0100",
+            "stress-0086",
+            "stress-0026",
+            "stress-0097",
+            "stress-0048",
+            "stress-0032",
+            "stress-0062",
+            "stress-0098",
+            "stress-0083",
+            "stress-0011",
+            "stress-0033",
+            "stress-0077",
+            "stress-0046",
+            "stress-0085",
+            "stress-0021",
+            "stress-0049",
+            "stress-0050",
+            "stress-0051",
+            "stress-0014",
+            "stress-0024",
+            "stress-0043",
+            "stress-0027",
+            "stress-0063",
+            "stress-0079",
+            "stress-0058",
+            "stress-0035",
+            "stress-0074",
+            "stress-0057",
+            "stress-0089",
+            "stress-0055",
+            "stress-0018",
+            "stress-0020",
+            "stress-0017",
+            "stress-0069",
+            "stress-0045",
+            "stress-0088",
+            "stress-0054",
+            "stress-0038",
+            "stress-0076",
+            "stress-0073",
+            "stress-0016",
+            "stress-0096",
+            "stress-0084",
+            "stress-0056",
+            "stress-0036",
+            "stress-0053",
+            "stress-0091",
+            "stress-0060",
+            "stress-0013",
+            "stress-0059",
+            "stress-0067"
+          ],
+          "definitionIds": [
+            "stress-0001",
+            "stress-0002",
+            "stress-0003",
+            "stress-0004",
+            "stress-0005",
+            "stress-0006",
+            "stress-0007",
+            "stress-0008",
+            "stress-0009",
+            "stress-0010"
+          ],
+          "x": 16,
+          "y": 16,
+          "cardSetId": "demo-emberguard"
+        },
+        {
+          "id": "pile-p2-main",
+          "name": "P2 main deck",
+          "ownerSeatId": "seat-p2",
+          "cardIds": [
+            "stress-0115",
+            "stress-0170",
+            "stress-0177",
+            "stress-0167",
+            "stress-0195",
+            "stress-0118",
+            "stress-0113",
+            "stress-0186",
+            "stress-0175",
+            "stress-0145",
+            "stress-0193",
+            "stress-0117",
+            "stress-0199",
+            "stress-0185",
+            "stress-0158",
+            "stress-0174",
+            "stress-0165",
+            "stress-0140",
+            "stress-0172",
+            "stress-0178",
+            "stress-0157",
+            "stress-0147",
+            "stress-0159",
+            "stress-0176",
+            "stress-0198",
+            "stress-0132",
+            "stress-0187",
+            "stress-0180",
+            "stress-0182",
+            "stress-0149",
+            "stress-0141",
+            "stress-0130",
+            "stress-0173",
+            "stress-0137",
+            "stress-0154",
+            "stress-0152",
+            "stress-0136",
+            "stress-0200",
+            "stress-0153",
+            "stress-0126",
+            "stress-0121",
+            "stress-0123",
+            "stress-0116",
+            "stress-0191",
+            "stress-0114",
+            "stress-0138",
+            "stress-0128",
+            "stress-0184",
+            "stress-0160",
+            "stress-0144",
+            "stress-0155",
+            "stress-0146",
+            "stress-0139",
+            "stress-0142",
+            "stress-0112",
+            "stress-0169",
+            "stress-0134",
+            "stress-0156",
+            "stress-0119",
+            "stress-0194"
+          ],
+          "definitionIds": [
+            "stress-0101",
+            "stress-0102",
+            "stress-0103",
+            "stress-0104",
+            "stress-0105",
+            "stress-0106",
+            "stress-0107",
+            "stress-0108",
+            "stress-0109",
+            "stress-0110"
+          ],
+          "x": 158,
+          "y": 16,
+          "cardSetId": "demo-tidewardens"
+        },
+        {
+          "id": "pile-env",
+          "name": "Environment deck",
+          "ownerSeatId": "seat-env",
+          "cardIds": [
+            "stress-0256",
+            "stress-0257",
+            "stress-0259",
+            "stress-0245",
+            "stress-0214",
+            "stress-0213",
+            "stress-0229",
+            "stress-0217",
+            "stress-0225",
+            "stress-0246",
+            "stress-0212",
+            "stress-0240",
+            "stress-0249",
+            "stress-0224",
+            "stress-0247",
+            "stress-0241",
+            "stress-0209",
+            "stress-0237",
+            "stress-0252",
+            "stress-0232",
+            "stress-0221",
+            "stress-0215",
+            "stress-0216",
+            "stress-0253",
+            "stress-0235",
+            "stress-0219",
+            "stress-0251",
+            "stress-0236",
+            "stress-0258",
+            "stress-0227",
+            "stress-0244",
+            "stress-0211",
+            "stress-0220",
+            "stress-0254",
+            "stress-0222",
+            "stress-0255",
+            "stress-0226",
+            "stress-0210",
+            "stress-0262",
+            "stress-0239"
+          ],
+          "definitionIds": [
+            "stress-0201",
+            "stress-0202",
+            "stress-0203",
+            "stress-0204",
+            "stress-0205",
+            "stress-0206",
+            "stress-0207",
+            "stress-0208"
+          ],
+          "x": 300,
+          "y": 16,
+          "cardSetId": "demo-the-fog"
+        },
+        {
+          "id": "pile-board",
+          "name": "Board cards",
+          "cardIds": [],
+          "definitionIds": [
+            "stress-0263",
+            "stress-0264",
+            "stress-0265",
+            "stress-0266",
+            "stress-0267",
+            "stress-0268"
+          ],
+          "x": 442,
+          "y": 16,
+          "cardSetId": "demo-harbour-board"
+        }
+      ],
+      "hands": {
+        "seat-p1": [],
+        "seat-p2": []
+      },
+      "table": [
+        {
+          "cardId": "stress-0090",
+          "x": 16,
+          "y": 208,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0094",
+          "x": 158,
+          "y": 208,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0071",
+          "x": 300,
+          "y": 208,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0066",
+          "x": 442,
+          "y": 208,
+          "rotation": 0,
+          "counters": [
+            {
+              "id": "stress-0066-damage",
+              "name": "Damage",
+              "value": 4
+            }
+          ]
+        },
+        {
+          "cardId": "stress-0087",
+          "x": 609,
+          "y": 208,
+          "rotation": 90
+        },
+        {
+          "cardId": "stress-0015",
+          "x": 726,
+          "y": 208,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0047",
+          "x": 868,
+          "y": 208,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0019",
+          "x": 1010,
+          "y": 208,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0030",
+          "x": 1152,
+          "y": 208,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0082",
+          "x": 1294,
+          "y": 208,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0095",
+          "x": 16,
+          "y": 400,
+          "rotation": 0,
+          "counters": [
+            {
+              "id": "stress-0095-damage",
+              "name": "Damage",
+              "value": 3
+            }
+          ]
+        },
+        {
+          "cardId": "stress-0070",
+          "x": 158,
+          "y": 400,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0040",
+          "x": 300,
+          "y": 400,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0064",
+          "x": 467,
+          "y": 400,
+          "rotation": 90
+        },
+        {
+          "cardId": "stress-0042",
+          "x": 584,
+          "y": 400,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0044",
+          "x": 726,
+          "y": 400,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0037",
+          "x": 868,
+          "y": 400,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0029",
+          "x": 1010,
+          "y": 400,
+          "rotation": 0,
+          "counters": [
+            {
+              "id": "stress-0029-damage",
+              "name": "Damage",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "cardId": "stress-0092",
+          "x": 1152,
+          "y": 400,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0031",
+          "x": 1294,
+          "y": 400,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0080",
+          "x": 16,
+          "y": 592,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0012",
+          "x": 158,
+          "y": 592,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0068",
+          "x": 325,
+          "y": 592,
+          "rotation": 90
+        },
+        {
+          "cardId": "stress-0023",
+          "x": 442,
+          "y": 592,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0034",
+          "x": 584,
+          "y": 592,
+          "rotation": 0,
+          "counters": [
+            {
+              "id": "stress-0034-damage",
+              "name": "Damage",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "cardId": "stress-0025",
+          "x": 726,
+          "y": 592,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0022",
+          "x": 868,
+          "y": 592,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0099",
+          "x": 1010,
+          "y": 592,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0081",
+          "x": 1152,
+          "y": 592,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0052",
+          "x": 1294,
+          "y": 592,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0192",
+          "x": 16,
+          "y": 784,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0120",
+          "x": 183,
+          "y": 784,
+          "rotation": 90,
+          "counters": [
+            {
+              "id": "stress-0120-damage",
+              "name": "Damage",
+              "value": 4
+            }
+          ]
+        },
+        {
+          "cardId": "stress-0131",
+          "x": 300,
+          "y": 784,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0181",
+          "x": 442,
+          "y": 784,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0161",
+          "x": 584,
+          "y": 784,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0196",
+          "x": 726,
+          "y": 784,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0166",
+          "x": 868,
+          "y": 784,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0135",
+          "x": 1010,
+          "y": 784,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0168",
+          "x": 1152,
+          "y": 784,
+          "rotation": 0,
+          "counters": [
+            {
+              "id": "stress-0168-damage",
+              "name": "Damage",
+              "value": 3
+            }
+          ]
+        },
+        {
+          "cardId": "stress-0150",
+          "x": 1294,
+          "y": 784,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0164",
+          "x": 41,
+          "y": 976,
+          "rotation": 90
+        },
+        {
+          "cardId": "stress-0125",
+          "x": 158,
+          "y": 976,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0151",
+          "x": 300,
+          "y": 976,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0189",
+          "x": 442,
+          "y": 976,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0124",
+          "x": 584,
+          "y": 976,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0171",
+          "x": 726,
+          "y": 976,
+          "rotation": 0,
+          "counters": [
+            {
+              "id": "stress-0171-damage",
+              "name": "Damage",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "cardId": "stress-0148",
+          "x": 868,
+          "y": 976,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0163",
+          "x": 1010,
+          "y": 976,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0188",
+          "x": 1152,
+          "y": 976,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0179",
+          "x": 1319,
+          "y": 976,
+          "rotation": 90
+        },
+        {
+          "cardId": "stress-0133",
+          "x": 16,
+          "y": 1168,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0122",
+          "x": 158,
+          "y": 1168,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0162",
+          "x": 300,
+          "y": 1168,
+          "rotation": 0,
+          "counters": [
+            {
+              "id": "stress-0162-damage",
+              "name": "Damage",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "cardId": "stress-0111",
+          "x": 442,
+          "y": 1168,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0183",
+          "x": 584,
+          "y": 1168,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0127",
+          "x": 726,
+          "y": 1168,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0190",
+          "x": 868,
+          "y": 1168,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0143",
+          "x": 1010,
+          "y": 1168,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0129",
+          "x": 1177,
+          "y": 1168,
+          "rotation": 90
+        },
+        {
+          "cardId": "stress-0197",
+          "x": 1294,
+          "y": 1168,
+          "rotation": 0,
+          "counters": [
+            {
+              "id": "stress-0197-damage",
+              "name": "Damage",
+              "value": 4
+            }
+          ]
+        },
+        {
+          "cardId": "stress-0250",
+          "x": 16,
+          "y": 1360,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0218",
+          "x": 158,
+          "y": 1360,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0231",
+          "x": 300,
+          "y": 1360,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0223",
+          "x": 442,
+          "y": 1360,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0242",
+          "x": 584,
+          "y": 1360,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0248",
+          "x": 726,
+          "y": 1360,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0243",
+          "x": 868,
+          "y": 1360,
+          "rotation": 0,
+          "counters": [
+            {
+              "id": "stress-0243-damage",
+              "name": "Damage",
+              "value": 3
+            }
+          ]
+        },
+        {
+          "cardId": "stress-0260",
+          "x": 1035,
+          "y": 1360,
+          "rotation": 90
+        },
+        {
+          "cardId": "stress-0233",
+          "x": 1152,
+          "y": 1360,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0228",
+          "x": 1294,
+          "y": 1360,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0261",
+          "x": 16,
+          "y": 1552,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0238",
+          "x": 158,
+          "y": 1552,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0234",
+          "x": 300,
+          "y": 1552,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0230",
+          "x": 442,
+          "y": 1552,
+          "rotation": 0,
+          "counters": [
+            {
+              "id": "stress-0230-damage",
+              "name": "Damage",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "cardId": "stress-0269",
+          "x": 584,
+          "y": 1552,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0270",
+          "x": 726,
+          "y": 1552,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0271",
+          "x": 893,
+          "y": 1552,
+          "rotation": 90
+        },
+        {
+          "cardId": "stress-0272",
+          "x": 1010,
+          "y": 1552,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0273",
+          "x": 1152,
+          "y": 1552,
+          "rotation": 0
+        },
+        {
+          "cardId": "stress-0274",
+          "x": 1294,
+          "y": 1552,
+          "rotation": 0
+        }
+      ],
+      "usesDice": true
+    },
+    "log": [],
+    "zoom": 1,
+    "snap": false
+  },
+  "snapshots": [],
+  "cardSets": [
+    {
+      "id": "demo-emberguard",
+      "name": "emberguard.csv",
+      "source": {
+        "kind": "file",
+        "name": "emberguard.csv"
+      },
+      "definitions": [
+        {
+          "row": 2,
+          "qty": 9,
+          "front": {
+            "name": "Ember Scout",
+            "fields": {
+              "cost": "1",
+              "rules": "When played, look at the top card of the Fog.",
+              "stats": "1/1"
+            },
+            "image": "demo/art/ember-scout.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0001"
+        },
+        {
+          "row": 3,
+          "qty": 9,
+          "front": {
+            "name": "Hearth Guard",
+            "fields": {
+              "cost": "2",
+              "rules": "Blocks first each round.",
+              "stats": "1/3"
+            },
+            "image": "demo/art/hearth-guard.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0002"
+        },
+        {
+          "row": 4,
+          "qty": 9,
+          "front": {
+            "name": "Lantern Bearer",
+            "fields": {
+              "cost": "2",
+              "rules": "Your other keepers get +1 while this is in play.",
+              "stats": "1/2"
+            },
+            "image": "demo/art/lantern-bearer.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0003"
+        },
+        {
+          "row": 5,
+          "qty": 9,
+          "front": {
+            "name": "Ash Warden",
+            "fields": {
+              "cost": "3",
+              "rules": "When this leaves play, add 1 ember to any keeper.",
+              "stats": "2/3"
+            },
+            "image": "demo/art/ash-warden.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0004"
+        },
+        {
+          "row": 6,
+          "qty": 9,
+          "front": {
+            "name": "Cinder Hound",
+            "fields": {
+              "cost": "3",
+              "rules": "Fast. Can act the round it is played.",
+              "stats": "3/1"
+            },
+            "image": "demo/art/cinder-hound.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0005"
+        },
+        {
+          "row": 7,
+          "qty": 9,
+          "front": {
+            "name": "Beacon Keeper",
+            "fields": {
+              "cost": "4",
+              "rules": "At round start, remove 1 fog from the town.",
+              "stats": "2/4"
+            },
+            "image": "demo/art/beacon-keeper.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0006"
+        },
+        {
+          "row": 8,
+          "qty": 9,
+          "front": {
+            "name": "Kindle",
+            "fields": {
+              "cost": "1",
+              "rules": "Add 2 embers to a keeper.",
+              "stats": ""
+            },
+            "image": "demo/art/kindle.svg",
+            "layout": "Demo action",
+            "type": "Action"
+          },
+          "id": "stress-0007"
+        },
+        {
+          "row": 9,
+          "qty": 9,
+          "front": {
+            "name": "Smoke Screen",
+            "fields": {
+              "cost": "2",
+              "rules": "Ignore the next Fog card this round.",
+              "stats": ""
+            },
+            "image": "demo/art/smoke-screen.svg",
+            "layout": "Demo action",
+            "type": "Action"
+          },
+          "id": "stress-0008"
+        },
+        {
+          "row": 10,
+          "qty": 9,
+          "front": {
+            "name": "Flare Shot",
+            "fields": {
+              "cost": "2",
+              "rules": "Deal 2 damage to a Fog creature.",
+              "stats": ""
+            },
+            "image": "demo/art/flare-shot.svg",
+            "layout": "Demo action",
+            "type": "Action"
+          },
+          "id": "stress-0009"
+        },
+        {
+          "row": 11,
+          "qty": 9,
+          "front": {
+            "name": "Hearthstone Ward",
+            "fields": {
+              "cost": "3",
+              "rules": "Prevent all damage to your keeper this round.",
+              "stats": ""
+            },
+            "image": "demo/art/hearthstone-ward.svg",
+            "layout": "Demo action",
+            "type": "Action"
+          },
+          "id": "stress-0010"
+        }
+      ]
+    },
+    {
+      "id": "demo-tidewardens",
+      "name": "tidewardens.csv",
+      "source": {
+        "kind": "file",
+        "name": "tidewardens.csv"
+      },
+      "definitions": [
+        {
+          "row": 2,
+          "qty": 9,
+          "front": {
+            "name": "Tide Scout",
+            "fields": {
+              "cost": "1",
+              "rules": "When played, draw a card.",
+              "stats": "1/1"
+            },
+            "image": "demo/art/tide-scout.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0101"
+        },
+        {
+          "row": 3,
+          "qty": 9,
+          "front": {
+            "name": "Net Mender",
+            "fields": {
+              "cost": "2",
+              "rules": "Heal 1 damage from a card each round.",
+              "stats": "1/2"
+            },
+            "image": "demo/art/net-mender.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0102"
+        },
+        {
+          "row": 4,
+          "qty": 9,
+          "front": {
+            "name": "Reef Guard",
+            "fields": {
+              "cost": "2",
+              "rules": "Blocks first each round.",
+              "stats": "1/3"
+            },
+            "image": "demo/art/reef-guard.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0103"
+        },
+        {
+          "row": 5,
+          "qty": 9,
+          "front": {
+            "name": "Salt Sentinel",
+            "fields": {
+              "cost": "3",
+              "rules": "Cannot be damaged by Fog events.",
+              "stats": "2/3"
+            },
+            "image": "demo/art/salt-sentinel.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0104"
+        },
+        {
+          "row": 6,
+          "qty": 9,
+          "front": {
+            "name": "Wave Rider",
+            "fields": {
+              "cost": "3",
+              "rules": "Fast. Can move to any place.",
+              "stats": "3/1"
+            },
+            "image": "demo/art/wave-rider.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0105"
+        },
+        {
+          "row": 7,
+          "qty": 9,
+          "front": {
+            "name": "Tide Caller",
+            "fields": {
+              "cost": "4",
+              "rules": "Flip at round end. Rising: draw two cards.",
+              "stats": "2/4"
+            },
+            "image": "demo/art/tide-caller.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "sourceId": "tide-caller",
+          "back": {
+            "name": "Ebb Caller",
+            "fields": {
+              "cost": "4",
+              "rules": "Flip at round end. Ebbing: put a card from hand on the deck.",
+              "stats": "2/4"
+            },
+            "image": "demo/art/ebb-caller.svg",
+            "layout": "Demo creature",
+            "type": "Creature"
+          },
+          "id": "stress-0106"
+        },
+        {
+          "row": 9,
+          "qty": 9,
+          "front": {
+            "name": "Mend",
+            "fields": {
+              "cost": "1",
+              "rules": "Heal 2 damage from a card.",
+              "stats": ""
+            },
+            "image": "demo/art/mend.svg",
+            "layout": "Demo action",
+            "type": "Action"
+          },
+          "id": "stress-0107"
+        },
+        {
+          "row": 10,
+          "qty": 9,
+          "front": {
+            "name": "Undertow",
+            "fields": {
+              "cost": "2",
+              "rules": "Return a Fog creature to the Fog deck.",
+              "stats": ""
+            },
+            "image": "demo/art/undertow.svg",
+            "layout": "Demo action",
+            "type": "Action"
+          },
+          "id": "stress-0108"
+        },
+        {
+          "row": 11,
+          "qty": 9,
+          "front": {
+            "name": "Current Step",
+            "fields": {
+              "cost": "2",
+              "rules": "Move a keeper to any place.",
+              "stats": ""
+            },
+            "image": "demo/art/current-step.svg",
+            "layout": "Demo action",
+            "type": "Action"
+          },
+          "id": "stress-0109"
+        },
+        {
+          "row": 12,
+          "qty": 9,
+          "front": {
+            "name": "Pearl Ward",
+            "fields": {
+              "cost": "3",
+              "rules": "A keeper takes no damage until your next turn.",
+              "stats": ""
+            },
+            "image": "demo/art/pearl-ward.svg",
+            "layout": "Demo action",
+            "type": "Action"
+          },
+          "id": "stress-0110"
+        }
+      ]
+    },
+    {
+      "id": "demo-the-fog",
+      "name": "the-fog.csv",
+      "source": {
+        "kind": "file",
+        "name": "the-fog.csv"
+      },
+      "definitions": [
+        {
+          "row": 2,
+          "qty": 7,
+          "front": {
+            "name": "Drifting Mist",
+            "fields": {
+              "cost": "1",
+              "rules": "Creeps in at round start.",
+              "stats": "1/1"
+            },
+            "image": "demo/art/drifting-mist.svg",
+            "layout": "Demo creature",
+            "type": "Fog"
+          },
+          "id": "stress-0201"
+        },
+        {
+          "row": 3,
+          "qty": 7,
+          "front": {
+            "name": "Thick Murk",
+            "fields": {
+              "cost": "2",
+              "rules": "Hides the card below it.",
+              "stats": "1/3"
+            },
+            "image": "demo/art/thick-murk.svg",
+            "layout": "Demo creature",
+            "type": "Fog"
+          },
+          "id": "stress-0202"
+        },
+        {
+          "row": 4,
+          "qty": 7,
+          "front": {
+            "name": "Cold Damp",
+            "fields": {
+              "cost": "2",
+              "rules": "Keepers here cannot gain embers.",
+              "stats": "2/2"
+            },
+            "image": "demo/art/cold-damp.svg",
+            "layout": "Demo creature",
+            "type": "Fog"
+          },
+          "id": "stress-0203"
+        },
+        {
+          "row": 5,
+          "qty": 7,
+          "front": {
+            "name": "Creeping Gloom",
+            "fields": {
+              "cost": "3",
+              "rules": "Grows +1/+1 each round.",
+              "stats": "2/2"
+            },
+            "image": "demo/art/creeping-gloom.svg",
+            "layout": "Demo creature",
+            "type": "Fog"
+          },
+          "id": "stress-0204"
+        },
+        {
+          "row": 6,
+          "qty": 7,
+          "front": {
+            "name": "Foghorn Echo",
+            "fields": {
+              "cost": "2",
+              "rules": "Every keeper discards a card.",
+              "stats": ""
+            },
+            "image": "demo/art/foghorn-echo.svg",
+            "layout": "Demo action",
+            "type": "Event"
+          },
+          "id": "stress-0205"
+        },
+        {
+          "row": 7,
+          "qty": 7,
+          "front": {
+            "name": "Lost Lantern",
+            "fields": {
+              "cost": "1",
+              "rules": "Remove a lantern from play.",
+              "stats": ""
+            },
+            "image": "demo/art/lost-lantern.svg",
+            "layout": "Demo action",
+            "type": "Event"
+          },
+          "id": "stress-0206"
+        },
+        {
+          "row": 8,
+          "qty": 6,
+          "front": {
+            "name": "Rolling Bank",
+            "fields": {
+              "cost": "4",
+              "rules": "Flip when damaged. Rolling: 3/5.",
+              "stats": "3/5"
+            },
+            "image": "demo/art/rolling-bank.svg",
+            "layout": "Demo creature",
+            "type": "Fog"
+          },
+          "sourceId": "rolling-bank",
+          "back": {
+            "name": "Clearing Bank",
+            "fields": {
+              "cost": "0",
+              "rules": "Discard at round end. The town breathes again.",
+              "stats": "0/1"
+            },
+            "image": "demo/art/clearing-bank.svg",
+            "layout": "Demo creature",
+            "type": "Fog"
+          },
+          "id": "stress-0207"
+        },
+        {
+          "row": 10,
+          "qty": 6,
+          "front": {
+            "name": "Salt Gale",
+            "fields": {
+              "cost": "3",
+              "rules": "Deal 1 damage to every keeper.",
+              "stats": ""
+            },
+            "image": "demo/art/salt-gale.svg",
+            "layout": "Demo action",
+            "type": "Event"
+          },
+          "id": "stress-0208"
+        }
+      ]
+    },
+    {
+      "id": "demo-harbour-board",
+      "name": "harbour-board.csv",
+      "source": {
+        "kind": "file",
+        "name": "harbour-board.csv"
+      },
+      "definitions": [
+        {
+          "row": 2,
+          "qty": 1,
+          "front": {
+            "name": "Harbour Wall",
+            "fields": {
+              "cost": "",
+              "rules": "Blocks the first Fog creature each round.",
+              "stats": ""
+            },
+            "image": "demo/art/harbour-wall.svg",
+            "layout": "Demo location",
+            "type": "Location"
+          },
+          "id": "stress-0263"
+        },
+        {
+          "row": 3,
+          "qty": 1,
+          "front": {
+            "name": "Lighthouse",
+            "fields": {
+              "cost": "",
+              "rules": "Once per round, reveal the next Fog card.",
+              "stats": ""
+            },
+            "image": "demo/art/lighthouse.svg",
+            "layout": "Demo location",
+            "type": "Location"
+          },
+          "id": "stress-0264"
+        },
+        {
+          "row": 4,
+          "qty": 1,
+          "front": {
+            "name": "Fish Market",
+            "fields": {
+              "cost": "",
+              "rules": "Keepers here heal 1 damage each round.",
+              "stats": ""
+            },
+            "image": "demo/art/fish-market.svg",
+            "layout": "Demo location",
+            "type": "Location"
+          },
+          "id": "stress-0265"
+        },
+        {
+          "row": 5,
+          "qty": 1,
+          "front": {
+            "name": "Old Pier",
+            "fields": {
+              "cost": "",
+              "rules": "Keepers here can move to any place.",
+              "stats": ""
+            },
+            "image": "demo/art/old-pier.svg",
+            "layout": "Demo location",
+            "type": "Location"
+          },
+          "id": "stress-0266"
+        },
+        {
+          "row": 6,
+          "qty": 1,
+          "front": {
+            "name": "Boathouse",
+            "fields": {
+              "cost": "",
+              "rules": "Store up to two cards here, face down.",
+              "stats": ""
+            },
+            "image": "demo/art/boathouse.svg",
+            "layout": "Demo location",
+            "type": "Location"
+          },
+          "id": "stress-0267"
+        },
+        {
+          "row": 7,
+          "qty": 1,
+          "front": {
+            "name": "Chapel Bell",
+            "fields": {
+              "cost": "",
+              "rules": "Ring it to clear one fog from the town.",
+              "stats": ""
+            },
+            "image": "demo/art/chapel-bell.svg",
+            "layout": "Demo location",
+            "type": "Location"
+          },
+          "id": "stress-0268"
+        }
+      ]
+    }
+  ],
+  "layouts": [
+    {
+      "id": "demo-creature",
+      "name": "Demo creature",
+      "orientation": "portrait",
+      "boxes": [
+        {
+          "id": "frame",
+          "x": 0,
+          "y": 0,
+          "width": 100,
+          "height": 100,
+          "content": {
+            "kind": "color"
+          },
+          "style": {
+            "size": 9,
+            "weight": 400,
+            "align": "left",
+            "valign": "top",
+            "font": "sans",
+            "color": "#1e1c1a",
+            "background": "#7a3b2e"
+          }
+        },
+        {
+          "id": "name-plate",
+          "x": 4,
+          "y": 3,
+          "width": 74,
+          "height": 9,
+          "content": {
+            "kind": "color"
+          },
+          "style": {
+            "size": 9,
+            "weight": 400,
+            "align": "left",
+            "valign": "top",
+            "font": "sans",
+            "color": "#1e1c1a",
+            "background": "#f3ece0"
+          }
+        },
+        {
+          "id": "name",
+          "x": 6,
+          "y": 3,
+          "width": 70,
+          "height": 9,
+          "content": {
+            "kind": "column",
+            "columns": [
+              "name"
+            ],
+            "as": "text"
+          },
+          "style": {
+            "size": 10,
+            "weight": 700,
+            "align": "left",
+            "valign": "middle",
+            "font": "sans",
+            "color": "#1e1c1a"
+          }
+        },
+        {
+          "id": "cost",
+          "x": 81,
+          "y": 3,
+          "width": 15,
+          "height": 9,
+          "content": {
+            "kind": "column",
+            "columns": [
+              "cost"
+            ],
+            "as": "text"
+          },
+          "style": {
+            "size": 10,
+            "weight": 700,
+            "align": "center",
+            "valign": "middle",
+            "font": "mono",
+            "color": "#ffffff",
+            "background": "#1e1c1a"
+          },
+          "label": "Cost"
+        },
+        {
+          "id": "art",
+          "x": 4,
+          "y": 15,
+          "width": 92,
+          "height": 40,
+          "content": {
+            "kind": "column",
+            "columns": [
+              "image"
+            ],
+            "as": "image"
+          },
+          "style": {
+            "size": 9,
+            "weight": 400,
+            "align": "left",
+            "valign": "top",
+            "font": "sans",
+            "color": "#1e1c1a",
+            "background": "#f3ece0"
+          }
+        },
+        {
+          "id": "type",
+          "x": 4,
+          "y": 57,
+          "width": 92,
+          "height": 7,
+          "content": {
+            "kind": "column",
+            "columns": [
+              "type"
+            ],
+            "as": "text"
+          },
+          "style": {
+            "size": 8,
+            "weight": 600,
+            "align": "left",
+            "valign": "middle",
+            "font": "sans",
+            "color": "#1e1c1a",
+            "background": "#f3ece0"
+          }
+        },
+        {
+          "id": "rules",
+          "x": 4,
+          "y": 66,
+          "width": 92,
+          "height": 21,
+          "content": {
+            "kind": "column",
+            "columns": [
+              "rules"
+            ],
+            "as": "text"
+          },
+          "style": {
+            "size": 8.5,
+            "weight": 400,
+            "align": "left",
+            "valign": "top",
+            "font": "sans",
+            "color": "#1e1c1a",
+            "background": "#fbf8f2"
+          }
+        },
+        {
+          "id": "stats",
+          "x": 62,
+          "y": 89,
+          "width": 34,
+          "height": 8,
+          "content": {
+            "kind": "column",
+            "columns": [
+              "stats"
+            ],
+            "as": "text"
+          },
+          "style": {
+            "size": 10,
+            "weight": 700,
+            "align": "center",
+            "valign": "middle",
+            "font": "mono",
+            "color": "#ffffff",
+            "background": "#1e1c1a"
+          },
+          "label": "Attack and health"
+        }
+      ]
+    },
+    {
+      "id": "demo-action",
+      "name": "Demo action",
+      "orientation": "portrait",
+      "boxes": [
+        {
+          "id": "frame",
+          "x": 0,
+          "y": 0,
+          "width": 100,
+          "height": 100,
+          "content": {
+            "kind": "color"
+          },
+          "style": {
+            "size": 9,
+            "weight": 400,
+            "align": "left",
+            "valign": "top",
+            "font": "sans",
+            "color": "#1e1c1a",
+            "background": "#2f5d62"
+          }
+        },
+        {
+          "id": "name-plate",
+          "x": 4,
+          "y": 3,
+          "width": 74,
+          "height": 9,
+          "content": {
+            "kind": "color"
+          },
+          "style": {
+            "size": 9,
+            "weight": 400,
+            "align": "left",
+            "valign": "top",
+            "font": "sans",
+            "color": "#1e1c1a",
+            "background": "#f3ece0"
+          }
+        },
+        {
+          "id": "name",
+          "x": 6,
+          "y": 3,
+          "width": 70,
+          "height": 9,
+          "content": {
+            "kind": "column",
+            "columns": [
+              "name"
+            ],
+            "as": "text"
+          },
+          "style": {
+            "size": 10,
+            "weight": 700,
+            "align": "left",
+            "valign": "middle",
+            "font": "sans",
+            "color": "#1e1c1a"
+          }
+        },
+        {
+          "id": "cost",
+          "x": 81,
+          "y": 3,
+          "width": 15,
+          "height": 9,
+          "content": {
+            "kind": "column",
+            "columns": [
+              "cost"
+            ],
+            "as": "text"
+          },
+          "style": {
+            "size": 10,
+            "weight": 700,
+            "align": "center",
+            "valign": "middle",
+            "font": "mono",
+            "color": "#ffffff",
+            "background": "#1e1c1a"
+          },
+          "label": "Cost"
+        },
+        {
+          "id": "art",
+          "x": 4,
+          "y": 15,
+          "width": 92,
+          "height": 32,
+          "content": {
+            "kind": "column",
+            "columns": [
+              "image"
+            ],
+            "as": "image"
+          },
+          "style": {
+            "size": 9,
+            "weight": 400,
+            "align": "left",
+            "valign": "top",
+            "font": "sans",
+            "color": "#1e1c1a",
+            "background": "#f3ece0"
+          }
+        },
+        {
+          "id": "type",
+          "x": 4,
+          "y": 49,
+          "width": 92,
+          "height": 7,
+          "content": {
+            "kind": "column",
+            "columns": [
+              "type"
+            ],
+            "as": "text"
+          },
+          "style": {
+            "size": 8,
+            "weight": 600,
+            "align": "left",
+            "valign": "middle",
+            "font": "sans",
+            "color": "#1e1c1a",
+            "background": "#f3ece0"
+          }
+        },
+        {
+          "id": "rules",
+          "x": 4,
+          "y": 58,
+          "width": 92,
+          "height": 38,
+          "content": {
+            "kind": "column",
+            "columns": [
+              "rules"
+            ],
+            "as": "text"
+          },
+          "style": {
+            "size": 8.5,
+            "weight": 400,
+            "align": "left",
+            "valign": "top",
+            "font": "sans",
+            "color": "#1e1c1a",
+            "background": "#fbf8f2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "demo-location",
+      "name": "Demo location",
+      "orientation": "landscape",
+      "boxes": [
+        {
+          "id": "frame",
+          "x": 0,
+          "y": 0,
+          "width": 100,
+          "height": 100,
+          "content": {
+            "kind": "color"
+          },
+          "style": {
+            "size": 9,
+            "weight": 400,
+            "align": "left",
+            "valign": "top",
+            "font": "sans",
+            "color": "#1e1c1a",
+            "background": "#3b4a6b"
+          }
+        },
+        {
+          "id": "name-plate",
+          "x": 3,
+          "y": 5,
+          "width": 94,
+          "height": 15,
+          "content": {
+            "kind": "color"
+          },
+          "style": {
+            "size": 9,
+            "weight": 400,
+            "align": "left",
+            "valign": "top",
+            "font": "sans",
+            "color": "#1e1c1a",
+            "background": "#f3ece0"
+          }
+        },
+        {
+          "id": "name",
+          "x": 5,
+          "y": 5,
+          "width": 90,
+          "height": 15,
+          "content": {
+            "kind": "column",
+            "columns": [
+              "name"
+            ],
+            "as": "text"
+          },
+          "style": {
+            "size": 13,
+            "weight": 700,
+            "align": "left",
+            "valign": "middle",
+            "font": "sans",
+            "color": "#1e1c1a"
+          }
+        },
+        {
+          "id": "art",
+          "x": 3,
+          "y": 24,
+          "width": 40,
+          "height": 71,
+          "content": {
+            "kind": "column",
+            "columns": [
+              "image"
+            ],
+            "as": "image"
+          },
+          "style": {
+            "size": 9,
+            "weight": 400,
+            "align": "left",
+            "valign": "top",
+            "font": "sans",
+            "color": "#1e1c1a",
+            "background": "#f3ece0"
+          }
+        },
+        {
+          "id": "type",
+          "x": 47,
+          "y": 24,
+          "width": 50,
+          "height": 11,
+          "content": {
+            "kind": "column",
+            "columns": [
+              "type"
+            ],
+            "as": "text"
+          },
+          "style": {
+            "size": 9,
+            "weight": 600,
+            "align": "left",
+            "valign": "middle",
+            "font": "sans",
+            "color": "#1e1c1a",
+            "background": "#f3ece0"
+          }
+        },
+        {
+          "id": "rules",
+          "x": 47,
+          "y": 38,
+          "width": 50,
+          "height": 57,
+          "content": {
+            "kind": "column",
+            "columns": [
+              "rules"
+            ],
+            "as": "text"
+          },
+          "style": {
+            "size": 11,
+            "weight": 400,
+            "align": "left",
+            "valign": "top",
+            "font": "sans",
+            "color": "#1e1c1a",
+            "background": "#fbf8f2"
+          }
+        }
+      ]
+    }
+  ],
+  "formats": [],
+  "settings": {
+    "id": "account",
+    "options": {}
+  }
+}

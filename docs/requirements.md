@@ -228,14 +228,14 @@ Target: WCAG 2.2 Level AA across the whole app, including the layout editor. Dra
 
 ## Performance
 
-The stress case is a full 1v1 table: 2 × 60-card decks, a 40-card environment or board pile, and 80 cards in play with art.
+The stress case is a full 1v1 table: 2 × 60-card decks, a 40-card environment or board pile, and 80 cards in play with art (`tests/fixtures/bundles/stress.json`). A mid-range laptop means 2× CPU slowdown in Chromium. Method, machine and results are in `docs/performance.md`.
 
 | Metric | Budget | Measured on |
 | --- | --- | --- |
 | Largest Contentful Paint | ≤ 2.5 s | Demo page, Lighthouse mobile profile |
 | Interaction to Next Paint | ≤ 200 ms | Any action on the stress table |
 | Cumulative Layout Shift | ≤ 0.1 | Load and CSV import |
-| Drag frame rate | 60 fps sustained | Dragging a 10-card stack, mid-range laptop |
+| Drag frame rate | 60 fps sustained | Dragging one card on the stress table, mid-range laptop (the 10-card stack version is with stacks, #30) |
 | JavaScript, initial load | ≤ 150 KB gzipped | Production build |
 | CSV import of 200 rows | ≤ 300 ms to cards in pile | Excluding image downloads |
 | Lighthouse Performance score | ≥ 90 | Demo page, mobile |
@@ -345,7 +345,7 @@ The code is AI-generated. The designer acts as product owner, requirements write
 - `docs/decisions/`: one short record per significant decision (what was chosen, what was rejected, why).
 - `docs/testing/`: test plans and manual test results, including screen-reader runs.
 - `docs/accessibility/acr.md`: the accessibility conformance report.
-- `docs/performance.md`: Lighthouse runs over time and what changed between them.
+- `docs/performance.md`: the stress table and Lighthouse runs over time, how they were measured and what changed between them.
 - `docs/case-study.md`: written at the end. Covers the problem, the designer's role, key decisions, accessibility and performance work, and lessons about directing AI.
 - A `CLAUDE.md` with project conventions for Claude Code.
 

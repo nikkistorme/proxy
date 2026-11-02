@@ -1,4 +1,4 @@
-import type { CSSProperties, KeyboardEvent, PointerEvent } from 'react';
+import { memo, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react';
 import { cardBox } from '../model/tablePlacement';
 import { CardFace } from './CardFace';
 import { seatIdentity } from './seatIdentity';
@@ -36,8 +36,11 @@ const MAX_PILLS = 3;
  * A card on the table, at its position and rotation. Like the viewer's cards, the
  * face is a decorative layer under a transparent button that carries the name,
  * so a face full of text never becomes the button's name (A11Y-6).
+ *
+ * Memoised (PF-2): the table hands it a view and handlers that keep their identity, so a
+ * drag, or an action on another card, doesn't re-render it.
  */
-export function TableCard({ view, layer, tabbable, register, onFocus, onKeyDown, onKeyUp, menuOpen, onOpenMenu, onPointerDown, dragging, onOpenCounters, onHover }: TableCardProps) {
+export const TableCard = memo(function TableCard({ view, layer, tabbable, register, onFocus, onKeyDown, onKeyUp, menuOpen, onOpenMenu, onPointerDown, dragging, onOpenCounters, onHover }: TableCardProps) {
   const { entry, face, ownerPlace, missing, doubleFaced, label } = view;
   const identity = seatIdentity(ownerPlace);
   // The outer box is the area the card covers on screen, turned or not, so the
@@ -156,4 +159,4 @@ export function TableCard({ view, layer, tabbable, register, onFocus, onKeyDown,
       </button>
     </div>
   );
-}
+});

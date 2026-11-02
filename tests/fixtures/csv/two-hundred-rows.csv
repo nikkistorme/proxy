@@ -1,0 +1,201 @@
+name,qty,type,layout,image,cost,rules,stats
+Ember Scout 1,1,Creature,Demo creature,demo/art/ember-scout.svg,1,"When played, look at the top card of the Fog.",1/1
+Hearth Guard 2,1,Creature,Demo creature,demo/art/hearth-guard.svg,2,Blocks first each round.,1/3
+Lantern Bearer 3,1,Creature,Demo creature,demo/art/lantern-bearer.svg,2,Your other keepers get +1 while this is in play.,1/2
+Ash Warden 4,1,Creature,Demo creature,demo/art/ash-warden.svg,3,"When this leaves play, add 1 ember to any keeper.",2/3
+Cinder Hound 5,1,Creature,Demo creature,demo/art/cinder-hound.svg,3,Fast. Can act the round it is played.,3/1
+Beacon Keeper 6,1,Creature,Demo creature,demo/art/beacon-keeper.svg,4,"At round start, remove 1 fog from the town.",2/4
+Kindle 7,1,Action,Demo action,demo/art/kindle.svg,1,Add 2 embers to a keeper.,
+Smoke Screen 8,1,Action,Demo action,demo/art/smoke-screen.svg,2,Ignore the next Fog card this round.,
+Flare Shot 9,1,Action,Demo action,demo/art/flare-shot.svg,2,Deal 2 damage to a Fog creature.,
+Hearthstone Ward 10,1,Action,Demo action,demo/art/hearthstone-ward.svg,3,Prevent all damage to your keeper this round.,
+Tide Scout 11,1,Creature,Demo creature,demo/art/tide-scout.svg,1,"When played, draw a card.",1/1
+Net Mender 12,1,Creature,Demo creature,demo/art/net-mender.svg,2,Heal 1 damage from a card each round.,1/2
+Reef Guard 13,1,Creature,Demo creature,demo/art/reef-guard.svg,2,Blocks first each round.,1/3
+Salt Sentinel 14,1,Creature,Demo creature,demo/art/salt-sentinel.svg,3,Cannot be damaged by Fog events.,2/3
+Wave Rider 15,1,Creature,Demo creature,demo/art/wave-rider.svg,3,Fast. Can move to any place.,3/1
+Mend 16,1,Action,Demo action,demo/art/mend.svg,1,Heal 2 damage from a card.,
+Undertow 17,1,Action,Demo action,demo/art/undertow.svg,2,Return a Fog creature to the Fog deck.,
+Current Step 18,1,Action,Demo action,demo/art/current-step.svg,2,Move a keeper to any place.,
+Pearl Ward 19,1,Action,Demo action,demo/art/pearl-ward.svg,3,A keeper takes no damage until your next turn.,
+Drifting Mist 20,1,Fog,Demo creature,demo/art/drifting-mist.svg,1,Creeps in at round start.,1/1
+Thick Murk 21,1,Fog,Demo creature,demo/art/thick-murk.svg,2,Hides the card below it.,1/3
+Cold Damp 22,1,Fog,Demo creature,demo/art/cold-damp.svg,2,Keepers here cannot gain embers.,2/2
+Creeping Gloom 23,1,Fog,Demo creature,demo/art/creeping-gloom.svg,3,Grows +1/+1 each round.,2/2
+Foghorn Echo 24,1,Event,Demo action,demo/art/foghorn-echo.svg,2,Every keeper discards a card.,
+Lost Lantern 25,1,Event,Demo action,demo/art/lost-lantern.svg,1,Remove a lantern from play.,
+Salt Gale 26,1,Event,Demo action,demo/art/salt-gale.svg,3,Deal 1 damage to every keeper.,
+Harbour Wall 27,1,Location,Demo location,demo/art/harbour-wall.svg,,Blocks the first Fog creature each round.,
+Lighthouse 28,1,Location,Demo location,demo/art/lighthouse.svg,,"Once per round, reveal the next Fog card.",
+Fish Market 29,1,Location,Demo location,demo/art/fish-market.svg,,Keepers here heal 1 damage each round.,
+Old Pier 30,1,Location,Demo location,demo/art/old-pier.svg,,Keepers here can move to any place.,
+Boathouse 31,1,Location,Demo location,demo/art/boathouse.svg,,"Store up to two cards here, face down.",
+Chapel Bell 32,1,Location,Demo location,demo/art/chapel-bell.svg,,Ring it to clear one fog from the town.,
+Ember Scout 33,1,Creature,Demo creature,demo/art/ember-scout.svg,1,"When played, look at the top card of the Fog.",1/1
+Hearth Guard 34,1,Creature,Demo creature,demo/art/hearth-guard.svg,2,Blocks first each round.,1/3
+Lantern Bearer 35,1,Creature,Demo creature,demo/art/lantern-bearer.svg,2,Your other keepers get +1 while this is in play.,1/2
+Ash Warden 36,1,Creature,Demo creature,demo/art/ash-warden.svg,3,"When this leaves play, add 1 ember to any keeper.",2/3
+Cinder Hound 37,1,Creature,Demo creature,demo/art/cinder-hound.svg,3,Fast. Can act the round it is played.,3/1
+Beacon Keeper 38,1,Creature,Demo creature,demo/art/beacon-keeper.svg,4,"At round start, remove 1 fog from the town.",2/4
+Kindle 39,1,Action,Demo action,demo/art/kindle.svg,1,Add 2 embers to a keeper.,
+Smoke Screen 40,1,Action,Demo action,demo/art/smoke-screen.svg,2,Ignore the next Fog card this round.,
+Flare Shot 41,1,Action,Demo action,demo/art/flare-shot.svg,2,Deal 2 damage to a Fog creature.,
+Hearthstone Ward 42,1,Action,Demo action,demo/art/hearthstone-ward.svg,3,Prevent all damage to your keeper this round.,
+Tide Scout 43,1,Creature,Demo creature,demo/art/tide-scout.svg,1,"When played, draw a card.",1/1
+Net Mender 44,1,Creature,Demo creature,demo/art/net-mender.svg,2,Heal 1 damage from a card each round.,1/2
+Reef Guard 45,1,Creature,Demo creature,demo/art/reef-guard.svg,2,Blocks first each round.,1/3
+Salt Sentinel 46,1,Creature,Demo creature,demo/art/salt-sentinel.svg,3,Cannot be damaged by Fog events.,2/3
+Wave Rider 47,1,Creature,Demo creature,demo/art/wave-rider.svg,3,Fast. Can move to any place.,3/1
+Mend 48,1,Action,Demo action,demo/art/mend.svg,1,Heal 2 damage from a card.,
+Undertow 49,1,Action,Demo action,demo/art/undertow.svg,2,Return a Fog creature to the Fog deck.,
+Current Step 50,1,Action,Demo action,demo/art/current-step.svg,2,Move a keeper to any place.,
+Pearl Ward 51,1,Action,Demo action,demo/art/pearl-ward.svg,3,A keeper takes no damage until your next turn.,
+Drifting Mist 52,1,Fog,Demo creature,demo/art/drifting-mist.svg,1,Creeps in at round start.,1/1
+Thick Murk 53,1,Fog,Demo creature,demo/art/thick-murk.svg,2,Hides the card below it.,1/3
+Cold Damp 54,1,Fog,Demo creature,demo/art/cold-damp.svg,2,Keepers here cannot gain embers.,2/2
+Creeping Gloom 55,1,Fog,Demo creature,demo/art/creeping-gloom.svg,3,Grows +1/+1 each round.,2/2
+Foghorn Echo 56,1,Event,Demo action,demo/art/foghorn-echo.svg,2,Every keeper discards a card.,
+Lost Lantern 57,1,Event,Demo action,demo/art/lost-lantern.svg,1,Remove a lantern from play.,
+Salt Gale 58,1,Event,Demo action,demo/art/salt-gale.svg,3,Deal 1 damage to every keeper.,
+Harbour Wall 59,1,Location,Demo location,demo/art/harbour-wall.svg,,Blocks the first Fog creature each round.,
+Lighthouse 60,1,Location,Demo location,demo/art/lighthouse.svg,,"Once per round, reveal the next Fog card.",
+Fish Market 61,1,Location,Demo location,demo/art/fish-market.svg,,Keepers here heal 1 damage each round.,
+Old Pier 62,1,Location,Demo location,demo/art/old-pier.svg,,Keepers here can move to any place.,
+Boathouse 63,1,Location,Demo location,demo/art/boathouse.svg,,"Store up to two cards here, face down.",
+Chapel Bell 64,1,Location,Demo location,demo/art/chapel-bell.svg,,Ring it to clear one fog from the town.,
+Ember Scout 65,1,Creature,Demo creature,demo/art/ember-scout.svg,1,"When played, look at the top card of the Fog.",1/1
+Hearth Guard 66,1,Creature,Demo creature,demo/art/hearth-guard.svg,2,Blocks first each round.,1/3
+Lantern Bearer 67,1,Creature,Demo creature,demo/art/lantern-bearer.svg,2,Your other keepers get +1 while this is in play.,1/2
+Ash Warden 68,1,Creature,Demo creature,demo/art/ash-warden.svg,3,"When this leaves play, add 1 ember to any keeper.",2/3
+Cinder Hound 69,1,Creature,Demo creature,demo/art/cinder-hound.svg,3,Fast. Can act the round it is played.,3/1
+Beacon Keeper 70,1,Creature,Demo creature,demo/art/beacon-keeper.svg,4,"At round start, remove 1 fog from the town.",2/4
+Kindle 71,1,Action,Demo action,demo/art/kindle.svg,1,Add 2 embers to a keeper.,
+Smoke Screen 72,1,Action,Demo action,demo/art/smoke-screen.svg,2,Ignore the next Fog card this round.,
+Flare Shot 73,1,Action,Demo action,demo/art/flare-shot.svg,2,Deal 2 damage to a Fog creature.,
+Hearthstone Ward 74,1,Action,Demo action,demo/art/hearthstone-ward.svg,3,Prevent all damage to your keeper this round.,
+Tide Scout 75,1,Creature,Demo creature,demo/art/tide-scout.svg,1,"When played, draw a card.",1/1
+Net Mender 76,1,Creature,Demo creature,demo/art/net-mender.svg,2,Heal 1 damage from a card each round.,1/2
+Reef Guard 77,1,Creature,Demo creature,demo/art/reef-guard.svg,2,Blocks first each round.,1/3
+Salt Sentinel 78,1,Creature,Demo creature,demo/art/salt-sentinel.svg,3,Cannot be damaged by Fog events.,2/3
+Wave Rider 79,1,Creature,Demo creature,demo/art/wave-rider.svg,3,Fast. Can move to any place.,3/1
+Mend 80,1,Action,Demo action,demo/art/mend.svg,1,Heal 2 damage from a card.,
+Undertow 81,1,Action,Demo action,demo/art/undertow.svg,2,Return a Fog creature to the Fog deck.,
+Current Step 82,1,Action,Demo action,demo/art/current-step.svg,2,Move a keeper to any place.,
+Pearl Ward 83,1,Action,Demo action,demo/art/pearl-ward.svg,3,A keeper takes no damage until your next turn.,
+Drifting Mist 84,1,Fog,Demo creature,demo/art/drifting-mist.svg,1,Creeps in at round start.,1/1
+Thick Murk 85,1,Fog,Demo creature,demo/art/thick-murk.svg,2,Hides the card below it.,1/3
+Cold Damp 86,1,Fog,Demo creature,demo/art/cold-damp.svg,2,Keepers here cannot gain embers.,2/2
+Creeping Gloom 87,1,Fog,Demo creature,demo/art/creeping-gloom.svg,3,Grows +1/+1 each round.,2/2
+Foghorn Echo 88,1,Event,Demo action,demo/art/foghorn-echo.svg,2,Every keeper discards a card.,
+Lost Lantern 89,1,Event,Demo action,demo/art/lost-lantern.svg,1,Remove a lantern from play.,
+Salt Gale 90,1,Event,Demo action,demo/art/salt-gale.svg,3,Deal 1 damage to every keeper.,
+Harbour Wall 91,1,Location,Demo location,demo/art/harbour-wall.svg,,Blocks the first Fog creature each round.,
+Lighthouse 92,1,Location,Demo location,demo/art/lighthouse.svg,,"Once per round, reveal the next Fog card.",
+Fish Market 93,1,Location,Demo location,demo/art/fish-market.svg,,Keepers here heal 1 damage each round.,
+Old Pier 94,1,Location,Demo location,demo/art/old-pier.svg,,Keepers here can move to any place.,
+Boathouse 95,1,Location,Demo location,demo/art/boathouse.svg,,"Store up to two cards here, face down.",
+Chapel Bell 96,1,Location,Demo location,demo/art/chapel-bell.svg,,Ring it to clear one fog from the town.,
+Ember Scout 97,1,Creature,Demo creature,demo/art/ember-scout.svg,1,"When played, look at the top card of the Fog.",1/1
+Hearth Guard 98,1,Creature,Demo creature,demo/art/hearth-guard.svg,2,Blocks first each round.,1/3
+Lantern Bearer 99,1,Creature,Demo creature,demo/art/lantern-bearer.svg,2,Your other keepers get +1 while this is in play.,1/2
+Ash Warden 100,1,Creature,Demo creature,demo/art/ash-warden.svg,3,"When this leaves play, add 1 ember to any keeper.",2/3
+Cinder Hound 101,1,Creature,Demo creature,demo/art/cinder-hound.svg,3,Fast. Can act the round it is played.,3/1
+Beacon Keeper 102,1,Creature,Demo creature,demo/art/beacon-keeper.svg,4,"At round start, remove 1 fog from the town.",2/4
+Kindle 103,1,Action,Demo action,demo/art/kindle.svg,1,Add 2 embers to a keeper.,
+Smoke Screen 104,1,Action,Demo action,demo/art/smoke-screen.svg,2,Ignore the next Fog card this round.,
+Flare Shot 105,1,Action,Demo action,demo/art/flare-shot.svg,2,Deal 2 damage to a Fog creature.,
+Hearthstone Ward 106,1,Action,Demo action,demo/art/hearthstone-ward.svg,3,Prevent all damage to your keeper this round.,
+Tide Scout 107,1,Creature,Demo creature,demo/art/tide-scout.svg,1,"When played, draw a card.",1/1
+Net Mender 108,1,Creature,Demo creature,demo/art/net-mender.svg,2,Heal 1 damage from a card each round.,1/2
+Reef Guard 109,1,Creature,Demo creature,demo/art/reef-guard.svg,2,Blocks first each round.,1/3
+Salt Sentinel 110,1,Creature,Demo creature,demo/art/salt-sentinel.svg,3,Cannot be damaged by Fog events.,2/3
+Wave Rider 111,1,Creature,Demo creature,demo/art/wave-rider.svg,3,Fast. Can move to any place.,3/1
+Mend 112,1,Action,Demo action,demo/art/mend.svg,1,Heal 2 damage from a card.,
+Undertow 113,1,Action,Demo action,demo/art/undertow.svg,2,Return a Fog creature to the Fog deck.,
+Current Step 114,1,Action,Demo action,demo/art/current-step.svg,2,Move a keeper to any place.,
+Pearl Ward 115,1,Action,Demo action,demo/art/pearl-ward.svg,3,A keeper takes no damage until your next turn.,
+Drifting Mist 116,1,Fog,Demo creature,demo/art/drifting-mist.svg,1,Creeps in at round start.,1/1
+Thick Murk 117,1,Fog,Demo creature,demo/art/thick-murk.svg,2,Hides the card below it.,1/3
+Cold Damp 118,1,Fog,Demo creature,demo/art/cold-damp.svg,2,Keepers here cannot gain embers.,2/2
+Creeping Gloom 119,1,Fog,Demo creature,demo/art/creeping-gloom.svg,3,Grows +1/+1 each round.,2/2
+Foghorn Echo 120,1,Event,Demo action,demo/art/foghorn-echo.svg,2,Every keeper discards a card.,
+Lost Lantern 121,1,Event,Demo action,demo/art/lost-lantern.svg,1,Remove a lantern from play.,
+Salt Gale 122,1,Event,Demo action,demo/art/salt-gale.svg,3,Deal 1 damage to every keeper.,
+Harbour Wall 123,1,Location,Demo location,demo/art/harbour-wall.svg,,Blocks the first Fog creature each round.,
+Lighthouse 124,1,Location,Demo location,demo/art/lighthouse.svg,,"Once per round, reveal the next Fog card.",
+Fish Market 125,1,Location,Demo location,demo/art/fish-market.svg,,Keepers here heal 1 damage each round.,
+Old Pier 126,1,Location,Demo location,demo/art/old-pier.svg,,Keepers here can move to any place.,
+Boathouse 127,1,Location,Demo location,demo/art/boathouse.svg,,"Store up to two cards here, face down.",
+Chapel Bell 128,1,Location,Demo location,demo/art/chapel-bell.svg,,Ring it to clear one fog from the town.,
+Ember Scout 129,1,Creature,Demo creature,demo/art/ember-scout.svg,1,"When played, look at the top card of the Fog.",1/1
+Hearth Guard 130,1,Creature,Demo creature,demo/art/hearth-guard.svg,2,Blocks first each round.,1/3
+Lantern Bearer 131,1,Creature,Demo creature,demo/art/lantern-bearer.svg,2,Your other keepers get +1 while this is in play.,1/2
+Ash Warden 132,1,Creature,Demo creature,demo/art/ash-warden.svg,3,"When this leaves play, add 1 ember to any keeper.",2/3
+Cinder Hound 133,1,Creature,Demo creature,demo/art/cinder-hound.svg,3,Fast. Can act the round it is played.,3/1
+Beacon Keeper 134,1,Creature,Demo creature,demo/art/beacon-keeper.svg,4,"At round start, remove 1 fog from the town.",2/4
+Kindle 135,1,Action,Demo action,demo/art/kindle.svg,1,Add 2 embers to a keeper.,
+Smoke Screen 136,1,Action,Demo action,demo/art/smoke-screen.svg,2,Ignore the next Fog card this round.,
+Flare Shot 137,1,Action,Demo action,demo/art/flare-shot.svg,2,Deal 2 damage to a Fog creature.,
+Hearthstone Ward 138,1,Action,Demo action,demo/art/hearthstone-ward.svg,3,Prevent all damage to your keeper this round.,
+Tide Scout 139,1,Creature,Demo creature,demo/art/tide-scout.svg,1,"When played, draw a card.",1/1
+Net Mender 140,1,Creature,Demo creature,demo/art/net-mender.svg,2,Heal 1 damage from a card each round.,1/2
+Reef Guard 141,1,Creature,Demo creature,demo/art/reef-guard.svg,2,Blocks first each round.,1/3
+Salt Sentinel 142,1,Creature,Demo creature,demo/art/salt-sentinel.svg,3,Cannot be damaged by Fog events.,2/3
+Wave Rider 143,1,Creature,Demo creature,demo/art/wave-rider.svg,3,Fast. Can move to any place.,3/1
+Mend 144,1,Action,Demo action,demo/art/mend.svg,1,Heal 2 damage from a card.,
+Undertow 145,1,Action,Demo action,demo/art/undertow.svg,2,Return a Fog creature to the Fog deck.,
+Current Step 146,1,Action,Demo action,demo/art/current-step.svg,2,Move a keeper to any place.,
+Pearl Ward 147,1,Action,Demo action,demo/art/pearl-ward.svg,3,A keeper takes no damage until your next turn.,
+Drifting Mist 148,1,Fog,Demo creature,demo/art/drifting-mist.svg,1,Creeps in at round start.,1/1
+Thick Murk 149,1,Fog,Demo creature,demo/art/thick-murk.svg,2,Hides the card below it.,1/3
+Cold Damp 150,1,Fog,Demo creature,demo/art/cold-damp.svg,2,Keepers here cannot gain embers.,2/2
+Creeping Gloom 151,1,Fog,Demo creature,demo/art/creeping-gloom.svg,3,Grows +1/+1 each round.,2/2
+Foghorn Echo 152,1,Event,Demo action,demo/art/foghorn-echo.svg,2,Every keeper discards a card.,
+Lost Lantern 153,1,Event,Demo action,demo/art/lost-lantern.svg,1,Remove a lantern from play.,
+Salt Gale 154,1,Event,Demo action,demo/art/salt-gale.svg,3,Deal 1 damage to every keeper.,
+Harbour Wall 155,1,Location,Demo location,demo/art/harbour-wall.svg,,Blocks the first Fog creature each round.,
+Lighthouse 156,1,Location,Demo location,demo/art/lighthouse.svg,,"Once per round, reveal the next Fog card.",
+Fish Market 157,1,Location,Demo location,demo/art/fish-market.svg,,Keepers here heal 1 damage each round.,
+Old Pier 158,1,Location,Demo location,demo/art/old-pier.svg,,Keepers here can move to any place.,
+Boathouse 159,1,Location,Demo location,demo/art/boathouse.svg,,"Store up to two cards here, face down.",
+Chapel Bell 160,1,Location,Demo location,demo/art/chapel-bell.svg,,Ring it to clear one fog from the town.,
+Ember Scout 161,1,Creature,Demo creature,demo/art/ember-scout.svg,1,"When played, look at the top card of the Fog.",1/1
+Hearth Guard 162,1,Creature,Demo creature,demo/art/hearth-guard.svg,2,Blocks first each round.,1/3
+Lantern Bearer 163,1,Creature,Demo creature,demo/art/lantern-bearer.svg,2,Your other keepers get +1 while this is in play.,1/2
+Ash Warden 164,1,Creature,Demo creature,demo/art/ash-warden.svg,3,"When this leaves play, add 1 ember to any keeper.",2/3
+Cinder Hound 165,1,Creature,Demo creature,demo/art/cinder-hound.svg,3,Fast. Can act the round it is played.,3/1
+Beacon Keeper 166,1,Creature,Demo creature,demo/art/beacon-keeper.svg,4,"At round start, remove 1 fog from the town.",2/4
+Kindle 167,1,Action,Demo action,demo/art/kindle.svg,1,Add 2 embers to a keeper.,
+Smoke Screen 168,1,Action,Demo action,demo/art/smoke-screen.svg,2,Ignore the next Fog card this round.,
+Flare Shot 169,1,Action,Demo action,demo/art/flare-shot.svg,2,Deal 2 damage to a Fog creature.,
+Hearthstone Ward 170,1,Action,Demo action,demo/art/hearthstone-ward.svg,3,Prevent all damage to your keeper this round.,
+Tide Scout 171,1,Creature,Demo creature,demo/art/tide-scout.svg,1,"When played, draw a card.",1/1
+Net Mender 172,1,Creature,Demo creature,demo/art/net-mender.svg,2,Heal 1 damage from a card each round.,1/2
+Reef Guard 173,1,Creature,Demo creature,demo/art/reef-guard.svg,2,Blocks first each round.,1/3
+Salt Sentinel 174,1,Creature,Demo creature,demo/art/salt-sentinel.svg,3,Cannot be damaged by Fog events.,2/3
+Wave Rider 175,1,Creature,Demo creature,demo/art/wave-rider.svg,3,Fast. Can move to any place.,3/1
+Mend 176,1,Action,Demo action,demo/art/mend.svg,1,Heal 2 damage from a card.,
+Undertow 177,1,Action,Demo action,demo/art/undertow.svg,2,Return a Fog creature to the Fog deck.,
+Current Step 178,1,Action,Demo action,demo/art/current-step.svg,2,Move a keeper to any place.,
+Pearl Ward 179,1,Action,Demo action,demo/art/pearl-ward.svg,3,A keeper takes no damage until your next turn.,
+Drifting Mist 180,1,Fog,Demo creature,demo/art/drifting-mist.svg,1,Creeps in at round start.,1/1
+Thick Murk 181,1,Fog,Demo creature,demo/art/thick-murk.svg,2,Hides the card below it.,1/3
+Cold Damp 182,1,Fog,Demo creature,demo/art/cold-damp.svg,2,Keepers here cannot gain embers.,2/2
+Creeping Gloom 183,1,Fog,Demo creature,demo/art/creeping-gloom.svg,3,Grows +1/+1 each round.,2/2
+Foghorn Echo 184,1,Event,Demo action,demo/art/foghorn-echo.svg,2,Every keeper discards a card.,
+Lost Lantern 185,1,Event,Demo action,demo/art/lost-lantern.svg,1,Remove a lantern from play.,
+Salt Gale 186,1,Event,Demo action,demo/art/salt-gale.svg,3,Deal 1 damage to every keeper.,
+Harbour Wall 187,1,Location,Demo location,demo/art/harbour-wall.svg,,Blocks the first Fog creature each round.,
+Lighthouse 188,1,Location,Demo location,demo/art/lighthouse.svg,,"Once per round, reveal the next Fog card.",
+Fish Market 189,1,Location,Demo location,demo/art/fish-market.svg,,Keepers here heal 1 damage each round.,
+Old Pier 190,1,Location,Demo location,demo/art/old-pier.svg,,Keepers here can move to any place.,
+Boathouse 191,1,Location,Demo location,demo/art/boathouse.svg,,"Store up to two cards here, face down.",
+Chapel Bell 192,1,Location,Demo location,demo/art/chapel-bell.svg,,Ring it to clear one fog from the town.,
+Ember Scout 193,1,Creature,Demo creature,demo/art/ember-scout.svg,1,"When played, look at the top card of the Fog.",1/1
+Hearth Guard 194,1,Creature,Demo creature,demo/art/hearth-guard.svg,2,Blocks first each round.,1/3
+Lantern Bearer 195,1,Creature,Demo creature,demo/art/lantern-bearer.svg,2,Your other keepers get +1 while this is in play.,1/2
+Ash Warden 196,1,Creature,Demo creature,demo/art/ash-warden.svg,3,"When this leaves play, add 1 ember to any keeper.",2/3
+Cinder Hound 197,1,Creature,Demo creature,demo/art/cinder-hound.svg,3,Fast. Can act the round it is played.,3/1
+Beacon Keeper 198,1,Creature,Demo creature,demo/art/beacon-keeper.svg,4,"At round start, remove 1 fog from the town.",2/4
+Kindle 199,1,Action,Demo action,demo/art/kindle.svg,1,Add 2 embers to a keeper.,
+Smoke Screen 200,1,Action,Demo action,demo/art/smoke-screen.svg,2,Ignore the next Fog card this round.,

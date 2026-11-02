@@ -1,5 +1,5 @@
 import { flushSync } from 'react-dom';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
 import { cardBox, CARD_H, CARD_W, clampToTable, columnsFor, describeSpot, freeSpot, overlaps, pileBox, pileUnder, TABLE_GAP } from '../model/tablePlacement';
 import { nearestInDirection, readingOrder, tableItems, type Direction } from '../model/tableNavigation';
 import { clampZoom, fitAll, GRID_X, GRID_Y, MAX_ZOOM, scrollAfterZoom, snapToGrid, stepZoom, zoomPercent, type Scroll } from '../model/tableView';
@@ -19,7 +19,7 @@ import { moveDestinations } from './moveDestinations';
 import { MoveDialog, type MoveRequest } from './MoveDialog';
 import { PlacementBar } from './PlacementBar';
 import { TableCard } from './TableCard';
-import { tableCardView } from './tableCardView';
+import { createTableCardViews, tableCardView } from './tableCardView';
 import { TOAST_UNDO_ID } from './Toast';
 import './TableSurface.css';
 
@@ -155,6 +155,8 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
   const register = useCallback((cardId: string, element: HTMLButtonElement | null) => {
     buttons.current[cardId] = element;
   }, []);
+  // PF-2: each card's view keeps its identity until something it shows changes.
+  const [viewOf] = useState(createTableCardViews);
 
   // Track the viewport's size, for fit all and for a mat that always fills the view.
   useEffect(() => {
@@ -786,6 +788,24 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
     runCommand(cardId, 'place');
   }
 
+  // PF-2: the cards get handlers that keep one identity and call the latest version,
+  // so a memoised card isn't re-rendered just because the table was.
+  const cardHandlers = useRef({ onCardKeyDown, onCardKeyUp, openMenu, onCardPointerDown, openCounters, onCardHover });
+  useLayoutEffect(() => {
+    cardHandlers.current = { onCardKeyDown, onCardKeyUp, openMenu, onCardPointerDown, openCounters, onCardHover };
+  });
+  const cardProps = useMemo(
+    () => ({
+      onKeyDown: (cardId: string, event: KeyboardEvent<HTMLButtonElement>) => cardHandlers.current.onCardKeyDown(cardId, event),
+      onKeyUp: (cardId: string, event: KeyboardEvent<HTMLButtonElement>) => cardHandlers.current.onCardKeyUp(cardId, event),
+      onOpenMenu: (cardId: string) => cardHandlers.current.openMenu(cardId),
+      onPointerDown: (cardId: string, event: PointerEvent<HTMLButtonElement>) => cardHandlers.current.onCardPointerDown(cardId, event),
+      onOpenCounters: (cardId: string, counterId?: string) => cardHandlers.current.openCounters(cardId, counterId),
+      onHover: (cardId: string, entering: boolean) => cardHandlers.current.onCardHover(cardId, entering),
+    }),
+    [],
+  );
+
   const count = session.table.length;
   const label = `Table, ${plural(count, 'card')}${renderPile ? `, ${plural(piles.length, 'pile')}` : ''}`;
   // The Tab stop is the last card focused, or the first in reading order once that card has gone.
@@ -858,19 +878,14 @@ export function TableSurface({ renderPile, openPileMenu, requestMerge }: TableSu
             {session.table.map((entry, index) => (
               <TableCard
                 key={entry.cardId}
-                view={tableCardView(session, entry)}
+                view={viewOf(session, entry)}
                 layer={index + 1}
                 tabbable={entry.cardId === tabbableId}
                 register={register}
                 onFocus={setActiveId}
-                onKeyDown={onCardKeyDown}
-                onKeyUp={onCardKeyUp}
                 menuOpen={menu?.cardId === entry.cardId}
-                onOpenMenu={openMenu}
-                onPointerDown={onCardPointerDown}
                 dragging={drag?.cardId === entry.cardId}
-                onOpenCounters={openCounters}
-                onHover={onCardHover}
+                {...cardProps}
               />
             ))}
             {dropBox && (
