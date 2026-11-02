@@ -75,7 +75,7 @@ describe('A11Y-3 piles on the table', () => {
     expect(pile('P1 main deck')).toHaveFocus();
 
     await user.keyboard('v');
-    expect(screen.getByRole('dialog', { name: 'P1 main deck' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'P1 main deck' })).toBeInTheDocument();
   });
 
   it('after deleting a pile, focus goes to the next pile or card in reading order', async () => {

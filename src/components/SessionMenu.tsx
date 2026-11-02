@@ -1,9 +1,10 @@
-import { lazy, Suspense, useCallback, useRef, useState } from 'react';
+import { lazy, useCallback, useRef, useState } from 'react';
 import { newItemId } from '../storage/storage';
 import { useSavedItems } from '../storage/useSavedItems';
 import { useSessionStoreApi } from '../store/sessionStore';
 import type { SnapshotItem } from '../store/snapshotItem';
 import { ImportDialogs } from './BundleDialogs';
+import { ChunkBoundary } from './ChunkBoundary';
 import { Menu } from './Menu';
 import { NameDialog } from './NameDialog';
 import { SessionLog } from './SessionLog';
@@ -147,9 +148,9 @@ export function SessionMenu({ canReloadAll = false, reloading = false, reloadBus
         }}
       />
       {formatsScreen && (
-        <Suspense fallback={null}>
+        <ChunkBoundary screen="the formats screen" onClose={closeFormats}>
           <FormatsScreen onClose={closeFormats} backLabel="Back to New session" editId={formatsScreen.editId} announcement={formatsScreen.message} />
-        </Suspense>
+        </ChunkBoundary>
       )}
       <NameDialog
         key={savingAt}

@@ -242,9 +242,9 @@ The stress case is a full 1v1 table: 2 × 60-card decks, a 40-card environment o
 
 **Requirements**
 
-- PF-1: Card art is lazy-loaded, decoded off the main thread, and cached after first load.
+- PF-1: Card art is lazy-loaded (`loading="lazy"`, set before `src`), decoded off the main thread (`decoding="async"`), and reused from the browser's own HTTP cache after first load. The art frame holds its size, so art arriving late shifts nothing. Offline art through a service worker is #59.
 - PF-2: Dragging uses CSS transforms only and doesn't re-render cards that aren't moving.
-- PF-3: The layout editor and pile viewer are code-split and load on first use.
+- PF-3: The layout editor, pile viewer and Formats screen are code-split and load on first use. The pile viewer opens with the same focus behaviour as before and closing returns focus to the pile. If a chunk fails to download, a toast and the live region say "Couldn't open <screen>. Check your connection, then reload the page.", the screen closes with focus where it was, and the session and table stay as they were.
 - PF-4: A performance check runs in CI against the demo build and fails the build when a budget is exceeded.
 
 ## Testing and CI/CD

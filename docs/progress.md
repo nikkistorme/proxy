@@ -20,9 +20,19 @@ Phase 7 (Session saves and Sheets, #141) is planned as 7a to 7g, sub-issues #142
 
 The design now has a UI placement guide (`design/ui-placement.md`, rules UI-1 to UI-8, with `FuturePlacement.dc.html`), and the plan follows it (2026-10-29). V1 keeps today's shell: V1 issues add no header or toolbar control (UI-3) and put new controls at the guide's address, or in the This session menu until the Session menu exists. So 6d's Formats screen opens from the setup dialog, and 6e's format editor is full screen. After V1, the shell moves to the guide in its own issues, #130 to #135 (action registry, workspace with Home, Library and Settings, header slots and Session menu, side panel, seat dock, command palette), before the card set library (#67). Smaller moves ride along with the feature that touches them. Each issue now has a Placement section.
 
-Phase 8 (Polish, #167) is split into 8a to 8f, sub-issues #168 to #173. 8a (#168) is done: the demo game's data is in the repo as plain files, `src/demo/` (four CSVs, three layouts and credits) and `public/demo/art/` (36 original SVG emblems), with no UI yet. `private/` is git-ignored. 8b (#169) is done: **Load demo** in the New session dialog starts a Co-op PvE session with all four piles filled from the demo data, which loads as its own chunk on the first click, and focuses the table. 8c (#170) is next.
+Phase 8 (Polish, #167) is split into 8a to 8f, sub-issues #168 to #173. 8a (#168) is done: the demo game's data is in the repo as plain files, `src/demo/` (four CSVs, three layouts and credits) and `public/demo/art/` (36 original SVG emblems), with no UI yet. `private/` is git-ignored. 8b (#169) is done: **Load demo** in the New session dialog starts a Co-op PvE session with all four piles filled from the demo data, which loads as its own chunk on the first click, and focuses the table. 8c (#170) is done: card art is lazy-loaded and decoded asynchronously, the pile viewer is its own chunk loaded on first open, and a failed chunk download shows a message instead of blanking the app. 8d (#171) is next, on the owner's go-ahead.
 
 ## Done
+
+### Phase 8c: Art loading and pile viewer code split (#170, 2026-11-01)
+
+- **Art (PF-1):** `CardArt`'s `<img>` has `loading="lazy"` (placed before `src`, with a comment why) and `decoding="async"`. `.card-art` already fills its frame, so late art shifts nothing; an E2E compares bounding boxes while the art is held back. Repeat images come from the browser's HTTP cache; a service worker is #59.
+- **Pile viewer (PF-3):** `PileViewer` is `lazy()` in `SessionScreen`, rendered only while `viewerPileId` is set (keyed by pile id). Named export kept, so `PileViewer.test.tsx` and `PileViewerDrag.test.tsx` are unchanged. Nothing else imports `PileViewer.css`.
+- **`ChunkBoundary` (new, `src/components/ChunkBoundary.tsx`):** a class error boundary plus `Suspense` at all three lazy sites (layout editor and pile viewer in `SessionScreen`, Formats screen in `SessionMenu`). On a failed chunk it shows the store toast, also `announce`s it (the toast has no live region), calls the screen's close handler so focus returns, and renders nothing. Message: "Couldn't open <screen>. Check your connection, then reload the page." A browser may keep a failed import failed until reload. The toast still carries its usual Undo button, which undoes the last session action, not the failed open.
+- **Touch drag fix:** `useCardDrag` removed the shared `touchmove` listener whenever any user of it unmounted, and the viewer now unmounts on close, which broke touch drags on the table afterwards. The listener is now reference-counted (regression test in `CardDrag.test.tsx`).
+- **Tests:** `CardArt.test.tsx` and `ChunkBoundary.test.tsx` additions; `e2e/lazy-loading.spec.ts` (viewer chunk not requested at load, slow chunk by mouse and keyboard, blocked chunk, late art doesn't move anything, art in viewer and on table, off-screen art not requested until scrolled to with a 60-card CSV at 320 px wide). Passed 5 times in Chromium and Firefox.
+- **Bundle:** main `index-*.js` 108.71 kB gzip (was 110.59 kB); `PileViewer-*.js` 9.98 kB, 3.51 kB gzip.
+- **Requirements changed:** PF-1, PF-3.
 
 ### Phase 8b: Load demo (#169, 2026-10-31)
 
@@ -1025,7 +1035,7 @@ Phase 8 (Polish, #167) is split into 8a to 8f, sub-issues #168 to #173. 8a (#168
 
 Every issue fills in its Placement section (`design/ui-placement.md`). No issue adds a header or toolbar control (UI-3).
 
-- **Phase 8c (art loading and pile viewer code split, #170):** next, starting only with the owner's go-ahead. 8a (#168) and 8b (#169) are done. The owner still has one manual check from 7g: with a real published sheet, edit a card's text, wait for Google to update, **Reload from URL**, and the card changes without moving (the last unticked CD criterion).
+- **Phase 8d (stress table performance, #171):** next, starting only with the owner's go-ahead. 8a (#168), 8b (#169) and 8c (#170) are done. The owner still has one manual check from 7g: with a real published sheet, edit a card's text, wait for Google to update, **Reload from URL**, and the card changes without moving (the last unticked CD criterion).
 - **Phase 8 (Polish), placement to carry into its split:** Load demo sits in the setup dialog until Home exists (#131), where it moves to Home › Load demo. The manual theme choice waits for Settings › Appearance (#131).
 - **After V1, in this order:**
   1. The demo on its own path (#63).
@@ -1066,7 +1076,6 @@ Every issue fills in its Placement section (`design/ui-placement.md`). No issue 
 - Until #132, the header is one flat row of 13 controls. V1 adds none, and new session-wide actions go in the This session menu.
 - Saved layouts load a moment after the page starts, so cards may first draw with the built-in layout and then switch.
 - A layout save or delete that fails is silent: the layout stays as it is in the app for the visit. The layout screen could say so, perhaps with the storage notice.
-- The pile viewer isn't code-split yet, although PF-3 asks for it. Only the layout editor is.
 - Only card sets and layouts are saved so far. Nothing reads card sets back yet: the card library (#67) will list them. A theme choice needs the Settings screen, so the theme option can only be seen with hand-made data.
 - Undoing a CSV load reverts the session but leaves the saved card set as loaded. The set belongs to the library, not to the session.
 - A card set saved before the startup storage check finishes (the first moments after the page loads) isn't saved. The session still has its copy.
@@ -1333,3 +1342,4 @@ Every issue fills in its Placement section (`design/ui-placement.md`). No issue 
 | 2026-10-31 | Reload all also retries empty piles whose format has a Sheet URL, not only piles loaded from a URL (#147) | Only URL-backed card sets | A pile that failed at the start has no card set, so it needs a way to retry, also after a page reload. File-backed piles are never touched. |
 | 2026-10-31 | The Sheet results dialog opens after a session start only when a sheet failed or has row problems, and not during a drag, a placement or another dialog (#147) | Always opening; never opening | A clean start is only announced; a failure still reaches the player through the announcement and the pile's badge when the dialog can't open. |
 |  2026-10-31 | #164 (a single Load cards dialog) is cancelled by the owner, and the pile menu keeps Load CSV…, Load from URL… and Reload as built | A single Load cards dialog | The goal is to pull cards from in-app card sets (#67), so the load menu stays as built until then  |
+| 2026-11-01 | A `ChunkBoundary` wraps all three lazy screens: a failed chunk download shows a toast, announces it and closes the screen (#170) | Leaving the plain `Suspense`, where a rejected import blanked the whole app | Owner approved adding it to 8c. The session and table stay intact and focus returns to where the player was. |

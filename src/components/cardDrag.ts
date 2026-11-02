@@ -261,6 +261,9 @@ function end() {
   if (current.started) current.store.getState().setDrag(undefined);
 }
 
+/** How many mounted components use the touchmove listener. */
+let touchMoveUsers = 0;
+
 /** Once a card has lifted, a finger moving it mustn't scroll the page too. */
 function onTouchMove(event: TouchEvent) {
   if (activeDrag?.started) event.preventDefault();
@@ -277,9 +280,13 @@ export function useCardDrag() {
   const store = useSessionStoreApi();
 
   // Registered up front: browsers only let a touch listener stop scrolling if it was there when the touch began.
+  // Every card, pile and viewer calls this hook but they share one listener, so it goes only when the last one unmounts
+  // (the pile viewer unmounts whenever it closes).
   useEffect(() => {
-    document.addEventListener('touchmove', onTouchMove, { passive: false });
-    return () => document.removeEventListener('touchmove', onTouchMove);
+    if (touchMoveUsers++ === 0) document.addEventListener('touchmove', onTouchMove, { passive: false });
+    return () => {
+      if (--touchMoveUsers === 0) document.removeEventListener('touchmove', onTouchMove);
+    };
   }, []);
 
   return useCallback(
