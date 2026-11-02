@@ -222,9 +222,9 @@ Target: WCAG 2.2 Level AA across the whole app, including the layout editor. Dra
 
 **Acceptance criteria**
 
-- [ ] A complete solo turn (draw, play a card to a location, rotate it, add a counter, undo) can be done with keyboard and screen reader alone in NVDA + Firefox and VoiceOver + Safari.
-- [ ] Automated axe checks pass with zero violations on every screen.
-- [ ] A manual audit against WCAG 2.2 AA produces an accessibility conformance report (VPAT format) with no failing criteria.
+- [ ] A complete solo turn (draw, play a card to a location, rotate it, add a counter, undo) can be done with keyboard and screen reader alone in NVDA + Firefox and VoiceOver + Safari. (The keyboard-only turn is `e2e/solo-turn.spec.ts`. The screen-reader runs are the owner's manual check, by `docs/testing/screen-reader-plan.md`, with results in its table.)
+- [ ] Automated axe checks pass with zero violations on every screen. (Passing on the main screen and every menu and dialog off it, `e2e/a11y.spec.ts` `SCREENS`, and on the layout, Formats and format editor screens, import results, snapshots, session bundle import and sheet dialogs in their own specs. Not yet scanned: the bundle import error dialog, the loading overlay and the chunk-failed toast.)
+- [ ] A manual audit against WCAG 2.2 AA produces an accessibility conformance report (VPAT format) with no failing criteria. (A draft built from the automated results is `docs/accessibility/acr.md`; the manual audit and the screen-reader runs finish it.)
 
 ## Performance
 
@@ -234,7 +234,7 @@ The stress case is a full 1v1 table: 2 × 60-card decks, a 40-card environment o
 | --- | --- | --- |
 | Largest Contentful Paint | ≤ 2.5 s | Main page (the demo page once #63 exists), Lighthouse mobile profile. Recorded |
 | Interaction to Next Paint | ≤ 200 ms | Any action on the stress table. Recorded |
-| Cumulative Layout Shift | ≤ 0.1 | Load (Lighthouse, main page until #63) and CSV import. Recorded |
+| Cumulative Layout Shift | ≤ 0.1 | Load (Lighthouse, main page until #63). Recorded. Late art can't shift anything because the art frame holds its size (PF-1, `e2e/lazy-loading.spec.ts`), so CSV import is covered by that test rather than a number |
 | Drag frame rate | 60 fps sustained | Dragging one card on the stress table, mid-range laptop (the 10-card stack version is with stacks, #30). Recorded |
 | JavaScript, initial load | ≤ 150 KB gzipped | Production build. **Enforced in CI** (`npm run check:size`) |
 | CSV import of 200 rows | ≤ 300 ms to cards in pile | Excluding image downloads. Recorded |
@@ -248,6 +248,14 @@ Only the JavaScript size is enforced in CI; the PF-2 render test also runs there
 - PF-2: Dragging uses CSS transforms only and doesn't re-render cards that aren't moving.
 - PF-3: The layout editor, pile viewer and Formats screen are code-split and load on first use. The pile viewer opens with the same focus behaviour as before and closing returns focus to the pile. If a chunk fails to download, a toast and the live region say "Couldn't open <screen>. Check your connection, then reload the page.", the screen closes with focus where it was, and the session and table stay as they were.
 - PF-4: CI enforces the initial JavaScript size: `npm run check:size` adds up the gzipped size of every script the built `index.html` loads at start and fails the build above 150 KB (150,000 bytes). The PF-2 render test, which runs with the unit tests, guards responsiveness. LCP, CLS, the Lighthouse score, INP, drag frame rate and CSV import time are measured and recorded in `docs/performance.md`, not gated, because Lighthouse scores vary run to run and a gate would slow every pull request.
+
+**Acceptance criteria**
+
+- [x] CI fails when initial JavaScript goes over 150 KB gzipped. (`npm run check:size` in the `check` job, `scripts/bundle-size.test.mjs`, PF-4; 107.77 kB in `docs/performance.md`)
+- [x] The PF-2 render test passes: a drag or an action doesn't re-render other cards. (`src/components/TableRenders.test.tsx`)
+- [x] Art is lazy-loaded and shifts nothing, and the pile viewer loads on first open. (`src/components/CardArt.test.tsx`, `e2e/lazy-loading.spec.ts`, PF-1 and PF-3)
+- [x] The stress table's INP, drag frame rate and 200-row import are measured and recorded against budget. (`docs/performance.md`, 8d: worst INP 16 ms, 60 fps, 27 ms at 2× CPU slowdown)
+- [x] A Lighthouse run (LCP, CLS, score) is recorded. (`docs/performance.md`, 8e: mobile LCP 0.76 s, CLS 0, score 100; repeated on `/demo/` by #63)
 
 ## Testing and CI/CD
 
@@ -284,9 +292,9 @@ The app ships with a full automated test suite that runs on every pull request; 
 
 **Acceptance criteria**
 
-- [ ] A PR that breaks shuffle, an E2E flow or an axe rule shows a failed check and cannot be merged.
-- [ ] The full pipeline finishes in under 10 minutes for a typical PR.
-- [ ] `npm test` and `npm run test:e2e` run the same suites locally as CI.
+- [x] A PR that breaks shuffle, an E2E flow or an axe rule shows a failed check and cannot be merged. (The `main` ruleset requires the four checks and an up-to-date branch; the CI jobs run `npm test` and `npm run test:e2e`, and PRs #172 and #179 each had a failed CI run before they passed.)
+- [ ] The full pipeline finishes in under 10 minutes for a typical PR. (Not met: recent passing PR runs took 6 to 13 minutes (6 for #168, 10 to 12 for #148, #170, #171, #172 and #179); the three E2E jobs run in parallel and the slowest sets the time.)
+- [x] `npm test` and `npm run test:e2e` run the same suites locally as CI. (`.github/workflows/ci.yml` runs exactly these two scripts; CI adds a per-browser `--project`.)
 
 ## Tech stack and architecture
 
@@ -328,6 +336,13 @@ The public demo ships with an original, generic sample game so the designer's ow
 - DM-4: Art is original or openly licensed (for example CC0), bundled with the app, with credits listed in the repo.
 - DM-5: A "Load demo" button sets up a Co-op PvE session in one click: all four piles filled (the three decks shuffled, the board in file order), the demo layouts and card sets saved as normal items, and focus on the table. Until the start screen exists (#131) the button is in the New session dialog, which asks first when the session has cards. The demo data is its own lazy chunk, loaded on first click. Loading it changes no options; a demo layout already saved (by id or name) is kept, and fixed ids mean a second load adds no copies.
 - DM-6: The repo's `.gitignore` excludes a `private/` folder for the designer's real CSVs and layouts.
+
+**Acceptance criteria**
+
+- [x] Load demo starts a Co-op PvE session with all four piles filled, in one click. (`e2e/demo.spec.ts`, `src/actions/loadDemo.test.ts`, DM-5)
+- [x] The demo has about 30 cards per player deck, about 20 in the environment deck and about 6 board cards, each its own CSV. (`src/demo/demoContent.test.ts`, DM-1)
+- [x] The demo uses three layouts, at least one double-faced card and original art with credits. (`src/demo/demoContent.test.ts`, DM-2 to DM-4)
+- [x] `private/` is git-ignored. (`.gitignore`, DM-6; checked with `git check-ignore`)
 
 ## Process and portfolio artifacts
 
