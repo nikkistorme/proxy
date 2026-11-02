@@ -1,6 +1,6 @@
 # Performance
 
-How Proxy measures up to the budgets in the Performance section of `docs/requirements.md`, how the numbers were taken, and what changed between runs. Lighthouse runs (LCP, CLS, score, JavaScript size) join this file with 8e (#172).
+How Proxy measures up to the budgets in the Performance section of `docs/requirements.md`, how the numbers were taken, and what changed between runs. CI enforces only the initial JavaScript size; everything else here is measured by hand and recorded (owner decision, #172).
 
 ## Method
 
@@ -50,3 +50,32 @@ INP values are in ms. Every budget passed before the fix, with a wide margin. Th
 
 - Dragging a 10-card stack: stacks are #30, and the stack version of the drag budget moved there.
 - Phones. The budgets are for a mid-range laptop; phone checks stay manual.
+
+## 8e: JavaScript size and Lighthouse (#172, 2026-11-02)
+
+### Initial JavaScript (enforced in CI)
+
+`npm run check:size` (`scripts/check-bundle-size.mjs`) reads `dist/index.html`, gzips every script loaded at start (the entry and any `modulepreload`) and fails above 150 kB (150,000 bytes). It runs in the `check` job right after `npm run build`. Lazy chunks (layout editor, Formats screen, pile viewer, demo data) aren't counted.
+
+| File | Gzipped |
+| --- | --- |
+| `assets/index-4Ynw3sd4.js` (the only start script) | 107.77 kB |
+| **Total** | **107.77 kB** (limit 150 kB) |
+
+Vite prints 108.95 kB for the same file. It compresses a little differently from Node's default gzip; the two agree to about 1%.
+
+### Lighthouse
+
+One run by hand on the production build's main page, not the demo (the demo is #63, which repeats this run on `/demo/` and records it here). Median of 3 runs each, performance category only.
+
+- **Command:** `npm run build`, `npx vite preview --port 4173`, then `CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" npx lighthouse@13.6.0 http://localhost:4173/proxy/ --chrome-flags="--headless=new" --only-categories=performance`, adding `--preset=desktop` for desktop. Lighthouse's default simulated throttling applies to mobile.
+- **Machine:** the one above, Chrome 156 headless, Node 22.12.0 (Lighthouse warns it wants 22.19; it ran without errors).
+
+| Metric | Budget | Mobile median | Desktop median |
+| --- | --- | --- | --- |
+| LCP | ≤ 2.5 s | 0.76 s | 0.21 s |
+| CLS | ≤ 0.1 | 0.000 | 0.000 |
+| TBT | (not budgeted) | 0 ms | 0 ms |
+| Performance score | ≥ 90 | 100 | 100 |
+
+Mobile LCP over the 3 runs: 1.51, 0.75, 0.76 s (the first run was slower, probably a cold start). Desktop: 0.21, 0.36, 0.20 s. All runs scored 100. This is a local server with no network delay beyond Lighthouse's simulation, so a real visit over the internet will be slower; #63 measures the deployed demo page.

@@ -8,7 +8,7 @@ export default mergeConfig(
       environment: 'jsdom',
       setupFiles: ['./src/test-setup.ts'],
       testTimeout: 15_000,
-      include: ['src/**/*.test.{ts,tsx}'],
+      include: ['src/**/*.test.{ts,tsx}', 'scripts/**/*.test.mjs'],
       coverage: {
         provider: 'v8',
         include: ['src/**/*.{ts,tsx}'],
