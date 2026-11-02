@@ -175,6 +175,24 @@ test.describe('PS-2 Resume', () => {
   });
 });
 
+for (const colorScheme of ['light', 'dark'] as const) {
+  test.describe(`PS-2 loading overlay (${colorScheme})`, () => {
+    test.use({ colorScheme });
+
+    test('has no axe violations', async ({ page }) => {
+      await page.addInitScript(() => {
+        // Hold the storage check back so the overlay stays up (see the phone test below).
+        IDBFactory.prototype.open = () => ({}) as IDBOpenDBRequest;
+      });
+      await page.reload();
+      await expect(page.getByRole('status').filter({ hasText: 'Loading your session…' })).toBeVisible();
+      await expect(page.locator('html')).toHaveAttribute('data-theme', colorScheme);
+      await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running'));
+      expect((await new AxeBuilder({ page }).withTags(axeTags).analyze()).violations).toEqual([]);
+    });
+  });
+}
+
 test.describe('PS-2 Resume on a phone', () => {
   test.use({ viewport: { width: 375, height: 667 } });
 
