@@ -287,6 +287,7 @@ test.describe('A11Y-8 target size', () => {
   // table's zoom below 100%, and overlapping box buttons on the layout canvas. Neither is on a screen scanned
   // here, which is all at default zoom, so nothing is excluded.
   test('axe target-size finds nothing on the main screen, each dialog and each menu', async ({ page }) => {
+    test.slow(); // about 25 screens, each opened and scanned
     await eachScreen(page, async (name) => {
       await scrollTableHome(page);
       const results = await new AxeBuilder({ page }).withRules(['target-size']).analyze();
@@ -300,6 +301,7 @@ test.describe('A11Y-9 contrast (light)', () => {
   test.use({ colorScheme: 'light' });
 
   test('axe color-contrast finds nothing on the main screen, each dialog and each menu', async ({ page }) => {
+    test.slow(); // about 25 screens, each opened and scanned
     await eachScreen(page, async (name) => {
       await scrollTableHome(page);
       const results = await new AxeBuilder({ page }).withRules(['color-contrast']).analyze();
@@ -312,6 +314,7 @@ test.describe('A11Y-9 contrast (dark, demo table)', () => {
   test.use({ colorScheme: 'dark' });
 
   test('the demo table and its dialogs pass axe in dark as well', async ({ page }) => {
+    test.slow(); // about 25 screens, each opened and scanned
     await eachScreen(
       page,
       async (name) => {
